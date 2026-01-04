@@ -1,0 +1,567 @@
+{
+ "pk": "QUESTION#5f41bdc9-67f0-478d-bba3-0271141d0eae",
+ "sk": "VERSION#2024-07-14T10:00:00Z",
+ "createdAt": "2024-07-14T10:00:00Z",
+ "createdBy": "admin-uuid",
+ "parts": [
+  {
+   "intro": "Basic organizational information to contextualize your digital maturity assessment. This should take about 5 minutes to complete.",
+   "part": "Section 1: Organization Overview",
+   "questions": [
+    {
+     "id": "company_size",
+     "number": "1.1",
+     "options": [
+      "Less than 50",
+      "50-250",
+      "251-1000",
+      "1000+"
+     ],
+     "question": "How many employees does your organization have?",
+     "required": true,
+     "title": "Company Size",
+     "type": "radio"
+    },
+    {
+     "hasOther": true,
+     "id": "industry_sector",
+     "number": "1.2",
+     "options": [
+      "Technology",
+      "Healthcare",
+      "Financial Services",
+      "Manufacturing",
+      "Retail",
+      "Education",
+      "Government",
+      "Non-profit",
+      "Other"
+     ],
+     "question": "Which industry sector best describes your organization?",
+     "required": true,
+     "title": "Industry Sector",
+     "type": "dropdown"
+    },
+    {
+     "id": "annual_revenue",
+     "number": "1.3",
+     "options": [
+      "Less than $1M",
+      "$1M - $10M",
+      "$10M - $100M",
+      "$100M - $1B",
+      "More than $1B",
+      "Prefer not to disclose"
+     ],
+     "question": "What is your organization's approximate annual revenue?",
+     "required": true,
+     "title": "Annual Revenue Range",
+     "type": "dropdown"
+    },
+    {
+     "hasOther": true,
+     "id": "business_model",
+     "number": "1.4",
+     "options": [
+      "B2B (Business to Business)",
+      "B2C (Business to Consumer)",
+      "B2B2C (Business to Business to Consumer)",
+      "Marketplace/Platform",
+      "Other"
+     ],
+     "question": "Which business model best describes your organization?",
+     "required": true,
+     "title": "Primary Business Model",
+     "type": "checkbox"
+    },
+    {
+     "id": "digital_transformation_stage",
+     "number": "1.5",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "How would you rate your organization's current digital transformation stage?",
+     "required": true,
+     "title": "Current Digital Transformation Stage",
+     "type": "scale"
+    }
+   ]
+  },
+  {
+   "intro": "Assess your organization's digital strategy clarity, leadership commitment, and resource allocation. This section takes approximately 8 minutes.",
+   "part": "Section 2: Strategic Foundation",
+   "questions": [
+    {
+     "id": "digital_strategy_clarity",
+     "number": "2.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our organization has a clearly defined digital transformation roadmap:",
+     "required": true,
+     "title": "Digital Strategy Roadmap",
+     "type": "scale"
+    },
+    {
+     "id": "executive_leadership_support",
+     "number": "2.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Executive leadership actively champions digital initiatives:",
+     "required": true,
+     "title": "Executive Leadership Championship",
+     "type": "scale"
+    },
+    {
+     "id": "budget_allocation",
+     "number": "2.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Digital transformation receives adequate budget allocation:",
+     "required": true,
+     "title": "Digital Investment Allocation",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "strategic_alignment_barriers",
+     "number": "2.4",
+     "options": [
+      "Lack of clear vision",
+      "Insufficient funding",
+      "Resistance to change",
+      "Skills gap",
+      "Technology limitations",
+      "Regulatory constraints",
+      "Other"
+     ],
+     "question": "What are the main barriers to digital strategy implementation in your organization?",
+     "required": false,
+     "title": "Strategic Alignment Challenges",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "intro": "Evaluate your organization's technical foundation, cloud adoption, data management, and cybersecurity posture. Estimated time: 10 minutes.",
+   "part": "Section 3: Technology & Infrastructure",
+   "questions": [
+    {
+     "id": "it_infrastructure_scalability",
+     "number": "3.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our IT infrastructure supports scalable digital operations:",
+     "required": true,
+     "title": "IT Infrastructure Scalability",
+     "type": "scale"
+    },
+    {
+     "id": "cloud_adoption_level",
+     "number": "3.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Cloud adoption across our organization is:",
+     "required": true,
+     "title": "Cloud Adoption Maturity",
+     "type": "scale"
+    },
+    {
+     "id": "data_accessibility_quality",
+     "number": "3.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our data is accessible, accurate, and actionable:",
+     "required": true,
+     "title": "Data Management Capability",
+     "type": "scale"
+    },
+    {
+     "id": "cybersecurity_posture",
+     "number": "3.4",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our cybersecurity measures protect digital assets effectively:",
+     "required": true,
+     "title": "Cybersecurity Effectiveness",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "technology_integration_challenges",
+     "number": "3.5",
+     "options": [
+      "Legacy system integration",
+      "Data silos",
+      "Scalability limitations",
+      "Security vulnerabilities",
+      "Vendor management",
+      "Skills shortage",
+      "Other"
+     ],
+     "question": "What are your biggest technology infrastructure challenges?",
+     "required": false,
+     "title": "Technology Integration Issues",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "intro": "Assess your digital customer interaction capabilities, personalization, and feedback integration. This section takes about 8 minutes.",
+   "part": "Section 4: Customer Experience & Engagement",
+   "questions": [
+    {
+     "id": "omnichannel_customer_interaction",
+     "number": "4.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Customers can interact with us seamlessly across digital channels:",
+     "required": true,
+     "title": "Omnichannel Customer Experience",
+     "type": "scale"
+    },
+    {
+     "id": "personalization_capability",
+     "number": "4.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "We use customer data to personalize experiences:",
+     "required": true,
+     "title": "Customer Data Personalization",
+     "type": "scale"
+    },
+    {
+     "id": "customer_feedback_integration",
+     "number": "4.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Customer feedback directly influences our digital improvements:",
+     "required": true,
+     "title": "Customer Feedback Integration",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "digital_customer_channels",
+     "number": "4.4",
+     "options": [
+      "Website",
+      "Mobile app",
+      "Social media",
+      "Email marketing",
+      "Live chat",
+      "Video conferencing",
+      "AI chatbots",
+      "Other"
+     ],
+     "question": "Which digital channels do you use to engage with customers?",
+     "required": true,
+     "title": "Primary Digital Customer Channels",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "intro": "Evaluate process digitization, automation levels, performance measurement, and departmental collaboration. Estimated completion time: 10 minutes.",
+   "part": "Section 5: Operations & Process Efficiency",
+   "questions": [
+    {
+     "id": "process_digitization_level",
+     "number": "5.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our core business processes are digitally enabled:",
+     "required": true,
+     "title": "Business Process Digitization",
+     "type": "scale"
+    },
+    {
+     "id": "operational_efficiency_measurement",
+     "number": "5.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "We measure and optimize operational efficiency using digital tools:",
+     "required": true,
+     "title": "Digital Performance Optimization",
+     "type": "scale"
+    },
+    {
+     "id": "departmental_collaboration",
+     "number": "5.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Different departments collaborate effectively through digital platforms:",
+     "required": true,
+     "title": "Digital Collaboration Effectiveness",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "automation_priorities",
+     "number": "5.4",
+     "options": [
+      "Customer service",
+      "Inventory management",
+      "Financial reporting",
+      "HR processes",
+      "Marketing campaigns",
+      "Quality control",
+      "Supply chain",
+      "Other"
+     ],
+     "question": "Which business processes have you automated or plan to automate?",
+     "required": false,
+     "title": "Process Automation Focus Areas",
+     "type": "checkbox"
+    },
+    {
+     "id": "operational_challenges",
+     "maxLength": 500,
+     "number": "5.5",
+     "question": "What are your main operational efficiency challenges?",
+     "required": false,
+     "title": "Key Operational Challenges",
+     "type": "textarea"
+    }
+   ]
+  },
+  {
+   "intro": "Assess workforce digital capabilities, cultural readiness for change, and change management effectiveness. This section takes approximately 8 minutes.",
+   "part": "Section 6: People & Culture",
+   "questions": [
+    {
+     "id": "workforce_digital_skills",
+     "number": "6.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our workforce has the digital skills needed for current operations:",
+     "required": true,
+     "title": "Workforce Digital Capabilities",
+     "type": "scale"
+    },
+    {
+     "id": "organizational_culture_adaptation",
+     "number": "6.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Our organizational culture embraces digital change:",
+     "required": true,
+     "title": "Cultural Adaptation to Digital Change",
+     "type": "scale"
+    },
+    {
+     "id": "change_management_effectiveness",
+     "number": "6.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "We effectively manage digital transformation changes:",
+     "required": true,
+     "title": "Change Management Effectiveness",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "skill_development_priorities",
+     "number": "6.4",
+     "options": [
+      "Data analysis",
+      "Digital marketing",
+      "Cloud technologies",
+      "Cybersecurity",
+      "AI/Machine learning",
+      "Project management",
+      "Customer experience",
+      "Other"
+     ],
+     "question": "Which digital skills are most important for your workforce development?",
+     "required": true,
+     "title": "Priority Skill Development Areas",
+     "type": "checkbox"
+    }
+   ]
+  },
+  {
+   "intro": "Evaluate innovation management, digital governance frameworks, and risk management approaches. Final section - approximately 7 minutes.",
+   "part": "Section 7: Innovation & Governance",
+   "questions": [
+    {
+     "id": "innovation_opportunity_identification",
+     "number": "7.1",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "We systematically identify and develop digital innovation opportunities:",
+     "required": true,
+     "title": "Digital Innovation Pipeline",
+     "type": "scale"
+    },
+    {
+     "id": "digital_governance_framework",
+     "number": "7.2",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "Digital initiatives are governed by clear policies and accountability:",
+     "required": true,
+     "title": "Digital Governance Structure",
+     "type": "scale"
+    },
+    {
+     "id": "digital_risk_management",
+     "number": "7.3",
+     "options": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+     ],
+     "question": "We proactively manage digital transformation risks:",
+     "required": true,
+     "title": "Digital Risk Management",
+     "type": "scale"
+    },
+    {
+     "hasOther": true,
+     "id": "innovation_barriers",
+     "number": "7.4",
+     "options": [
+      "Budget constraints",
+      "Risk aversion",
+      "Lack of time",
+      "Skills shortage",
+      "Regulatory compliance",
+      "Organizational silos",
+      "Technology limitations",
+      "Other"
+     ],
+     "question": "What are the main barriers to innovation in your organization?",
+     "required": false,
+     "title": "Innovation Implementation Barriers",
+     "type": "checkbox"
+    },
+    {
+     "id": "future_digital_priorities",
+     "maxLength": 750,
+     "number": "7.5",
+     "question": "What are your organization's top digital transformation priorities for the next 12-18 months?",
+     "required": false,
+     "title": "Future Digital Transformation Priorities",
+     "type": "textarea"
+    }
+   ]
+  }
+ ],
+ "questionSection": "Profiling Assessment"
+}

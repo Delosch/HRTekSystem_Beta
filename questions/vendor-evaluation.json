@@ -1,0 +1,470 @@
+{
+    "pk": "QUESTION#vendor-evaluation-001",
+    "sk": "VERSION#1",
+    "questionSection": "Vendor Evaluation",
+    "createdAt": "2025-12-23T13:30:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Vendor Requirements",
+            "intro": "Define your requirements for HR technology vendors.",
+            "questions": [
+                {
+                    "id": "s1_q1",
+                    "number": "1",
+                    "title": "Solution Category",
+                    "question": "What type of HR solution are you evaluating?",
+                    "type": "radio",
+                    "options": [
+                        "Comprehensive HRMS/HCM Suite",
+                        "Applicant Tracking System (ATS)",
+                        "Learning Management System (LMS)",
+                        "Performance Management",
+                        "Payroll System",
+                        "Employee Engagement Platform",
+                        "HR Analytics/BI Tool",
+                        "Benefits Administration",
+                        "Time & Attendance",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s1_q2",
+                    "number": "2",
+                    "title": "Deployment Preference",
+                    "question": "What is your preferred deployment model?",
+                    "type": "radio",
+                    "options": [
+                        "Cloud/SaaS only",
+                        "On-premise only",
+                        "Hybrid (Cloud + On-premise)",
+                        "No preference",
+                        "Don't know"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q3",
+                    "number": "3",
+                    "title": "User Count",
+                    "question": "How many users will need access to the system?",
+                    "type": "radio",
+                    "options": [
+                        "1-50 users",
+                        "51-200 users",
+                        "201-500 users",
+                        "501-1,000 users",
+                        "1,001-5,000 users",
+                        "More than 5,000 users"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q4",
+                    "number": "4",
+                    "title": "Budget Range",
+                    "question": "What is your annual budget range for this solution?",
+                    "type": "radio",
+                    "options": [
+                        "Less than $10,000",
+                        "$10,000 - $50,000",
+                        "$50,000 - $100,000",
+                        "$100,000 - $250,000",
+                        "$250,000 - $500,000",
+                        "More than $500,000",
+                        "Prefer not to disclose"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q5",
+                    "number": "5",
+                    "title": "Implementation Timeline",
+                    "question": "What is your desired implementation timeline?",
+                    "type": "radio",
+                    "options": [
+                        "Immediate (0-3 months)",
+                        "Short-term (3-6 months)",
+                        "Medium-term (6-12 months)",
+                        "Long-term (12+ months)",
+                        "Flexible/Not yet determined"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: Functional Requirements",
+            "intro": "Identify the key features and capabilities you need.",
+            "questions": [
+                {
+                    "id": "s2_q1",
+                    "number": "6",
+                    "title": "Must-Have Features",
+                    "question": "Which features are absolutely essential? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Employee self-service portal",
+                        "Manager self-service",
+                        "Mobile app access",
+                        "Automated workflows",
+                        "Custom reporting",
+                        "Real-time analytics/Dashboards",
+                        "Integration capabilities",
+                        "Multi-language support",
+                        "Multi-currency support",
+                        "Compliance management",
+                        "Document management",
+                        "E-signature capability",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s2_q2",
+                    "number": "7",
+                    "title": "Integration Needs",
+                    "question": "Which systems must the HR solution integrate with? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Existing HRMS/HCM",
+                        "Payroll system",
+                        "Accounting/ERP (SAP, Oracle, etc.)",
+                        "Active Directory/SSO",
+                        "Email systems (Outlook, Gmail)",
+                        "Calendar systems",
+                        "Collaboration tools (Slack, Teams)",
+                        "Background check providers",
+                        "Benefits providers",
+                        "Learning platforms",
+                        "No integration needed",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s2_q3",
+                    "number": "8",
+                    "title": "Customization Needs",
+                    "question": "How important is system customization to your organization?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q4",
+                    "number": "9",
+                    "title": "Reporting Requirements",
+                    "question": "What level of reporting and analytics do you need?",
+                    "type": "radio",
+                    "options": [
+                        "Basic standard reports",
+                        "Standard reports with some customization",
+                        "Advanced custom reporting",
+                        "Predictive analytics/AI-driven insights",
+                        "Real-time dashboards and visualizations",
+                        "Full business intelligence suite"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q5",
+                    "number": "10",
+                    "title": "Automation Priority",
+                    "question": "Which processes would you most like to automate? (Select up to 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "Onboarding/Offboarding",
+                        "Time-off requests/Approvals",
+                        "Performance review cycles",
+                        "Recruitment workflows",
+                        "Compliance tracking",
+                        "Document generation",
+                        "Notifications/Reminders",
+                        "Data entry/Updates",
+                        "Report generation",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 3: Vendor Evaluation Criteria",
+            "intro": "Rate the importance of various vendor characteristics.",
+            "questions": [
+                {
+                    "id": "s3_q1",
+                    "number": "11",
+                    "title": "Vendor Reputation",
+                    "question": "How important is vendor market reputation and brand recognition?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q2",
+                    "number": "12",
+                    "title": "Customer Support",
+                    "question": "What level of customer support do you require?",
+                    "type": "radio",
+                    "options": [
+                        "24/7 phone and email support",
+                        "Business hours phone support",
+                        "Email support only",
+                        "Self-service knowledge base",
+                        "Dedicated account manager",
+                        "Community forum support"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q3",
+                    "number": "13",
+                    "title": "Training & Onboarding",
+                    "question": "What type of training and onboarding support do you need?",
+                    "type": "checkbox",
+                    "options": [
+                        "On-site training",
+                        "Virtual training sessions",
+                        "Self-paced online courses",
+                        "Documentation/User guides",
+                        "Video tutorials",
+                        "Train-the-trainer programs",
+                        "Ongoing training programs",
+                        "Certification programs",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s3_q4",
+                    "number": "14",
+                    "title": "Implementation Support",
+                    "question": "How important is vendor-led implementation support?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q5",
+                    "number": "15",
+                    "title": "Product Roadmap",
+                    "question": "How important is the vendor's product innovation and roadmap?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 4: Security & Compliance",
+            "intro": "Assess security and compliance requirements.",
+            "questions": [
+                {
+                    "id": "s4_q1",
+                    "number": "16",
+                    "title": "Security Certifications",
+                    "question": "Which security certifications are required? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "SOC 2 Type II",
+                        "ISO 27001",
+                        "GDPR compliance",
+                        "HIPAA compliance",
+                        "PCI DSS",
+                        "FedRAMP",
+                        "None required",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s4_q2",
+                    "number": "17",
+                    "title": "Data Residency",
+                    "question": "Do you have data residency requirements?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, data must be stored in specific country/region",
+                        "Yes, data must be stored on-premise",
+                        "Prefer local data storage but not required",
+                        "No specific requirements",
+                        "Don't know"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q3",
+                    "number": "18",
+                    "title": "Compliance Needs",
+                    "question": "Which compliance requirements must the vendor support? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "GDPR (EU data protection)",
+                        "CCPA (California privacy)",
+                        "Labor law compliance",
+                        "Equal employment opportunity",
+                        "ADA compliance",
+                        "Industry-specific regulations",
+                        "Multi-country compliance",
+                        "None specific",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s4_q4",
+                    "number": "19",
+                    "title": "Data Security Importance",
+                    "question": "How critical is data encryption and security to your organization?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q5",
+                    "number": "20",
+                    "title": "Audit Trail",
+                    "question": "Do you require comprehensive audit trails and activity logging?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, absolutely essential",
+                        "Yes, preferred",
+                        "Nice to have",
+                        "Not required",
+                        "Don't know"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 5: Decision Factors",
+            "intro": "Help us understand your decision-making priorities.",
+            "questions": [
+                {
+                    "id": "s5_q1",
+                    "number": "21",
+                    "title": "Key Decision Factors",
+                    "question": "What are the top 3 factors in your vendor selection? (Select 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "Total cost of ownership",
+                        "Feature completeness",
+                        "Ease of use/User experience",
+                        "Implementation speed",
+                        "Vendor reputation",
+                        "Customer support quality",
+                        "Integration capabilities",
+                        "Scalability",
+                        "Security/Compliance",
+                        "Customization flexibility",
+                        "Mobile capabilities",
+                        "Analytics/Reporting",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q2",
+                    "number": "22",
+                    "title": "Decision Timeline",
+                    "question": "When do you plan to make a vendor selection decision?",
+                    "type": "radio",
+                    "options": [
+                        "Within 1 month",
+                        "1-3 months",
+                        "3-6 months",
+                        "6-12 months",
+                        "More than 12 months",
+                        "Not yet determined"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q3",
+                    "number": "23",
+                    "title": "Stakeholders Involved",
+                    "question": "Who will be involved in the vendor selection decision? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "HR Leadership",
+                        "IT Department",
+                        "Finance/Procurement",
+                        "Executive Leadership/C-Suite",
+                        "Legal/Compliance",
+                        "End Users/Employees",
+                        "External Consultants",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q4",
+                    "number": "24",
+                    "title": "Proof of Concept",
+                    "question": "Will you require a proof of concept or trial period?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, absolutely required",
+                        "Yes, strongly preferred",
+                        "Maybe, depends on vendor",
+                        "No, not necessary",
+                        "Don't know yet"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q5",
+                    "number": "25",
+                    "title": "Additional Requirements",
+                    "question": "Are there any other specific requirements or considerations for vendor evaluation?",
+                    "type": "textarea",
+                    "required": false,
+                    "maxLength": 1000
+                }
+            ]
+        }
+    ]
+}

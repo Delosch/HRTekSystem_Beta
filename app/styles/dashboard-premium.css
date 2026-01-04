@@ -1,0 +1,159 @@
+/* 
+  Dashboard Premium Styles 
+  Enhances the application with glassmorphism, modern gradients, and smooth animations.
+*/
+
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
+    --card-hover-transform: translateY(-4px);
+}
+
+.dark {
+    --glass-bg: rgba(17, 24, 39, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --surface-gradient: linear-gradient(180deg, rgba(31, 41, 55, 0.8) 0%, rgba(31, 41, 55, 0.4) 100%);
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+    background: var(--surface-gradient);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    transform: var(--card-hover-transform);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+/* Premium Gradients */
+.text-gradient-premium {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bg-gradient-premium {
+    background: var(--primary-gradient);
+}
+
+/* Animations */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale 0.4s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dashboard Specific Overrides */
+.dashboard-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.stat-card-icon {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark .stat-card-icon {
+    background: rgba(99, 102, 241, 0.2);
+    color: #818cf8;
+}
+
+/* Modern Table Styles */
+.premium-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.premium-table th {
+    background: transparent;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.premium-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.1);
+    transition: background-color 0.2s;
+}
+
+.premium-table tr:hover td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
