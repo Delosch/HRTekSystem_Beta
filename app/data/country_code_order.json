@@ -1,0 +1,1456 @@
+{
+    "countryCode": [
+        {
+            "code": "+1",
+            "flag": "🇨🇦",
+            "country": "Canada",
+            "iso2": "CA"
+        },
+        {
+            "code": "+1",
+            "flag": "🇺🇸",
+            "country": "United States",
+            "iso2": "US"
+        },
+        {
+            "code": "+1242",
+            "flag": "🇧🇸",
+            "country": "Bahamas",
+            "iso2": "BS"
+        },
+        {
+            "code": "+1246",
+            "flag": "🇧🇧",
+            "country": "Barbados",
+            "iso2": "BB"
+        },
+        {
+            "code": "+1264",
+            "flag": "🇦🇮",
+            "country": "Anguilla",
+            "iso2": "AI"
+        },
+        {
+            "code": "+1268",
+            "flag": "🇦🇬",
+            "country": "Antigua and Barbuda",
+            "iso2": "AG"
+        },
+        {
+            "code": "+1284",
+            "flag": "🇻🇬",
+            "country": "British Virgin Islands",
+            "iso2": "VG"
+        },
+        {
+            "code": "+1340",
+            "flag": "🇻🇮",
+            "country": "U.S. Virgin Islands",
+            "iso2": "VI"
+        },
+        {
+            "code": "+1345",
+            "flag": "🇰🇾",
+            "country": "Cayman Islands",
+            "iso2": "KY"
+        },
+        {
+            "code": "+1441",
+            "flag": "🇧🇲",
+            "country": "Bermuda",
+            "iso2": "BM"
+        },
+        {
+            "code": "+1473",
+            "flag": "🇬🇩",
+            "country": "Grenada",
+            "iso2": "GD"
+        },
+        {
+            "code": "+1649",
+            "flag": "🇹🇨",
+            "country": "Turks and Caicos Islands",
+            "iso2": "TC"
+        },
+        {
+            "code": "+1664",
+            "flag": "🇲🇸",
+            "country": "Montserrat",
+            "iso2": "MS"
+        },
+        {
+            "code": "+1670",
+            "flag": "🇲🇵",
+            "country": "Northern Mariana Islands",
+            "iso2": "MP"
+        },
+        {
+            "code": "+1671",
+            "flag": "🇬🇺",
+            "country": "Guam",
+            "iso2": "GU"
+        },
+        {
+            "code": "+1684",
+            "flag": "🇦🇸",
+            "country": "American Samoa",
+            "iso2": "AS"
+        },
+        {
+            "code": "+1721",
+            "flag": "🇸🇽",
+            "country": "Sint Maarten",
+            "iso2": "SX"
+        },
+        {
+            "code": "+1758",
+            "flag": "🇱🇨",
+            "country": "Saint Lucia",
+            "iso2": "LC"
+        },
+        {
+            "code": "+1767",
+            "flag": "🇩🇲",
+            "country": "Dominica",
+            "iso2": "DM"
+        },
+        {
+            "code": "+1784",
+            "flag": "🇻🇨",
+            "country": "Saint Vincent and the Grenadines",
+            "iso2": "VC"
+        },
+        {
+            "code": "+1787",
+            "flag": "🇵🇷",
+            "country": "Puerto Rico",
+            "iso2": "PR"
+        },
+        {
+            "code": "+1809",
+            "flag": "🇩🇴",
+            "country": "Dominican Republic",
+            "iso2": "DO"
+        },
+        {
+            "code": "+1829",
+            "flag": "🇩🇴",
+            "country": "Dominican Republic",
+            "iso2": "DO"
+        },
+        {
+            "code": "+1849",
+            "flag": "🇩🇴",
+            "country": "Dominican Republic",
+            "iso2": "DO"
+        },
+        {
+            "code": "+1868",
+            "flag": "🇹🇹",
+            "country": "Trinidad and Tobago",
+            "iso2": "TT"
+        },
+        {
+            "code": "+1869",
+            "flag": "🇰🇳",
+            "country": "Saint Kitts and Nevis",
+            "iso2": "KN"
+        },
+        {
+            "code": "+1876",
+            "flag": "🇯🇲",
+            "country": "Jamaica",
+            "iso2": "JM"
+        },
+        {
+            "code": "+1939",
+            "flag": "🇵🇷",
+            "country": "Puerto Rico",
+            "iso2": "PR"
+        },
+        {
+            "code": "+20",
+            "flag": "🇪🇬",
+            "country": "Egypt",
+            "iso2": "EG"
+        },
+        {
+            "code": "+211",
+            "flag": "🇸🇸",
+            "country": "South Sudan",
+            "iso2": "SS"
+        },
+        {
+            "code": "+212",
+            "flag": "🇲🇦",
+            "country": "Morocco",
+            "iso2": "MA"
+        },
+        {
+            "code": "+212",
+            "flag": "🇪🇭",
+            "country": "Western Sahara",
+            "iso2": "EH"
+        },
+        {
+            "code": "+213",
+            "flag": "🇩🇿",
+            "country": "Algeria",
+            "iso2": "DZ"
+        },
+        {
+            "code": "+216",
+            "flag": "🇹🇳",
+            "country": "Tunisia",
+            "iso2": "TN"
+        },
+        {
+            "code": "+218",
+            "flag": "🇱🇾",
+            "country": "Libya",
+            "iso2": "LY"
+        },
+        {
+            "code": "+220",
+            "flag": "🇬🇲",
+            "country": "Gambia",
+            "iso2": "GM"
+        },
+        {
+            "code": "+221",
+            "flag": "🇸🇳",
+            "country": "Senegal",
+            "iso2": "SN"
+        },
+        {
+            "code": "+223",
+            "flag": "🇲🇱",
+            "country": "Mali",
+            "iso2": "ML"
+        },
+        {
+            "code": "+224",
+            "flag": "🇬🇳",
+            "country": "Guinea",
+            "iso2": "GN"
+        },
+        {
+            "code": "+225",
+            "flag": "🇨🇮",
+            "country": "Côte d'Ivoire",
+            "iso2": "CI"
+        },
+        {
+            "code": "+226",
+            "flag": "🇧🇫",
+            "country": "Burkina Faso",
+            "iso2": "BF"
+        },
+        {
+            "code": "+227",
+            "flag": "🇳🇪",
+            "country": "Niger",
+            "iso2": "NE"
+        },
+        {
+            "code": "+228",
+            "flag": "🇹🇬",
+            "country": "Togo",
+            "iso2": "TG"
+        },
+        {
+            "code": "+229",
+            "flag": "🇧🇯",
+            "country": "Benin",
+            "iso2": "BJ"
+        },
+        {
+            "code": "+230",
+            "flag": "🇲🇺",
+            "country": "Mauritius",
+            "iso2": "MU"
+        },
+        {
+            "code": "+231",
+            "flag": "🇱🇷",
+            "country": "Liberia",
+            "iso2": "LR"
+        },
+        {
+            "code": "+232",
+            "flag": "🇸🇱",
+            "country": "Sierra Leone",
+            "iso2": "SL"
+        },
+        {
+            "code": "+233",
+            "flag": "🇬🇭",
+            "country": "Ghana",
+            "iso2": "GH"
+        },
+        {
+            "code": "+234",
+            "flag": "🇳🇬",
+            "country": "Nigeria",
+            "iso2": "NG"
+        },
+        {
+            "code": "+235",
+            "flag": "🇹🇩",
+            "country": "Chad",
+            "iso2": "TD"
+        },
+        {
+            "code": "+236",
+            "flag": "🇨🇫",
+            "country": "Central African Republic",
+            "iso2": "CF"
+        },
+        {
+            "code": "+237",
+            "flag": "🇨🇲",
+            "country": "Cameroon",
+            "iso2": "CM"
+        },
+        {
+            "code": "+238",
+            "flag": "🇨🇻",
+            "country": "Cape Verde",
+            "iso2": "CV"
+        },
+        {
+            "code": "+239",
+            "flag": "🇸🇹",
+            "country": "São Tomé and Príncipe",
+            "iso2": "ST"
+        },
+        {
+            "code": "+240",
+            "flag": "🇬🇶",
+            "country": "Equatorial Guinea",
+            "iso2": "GQ"
+        },
+        {
+            "code": "+241",
+            "flag": "🇬🇦",
+            "country": "Gabon",
+            "iso2": "GA"
+        },
+        {
+            "code": "+242",
+            "flag": "🇨🇬",
+            "country": "Republic of the Congo",
+            "iso2": "CG"
+        },
+        {
+            "code": "+243",
+            "flag": "🇨🇩",
+            "country": "Democratic Republic of the Congo",
+            "iso2": "CD"
+        },
+        {
+            "code": "+244",
+            "flag": "🇦🇴",
+            "country": "Angola",
+            "iso2": "AO"
+        },
+        {
+            "code": "+245",
+            "flag": "🇬🇼",
+            "country": "Guinea-Bissau",
+            "iso2": "GW"
+        },
+        {
+            "code": "+246",
+            "flag": "🇮🇴",
+            "country": "British Indian Ocean Territory",
+            "iso2": "IO"
+        },
+        {
+            "code": "+248",
+            "flag": "🇸🇨",
+            "country": "Seychelles",
+            "iso2": "SC"
+        },
+        {
+            "code": "+249",
+            "flag": "🇸🇩",
+            "country": "Sudan",
+            "iso2": "SD"
+        },
+        {
+            "code": "+250",
+            "flag": "🇷🇼",
+            "country": "Rwanda",
+            "iso2": "RW"
+        },
+        {
+            "code": "+251",
+            "flag": "🇪🇹",
+            "country": "Ethiopia",
+            "iso2": "ET"
+        },
+        {
+            "code": "+252",
+            "flag": "🇸🇴",
+            "country": "Somalia",
+            "iso2": "SO"
+        },
+        {
+            "code": "+253",
+            "flag": "🇩🇯",
+            "country": "Djibouti",
+            "iso2": "DJ"
+        },
+        {
+            "code": "+254",
+            "flag": "🇰🇪",
+            "country": "Kenya",
+            "iso2": "KE"
+        },
+        {
+            "code": "+255",
+            "flag": "🇹🇿",
+            "country": "Tanzania",
+            "iso2": "TZ"
+        },
+        {
+            "code": "+256",
+            "flag": "🇺🇬",
+            "country": "Uganda",
+            "iso2": "UG"
+        },
+        {
+            "code": "+257",
+            "flag": "🇧🇮",
+            "country": "Burundi",
+            "iso2": "BI"
+        },
+        {
+            "code": "+258",
+            "flag": "🇲🇿",
+            "country": "Mozambique",
+            "iso2": "MZ"
+        },
+        {
+            "code": "+260",
+            "flag": "🇿🇲",
+            "country": "Zambia",
+            "iso2": "ZM"
+        },
+        {
+            "code": "+261",
+            "flag": "🇲🇬",
+            "country": "Madagascar",
+            "iso2": "MG"
+        },
+        {
+            "code": "+262",
+            "flag": "🇷🇪",
+            "country": "Réunion",
+            "iso2": "RE"
+        },
+        {
+            "code": "+262",
+            "flag": "🇾🇹",
+            "country": "Mayotte",
+            "iso2": "YT"
+        },
+        {
+            "code": "+263",
+            "flag": "🇿🇼",
+            "country": "Zimbabwe",
+            "iso2": "ZW"
+        },
+        {
+            "code": "+264",
+            "flag": "🇳🇦",
+            "country": "Namibia",
+            "iso2": "NA"
+        },
+        {
+            "code": "+265",
+            "flag": "🇲🇼",
+            "country": "Malawi",
+            "iso2": "MW"
+        },
+        {
+            "code": "+266",
+            "flag": "🇱🇸",
+            "country": "Lesotho",
+            "iso2": "LS"
+        },
+        {
+            "code": "+267",
+            "flag": "🇧🇼",
+            "country": "Botswana",
+            "iso2": "BW"
+        },
+        {
+            "code": "+268",
+            "flag": "🇸🇿",
+            "country": "Eswatini",
+            "iso2": "SZ"
+        },
+        {
+            "code": "+269",
+            "flag": "🇰🇲",
+            "country": "Comoros",
+            "iso2": "KM"
+        },
+        {
+            "code": "+27",
+            "flag": "🇿🇦",
+            "country": "South Africa",
+            "iso2": "ZA"
+        },
+        {
+            "code": "+290",
+            "flag": "🇸🇭",
+            "country": "Saint Helena",
+            "iso2": "SH"
+        },
+        {
+            "code": "+291",
+            "flag": "🇪🇷",
+            "country": "Eritrea",
+            "iso2": "ER"
+        },
+        {
+            "code": "+297",
+            "flag": "🇦🇼",
+            "country": "Aruba",
+            "iso2": "AW"
+        },
+        {
+            "code": "+298",
+            "flag": "🇫🇴",
+            "country": "Faroe Islands",
+            "iso2": "FO"
+        },
+        {
+            "code": "+299",
+            "flag": "🇬🇱",
+            "country": "Greenland",
+            "iso2": "GL"
+        },
+        {
+            "code": "+30",
+            "flag": "🇬🇷",
+            "country": "Greece",
+            "iso2": "GR"
+        },
+        {
+            "code": "+31",
+            "flag": "🇳🇱",
+            "country": "Netherlands",
+            "iso2": "NL"
+        },
+        {
+            "code": "+32",
+            "flag": "🇧🇪",
+            "country": "Belgium",
+            "iso2": "BE"
+        },
+        {
+            "code": "+33",
+            "flag": "🇫🇷",
+            "country": "France",
+            "iso2": "FR"
+        },
+        {
+            "code": "+34",
+            "flag": "🇪🇸",
+            "country": "Spain",
+            "iso2": "ES"
+        },
+        {
+            "code": "+350",
+            "flag": "🇬🇮",
+            "country": "Gibraltar",
+            "iso2": "GI"
+        },
+        {
+            "code": "+351",
+            "flag": "🇵🇹",
+            "country": "Portugal",
+            "iso2": "PT"
+        },
+        {
+            "code": "+352",
+            "flag": "🇱🇺",
+            "country": "Luxembourg",
+            "iso2": "LU"
+        },
+        {
+            "code": "+353",
+            "flag": "🇮🇪",
+            "country": "Ireland",
+            "iso2": "IE"
+        },
+        {
+            "code": "+354",
+            "flag": "🇮🇸",
+            "country": "Iceland",
+            "iso2": "IS"
+        },
+        {
+            "code": "+355",
+            "flag": "🇦🇱",
+            "country": "Albania",
+            "iso2": "AL"
+        },
+        {
+            "code": "+356",
+            "flag": "🇲🇹",
+            "country": "Malta",
+            "iso2": "MT"
+        },
+        {
+            "code": "+358",
+            "flag": "🇫🇮",
+            "country": "Finland",
+            "iso2": "FI"
+        },
+        {
+            "code": "+358",
+            "flag": "🇦🇽",
+            "country": "Åland Islands",
+            "iso2": "AX"
+        },
+        {
+            "code": "+359",
+            "flag": "🇧🇬",
+            "country": "Bulgaria",
+            "iso2": "BG"
+        },
+        {
+            "code": "+36",
+            "flag": "🇭🇺",
+            "country": "Hungary",
+            "iso2": "HU"
+        },
+        {
+            "code": "+370",
+            "flag": "🇱🇹",
+            "country": "Lithuania",
+            "iso2": "LT"
+        },
+        {
+            "code": "+371",
+            "flag": "🇱🇻",
+            "country": "Latvia",
+            "iso2": "LV"
+        },
+        {
+            "code": "+372",
+            "flag": "🇪🇪",
+            "country": "Estonia",
+            "iso2": "EE"
+        },
+        {
+            "code": "+373",
+            "flag": "🇲🇩",
+            "country": "Moldova",
+            "iso2": "MD"
+        },
+        {
+            "code": "+374",
+            "flag": "🇦🇲",
+            "country": "Armenia",
+            "iso2": "AM"
+        },
+        {
+            "code": "+376",
+            "flag": "🇦🇩",
+            "country": "Andorra",
+            "iso2": "AD"
+        },
+        {
+            "code": "+377",
+            "flag": "🇲🇨",
+            "country": "Monaco",
+            "iso2": "MC"
+        },
+        {
+            "code": "+378",
+            "flag": "🇸🇲",
+            "country": "San Marino",
+            "iso2": "SM"
+        },
+        {
+            "code": "+379",
+            "flag": "🇻🇦",
+            "country": "Vatican City",
+            "iso2": "VA"
+        },
+        {
+            "code": "+380",
+            "flag": "🇺🇦",
+            "country": "Ukraine",
+            "iso2": "UA"
+        },
+        {
+            "code": "+381",
+            "flag": "🇷🇸",
+            "country": "Serbia",
+            "iso2": "RS"
+        },
+        {
+            "code": "+382",
+            "flag": "🇲🇪",
+            "country": "Montenegro",
+            "iso2": "ME"
+        },
+        {
+            "code": "+385",
+            "flag": "🇭🇷",
+            "country": "Croatia",
+            "iso2": "HR"
+        },
+        {
+            "code": "+386",
+            "flag": "🇸🇮",
+            "country": "Slovenia",
+            "iso2": "SI"
+        },
+        {
+            "code": "+387",
+            "flag": "🇧🇦",
+            "country": "Bosnia and Herzegovina",
+            "iso2": "BA"
+        },
+        {
+            "code": "+389",
+            "flag": "🇲🇰",
+            "country": "North Macedonia",
+            "iso2": "MK"
+        },
+        {
+            "code": "+39",
+            "flag": "🇮🇹",
+            "country": "Italy",
+            "iso2": "IT"
+        },
+        {
+            "code": "+40",
+            "flag": "🇷🇴",
+            "country": "Romania",
+            "iso2": "RO"
+        },
+        {
+            "code": "+41",
+            "flag": "🇨🇭",
+            "country": "Switzerland",
+            "iso2": "CH"
+        },
+        {
+            "code": "+420",
+            "flag": "🇨🇿",
+            "country": "Czech Republic",
+            "iso2": "CZ"
+        },
+        {
+            "code": "+421",
+            "flag": "🇸🇰",
+            "country": "Slovakia",
+            "iso2": "SK"
+        },
+        {
+            "code": "+423",
+            "flag": "🇱🇮",
+            "country": "Liechtenstein",
+            "iso2": "LI"
+        },
+        {
+            "code": "+43",
+            "flag": "🇦🇹",
+            "country": "Austria",
+            "iso2": "AT"
+        },
+        {
+            "code": "+44",
+            "flag": "🇬🇧",
+            "country": "United Kingdom",
+            "iso2": "GB"
+        },
+        {
+            "code": "+44",
+            "flag": "🇬🇬",
+            "country": "Guernsey",
+            "iso2": "GG"
+        },
+        {
+            "code": "+44",
+            "flag": "🇮🇲",
+            "country": "Isle of Man",
+            "iso2": "IM"
+        },
+        {
+            "code": "+44",
+            "flag": "🇯🇪",
+            "country": "Jersey",
+            "iso2": "JE"
+        },
+        {
+            "code": "+45",
+            "flag": "🇩🇰",
+            "country": "Denmark",
+            "iso2": "DK"
+        },
+        {
+            "code": "+46",
+            "flag": "🇸🇪",
+            "country": "Sweden",
+            "iso2": "SE"
+        },
+        {
+            "code": "+47",
+            "flag": "🇳🇴",
+            "country": "Norway",
+            "iso2": "NO"
+        },
+        {
+            "code": "+48",
+            "flag": "🇵🇱",
+            "country": "Poland",
+            "iso2": "PL"
+        },
+        {
+            "code": "+49",
+            "flag": "🇩🇪",
+            "country": "Germany",
+            "iso2": "DE"
+        },
+        {
+            "code": "+501",
+            "flag": "🇧🇿",
+            "country": "Belize",
+            "iso2": "BZ"
+        },
+        {
+            "code": "+502",
+            "flag": "🇬🇹",
+            "country": "Guatemala",
+            "iso2": "GT"
+        },
+        {
+            "code": "+503",
+            "flag": "🇸🇻",
+            "country": "El Salvador",
+            "iso2": "SV"
+        },
+        {
+            "code": "+504",
+            "flag": "🇭🇳",
+            "country": "Honduras",
+            "iso2": "HN"
+        },
+        {
+            "code": "+505",
+            "flag": "🇳🇮",
+            "country": "Nicaragua",
+            "iso2": "NI"
+        },
+        {
+            "code": "+506",
+            "flag": "🇨🇷",
+            "country": "Costa Rica",
+            "iso2": "CR"
+        },
+        {
+            "code": "+507",
+            "flag": "🇵🇦",
+            "country": "Panama",
+            "iso2": "PA"
+        },
+        {
+            "code": "+508",
+            "flag": "🇵🇲",
+            "country": "Saint Pierre and Miquelon",
+            "iso2": "PM"
+        },
+        {
+            "code": "+509",
+            "flag": "🇭🇹",
+            "country": "Haiti",
+            "iso2": "HT"
+        },
+        {
+            "code": "+51",
+            "flag": "🇵🇪",
+            "country": "Peru",
+            "iso2": "PE"
+        },
+        {
+            "code": "+52",
+            "flag": "🇲🇽",
+            "country": "Mexico",
+            "iso2": "MX"
+        },
+        {
+            "code": "+53",
+            "flag": "🇨🇺",
+            "country": "Cuba",
+            "iso2": "CU"
+        },
+        {
+            "code": "+54",
+            "flag": "🇦🇷",
+            "country": "Argentina",
+            "iso2": "AR"
+        },
+        {
+            "code": "+55",
+            "flag": "🇧🇷",
+            "country": "Brazil",
+            "iso2": "BR"
+        },
+        {
+            "code": "+56",
+            "flag": "🇨🇱",
+            "country": "Chile",
+            "iso2": "CL"
+        },
+        {
+            "code": "+57",
+            "flag": "🇨🇴",
+            "country": "Colombia",
+            "iso2": "CO"
+        },
+        {
+            "code": "+58",
+            "flag": "🇻🇪",
+            "country": "Venezuela",
+            "iso2": "VE"
+        },
+        {
+            "code": "+590",
+            "flag": "🇬🇵",
+            "country": "Guadeloupe",
+            "iso2": "GP"
+        },
+        {
+            "code": "+590",
+            "flag": "🇧🇱",
+            "country": "Saint Barthélemy",
+            "iso2": "BL"
+        },
+        {
+            "code": "+590",
+            "flag": "🇲🇫",
+            "country": "Saint Martin",
+            "iso2": "MF"
+        },
+        {
+            "code": "+591",
+            "flag": "🇧🇴",
+            "country": "Bolivia",
+            "iso2": "BO"
+        },
+        {
+            "code": "+592",
+            "flag": "🇬🇾",
+            "country": "Guyana",
+            "iso2": "GY"
+        },
+        {
+            "code": "+593",
+            "flag": "🇪🇨",
+            "country": "Ecuador",
+            "iso2": "EC"
+        },
+        {
+            "code": "+594",
+            "flag": "🇬🇫",
+            "country": "French Guiana",
+            "iso2": "GF"
+        },
+        {
+            "code": "+595",
+            "flag": "🇵🇾",
+            "country": "Paraguay",
+            "iso2": "PY"
+        },
+        {
+            "code": "+596",
+            "flag": "🇲🇶",
+            "country": "Martinique",
+            "iso2": "MQ"
+        },
+        {
+            "code": "+597",
+            "flag": "🇸🇷",
+            "country": "Suriname",
+            "iso2": "SR"
+        },
+        {
+            "code": "+598",
+            "flag": "🇺🇾",
+            "country": "Uruguay",
+            "iso2": "UY"
+        },
+        {
+            "code": "+599",
+            "flag": "🇨🇼",
+            "country": "Curaçao",
+            "iso2": "CW"
+        },
+        {
+            "code": "+599",
+            "flag": "🇧🇶",
+            "country": "Caribbean Netherlands",
+            "iso2": "BQ"
+        },
+        {
+            "code": "+60",
+            "flag": "🇲🇾",
+            "country": "Malaysia",
+            "iso2": "MY"
+        },
+        {
+            "code": "+61",
+            "flag": "🇦🇺",
+            "country": "Australia",
+            "iso2": "AU"
+        },
+        {
+            "code": "+61",
+            "flag": "🇨🇽",
+            "country": "Christmas Island",
+            "iso2": "CX"
+        },
+        {
+            "code": "+61",
+            "flag": "🇨🇨",
+            "country": "Cocos Islands",
+            "iso2": "CC"
+        },
+        {
+            "code": "+62",
+            "flag": "🇮🇩",
+            "country": "Indonesia",
+            "iso2": "ID"
+        },
+        {
+            "code": "+63",
+            "flag": "🇵🇭",
+            "country": "Philippines",
+            "iso2": "PH"
+        },
+        {
+            "code": "+64",
+            "flag": "🇳🇿",
+            "country": "New Zealand",
+            "iso2": "NZ"
+        },
+        {
+            "code": "+64",
+            "flag": "🇵🇳",
+            "country": "Pitcairn Islands",
+            "iso2": "PN"
+        },
+        {
+            "code": "+65",
+            "flag": "🇸🇬",
+            "country": "Singapore",
+            "iso2": "SG"
+        },
+        {
+            "code": "+66",
+            "flag": "🇹🇭",
+            "country": "Thailand",
+            "iso2": "TH"
+        },
+        {
+            "code": "+670",
+            "flag": "🇹🇱",
+            "country": "East Timor",
+            "iso2": "TL"
+        },
+        {
+            "code": "+672",
+            "flag": "🇦🇶",
+            "country": "Antarctica",
+            "iso2": "AQ"
+        },
+        {
+            "code": "+672",
+            "flag": "🇳🇫",
+            "country": "Norfolk Island",
+            "iso2": "NF"
+        },
+        {
+            "code": "+673",
+            "flag": "🇧🇳",
+            "country": "Brunei",
+            "iso2": "BN"
+        },
+        {
+            "code": "+674",
+            "flag": "🇳🇷",
+            "country": "Nauru",
+            "iso2": "NR"
+        },
+        {
+            "code": "+675",
+            "flag": "🇵🇬",
+            "country": "Papua New Guinea",
+            "iso2": "PG"
+        },
+        {
+            "code": "+676",
+            "flag": "🇹🇴",
+            "country": "Tonga",
+            "iso2": "TO"
+        },
+        {
+            "code": "+677",
+            "flag": "🇸🇧",
+            "country": "Solomon Islands",
+            "iso2": "SB"
+        },
+        {
+            "code": "+678",
+            "flag": "🇻🇺",
+            "country": "Vanuatu",
+            "iso2": "VU"
+        },
+        {
+            "code": "+679",
+            "flag": "🇫🇯",
+            "country": "Fiji",
+            "iso2": "FJ"
+        },
+        {
+            "code": "+680",
+            "flag": "🇵🇼",
+            "country": "Palau",
+            "iso2": "PW"
+        },
+        {
+            "code": "+681",
+            "flag": "🇼🇫",
+            "country": "Wallis and Futuna",
+            "iso2": "WF"
+        },
+        {
+            "code": "+682",
+            "flag": "🇨🇰",
+            "country": "Cook Islands",
+            "iso2": "CK"
+        },
+        {
+            "code": "+683",
+            "flag": "🇳🇺",
+            "country": "Niue",
+            "iso2": "NU"
+        },
+        {
+            "code": "+685",
+            "flag": "🇼🇸",
+            "country": "Samoa",
+            "iso2": "WS"
+        },
+        {
+            "code": "+686",
+            "flag": "🇰🇮",
+            "country": "Kiribati",
+            "iso2": "KI"
+        },
+        {
+            "code": "+687",
+            "flag": "🇳🇨",
+            "country": "New Caledonia",
+            "iso2": "NC"
+        },
+        {
+            "code": "+688",
+            "flag": "🇹🇻",
+            "country": "Tuvalu",
+            "iso2": "TV"
+        },
+        {
+            "code": "+689",
+            "flag": "🇵🇫",
+            "country": "French Polynesia",
+            "iso2": "PF"
+        },
+        {
+            "code": "+690",
+            "flag": "🇹🇰",
+            "country": "Tokelau",
+            "iso2": "TK"
+        },
+        {
+            "code": "+691",
+            "flag": "🇫🇲",
+            "country": "Micronesia",
+            "iso2": "FM"
+        },
+        {
+            "code": "+692",
+            "flag": "🇲🇭",
+            "country": "Marshall Islands",
+            "iso2": "MH"
+        },
+        {
+            "code": "+7",
+            "flag": "🇰🇿",
+            "country": "Kazakhstan",
+            "iso2": "KZ"
+        },
+        {
+            "code": "+7",
+            "flag": "🇷🇺",
+            "country": "Russia",
+            "iso2": "RU"
+        },
+        {
+            "code": "+81",
+            "flag": "🇯🇵",
+            "country": "Japan",
+            "iso2": "JP"
+        },
+        {
+            "code": "+82",
+            "flag": "🇰🇷",
+            "country": "South Korea",
+            "iso2": "KR"
+        },
+        {
+            "code": "+84",
+            "flag": "🇻🇳",
+            "country": "Vietnam",
+            "iso2": "VN"
+        },
+        {
+            "code": "+850",
+            "flag": "🇰🇵",
+            "country": "North Korea",
+            "iso2": "KP"
+        },
+        {
+            "code": "+852",
+            "flag": "🇭🇰",
+            "country": "Hong Kong",
+            "iso2": "HK"
+        },
+        {
+            "code": "+853",
+            "flag": "🇲🇴",
+            "country": "Macau",
+            "iso2": "MO"
+        },
+        {
+            "code": "+855",
+            "flag": "🇰🇭",
+            "country": "Cambodia",
+            "iso2": "KH"
+        },
+        {
+            "code": "+856",
+            "flag": "🇱🇦",
+            "country": "Laos",
+            "iso2": "LA"
+        },
+        {
+            "code": "+86",
+            "flag": "🇨🇳",
+            "country": "China",
+            "iso2": "CN"
+        },
+        {
+            "code": "+880",
+            "flag": "🇧🇩",
+            "country": "Bangladesh",
+            "iso2": "BD"
+        },
+        {
+            "code": "+886",
+            "flag": "🇹🇼",
+            "country": "Taiwan",
+            "iso2": "TW"
+        },
+        {
+            "code": "+90",
+            "flag": "🇹🇷",
+            "country": "Turkey",
+            "iso2": "TR"
+        },
+        {
+            "code": "+91",
+            "flag": "🇮🇳",
+            "country": "India",
+            "iso2": "IN"
+        },
+        {
+            "code": "+92",
+            "flag": "🇵🇰",
+            "country": "Pakistan",
+            "iso2": "PK"
+        },
+        {
+            "code": "+93",
+            "flag": "🇦🇫",
+            "country": "Afghanistan",
+            "iso2": "AF"
+        },
+        {
+            "code": "+94",
+            "flag": "🇱🇰",
+            "country": "Sri Lanka",
+            "iso2": "LK"
+        },
+        {
+            "code": "+95",
+            "flag": "🇲🇲",
+            "country": "Myanmar",
+            "iso2": "MM"
+        },
+        {
+            "code": "+960",
+            "flag": "🇲🇻",
+            "country": "Maldives",
+            "iso2": "MV"
+        },
+        {
+            "code": "+961",
+            "flag": "🇱🇧",
+            "country": "Lebanon",
+            "iso2": "LB"
+        },
+        {
+            "code": "+962",
+            "flag": "🇯🇴",
+            "country": "Jordan",
+            "iso2": "JO"
+        },
+        {
+            "code": "+963",
+            "flag": "🇸🇾",
+            "country": "Syria",
+            "iso2": "SY"
+        },
+        {
+            "code": "+964",
+            "flag": "🇮🇶",
+            "country": "Iraq",
+            "iso2": "IQ"
+        },
+        {
+            "code": "+965",
+            "flag": "🇰🇼",
+            "country": "Kuwait",
+            "iso2": "KW"
+        },
+        {
+            "code": "+966",
+            "flag": "🇸🇦",
+            "country": "Saudi Arabia",
+            "iso2": "SA"
+        },
+        {
+            "code": "+967",
+            "flag": "🇾🇪",
+            "country": "Yemen",
+            "iso2": "YE"
+        },
+        {
+            "code": "+968",
+            "flag": "🇴🇲",
+            "country": "Oman",
+            "iso2": "OM"
+        },
+        {
+            "code": "+970",
+            "flag": "🇵🇸",
+            "country": "Palestine",
+            "iso2": "PS"
+        },
+        {
+            "code": "+971",
+            "flag": "🇦🇪",
+            "country": "United Arab Emirates",
+            "iso2": "AE"
+        },
+        {
+            "code": "+972",
+            "flag": "🇮🇱",
+            "country": "Israel",
+            "iso2": "IL"
+        },
+        {
+            "code": "+973",
+            "flag": "🇧🇭",
+            "country": "Bahrain",
+            "iso2": "BH"
+        },
+        {
+            "code": "+974",
+            "flag": "🇶🇦",
+            "country": "Qatar",
+            "iso2": "QA"
+        },
+        {
+            "code": "+975",
+            "flag": "🇧🇹",
+            "country": "Bhutan",
+            "iso2": "BT"
+        },
+        {
+            "code": "+976",
+            "flag": "🇲🇳",
+            "country": "Mongolia",
+            "iso2": "MN"
+        },
+        {
+            "code": "+977",
+            "flag": "🇳🇵",
+            "country": "Nepal",
+            "iso2": "NP"
+        },
+        {
+            "code": "+98",
+            "flag": "🇮🇷",
+            "country": "Iran",
+            "iso2": "IR"
+        },
+        {
+            "code": "+992",
+            "flag": "🇹🇯",
+            "country": "Tajikistan",
+            "iso2": "TJ"
+        },
+        {
+            "code": "+993",
+            "flag": "🇹🇲",
+            "country": "Turkmenistan",
+            "iso2": "TM"
+        },
+        {
+            "code": "+994",
+            "flag": "🇦🇿",
+            "country": "Azerbaijan",
+            "iso2": "AZ"
+        },
+        {
+            "code": "+995",
+            "flag": "🇬🇪",
+            "country": "Georgia",
+            "iso2": "GE"
+        },
+        {
+            "code": "+996",
+            "flag": "🇰🇬",
+            "country": "Kyrgyzstan",
+            "iso2": "KG"
+        },
+        {
+            "code": "+998",
+            "flag": "🇺🇿",
+            "country": "Uzbekistan",
+            "iso2": "UZ"
+        }
+    ]
+}

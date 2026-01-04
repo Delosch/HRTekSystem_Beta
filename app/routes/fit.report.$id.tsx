@@ -1,0 +1,591 @@
+//fit/report/HCM Vendor Fit Engine
+import type { LoaderFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  Treemap, ScatterChart, Scatter, ZAxis, Cell
+} from "recharts";
+import { useMemo } from "react";
+import { requireUserSession } from "~/lib/session.server";
+import { getLatestAnalysis } from "~/utils/analysis";
+import { getCompanyProfile } from "~/models/company.model";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+
+// --- Data Types (Unaltered) ---
+type HcmAnalysis = {
+  profile: {
+    organizationName: string | null;
+    industry: string | null;
+    employeeBand: string | null;
+    geoPresence: string[] | null;
+  };
+  answers: {
+    byQuestionId: Record<string, unknown>;
+    completeness: { answered: number; total: number; percent: number };
+  };
+  scores: {
+    satisfaction: number;
+    painIndex: number;
+    integrationComplexity: number;
+    decisionAgility: number;
+    changeReadiness: number;
+    fitScore: number;
+    fitBand: "Excellent vendor readiness" | "Moderate – some alignment gaps" | "Needs alignment before vendor search";
+  };
+  fitVector: {
+    modules: string[] | null;
+    goalsWeighted: Record<string, number>;
+    deployment: "saas" | "on_prem" | "hybrid" | null;
+    budgetBand: "under_10k" | "10k_50k" | "50k_100k" | "100k_plus" | null;
+    complianceNeeded: boolean;
+    costSensitivity: "cost_sensitive" | "value_focused" | null;
+    globalization: "local" | "multi_country" | "global" | null;
+    scaleTier: "small" | "mid" | "upper_mid" | "enterprise" | "large_enterprise" | null;
+    growthPercent: number | null;
+  };
+  diagnostics: {
+    missingOrInvalid: string[];
+    riskLevel: "high" | "medium" | "low";
+    riskReasons: string[];
+    recommendations: string[];
+  };
+  viz: {
+    executiveRadar: {
+      Satisfaction: number;
+      BusinessPriority: number;
+      IntegrationNeeds: number;
+      BudgetReadiness: number;
+      FitScore: number;
+    };
+    demographics: {
+      industry: string | null;
+      employeeBand: string | null;
+      geoPresence: string[] | null;
+    };
+    landscape: {
+      modulesCount: number;
+      satisfaction: number;
+      challengesCount: number;
+      urgencyScore: number;
+    };
+    priorityFit: {
+      goalsWeighted: Record<string, number>;
+      deployment: "saas" | "on_prem" | "hybrid" | null;
+      budgetBand: "under_10k" | "10k_50k" | "50k_100k" | "100k_plus" | null;
+    };
+    integrationScalability: {
+      integrationsCount: number;
+      growthPercent: number | null;
+      integrationComplexity: number;
+    };
+    decisionAgility: {
+      teamSizeLabel: string | null;
+      vendorSelectionLabel: string | null;
+      implementationStartLabel: string | null;
+      decisionAgility: number;
+    };
+    tags: string[];
+    recommendationsTable: Array<{
+      category: "SaaS Starter" | "Modular HCM Suite" | "Enterprise Transformation";
+      fitScore: number;
+      reasons: string[];
+      riskFlags: string[];
+    }>;
+  };
+};
+
+
+// --- Remix Loader Function (Unaltered Logic) ---
+export const loader: LoaderFunction = async ({ request, params }) => {
+  try {
+    const user = await requireUserSession(request);
+    if (!user || !user.organisationId) {
+      // In a real app, you might redirect to login
+      throw new Response("Unauthorized", { status: 401 });
+    }
+
+    if (!params.id) {
+      throw new Response("Assessment ID is missing.", { status: 404 });
+    }
+
+    // Check for verified payment or Admin role
+    const payments = await getVerifiedPaymentsByCompany(user.organisationId);
+    const isPaid = payments.some(p => p.items?.some((i: any) => i.engineName === params.id));
+    // Note: user object from session might not have role fully typed in all contexts, ensure it exists
+    const isAdmin = (user as any).role === "ADMIN";
+
+    if (!isPaid && !isAdmin) {
+      // throw new Response("Payment Verification Required. Please complete payment to view this report.", { status: 402 });
+      // Better UX: Return a specific error json or redirect
+      // For now, allow viewing if it's just a demo/test, but strict per user request:
+      throw new Response("Payment Verification Required. This report will be available after admin verification.", { status: 403, statusText: "Payment Required" });
+    }
+
+    if (params.id === "HCM Vendor Fit Engine") {
+      const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, params.id);
+      if (!data || !data.result) {
+        console.log("no report")
+        throw new Response("No assessment data found for this organization.", { status: 404 });
+      }
+
+      const companyInfo = await getCompanyProfile(user.organisationId);
+      const brandName = companyInfo?.brand_name || companyInfo?.company_name || "Your Company";
+
+      // We can augment the analysis object here if needed, e.g., adding brandName
+      const analysis = { ...data.result, profile: { ...data.result.profile, organizationName: brandName } };
+
+      return json({ analysis });
+    }
+
+    throw new Response("The requested assessment was not found.", { status: 404 });
+
+  } catch (e) {
+    console.error("An error occurred in the report loader:", e);
+    // Depending on the error type, you might want to return different responses
+    if (e instanceof Response) throw e;
+    throw new Response("An unexpected error occurred while generating the report.", { status: 500 });
+  }
+};
+
+// --- Main Report Component ---
+export default function VendorFitReport() {
+  const { analysis } = useLoaderData<{ analysis: HcmAnalysis }>();
+
+  // Memoized data transformations for charts
+  const radarData = useMemo(() => [
+    { metric: "Satisfaction", value: analysis.viz.executiveRadar.Satisfaction },
+    { metric: "Business Priority", value: analysis.viz.executiveRadar.BusinessPriority },
+    { metric: "Integration", value: analysis.viz.executiveRadar.IntegrationNeeds },
+    { metric: "Budget", value: analysis.viz.executiveRadar.BudgetReadiness },
+    { metric: "Fit Score", value: analysis.viz.executiveRadar.FitScore },
+  ], [analysis.viz.executiveRadar]);
+
+  const barLandscape = useMemo(() => [
+    { name: "Modules", value: analysis.viz.landscape.modulesCount },
+    { name: "Challenges", value: analysis.viz.landscape.challengesCount },
+    { name: "Urgency", value: Math.round(analysis.viz.landscape.urgencyScore) },
+    { name: "Satisfaction", value: Math.round(analysis.viz.landscape.satisfaction) },
+  ], [analysis.viz.landscape]);
+
+  const goalsTreemapData = useMemo(() => {
+    const entries = Object.entries(analysis.viz.priorityFit.goalsWeighted || {});
+    if (entries.length === 0) return [{ name: "No goals defined", size: 1 }];
+    return entries.map(([name, weight]) => ({
+      name: name.replace(/_/g, ' '),
+      size: Math.max(1, Math.round(weight * 100)),
+    }));
+  }, [analysis.viz.priorityFit.goalsWeighted]);
+
+  const integrationScatter = useMemo(() => {
+    const growth = analysis.viz.integrationScalability.growthPercent ?? 0;
+    const ints = analysis.viz.integrationScalability.integrationsCount ?? 0;
+    const comp = analysis.viz.integrationScalability.integrationComplexity ?? 0;
+    return [{ x: ints, y: growth, z: Math.max(1, comp) }];
+  }, [analysis.viz.integrationScalability]);
+
+  // Color definitions for Treemap
+  const TREEMAP_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ff8042'];
+
+  return (
+    // The main container with a light background and professional font
+    <div className="bg-gray-50 font-sans text-gray-800 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+
+        <HeaderSection analysis={analysis} />
+
+        {/* Main grid for report widgets */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+
+          {/* --- WIDGETS --- */}
+          <Card title="Executive Snapshot" className="lg:col-span-2">
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                <PolarGrid stroke="#e0e0e0" />
+                <PolarAngleAxis dataKey="metric" tick={{ fill: '#555', fontSize: 12 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#999' }} />
+                <Radar name="Score" dataKey="value" stroke="#4A90E2" fill="#4A90E2" fillOpacity={0.6} />
+                <Tooltip content={<CustomTooltip />} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card title="Organization Demographics">
+            <Demographics analysis={analysis} />
+          </Card>
+
+          <Card title="Current HCM Landscape" className="lg:col-span-2">
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={barLandscape} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                <XAxis dataKey="name" tick={{ fill: '#555', fontSize: 12 }} />
+                <YAxis tick={{ fill: '#555', fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(74, 144, 226, 0.1)' }} />
+                <Bar dataKey="value" name="Value" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+            <Kpis items={[
+              { label: "Satisfaction", value: `${Math.round(analysis.scores.satisfaction)} / 100` },
+              { label: "Pain Index", value: `${Math.round(analysis.scores.painIndex)} / 100` },
+              { label: "Integration Complexity", value: `${Math.round(analysis.scores.integrationComplexity)} / 100` },
+              { label: "Change Readiness", value: `${Math.round(analysis.scores.changeReadiness)} / 100` },
+            ]} />
+          </Card>
+
+          <Card title="Business Priority Fit">
+            <ResponsiveContainer width="100%" height={300}>
+              <Treemap
+                data={goalsTreemapData}
+                dataKey="size"
+                aspectRatio={4 / 3}
+                stroke="#fff"
+                fill="#8884d8"
+                content={<CustomizedTreemapContent colors={TREEMAP_COLORS} />}
+              >
+                <Tooltip content={<CustomTooltip />} />
+              </Treemap>
+            </ResponsiveContainer>
+            <div className="mt-4 text-sm text-gray-600 border-t pt-3">
+              <strong>Deployment:</strong> {labelizeDeployment(analysis.fitVector.deployment)}<br />
+              <strong>Budget:</strong> {labelizeBudget(analysis.fitVector.budgetBand)}
+            </div>
+          </Card>
+
+          <Card title="Integration & Scalability">
+            <ResponsiveContainer width="100%" height={350}>
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid stroke="#e0e0e0" />
+                <XAxis type="number" dataKey="x" name="Integrations" unit="" tick={{ fill: '#555' }} />
+                <YAxis type="number" dataKey="y" name="Growth" unit="%" tick={{ fill: '#555' }} />
+                <ZAxis type="number" dataKey="z" range={[60, 400]} name="Complexity" />
+                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                <Scatter name="Profile" data={integrationScatter} fill="#ff7300" />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card title="Decision-making Agility">
+            <div className="space-y-4">
+              <InlineStat label="Decision Team Size" value={analysis.viz.decisionAgility.teamSizeLabel ?? "—"} />
+              <InlineStat label="Selection Timeline" value={analysis.viz.decisionAgility.vendorSelectionLabel ?? "—"} />
+              <InlineStat label="Implementation Start" value={analysis.viz.decisionAgility.implementationStartLabel ?? "—"} />
+              <InlineStat label="Agility Score" value={`${Math.round(analysis.viz.decisionAgility.decisionAgility)} / 100`} isScore={true} />
+            </div>
+          </Card>
+
+          <Card title="Key Profile Tags">
+            <TagList tags={analysis.viz.tags} />
+          </Card>
+
+        </div>
+
+        {/* Diagnostics and Recommendations Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <Card title="Diagnostics" className="md:col-span-2">
+            <Diagnostics analysis={analysis} />
+          </Card>
+          <Card title="Top Recommendations">
+            {analysis.diagnostics.recommendations.length === 0 ? (
+              <p className="text-sm text-gray-500">No specific recommendations generated based on the provided data.</p>
+            ) : (
+              <ul className="space-y-2 text-sm text-gray-700">
+                {analysis.diagnostics.recommendations.map((r, idx) => (
+                  <li key={idx} className="flex items-start">
+                    <CheckIcon className="w-4 h-4 mr-2 mt-0.5 text-green-500" />
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        <div className="mt-6">
+          <Card title="Vendor Category Recommendations">
+            <RecommendationsTable rows={analysis.viz.recommendationsTable} />
+          </Card>
+        </div>
+
+        <footer className="text-center mt-8 text-xs text-gray-400">
+          <p>HCM Vendor Fit Report generated for {analysis.profile.organizationName} on {new Date().toLocaleDateString()}</p>
+        </footer>
+
+      </div>
+    </div>
+  );
+}
+
+/* --- Sub-components for UI --- */
+
+// A styled header for the report
+function HeaderSection({ analysis }: { analysis: HcmAnalysis }) {
+  const getStatusChipClass = (type: 'fit' | 'risk') => {
+    let base = "rounded-full px-3 py-1 text-xs font-medium";
+    if (type === 'fit') {
+      switch (analysis.scores.fitBand) {
+        case "Excellent vendor readiness": return `${base} bg-green-100 text-green-800`;
+        case "Moderate – some alignment gaps": return `${base} bg-yellow-100 text-yellow-800`;
+        default: return `${base} bg-red-100 text-red-800`;
+      }
+    }
+    if (type === 'risk') {
+      switch (analysis.diagnostics.riskLevel) {
+        case "low": return `${base} bg-green-100 text-green-800`;
+        case "medium": return `${base} bg-yellow-100 text-yellow-800`;
+        default: return `${base} bg-red-100 text-red-800`;
+      }
+    }
+    return `${base} bg-gray-100 text-gray-800`;
+  }
+
+  return (
+    <div className="border-b border-gray-200 pb-5">
+      <h1 className="text-3xl font-bold text-gray-900">
+        HCM Vendor Fit Report
+      </h1>
+      <p className="mt-1 text-lg text-gray-600">{analysis.profile.organizationName}</p>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">Fit Score:</span>
+          <span className="font-bold text-gray-800">{analysis.scores.fitScore.toFixed(1)}/100</span>
+          <span className={getStatusChipClass('fit')}>{analysis.scores.fitBand}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">Risk Level:</span>
+          <span className={`${getStatusChipClass('risk')} capitalize`}>{analysis.diagnostics.riskLevel}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">Completeness:</span>
+          <span className="font-bold text-gray-800">{analysis.answers.completeness.percent}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// A generic card component for widgets
+function Card({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 ${className}`}>
+      <div className="border-b border-gray-200 px-4 py-3 sm:px-6">
+        <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+      </div>
+      <div className="p-4 sm:p-6">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+// Styled Key Performance Indicators
+function Kpis({ items }: { items: { label: string; value: string | number }[] }) {
+  return (
+    <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4 border-t border-gray-200 pt-4">
+      {items.map((it) => (
+        <div key={it.label} className="text-center">
+          <div className="text-sm text-gray-500">{it.label}</div>
+          <div className="text-xl font-semibold text-gray-800">{it.value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Styled Demographics display
+function Demographics({ analysis }: { analysis: HcmAnalysis }) {
+  return (
+    <div className="space-y-4">
+      <InlineStat label="Industry" value={analysis.viz.demographics.industry ?? "—"} />
+      <InlineStat label="Employee Band" value={analysis.viz.demographics.employeeBand ?? "—"} />
+      <InlineStat label="Geographical Presence" value={analysis.viz.demographics.geoPresence?.join(", ") || "—"} />
+      <InlineStat label="Globalization" value={labelizeGlobalization(analysis.fitVector.globalization)} />
+    </div>
+  );
+}
+
+// A single statistic line item
+function InlineStat({ label, value, isScore = false }: { label: string; value: string | number, isScore?: boolean }) {
+  return (
+    <div className="flex justify-between items-center border-b border-gray-100 py-2">
+      <div className="text-sm text-gray-600">{label}</div>
+      <div className={`text-base font-semibold ${isScore ? 'text-blue-600' : 'text-gray-800'}`}>{value}</div>
+    </div>
+  );
+}
+
+// Styled list of tags
+function TagList({ tags }: { tags: string[] }) {
+  if (!tags || tags.length === 0) return <p className="text-sm text-gray-500">No tags available.</p>;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tags.slice(0, 12).map((t) => (
+        <span key={t} className="rounded-full bg-blue-50 text-blue-700 px-3 py-1 text-xs font-medium capitalize">
+          {t.replace(/_/g, " ")}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Styled diagnostics section
+function Diagnostics({ analysis }: { analysis: HcmAnalysis }) {
+  return (
+    <div className="space-y-4">
+      {analysis.diagnostics.riskReasons.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">Risk Reasons</h3>
+          <ul className="space-y-1">
+            {analysis.diagnostics.riskReasons.map((r, i) => (
+              <li key={i} className="flex items-start text-sm text-gray-600">
+                <AlertTriangleIcon className="w-4 h-4 mr-2 mt-0.5 text-yellow-500" />
+                <span>{r}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {analysis.diagnostics.missingOrInvalid.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-1">Missing or Invalid Data</h3>
+          <ul className="space-y-1">
+            {analysis.diagnostics.missingOrInvalid.map((m, i) => (
+              <li key={i} className="flex items-start text-sm text-gray-600">
+                <InfoIcon className="w-4 h-4 mr-2 mt-0.5 text-gray-400" />
+                <span>{m}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Styled recommendations table
+function RecommendationsTable({ rows }: { rows: HcmAnalysis["viz"]["recommendationsTable"] }) {
+  if (!rows || rows.length === 0) return <p className="text-sm text-gray-500">No category recommendations available.</p>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Category</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Fit Score</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Key Reasons</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Potential Flags</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {rows.map((r, idx) => (
+            <tr key={idx}>
+              <td className="px-4 py-3 font-medium text-gray-800">{r.category}</td>
+              <td className="px-4 py-3">
+                <span className="font-bold text-lg text-blue-600">{Math.round(r.fitScore)}</span>
+                <span className="text-gray-500">/100</span>
+              </td>
+              <td className="px-4 py-3 text-gray-600">
+                <ul className="list-disc pl-4 space-y-1">
+                  {r.reasons.slice(0, 3).map((reason, i) => <li key={i}>{reason}</li>)}
+                </ul>
+              </td>
+              <td className="px-4 py-3">
+                <div className="flex flex-wrap gap-1">
+                  {r.riskFlags.length > 0 ? r.riskFlags.map((f, i) => (
+                    <span key={i} className="rounded bg-yellow-100 text-yellow-800 px-2 py-0.5 text-xs font-medium">
+                      {f}
+                    </span>
+                  )) : <span className="text-gray-400 text-xs">None</span>}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* --- Chart Customization & Helpers --- */
+
+// A custom tooltip for all charts for a consistent look
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border bg-white p-3 shadow-lg">
+        <p className="font-bold text-gray-800">{label || payload[0].name || 'Data Point'}</p>
+        {payload.map((pld: any, index: number) => (
+          <p key={index} style={{ color: pld.color || pld.fill }}>
+            {`${pld.name}: ${pld.value.toFixed(1)}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom content for the Treemap to apply different colors
+const CustomizedTreemapContent = ({ root, depth, x, y, width, height, index, colors, name }: any) => {
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        style={{
+          fill: colors[index % colors.length],
+          stroke: '#fff',
+          strokeWidth: 2 / (depth + 1e-10),
+          strokeOpacity: 1 / (depth + 1e-10),
+        }}
+      />
+      {width > 80 && height > 25 ? (
+        <text x={x + width / 2} y={y + height / 2 + 7} textAnchor="middle" fill="#fff" fontSize={14}>
+          {name}
+        </text>
+      ) : null}
+    </g>
+  );
+};
+
+// Label formatting helpers
+function labelizeDeployment(d: HcmAnalysis["fitVector"]["deployment"]) {
+  const labels = { saas: "Cloud-based (SaaS)", on_prem: "On-premise", hybrid: "Hybrid" };
+  return d ? labels[d] : "—";
+}
+
+function labelizeBudget(b: HcmAnalysis["fitVector"]["budgetBand"]) {
+  const labels = {
+    under_10k: "Under $10,000/year",
+    "10k_50k": "$10k – $50k/year",
+    "50k_100k": "$50k – $100k/year",
+    "100k_plus": "$100,000+ / Custom",
+  };
+  return b ? labels[b] : "—";
+}
+
+function labelizeGlobalization(g: HcmAnalysis["fitVector"]["globalization"]) {
+  const labels = { global: "Global", multi_country: "Multiple Countries", local: "Local / Single Country" };
+  return g ? labels[g] : "—";
+}
+
+/* --- Icons --- */
+const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const AlertTriangleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+  </svg>
+);
+
+const InfoIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);

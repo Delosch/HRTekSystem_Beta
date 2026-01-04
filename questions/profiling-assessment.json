@@ -1,0 +1,380 @@
+{
+    "pk": "QUESTION#profiling-assessment-001",
+    "sk": "VERSION#2",
+    "questionSection": "HR Digital Roadmap Assessment",
+    "createdAt": "2025-12-26T14:49:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Strategic Drivers & Transformation Intent",
+            "intro": "Help us understand your key drivers and strategic ambitions for HR digital transformation.",
+            "questions": [
+                {
+                    "id": "s1_q1",
+                    "number": "1",
+                    "title": "Transformation Drivers",
+                    "question": "What are the key drivers for pursuing an HR digital transformation? (Select top 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "Improve employee experience",
+                        "Standardize and streamline operations",
+                        "Support business scale/geographic growth",
+                        "Enable data-driven decisions",
+                        "Reduce operational costs",
+                        "Compliance and audit readiness",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s1_q2",
+                    "number": "2",
+                    "title": "Strategy Integration",
+                    "question": "Is the HR Digital Strategy integrated into your overall business strategy or digital agenda?",
+                    "type": "radio",
+                    "options": [
+                        "Yes – Fully aligned",
+                        "Partially aligned",
+                        "Exists but isolated",
+                        "No formal strategy"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q3",
+                    "number": "3",
+                    "title": "Transformation Ambition",
+                    "question": "What is your HR transformation ambition over the next 2 years?",
+                    "type": "radio",
+                    "options": [
+                        "Fix basics and digitize",
+                        "Automate and optimize operations",
+                        "Enable employee-centric, AI-powered HR",
+                        "Build a next-gen HR ecosystem with predictive insights"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: Current Digital Capability Landscape",
+            "intro": "Tell us about your current digital capabilities and pain points.",
+            "questions": [
+                {
+                    "id": "s2_q1",
+                    "number": "4",
+                    "title": "Digitized Areas",
+                    "question": "Which areas are currently digitized (workflow-driven, mobile-enabled)? (Check all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Core HR (employee records, org management)",
+                        "Payroll",
+                        "Time & Attendance",
+                        "Recruitment",
+                        "Performance Management",
+                        "Learning & Development",
+                        "Benefits Administration",
+                        "Employee Self-Service",
+                        "Manager Self-Service",
+                        "None - Mostly manual",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s2_q2",
+                    "number": "5",
+                    "title": "End-to-End Automation",
+                    "question": "Which of these processes are currently automated end-to-end? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Onboarding",
+                        "Offboarding",
+                        "Leave Management",
+                        "Expense Claims",
+                        "Performance Reviews",
+                        "Recruitment Workflow",
+                        "Payroll Processing",
+                        "None",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s2_q3",
+                    "number": "6",
+                    "title": "Technology Bottlenecks",
+                    "question": "What are the top 3 bottlenecks or pain points in your current HR technology/process landscape? (Select up to 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "Manual tasks",
+                        "System fragmentation",
+                        "Lack of integration",
+                        "Poor user experience",
+                        "Analytics & insights gaps",
+                        "Compliance risks",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 3: Digital Priorities & Focus Areas",
+            "intro": "Share your digital priorities for the next 12-24 months.",
+            "questions": [
+                {
+                    "id": "s3_q1",
+                    "number": "7",
+                    "title": "Digital Priorities",
+                    "question": "Which of the following are digital priorities for your HR function over the next 12–24 months? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Digital onboarding & document automation",
+                        "AI-enabled recruitment",
+                        "Unified employee service portal",
+                        "Chatbots & case deflection",
+                        "Learning experience platforms (LXP)",
+                        "Career & succession planning",
+                        "Workforce planning tools",
+                        "People analytics & dashboards",
+                        "Compliance & audit automation",
+                        "Shared Services setup / Service delivery modernization",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s3_q2",
+                    "number": "8",
+                    "title": "Transformation Approach",
+                    "question": "What is your preferred transformation approach?",
+                    "type": "radio",
+                    "options": [
+                        "Big-bang deployment (multi-module rollout)",
+                        "Phased rollout (high-priority first)",
+                        "Module-by-module modernization",
+                        "Pilot → Scale → Optimize"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 4: Change Readiness & Resource Alignment",
+            "intro": "Help us understand your organizational readiness and support needs.",
+            "questions": [
+                {
+                    "id": "s4_q1",
+                    "number": "9",
+                    "title": "Transformation Office",
+                    "question": "Do you have a digital transformation office (DTO) or HR transformation program team?",
+                    "type": "radio",
+                    "options": [
+                        "Yes – Dedicated and active",
+                        "Some roles loosely aligned",
+                        "No – HR manages as part of BAU"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q2",
+                    "number": "10",
+                    "title": "Change Readiness",
+                    "question": "How ready is your organization for HR process change and user adoption?",
+                    "type": "radio",
+                    "options": [
+                        "Very ready",
+                        "Mixed readiness",
+                        "High resistance",
+                        "Unknown / not assessed"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q3",
+                    "number": "11",
+                    "title": "Support Needs",
+                    "question": "What type of support do you need most from a roadmap partner? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Visioning & digital design",
+                        "Platform selection guidance",
+                        "Phased roadmap planning",
+                        "Operating model redesign",
+                        "Change management & enablement",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 5: Digital Tools, Integrations & Architecture",
+            "intro": "Tell us about your current HCM platform and integration landscape.",
+            "questions": [
+                {
+                    "id": "s5_q1",
+                    "number": "12",
+                    "title": "Current HCM Platform",
+                    "question": "What is your current HCM system/platform?",
+                    "type": "radio",
+                    "options": [
+                        "Oracle",
+                        "SAP SuccessFactors",
+                        "Workday",
+                        "Zoho / Darwinbox / Keka",
+                        "ADP / Paylocity",
+                        "BambooHR / Namely",
+                        "Legacy or in-house",
+                        "No formal system",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q2",
+                    "number": "13",
+                    "title": "Enterprise Integration",
+                    "question": "Are your HR tools integrated with other enterprise systems? (ERP, CRM, Finance, ITSM, LMS)",
+                    "type": "radio",
+                    "options": [
+                        "Fully Integrated",
+                        "Partial / Manual",
+                        "Not Integrated"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q3",
+                    "number": "14",
+                    "title": "API & Microservices Roadmap",
+                    "question": "Do you have a roadmap for API enablement or microservices architecture in HR?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "Under discussion",
+                        "No / Not applicable"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q4",
+                    "number": "15",
+                    "title": "Digital Enablers",
+                    "question": "Do you use any of the following digital enablers in HR? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Robotic Process Automation (RPA)",
+                        "Chatbots or NLP Interfaces",
+                        "BI / People Analytics Tools",
+                        "Low-code workflow engines",
+                        "AI/ML for HR processes",
+                        "None",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 6: Data, Metrics & Governance",
+            "intro": "Share how you track performance and govern HR technology decisions.",
+            "questions": [
+                {
+                    "id": "s6_q1",
+                    "number": "16",
+                    "title": "Performance Tracking",
+                    "question": "How do you currently track and measure HR tech performance or adoption? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "System usage dashboards",
+                        "SLA & process cycle time reports",
+                        "Adoption/feedback surveys",
+                        "Not tracked formally",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s6_q2",
+                    "number": "17",
+                    "title": "Transformation KPIs",
+                    "question": "Are key transformation KPIs defined and reviewed?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "In Development"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q3",
+                    "number": "18",
+                    "title": "Technology Governance",
+                    "question": "Is there a centralized governance structure for HR technology decisions?",
+                    "type": "radio",
+                    "options": [
+                        "Yes – cross-functional",
+                        "Informal / HR-owned",
+                        "None yet"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 7: Budget & Investment Horizon",
+            "intro": "Help us understand your budget and timeline expectations.",
+            "questions": [
+                {
+                    "id": "s7_q1",
+                    "number": "19",
+                    "title": "Budget Approval",
+                    "question": "Has a formal HR tech/digital budget been approved?",
+                    "type": "radio",
+                    "options": [
+                        "Yes – Current FY",
+                        "Yes – Next FY",
+                        "Under Review",
+                        "Not Planned Yet"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q2",
+                    "number": "20",
+                    "title": "Impact Timeline",
+                    "question": "What is the desired timeframe for visible HR tech impact?",
+                    "type": "radio",
+                    "options": [
+                        "3–6 months",
+                        "6–12 months",
+                        "12–24 months",
+                        "Flexible"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q3",
+                    "number": "21",
+                    "title": "Additional Context",
+                    "question": "Any specific requirements, constraints, or context we should know about for your digital roadmap?",
+                    "type": "textarea",
+                    "required": false,
+                    "maxLength": 1000
+                }
+            ]
+        }
+    ]
+}

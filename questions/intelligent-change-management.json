@@ -1,0 +1,418 @@
+{
+    "pk": "QUESTION#change-management-001",
+    "sk": "VERSION#1",
+    "questionSection": "Intelligent Change Management",
+    "createdAt": "2025-12-17T05:30:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Change Context & Scope",
+            "intro": "Tell us about the change initiative you're planning or implementing.",
+            "questions": [
+                {
+                    "id": "s1_q1",
+                    "number": "1",
+                    "title": "Change Type",
+                    "question": "What type of change are you implementing?",
+                    "type": "radio",
+                    "options": [
+                        "HR Technology implementation",
+                        "Process transformation",
+                        "Organizational restructuring",
+                        "Cultural change",
+                        "Digital transformation",
+                        "Merger/Acquisition integration",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s1_q2",
+                    "number": "2",
+                    "title": "Change Scope",
+                    "question": "What is the scope of this change?",
+                    "type": "radio",
+                    "options": [
+                        "Department-level (single department)",
+                        "Division-level (multiple departments)",
+                        "Enterprise-wide (entire organization)",
+                        "Multi-company (across subsidiaries)",
+                        "Global (across countries/regions)"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q3",
+                    "number": "3",
+                    "title": "People Impacted",
+                    "question": "How many people will be directly impacted by this change?",
+                    "type": "radio",
+                    "options": [
+                        "Less than 100",
+                        "100-500",
+                        "500-1,000",
+                        "1,000-5,000",
+                        "5,000-10,000",
+                        "More than 10,000"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q4",
+                    "number": "4",
+                    "title": "Change Duration",
+                    "question": "What is the expected duration of this change initiative?",
+                    "type": "radio",
+                    "options": [
+                        "Quick (Less than 3 months)",
+                        "Medium (3-6 months)",
+                        "Standard (6-12 months)",
+                        "Long (12-18 months)",
+                        "Extended (More than 18 months)"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q5",
+                    "number": "5",
+                    "title": "Impact Level",
+                    "question": "How disruptive will this change be to daily work?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: Leadership & Sponsorship",
+            "intro": "Help us understand the leadership support and sponsorship for this change.",
+            "questions": [
+                {
+                    "id": "s2_q1",
+                    "number": "6",
+                    "title": "Executive Sponsorship",
+                    "question": "Do you have a dedicated executive sponsor for this change?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, CEO/President level",
+                        "Yes, C-suite level (CHRO, CIO, etc.)",
+                        "Yes, VP/Director level",
+                        "Yes, but not actively engaged",
+                        "No, no formal sponsor",
+                        "Not yet determined"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q2",
+                    "number": "7",
+                    "title": "Leadership Alignment",
+                    "question": "How aligned is the leadership team on this change?",
+                    "type": "scale",
+                    "options": [
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q3",
+                    "number": "8",
+                    "title": "Visible Support",
+                    "question": "How visible is leadership support for this change?",
+                    "type": "radio",
+                    "options": [
+                        "Very visible (regular communication, town halls)",
+                        "Moderately visible (occasional updates)",
+                        "Somewhat visible (mentioned in meetings)",
+                        "Limited visibility",
+                        "Not visible",
+                        "Too early to tell"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q4",
+                    "number": "9",
+                    "title": "Middle Management Buy-in",
+                    "question": "What is the level of middle management buy-in?",
+                    "type": "radio",
+                    "options": [
+                        "Strong support (Champions)",
+                        "Moderate support (Supporters)",
+                        "Neutral (Wait and see)",
+                        "Some resistance (Concerned)",
+                        "Strong resistance (Blockers)",
+                        "Unknown/Not assessed"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 3: Organizational Readiness",
+            "intro": "Assess your organization's readiness and capability for this change.",
+            "questions": [
+                {
+                    "id": "s3_q1",
+                    "number": "10",
+                    "title": "Change History",
+                    "question": "How successful have previous change initiatives been?",
+                    "type": "radio",
+                    "options": [
+                        "Very successful (Achieved all objectives)",
+                        "Mostly successful (Achieved most objectives)",
+                        "Moderately successful (Mixed results)",
+                        "Somewhat unsuccessful (Many challenges)",
+                        "Unsuccessful (Failed to achieve objectives)",
+                        "No previous major changes"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q2",
+                    "number": "11",
+                    "title": "Cultural Adaptability",
+                    "question": "How would you describe your organizational culture regarding change?",
+                    "type": "radio",
+                    "options": [
+                        "Highly adaptive (Embraces change)",
+                        "Moderately adaptive (Open to change)",
+                        "Neutral (Accepts change when necessary)",
+                        "Somewhat resistant (Prefers stability)",
+                        "Highly resistant (Avoids change)",
+                        "Mixed (Varies by department)"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q3",
+                    "number": "12",
+                    "title": "Change Capability",
+                    "question": "Do you have a dedicated change management team or capability?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, dedicated change management office",
+                        "Yes, change management team",
+                        "Yes, part-time change resources",
+                        "No, but planning to build",
+                        "No, handled by project teams",
+                        "No formal change management"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q4",
+                    "number": "13",
+                    "title": "Employee Engagement",
+                    "question": "What is your current employee engagement level?",
+                    "type": "radio",
+                    "options": [
+                        "Very high (eNPS > 50)",
+                        "High (eNPS 30-50)",
+                        "Moderate (eNPS 10-30)",
+                        "Low (eNPS 0-10)",
+                        "Very low (eNPS < 0)",
+                        "Don't measure engagement"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q5",
+                    "number": "14",
+                    "title": "Change Fatigue",
+                    "question": "Is your organization experiencing change fatigue?",
+                    "type": "radio",
+                    "options": [
+                        "No, fresh and ready for change",
+                        "Minimal fatigue",
+                        "Moderate fatigue (some concerns)",
+                        "High fatigue (significant concerns)",
+                        "Severe fatigue (burnout)",
+                        "Unknown"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 4: Communication & Training",
+            "intro": "Tell us about your communication and training plans for this change.",
+            "questions": [
+                {
+                    "id": "s4_q1",
+                    "number": "15",
+                    "title": "Communication Channels",
+                    "question": "Which communication channels will you use? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Town halls/All-hands meetings",
+                        "Email updates",
+                        "Intranet/SharePoint",
+                        "Manager cascade",
+                        "Teams/Slack channels",
+                        "Video messages",
+                        "Newsletters",
+                        "Roadshows/Workshops",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s4_q2",
+                    "number": "16",
+                    "title": "Communication Frequency",
+                    "question": "How frequently will you communicate about this change?",
+                    "type": "radio",
+                    "options": [
+                        "Daily",
+                        "Weekly",
+                        "Bi-weekly",
+                        "Monthly",
+                        "As needed",
+                        "Not yet planned"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q3",
+                    "number": "17",
+                    "title": "Training Approach",
+                    "question": "What training approach will you use?",
+                    "type": "checkbox",
+                    "options": [
+                        "In-person workshops",
+                        "Virtual training sessions",
+                        "E-learning modules",
+                        "Train-the-trainer",
+                        "On-the-job training",
+                        "Quick reference guides",
+                        "Video tutorials",
+                        "Coaching/Mentoring",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s4_q4",
+                    "number": "18",
+                    "title": "Training Timeline",
+                    "question": "When will training be delivered relative to go-live?",
+                    "type": "radio",
+                    "options": [
+                        "4+ weeks before go-live",
+                        "2-4 weeks before go-live",
+                        "1-2 weeks before go-live",
+                        "Just-in-time (days before)",
+                        "After go-live",
+                        "Not yet planned"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 5: Resources & Support",
+            "intro": "Share information about resources and support available for this change.",
+            "questions": [
+                {
+                    "id": "s5_q1",
+                    "number": "19",
+                    "title": "Budget Allocation",
+                    "question": "Is there a dedicated budget for change management?",
+                    "type": "radio",
+                    "options": [
+                        "Yes, fully funded",
+                        "Yes, partially funded",
+                        "Budget approved but not allocated",
+                        "Budget in approval process",
+                        "No dedicated budget",
+                        "Unknown"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q2",
+                    "number": "20",
+                    "title": "Support Model",
+                    "question": "What support will be available during and after go-live? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "24/7 helpdesk",
+                        "Business hours support",
+                        "Floor walkers/Super users",
+                        "Office hours/Drop-in sessions",
+                        "Online knowledge base",
+                        "Chatbot/Virtual assistant",
+                        "Email support",
+                        "Peer support network",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q3",
+                    "number": "21",
+                    "title": "Success Metrics",
+                    "question": "How will you measure change success? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Adoption rate",
+                        "User satisfaction (CSAT)",
+                        "Training completion rate",
+                        "Process compliance",
+                        "Productivity metrics",
+                        "Error/Issue rate",
+                        "Time to proficiency",
+                        "Business outcomes (ROI)",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q4",
+                    "number": "22",
+                    "title": "Risk Assessment",
+                    "question": "What are your biggest concerns about this change? (Select top 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "User resistance",
+                        "Lack of leadership support",
+                        "Insufficient training",
+                        "Technical issues",
+                        "Resource constraints",
+                        "Timeline pressure",
+                        "Communication gaps",
+                        "Change fatigue",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q5",
+                    "number": "23",
+                    "title": "Additional Context",
+                    "question": "Any additional context or specific challenges we should consider?",
+                    "type": "textarea",
+                    "required": false,
+                    "maxLength": 1000
+                }
+            ]
+        }
+    ]
+}

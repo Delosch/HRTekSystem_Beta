@@ -1,0 +1,379 @@
+{
+    "pk": "QUESTION#shared-service-001",
+    "sk": "VERSION#2",
+    "questionSection": "Shared Services Operating Model Planner",
+    "createdAt": "2025-12-26T14:52:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Current HR Service Delivery Model",
+            "intro": "Help us understand your current HR structure and service delivery approach.",
+            "questions": [
+                {
+                    "id": "s1_q1",
+                    "number": "1",
+                    "title": "HR Structure",
+                    "question": "How is your HR currently structured?",
+                    "type": "radio",
+                    "options": [
+                        "Centralized",
+                        "Decentralized (by BU/region)",
+                        "Federated/Hybrid",
+                        "Outsourced",
+                        "No formal structure"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q2",
+                    "number": "2",
+                    "title": "Existing Shared Services",
+                    "question": "Do you currently operate any form of Shared Services in HR?",
+                    "type": "radio",
+                    "options": [
+                        "Yes (Fully operational)",
+                        "Partially (For select functions)",
+                        "No",
+                        "In Planning"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q3",
+                    "number": "3",
+                    "title": "Centrally Managed Services",
+                    "question": "Which of the following HR services are centrally managed today? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Payroll & Benefits",
+                        "Employee Helpdesk",
+                        "Recruitment Services",
+                        "Learning Administration",
+                        "Data Management / Employee Records",
+                        "Reporting & Compliance",
+                        "None",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: Shared Services Drivers & Vision",
+            "intro": "Tell us about your objectives and vision for Shared Services transformation.",
+            "questions": [
+                {
+                    "id": "s2_q1",
+                    "number": "4",
+                    "title": "Transformation Objectives",
+                    "question": "What are your top 3 objectives for considering a Shared Services model? (Select up to 3)",
+                    "type": "checkbox",
+                    "options": [
+                        "Cost Reduction",
+                        "Standardization of Processes",
+                        "Service Level Improvement",
+                        "Compliance & Risk Reduction",
+                        "Focus on Strategic HR",
+                        "Digital Enablement",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s2_q2",
+                    "number": "5",
+                    "title": "Leadership Alignment",
+                    "question": "Is your leadership aligned on transforming HR operations through Shared Services?",
+                    "type": "radio",
+                    "options": [
+                        "Fully Aligned",
+                        "Somewhat",
+                        "Not Aligned",
+                        "Not Discussed Yet"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q3",
+                    "number": "6",
+                    "title": "Transformation Timeline",
+                    "question": "What timeline are you targeting for Shared Services transformation?",
+                    "type": "radio",
+                    "options": [
+                        "3 months",
+                        "6–12 months",
+                        ">12 months",
+                        "No defined timeline"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 3: Scope of Shared Services",
+            "intro": "Define the scope and coverage of your Shared Services model.",
+            "questions": [
+                {
+                    "id": "s3_q1",
+                    "number": "7",
+                    "title": "Functions to Include",
+                    "question": "Which HR functions do you want to include in the Shared Services model? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Employee Services (e.g., letters, onboarding)",
+                        "Payroll & Leave Administration",
+                        "Benefits Administration",
+                        "HR Helpdesk / Tier 1 Queries",
+                        "Talent Acquisition Operations",
+                        "Learning Coordination",
+                        "Exit / Separation Management",
+                        "HRIS / System Support",
+                        "Workforce Data Analytics",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s3_q2",
+                    "number": "8",
+                    "title": "Geographic Scope",
+                    "question": "What geographic scope will Shared Services cover?",
+                    "type": "radio",
+                    "options": [
+                        "Single Country",
+                        "Multi-country",
+                        "Global"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q3",
+                    "number": "9",
+                    "title": "External Partner",
+                    "question": "Are you open to leveraging an external partner (like HR Tek Systems) to co-design and run Shared Services?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "Depends on Cost/Value"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 4: Current Capability Assessment",
+            "intro": "Help us assess your current capabilities and infrastructure.",
+            "questions": [
+                {
+                    "id": "s4_q1",
+                    "number": "10",
+                    "title": "Ticketing System",
+                    "question": "Do you have a centralized HR ticketing or case management system?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "Partial/Manual"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q2",
+                    "number": "11",
+                    "title": "Standard Operating Procedures",
+                    "question": "Do you have clearly defined and documented HR Standard Operating Procedures (SOPs)?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "Some functions only",
+                        "No"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q3",
+                    "number": "12",
+                    "title": "Support Tier Training",
+                    "question": "Is your HR team trained in Tier 0, Tier 1, and Tier 2 support levels?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "Partially",
+                        "Not Yet"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q4",
+                    "number": "13",
+                    "title": "SLAs and KPIs",
+                    "question": "Do you currently track service performance with SLAs and KPIs?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "Under Development"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 5: Process Standardization & Technology Readiness",
+            "intro": "Tell us about process standardization and technology infrastructure.",
+            "questions": [
+                {
+                    "id": "s5_q1",
+                    "number": "14",
+                    "title": "Process Standardization",
+                    "question": "Are your HR processes standardized across departments/business units?",
+                    "type": "radio",
+                    "options": [
+                        "Fully",
+                        "Partially",
+                        "Not Standardized"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q2",
+                    "number": "15",
+                    "title": "Technology Platforms",
+                    "question": "What technology platforms are used to support HR operations? (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "HCM System (e.g., Oracle, SAP, Workday)",
+                        "Helpdesk/Ticketing (e.g., ServiceNow, Freshservice)",
+                        "Knowledge Base/Chatbot",
+                        "Excel/Email",
+                        "Other"
+                    ],
+                    "hasOther": true,
+                    "required": true
+                },
+                {
+                    "id": "s5_q3",
+                    "number": "16",
+                    "title": "Automation Level",
+                    "question": "How would you rate your current level of automation in HR operations?",
+                    "type": "radio",
+                    "options": [
+                        "High",
+                        "Medium",
+                        "Low",
+                        "None"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 6: Change Readiness & Governance",
+            "intro": "Share information about organizational readiness and governance.",
+            "questions": [
+                {
+                    "id": "s6_q1",
+                    "number": "17",
+                    "title": "Transformation Readiness",
+                    "question": "How ready is your organization for HR process transformation?",
+                    "type": "radio",
+                    "options": [
+                        "Very Ready",
+                        "Somewhat Ready",
+                        "Not Ready",
+                        "Not Assessed"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q2",
+                    "number": "18",
+                    "title": "Change Management Plan",
+                    "question": "Do you have a change management plan in place for HR transformation?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "In Progress"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q3",
+                    "number": "19",
+                    "title": "Transformation Sponsor",
+                    "question": "Do you have an HR Operations/Shared Services lead or designated transformation sponsor?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "Not Yet Identified"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 7: Engagement with HR Tek Systems",
+            "intro": "Help us understand your engagement preferences and needs.",
+            "questions": [
+                {
+                    "id": "s7_q1",
+                    "number": "20",
+                    "title": "Service Needs",
+                    "question": "Are you looking for: (Select all that apply)",
+                    "type": "checkbox",
+                    "options": [
+                        "Shared Services Setup & Design",
+                        "Transition/Outsourcing Support",
+                        "Full Operational Management by HR Tek Systems",
+                        "Shared Services Audit & Benchmarking",
+                        "Tool/Platform for Managing Shared Services",
+                        "Not Sure – Need Advisory"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q2",
+                    "number": "21",
+                    "title": "Engagement Model",
+                    "question": "Preferred engagement model:",
+                    "type": "radio",
+                    "options": [
+                        "Build-Operate-Transfer",
+                        "Joint Center of Excellence",
+                        "Outsourced HR Shared Services",
+                        "Internal build with advisory support"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q3",
+                    "number": "22",
+                    "title": "Benchmarking Interest",
+                    "question": "Would you like to benchmark your Shared Services maturity with similar organizations?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "No",
+                        "Maybe"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q4",
+                    "number": "23",
+                    "title": "Additional Requirements",
+                    "question": "Any additional information or specific requirements for your shared service design?",
+                    "type": "textarea",
+                    "required": false,
+                    "maxLength": 1000
+                }
+            ]
+        }
+    ]
+}

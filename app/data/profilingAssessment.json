@@ -1,0 +1,263 @@
+[
+  {
+    "part": "Part 0: Company Demographics & HR Structure",
+    "intro": "Foundational information to help us understand your company profile, HR operations, and current digital maturity.",
+    "questions": [
+      {
+        "id": "p0_q1",
+        "number": 1,
+        "title": "Number of Employees",
+        "question": "How many employees does your company have?",
+        "type": "radio",
+        "options": [
+          "<200",
+          "201–1000",
+          "10001–15000",
+          "15001–25000+"
+        ]
+      },
+      {
+        "id": "p0_q2",
+        "number": 2,
+        "title": "Industry / Sector",
+        "question": "Which industry best describes your company?",
+        "type": "dropdown",
+        "options": [
+          "IT / Software",
+          "Manufacturing",
+          "Healthcare",
+          "Retail / FMCG",
+          "Financial Services",
+          "Education",
+          "Other"
+        ],
+        "hasOther": true
+      },
+      {
+        "id": "p0_q3",
+        "number": 3,
+        "title": "Geographical Presence",
+        "question": "Please tell us about your company's geographical footprint.",
+        "type": "textarea"
+      }
+    ]
+  },
+    {
+      "part": "Part 1: Setting the Strategic Compass",
+      "intro": "Every great journey starts with a clear destination. Tell us about the strategic direction your company is heading in.",
+      "questions": [
+        {
+          "id": "p1_q1",
+          "number": 1,
+          "title": "Our Vision for Tomorrow",
+          "question": "What are your company's overarching strategic goals for the next 1-3-5 years? (Choose all that apply)",
+          "type": "checkbox",
+          "options": [
+            "Market Expansion (entering new markets, increasing market share)",
+            "Cost Reduction/Operational Efficiency",
+            "Innovation & New Product/Service Development",
+            "Customer Experience Improvement",
+            "Employee Engagement & Talent Development",
+            "Sustainability & Social Responsibility",
+            "Other"
+          ],
+          "hasOther": true
+        },
+        {
+          "id": "p1_q2",
+          "number": 2,
+          "title": "Embracing the Digital Horizon",
+          "question": "Is there a clear, company-wide digital strategy guiding your entire business?",
+          "type": "radio",
+          "options": [
+            "Yes, we have a well-defined and actively pursued digital strategy.",
+            "We have some digital initiatives, but no unified company-wide strategy yet.",
+            "We are just starting to explore digital transformation.",
+            "No, digital transformation is not a current strategic focus."
+          ]
+        },
+        {
+          "id": "p1_q3",
+          "number": 3,
+          "title": "Digital Echoes Across Departments",
+          "question": "What key digital projects are currently underway or planned in other departments (e.g., Sales, Marketing, Operations, IT)?",
+          "type": "textarea"
+        },
+        {
+          "id": "p1_q4",
+          "number": 4,
+          "title": "Our Biggest Hurdles, Digitally Solved",
+          "question": "What are the top 3-5 business challenges your company is currently facing that digital transformation could help address?",
+          "type": "textarea"
+        },
+        {
+          "id": "p1_q5",
+          "number": 5,
+          "title": "Measuring Our Digital Footprint",
+          "question": "How does your company define \"success\" in its digital endeavors? What are the key metrics or indicators you track?",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "part": "Part 2: The Heartbeat of Our Culture & Readiness for Change",
+      "intro": "Understanding your organizational culture is crucial, as it's the environment in which any digital transformation will thrive or falter.",
+      "questions": [
+        {
+          "id": "p2_q1",
+          "number": 1,
+          "title": "The Fabric of Our Workplace",
+          "question": "Which best describes your prevailing organizational culture?",
+          "type": "dropdown",
+          "options": [
+            "Innovative & Agile: Open to new ideas, quick to adapt, encourages experimentation.",
+            "Risk-Averse & Stable: Prioritizes stability, cautious with new approaches, strong adherence to established processes.",
+            "Hierarchical & Structured: Clear reporting lines, decisions flow top-down, emphasis on formal procedures.",
+            "Collaborative & Empowering: Cross-functional teamwork, shared decision-making, employee autonomy.",
+            "Customer-Centric: Focus on meeting customer needs above all else.",
+            "Results-Driven: Strong emphasis on achieving targets and outcomes."
+          ]
+        },
+        {
+          "id": "p2_q2",
+          "number": 2,
+          "title": "Learning from Our Past Transformations",
+          "question": "Think about major organizational changes or technology implementations your company has undertaken. What were the key successes and failures, and what did you learn from them?",
+          "type": "textarea"
+        },
+        {
+          "id": "p2_q3",
+          "number": 3,
+          "title": "The Spirit of Continuous Growth",
+          "question": "Is there a strong culture of continuous learning and adaptation within your organization?",
+          "type": "radio",
+          "options": [
+            "Yes, continuous learning is deeply embedded in our culture.",
+            "We encourage learning, but it's not always consistent.",
+            "Some departments embrace it more than others.",
+            "Not particularly; we tend to stick to established ways."
+          ]
+        },
+        {
+          "id": "p2_q4",
+          "number": 4,
+          "title": "Employee Pulse on Technology",
+          "question": "What is the general employee sentiment towards technology adoption and digital tools within the company?",
+          "type": "radio",
+          "options": [
+            "Highly enthusiastic and eager to adopt new tools.",
+            "Generally positive, with some natural hesitation.",
+            "Mixed; some embrace it, others are resistant.",
+            "Predominantly resistant or slow to adopt new technology."
+          ]
+        },
+        {
+          "id": "p2_q5",
+          "number": 5,
+          "title": "Guiding Change Through Our Doors",
+          "question": "How is change typically communicated and managed across your company? (e.g., top-down, collaborative, through specific change champions)",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "part": "Part 3: Leadership Driving the Digital Ship",
+      "intro": "Strong leadership and clear governance are non-negotiable for successful digital initiatives.",
+      "questions": [
+        {
+          "id": "p3_q1",
+          "number": 1,
+          "title": "Our Digital Champions",
+          "question": "Who are the key executive sponsors for digital transformation initiatives within your company? (Please provide names or roles if comfortable.)",
+          "type": "textarea"
+        },
+        {
+          "id": "p3_q2",
+          "number": 2,
+          "title": "The Investment Mindset",
+          "question": "What is the leadership's appetite for investment in new technologies, especially those impacting internal operations like HR?",
+          "type": "radio",
+          "options": [
+            "Very high; they are eager to invest in cutting-edge solutions.",
+            "Moderate; they are open to investments with clear ROI.",
+            "Cautious; investments are considered carefully and only when essential.",
+            "Low; investment in new internal technologies is not a priority."
+          ]
+        },
+        {
+          "id": "p3_q3",
+          "number": 3,
+          "title": "Orchestrating Digital Initiatives",
+          "question": "Is there a dedicated steering committee or governance structure for company-wide digital initiatives? If so, how does HR typically integrate or \"plug into\" this structure?",
+          "type": "textarea"
+        },
+        {
+          "id": "p3_q4",
+          "number": 4,
+          "title": "Bridging Departments for Progress",
+          "question": "How do different departments typically collaborate on cross-functional projects, particularly those involving technology?",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "part": "Part 4: The Digital Backbone: Technology & Data",
+      "intro": "A robust and well-understood technological foundation is essential for any digital transformation.",
+      "questions": [
+        {
+          "id": "p4_q1",
+          "number": 1,
+          "title": "Our IT Landscape",
+          "question": "What is the current state of your company's IT infrastructure?",
+          "type": "dropdown",
+          "options": [
+            "Cloud-First: Majority of our systems and data reside in the cloud.",
+            "On-Premise Dominant: Most systems are hosted internally.",
+            "Hybrid: A significant mix of both cloud and on-premise solutions.",
+            "Legacy Systems: Heavily reliant on older, perhaps outdated, systems."
+          ]
+        },
+        {
+          "id": "p4_q2",
+          "number": 2,
+          "title": "Navigating Our Data World",
+          "question": "What are your company's overall data governance policies and practices? How is data quality, security, and accessibility managed?",
+          "type": "textarea"
+        },
+        {
+          "id": "p4_q3",
+          "number": 3,
+          "title": "Connecting Our Digital Dots",
+          "question": "Are there existing enterprise-wide platforms or tools that HR would need to integrate with (e.g., ERP like SAP/Oracle, CRM like Salesforce, project management tools)?",
+          "type": "textarea"
+        },
+        {
+          "id": "p4_q4",
+          "number": 4,
+          "title": "Safeguarding Our Digital Assets",
+          "question": "What is your company's overall cybersecurity posture and adherence to data privacy regulations (e.g., GDPR, CCPA, local regulations)?",
+          "type": "textarea"
+        }
+      ]
+    },
+    {
+      "part": "Part 5: The Financial Canvas",
+      "intro": "Understanding the financial context helps us tailor a realistic and impactful HR digital transformation roadmap.",
+      "questions": [
+        {
+          "id": "p5_q1",
+          "number": 1,
+          "title": "Investing in Our Future",
+          "question": "What is your company's typical budget allocation or approach for technology investments and change management initiatives?",
+          "type": "textarea"
+        },
+        {
+          "id": "p5_q2",
+          "number": 2,
+          "title": "The Economic Lens",
+          "question": "Are there specific financial constraints or opportunities that will significantly influence digital transformation efforts within your company? (e.g., recent acquisitions, pending investments, cost-saving mandates)",
+          "type": "textarea"
+        }
+      ]
+    }
+  ]

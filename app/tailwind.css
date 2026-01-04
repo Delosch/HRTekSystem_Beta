@@ -1,0 +1,72 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes subtleGlowPulse {
+  0% { box-shadow: 0 0 0px rgba(139, 92, 246, 0.4); }
+  50% { box-shadow: 0 0 6px rgba(99, 102, 241, 0.7); }
+  100% { box-shadow: 0 0 0px rgba(139, 92, 246, 0.4); }
+}
+
+.focus-animated-border:focus {
+  animation: subtleGlowPulse 1.2s ease-in-out infinite;
+  border: 1px solid rgba(139, 92, 246, 0.4); /* fallback subtle border */
+  outline: none;
+}
+
+@font-face {
+  font-family: "Lato-Regular";
+  src: local("Lato-Regular") ,
+  url("../public/fonts/Lato/Lato-Regular.ttf") format("truetype");
+}
+html,
+body {
+  @apply bg-white dark:bg-gray-950;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+/* hCaptcha box enhancements */
+.hcaptcha-container-reshaped {
+  transform: scale(0.85, 0.75); /* Width scale, height scale */
+  transform-origin: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.hcaptcha-container-reshaped iframe {
+  border-radius: 8px !important;
+}
+
+/* Alternative: More dramatic reshaping */
+.hcaptcha-container-reshaped-alt {
+  transform: scaleX(0.9) scaleY(0.7);
+  transform-origin: center;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .hcaptcha-container-reshaped {
+    transform: scale(0.8, 0.7);
+  }
+}
+
+/* Perfect blend with your form styling */
+.hcaptcha-container-reshaped {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 2px;
+  transform: scale(0.88, 0.72);
+  transform-origin: center;
+}
+
+.hcaptcha-container-reshaped:hover {
+  border-color: #9ca3af;
+  transition: border-color 0.2s ease;
+}
