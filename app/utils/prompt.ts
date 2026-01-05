@@ -2491,6 +2491,12 @@ export async function prompt_processed(
     }
 
     const question = await getLatestQuestion(question_section) as QuestionResult;
+
+    if (!question || !question.pk) {
+      console.error(`❌ Question section "${question_section}" not found in database`);
+      return undefined;
+    }
+
     const question_id = question.pk;
 
     if (id === "digital_maturity" || id === "vendor_fit" || id === "digital_transformation" || id === "shared_service" || id === "change_management" || id === "tech_maturity") {

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import { json, unstable_composeUploadHandlers, unstable_createFileUploadHandler, unstable_createMemoryUploadHandler, unstable_parseMultipartFormData } from "@remix-run/node";
 import type { ActionFunction, LoaderFunction, UploadHandler } from "@remix-run/node";
-import Sidebar from "../components/DashboardComponents/Sidebar";
+import { Layout } from "~/components/Layout";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
 import { updateUser } from "~/models/user.model";
-import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail } from "lucide-react";
+import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle } from "lucide-react";
 
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await requireUserSession(request);
@@ -16,14 +16,12 @@ export const action: ActionFunction = async ({ request }) => {
   const session = await getSession(request.headers.get("Cookie"));
   const user = await requireUserSession(request);
 
-  // Custom upload handler to save files to public/uploads
   const uploadHandler: UploadHandler = unstable_composeUploadHandlers(
     unstable_createFileUploadHandler({
-      directory: "./public/uploads", // Ensure this directory exists
+      directory: "./public/uploads",
       file: ({ filename }) => filename,
-      maxPartSize: 5_000_000, // 5MB
+      maxPartSize: 5_000_000,
     }),
-    // fallback to memory for other fields
     unstable_createMemoryUploadHandler()
   );
 
@@ -31,33 +29,25 @@ export const action: ActionFunction = async ({ request }) => {
   try {
     formData = await unstable_parseMultipartFormData(request, uploadHandler);
   } catch (error) {
-    // Fallback if not multipart (e.g. simple update without file)
     formData = await request.formData();
   }
 
   const intent = formData.get("intent") as string;
-  console.log("📝 Action Intent:", intent); // Debug logging
 
   if (intent === "update_profile") {
     const first_name = formData.get("first_name") as string;
+    const last_name = formData.get("last_name") as string;
     const username = formData.get("username") as string;
     const email = formData.get("email") as string;
-    const photo = formData.get("photo"); // This might be a File object node ref
+    const photo = formData.get("photo");
 
     const updateData: any = {};
-    if (first_name) {
-      // Split if user enters full name
-      const parts = first_name.split(' ');
-      updateData.first_name = parts[0];
-      if (parts.length > 1) updateData.last_name = parts.slice(1).join(' ');
-      else updateData.first_name = first_name;
-    }
+    if (first_name) updateData.first_name = first_name;
+    if (last_name) updateData.last_name = last_name;
     if (username) updateData.username = username;
     if (email && email !== user.email) updateData.email = email;
 
-    // Handle photo upload success
     if (photo && typeof photo === 'object' && 'name' in photo && (photo as any).size > 0) {
-      // Construct public URL. Assuming standard remix public mapping
       updateData.photoUrl = `/uploads/${(photo as any).name}`;
     }
 
@@ -65,7 +55,6 @@ export const action: ActionFunction = async ({ request }) => {
       try {
         const updatedUser = await updateUser(user.userId, updateData);
 
-        // Update Session
         if (updatedUser.first_name) session.set("first_name", updatedUser.first_name);
         if (updatedUser.last_name) session.set("last_name", updatedUser.last_name);
         if (updatedUser.email) session.set("email", updatedUser.email);
@@ -73,23 +62,18 @@ export const action: ActionFunction = async ({ request }) => {
         if (updatedUser.username) session.set("username", updatedUser.username);
 
         return json(
-          { success: true, message: "Profile updated successfully" },
+          { success: true, message: "Profile successfully updated!" },
           { headers: { "Set-Cookie": await commitSession(session) } }
         );
-
       } catch (error: any) {
         return json({ error: error.message || "Failed to update profile" }, { status: 400 });
       }
     }
-    return json({ success: true, message: "No changes made" });
+    return json({ success: true, message: "No data changed." });
   }
 
-  // ... (Keep existing delete logic placeholders)
-  if (intent === "send_otp") {
-    return json({ success: true, message: "OTP sent (Placeholder)", otpSent: true });
-  }
   if (intent === "delete_account") {
-    return json({ success: true, message: "Account deleted (Placeholder)", accountDeleted: true });
+    return json({ error: "For security reasons, please contact support to permanently delete your account." }, { status: 403 });
   }
 
   return json({ error: "Invalid action" }, { status: 400 });
@@ -97,19 +81,12 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function UserSettingsDashboard() {
   const { user } = useLoaderData<typeof loader>();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(user.photoUrl || null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
-
-  useEffect(() => {
-    const handleResize = () => setIsSidebarCollapsed(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,111 +98,174 @@ export default function UserSettingsDashboard() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
-      {!isSidebarCollapsed && <Sidebar />}
-
-      <main className="flex-1 md:ml-64 p-4 sm:p-6">
+    <Layout user={user}>
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-8">
-          <h1 className="text-3xl font-semibold text-gray-800">User Settings</h1>
 
-          {/* Messages */}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+            <p className="text-gray-500 mt-2">Manage your personal information and preferences.</p>
+          </div>
+
           {actionData?.success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-800">{actionData.message}</p>
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2 animate-fadeIn">
+              <CheckCircle className="w-5 h-5" />
+              {actionData.message}
             </div>
           )}
           {actionData?.error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <p className="text-sm text-red-800">{actionData.error}</p>
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2 animate-fadeIn">
+              <AlertTriangle className="w-5 h-5" />
+              {actionData.error}
             </div>
           )}
 
-          {/* Profile Form */}
-          <Form method="post" encType="multipart/form-data" className="bg-white p-6 rounded-2xl shadow">
-            <input type="hidden" name="intent" value="update_profile" />
-            <h2 className="text-xl font-semibold mb-6 text-gray-700 flex items-center gap-2">
-              <User className="w-5 h-5" /> Profile
-            </h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <Form method="post" encType="multipart/form-data" className="p-8 space-y-8">
+              <input type="hidden" name="intent" value="update_profile" />
 
-            <div className="flex flex-col md:flex-row items-start gap-8">
-              {/* Photo Upload */}
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
                 <div className="relative group">
-                  <img
-                    src={previewImage || "/assets/avatar-placeholder.png"}
-                    alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                  />
-                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
+                    <img
+                      src={previewImage || "/assets/avatar-placeholder.png"}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
                     <Camera className="w-8 h-8 text-white" />
                     <input type="file" name="photo" accept="image/*" className="hidden" onChange={handleImageChange} />
                   </label>
                 </div>
-                <span className="text-xs text-gray-500">Click to upload</span>
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
+                  <p className="text-sm text-gray-500 mt-1">Accepts JPG, PNG or GIF up to 5MB.</p>
+                </div>
               </div>
 
-              {/* Info Fields */}
-              <div className="flex-1 space-y-4 w-full">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      name="first_name"
-                      defaultValue={`${user.first_name} ${user.last_name}`}
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Username / Display Name</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                  <input
+                    type="text"
+                    name="first_name"
+                    defaultValue={user.first_name}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    name="last_name"
+                    defaultValue={user.last_name}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-2.5 text-gray-400 font-medium">@</span>
                     <input
                       type="text"
                       name="username"
                       defaultValue={user.username || ""}
-                      placeholder="@username"
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                      placeholder="username"
+                      className="w-full pl-8 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-xs text-gray-400">(Changing this may require re-verification)</span></label>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-4 top-2.5 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
                       name="email"
                       defaultValue={user.email}
-                      className="w-full pl-10 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                      className="w-full pl-11 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1.5 ml-1">If you change your email, you may need to verify it again.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end pt-6 border-t border-gray-100">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm hover:shadow"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">Saving...</span>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </Form>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-red-600 flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-5 h-5" /> Danger Zone
+              </h3>
+              <p className="text-gray-600 text-sm mb-6">
+                Permanently delete your account and all of your content. This action is not reversible.
+              </p>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-lg font-medium text-sm border border-red-200 transition-colors"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {isDeleteModalOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+                <div className="flex items-center gap-3 text-red-600 mb-4">
+                  <Trash2 className="w-6 h-6" />
+                  <h3 className="text-xl font-bold">Delete Account?</h3>
+                </div>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete your account? All of your data, including company profiles and reports, will be permanently removed.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <Form method="post">
+                    <input type="hidden" name="intent" value="delete_account" />
+                    <button
+                      type="submit"
+                      onClick={() => setIsDeleteModalOpen(false)}
+                      className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium"
+                    >
+                      Confirm Delete
+                    </button>
+                  </Form>
                 </div>
               </div>
             </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
-              >
-                {isSubmitting ? "Saving..." : <><Save className="w-4 h-4" /> Save Changes</>}
-              </button>
-            </div>
-          </Form>
-
-          {/* Placeholder for Delete Account */}
-          <section className="bg-red-50 p-6 rounded-2xl shadow border border-red-200 opacity-70">
-            <h2 className="text-xl font-semibold mb-2 text-red-700 flex items-center gap-2">
-              <Trash2 className="w-5 h-5" /> Danger Zone
-            </h2>
-            <p className="text-sm text-red-600 mb-4">Account deletion is disabled for this demo.</p>
-          </section>
+          )}
 
         </div>
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

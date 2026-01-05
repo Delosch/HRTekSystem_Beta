@@ -204,21 +204,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   console.log(`[Loader] Company: ${companyId} Status: ${currentStatus}`);
 
-  // If status is error, reset to pending to retry AI generation
-  if (currentStatus === "error") {
-    console.log(`[Loader] Status is error, resetting to pending and retrying.`);
+  // ✅ FIX: Allow retry if status is 'error' or missing
+  if (!currentStatus || currentStatus === "error") {
+    // Only start generation if no status exists or it failed previously
     setAIStatus(companyId, "pending");
-    // Trigger regenerate
-    generate("digital_maturity", "Profiling Assessment", companyId);
-  } else if (!currentStatus || currentStatus === "pending") {
-    // Start generation if no status or pending
-    if (!currentStatus) {
-      setAIStatus(companyId, "pending");
-      generate("digital_maturity", "Profiling Assessment", companyId);
-      console.log(`[Loader] Starting AI generation as status was missing`);
-    }
+    generate("digital_maturity", "Profiling Assessment", companyId).catch((err) => {
+      console.error("[Loader] AI generation failed:", err);
+      setAIStatus(companyId, "error");
+    });
+    console.log(`[Loader] Starting AI generation as status was missing`);
   } else {
-    console.log(`[Loader] AI generation already in progress or done: ${currentStatus}`);
+    console.log(`[Loader] AI generation status: ${currentStatus}`);
   }
 
   return json({
@@ -267,7 +263,7 @@ export async function action({ request }: ActionFunctionArgs) {
     console.log("Timestamp:", new Date().toISOString());
     console.log("================================");
     // lets save the all ranking
-    await engineRecommendationList({ user_id: user.userId, company_id: user.organisationId|| "", sortedEngines })
+    await engineRecommendationList({ user_id: user.userId, company_id: user.organisationId || "", sortedEngines })
     return json<ActionData>({ success: true });
 
   } catch (error) {
@@ -322,11 +318,27 @@ export default function Intermediate() {
 
       const poll = async () => {
         try {
+          // ✅ Calculate elapsed time directly to avoid closure issues
+          const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
+
           const response = await fetch(`/api/ai-status?companyId=${companyId}`);
           if (response.ok) {
             const data = await response.json();
             if (data.status === 'ready') {
               setAiReady(true);
+              if (pollRef.current) clearInterval(pollRef.current);
+              if (timerRef.current) clearInterval(timerRef.current);
+            } else if (data.status === 'pending' && currentElapsed > 18) {
+              console.log(`⚠️ Generation slow (elapsed: ${currentElapsed}s), auto-redirecting to dashboard`);
+              navigate("/dashboard", { replace: true });
+              if (pollRef.current) clearInterval(pollRef.current);
+              if (timerRef.current) clearInterval(timerRef.current);
+            } else if (
+              data.status === 'timeout' ||
+              (data.status === 'error' && currentElapsed > 10)
+            ) {
+              console.log(`⚠️ Generation failed (status: ${data.status}, elapsed: ${currentElapsed}s), showing error UI`);
+              setError('AI generation encountered an issue. You can proceed to dashboard.');
               if (pollRef.current) clearInterval(pollRef.current);
               if (timerRef.current) clearInterval(timerRef.current);
             }
@@ -374,6 +386,43 @@ export default function Intermediate() {
                 >
                   Access Your Personalized Dashboard
                 </a>
+              </>
+            ) : error ? (
+              <>
+                {/* ✅ ERROR STATE UI */}
+                <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  AI Analysis Delayed
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {error}
+                </p>
+
+                <div className="space-y-3">
+                  <a
+                    href="/dashboard"
+                    className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    Proceed to Dashboard Anyway
+                  </a>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setSubmitted(false);
+                    }}
+                    className="inline-flex items-center justify-center w-full py-3 px-6 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                  >
+                    Retry Assessment
+                  </button>
+                </div>
+
+                <div className="mt-4 text-xs text-gray-500">
+                  Your responses have been saved. The AI analysis will continue in the background.
+                </div>
               </>
             ) : (
               <>

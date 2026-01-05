@@ -60,7 +60,9 @@ async function uploadAllQuestions() {
     const questionFiles = [
         'questions/shared-service-designer.json',
         'questions/intelligent-change-management.json',
-        'questions/hr-tech-maturity-analysis.json'
+        'questions/hr-tech-maturity-analysis.json',
+        'questions/profiling-assessment.json',
+        'questions/vendor-evaluation.json'
     ];
 
     const results = [];
