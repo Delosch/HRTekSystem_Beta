@@ -157,10 +157,19 @@ export default function EmailVerify() {
 
   // Derived states
   const isSubmitting = fetcher.state === "submitting";
-  const actionType = fetcher.formData?.get("action");
 
-  const isSendingEmail = isSubmitting && (actionType === "send_verification" || actionType === "update_email");
-  const isVerifying = isSubmitting && actionType === "verify_code";
+  // 🔥 FIX: Track the last action submitted so we know what to do when fetcher becomes idle
+  const [lastSubmittedAction, setLastSubmittedAction] = useState<string | null>(null);
+
+  // Use useEffect to capture the action when it's submitting
+  useEffect(() => {
+    if (isSubmitting && fetcher.formData) {
+      setLastSubmittedAction(fetcher.formData.get("action") as string);
+    }
+  }, [isSubmitting, fetcher.formData]);
+
+  const isSendingEmail = isSubmitting && (lastSubmittedAction === "send_verification" || lastSubmittedAction === "update_email");
+  const isVerifying = isSubmitting && lastSubmittedAction === "verify_code";
 
   // Framer Motion shared values
   const cardScale = useMotionValue(1);
@@ -175,32 +184,32 @@ export default function EmailVerify() {
   useEffect(() => {
     if (fetcher.state === "idle" && fetcher.data) {
       if (fetcher.data.error) {
-        if (actionType === "verify_code") {
+        if (lastSubmittedAction === "verify_code") {
           setCodeError(fetcher.data.error);
           setVerificationCode(["", "", "", "", "", ""]);
           inputRefs.current[0]?.focus();
         } else {
-          // General error (e.g. update email failed)
-          // Use a toast or alert, or simple console for now if no UI element
           alert(fetcher.data.error);
         }
         setIsResending(false);
       } else if (fetcher.data.success) {
-        if (actionType === "send_verification") {
+        if (lastSubmittedAction === "send_verification") {
           setSuccessMessage(fetcher.data.message);
-          setStep("code");
+          setStep("code"); // <--- This will now trigger correctly!
           setCountdown(60);
           setIsResending(false);
-        } else if (actionType === "verify_code") {
+        } else if (lastSubmittedAction === "verify_code") {
           setStep("success");
-        } else if (actionType === "update_email") {
+        } else if (lastSubmittedAction === "update_email") {
           setSuccessMessage(fetcher.data.message);
           setStep("code");
           setCountdown(60);
         }
+        // Clear last action after successful completion
+        setLastSubmittedAction(null);
       }
     }
-  }, [fetcher.state, fetcher.data, actionType]);
+  }, [fetcher.state, fetcher.data, lastSubmittedAction]);
 
   // Countdown timer
   useEffect(() => {

@@ -164,11 +164,22 @@ ${JSON.stringify(answer, null, 2)}
         }
 
         throw new Error(processed.error || "JSON validation failed");
-      } catch (err) {
-        console.error(`❌ Attempt ${attempt + 1} failed`, err);
+      } catch (err: any) {
+        // ✅ Enhanced error logging for AWS Bedrock issues
+        console.error(`❌ Attempt ${attempt + 1} failed`);
+        console.error(`Error name: ${err?.name}`);
+        console.error(`Error message: ${err?.message}`);
+        console.error(`Full error:`, JSON.stringify(err, null, 2));
+
+        // Log AWS-specific error details if available
+        if (err?.$metadata) {
+          console.error(`AWS Metadata:`, err.$metadata);
+        }
+
         attempt++;
 
         if (attempt < maxRetries) {
+          console.log(`⏳ Waiting ${2 * attempt} seconds before retry...`);
           await new Promise((r) => setTimeout(r, 2000 * attempt));
         }
       }

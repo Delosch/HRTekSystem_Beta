@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import EngineStatusActions from "../components/DashboardComponents/EngineStatusActions";
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
@@ -89,13 +90,15 @@ export default function AnalysisDashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+
+
   const recommendedEngines = recommendations
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
     .slice(0, 3);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6">
         {/* Page Header */}

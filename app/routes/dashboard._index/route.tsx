@@ -20,6 +20,8 @@ import {
 } from "recharts";
 import { CheckCircle, LayoutDashboard, TrendingUp, Cpu, Clock, Award } from "lucide-react";
 import { requireUserSession } from "~/lib/session.server";
+import { getUserProfile } from "~/models/user.model";
+import { getCompanyProfile } from "~/models/company.model";
 import { LoaderFunction } from "@remix-run/node";
 import { motion, Variants } from "framer-motion";
 import { getHeatmapMatrix, Heatmap, HeatmapDataConfig } from "../v2.$id/heat_map";
@@ -50,8 +52,8 @@ const setCachedData = (key: string, data: DashboardData): void => {
 };
 
 const createFallbackData = (): DashboardData => ({
-  isEmpty: true,
-  message: "No assessment data available. Please complete an assessment first.",
+  isEmpty: false,
+  message: "No assessment data available.",
   radar_chart: {
     labels: [],
     current_scores: [],
@@ -65,6 +67,14 @@ const createFallbackData = (): DashboardData => ({
   heat_map: {
     dimensions: [],
     colors: { min: "#ffcccc", mid: "#ffffcc", max: "#ccffcc" }
+  },
+  metrics: {
+    totalEngines: 5,
+    completedEngines: 0,
+    progress: 0,
+    insights: 0,
+    avgTime: "45m",
+    maturity: "0.0/5"
   }
 });
 
@@ -83,6 +93,14 @@ interface DashboardData {
   } | null;
   verifiedPayments?: Array<any>;
   htiReports?: Array<any>;
+  metrics?: {
+    totalEngines: number;
+    completedEngines: number;
+    progress: number;
+    insights: number;
+    avgTime: string;
+    maturity: string;
+  };
   radar_chart: {
     labels: string[];
     current_scores: number[];
@@ -280,10 +298,34 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
   try {
     console.log("🚀 Loader started");
 
-    const user = await requireUserSession(request);
-    console.log("👤 User authenticated:", user.userId);
+    const userSession = await requireUserSession(request);
+    console.log("👤 User authenticated:", userSession.userId);
 
-    // Enforce Phone Verification
+    // FETCH FRESH USER PROFILE & COMPANY DATA
+    let userProfile: any = {};
+    let organisationName = "";
+
+    try {
+      const [profile, company] = await Promise.all([
+        getUserProfile(userSession.userId).catch((e: any) => { console.error("User fetch failed", e); return null; }),
+        userSession.organisationId ? getCompanyProfile(userSession.organisationId).catch((e: any) => { console.error("Company fetch failed", e); return null; }) : Promise.resolve(null)
+      ]);
+
+      userProfile = profile || {};
+      if (company) {
+        organisationName = company.company_name;
+      }
+    } catch (e) {
+      console.error("Error fetching enhanced user details", e);
+    }
+
+    const user = {
+      ...userSession,
+      ...userProfile,
+      organisationName: organisationName || (userSession as any).organisationName || "",
+      role: userProfile.role || (userSession as any).role || "Team Member"
+    };
+
     if (!user.is_verified_phone) {
       console.log("⚠️ User phone not verified, redirecting to SMS verification");
       throw redirect('/auth/sms/verify');
@@ -295,9 +337,7 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 
     const cacheKey = `dashboard_v2_${user.organisationId}_Profiling Assessment`;
 
-    // Check cache first
     const cachedData = getCachedData(cacheKey);
-    // Note: We need to inject current user into cached data as user might update profile while dashboard data is cached
     if (cachedData) {
       return { ...cachedData, user };
     }
@@ -342,17 +382,35 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
       console.log("⚠️ Verified payments not available:", error);
     }
 
+    // CALCULATE REAL METRICS
+    const totalEngines = 5;
+    const completedEngines = eligibilityData?.completedEnginesList?.length || (htiReports.length > totalEngines ? totalEngines : htiReports.length) || 0;
+    const progress = eligibilityData?.percentage || Math.round((completedEngines / totalEngines) * 100);
+    const totalReports = htiReports.length || 0;
+
+    // Calculate maturity from radar chart usage
+    const scores = data.result.visualization_data.radar_chart?.current_scores || [];
+    const avgScore = scores.length > 0 ? (scores.reduce((a: number, b: number) => a + b, 0) / scores.length).toFixed(1) : "0.0";
+
+    const metrics = {
+      totalEngines: 5,
+      completedEngines,
+      progress: progress,
+      insights: totalReports, // Displaying report count is more accurate to "Real Data" than a multiplier
+      avgTime: "45m",
+      maturity: `${avgScore}/5`
+    };
+
     const responseData: DashboardData = {
-      user: user, // Inject user data
+      user: user,
       isEmpty: false,
       eligibility: eligibilityData,
       htiReports: htiReports,
       verifiedPayments: verifiedPayments,
+      metrics: metrics,
       ...data.result.visualization_data
     };
 
-    // Cache the successful response (without user ideally, but for now simple)
-    // Actually caching with user is fine as long as we override it on cache hit if needed, but we did that above.
     setCachedData(cacheKey, responseData);
 
     return responseData;
@@ -360,12 +418,11 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
   } catch (error) {
     console.error("🚨 Loader error:", error);
 
-    // Return fallback data instead of throwing error
     const errorData: DashboardData = {
+      ...createFallbackData(),
       isEmpty: true,
       error: true,
       message: "Unable to load dashboard data. Please try refreshing the page or contact support.",
-      ...createFallbackData()
     };
 
     return errorData;
@@ -375,13 +432,11 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 export default function Dashboard() {
   const data = useLoaderData<DashboardData>();
 
-  // Move all hooks to the top level
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [activeRadialIndex, setActiveRadialIndex] = useState<number | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
 
-  // Add this useEffect for smooth animation
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationProgress(1);
@@ -399,7 +454,6 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Transform gap bubbles data for interactive bubble chart
   const processedBubbles = useMemo(() => {
     if (!data.gap_bubbles?.length) return [];
 
@@ -416,10 +470,9 @@ export default function Dashboard() {
       const countAtPosition = positionMap.get(positionKey) || 0;
       positionMap.set(positionKey, countAtPosition + 1);
 
-      // Apply jitter if this is not the first bubble at this position
       if (countAtPosition > 0) {
-        const angle = countAtPosition * (Math.PI / 3); // 60 degrees apart
-        const radius = 20; // The radius of the jitter circle
+        const angle = countAtPosition * (Math.PI / 3);
+        const radius = 20;
         return {
           ...bubble,
           name: typeof bubble.dimension === "string"
@@ -442,16 +495,96 @@ export default function Dashboard() {
     });
   }, [data.gap_bubbles]);
 
-  // Check if we have empty or error data
   if (data.isEmpty) {
+    // Check if user has ALREADY completed assessment but analysis is pending/failed
+    if (data.user?.onboardingStatus === "Completed") {
+      return (
+        <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
+          {!isSidebarCollapsed && <Sidebar user={data.user} />}
+          <main className="flex-1 md:ml-64 p-4 sm:p-6">
+            <div className="flex flex-col items-center justify-center h-[80vh] bg-white rounded-xl shadow-sm p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600 mb-6"></div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Analysis in Progress</h2>
+              <p className="text-gray-600 max-w-md mb-8 leading-relaxed">
+                Great job completing the assessment! Our AI is currently processing your inputs to generate detailed insights. This usually takes less than a minute.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-xl"
+                >
+                  Refresh Status
+                </button>
+                <a
+                  href="/onboarding/profilingAssessment"
+                  className="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
+                >
+                  Retake Assessment
+                </a>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    if (data.error) {
+      return (
+        <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
+          {!isSidebarCollapsed && <Sidebar user={data.user} />}
+          <main className="flex-1 md:ml-64 p-4 sm:p-6">
+            <LoadingFallback
+              message={data.message || "Unable to load data."}
+              hasError={true}
+            />
+          </main>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
+      <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         {!isSidebarCollapsed && <Sidebar user={data.user} />}
-        <main className="flex-1 md:ml-64 p-4 sm:p-6">
-          <LoadingFallback
-            message={data.message || "Loading dashboard data..."}
-            hasError={data.error || false}
-          />
+        <main className="flex-1 md:ml-64 p-4 sm:p-6 flex flex-col items-center justify-center min-h-[85vh]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-3xl w-full bg-white rounded-3xl shadow-2xl p-12 text-center border border-white/20 relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+
+            <div className="relative z-10">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-2xl mb-6 shadow-sm">
+                <span className="text-4xl">🚀</span>
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
+                Welcome, {data.user?.first_name}!
+              </h1>
+              <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-xl mx-auto">
+                To activate your digital transformation dashboard and view insights, you must first complete the engine assessment.
+              </p>
+
+              <motion.a
+                href="/onboarding/profilingAssessment"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                animate={{
+                  boxShadow: ["0 0 0 0 rgba(37, 99, 235, 0.4)", "0 0 0 20px rgba(37, 99, 235, 0)", "0 0 0 0 rgba(37, 99, 235, 0)"]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity
+                }}
+                className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xl font-bold rounded-full shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all"
+              >
+                Start Assessment
+                <span className="text-2xl">→</span>
+              </motion.a>
+
+              <p className="mt-4 text-slate-400 text-sm">Required to unlock dashboard features</p>
+            </div>
+          </motion.div>
         </main>
       </div>
     );
@@ -480,8 +613,8 @@ export default function Dashboard() {
       name: dim.name,
       capabilities: dim.capabilities.map((cap, idx) => ({
         ...cap,
-        name: (cap as any).name || `Capability ${idx + 1}`, // Ensure name is string
-        color_intensity: Math.max(1, 6 - cap.score) // intensity: 1 best, 5 worst
+        name: (cap as any).name || `Capability ${idx + 1}`,
+        color_intensity: Math.max(1, 6 - cap.score)
       }))
     })),
     color_scale: {
@@ -493,16 +626,14 @@ export default function Dashboard() {
 
   const heatmapMatrixData = getHeatmapMatrix(heatmapDataConfig);
 
-  // Transform radar chart data
   const radarData = data.radar_chart.labels.map((label: string, index: number) => ({
-    subject: label.split(' ')[0], // Shortened for display
+    subject: label.split(' ')[0],
     current: data.radar_chart.current_scores[index],
     benchmark: data.radar_chart.industry_benchmarks[index],
     target: data.radar_chart.target_scores[index],
     fullMark: 5,
   }));
 
-  // Get improvement areas (below benchmark)
   const improvementAreas = data.radar_chart.labels
     .map((label: string, index: number) => ({
       label,
@@ -511,17 +642,15 @@ export default function Dashboard() {
     }))
     .filter((area) => area.current < area.benchmark);
 
-  // Transform progress bars data for radial chart with pastel colors
   const radialBarData: RadialBarData[] = data.progress_bars.map((item, index: number) => ({
-    name: (item.dimension ?? "").split(" ")[0], // Take first word as string
+    name: (item.dimension ?? "").split(" ")[0],
     value: item.current_percentage,
-    fill: PASTEL_COLORS[index % PASTEL_COLORS.length], // Use pastel colors instead
+    fill: PASTEL_COLORS[index % PASTEL_COLORS.length],
     status: item.status
   }));
 
-  // Transform bar chart data - keeping original structure
   const barChartData = data.bar_chart.dimensions.map((dimension: string, index: number) => ({
-    name: dimension.split(' ')[0], // Shortened dimension name
+    name: dimension.split(' ')[0],
     answered: data.bar_chart.answeredQuestions[index],
     total: data.bar_chart.totalQuestions[index],
     percentage: Math.round((data.bar_chart.answeredQuestions[index] / data.bar_chart.totalQuestions[index]) * 100)
@@ -552,7 +681,7 @@ export default function Dashboard() {
             {
               icon: <LayoutDashboard className="w-6 h-6 text-blue-600" />,
               label: "Total Engines",
-              value: "5",
+              value: data.metrics?.totalEngines || "5",
               subtext: "Assessment Engines",
               bg: "bg-blue-50",
               border: "border-blue-100"
@@ -560,23 +689,23 @@ export default function Dashboard() {
             {
               icon: <CheckCircle className="w-6 h-6 text-emerald-600" />,
               label: "Completed",
-              value: "5",
-              subtext: "100% Done",
+              value: data.metrics?.completedEngines || "0",
+              subtext: `${data.metrics?.progress || 0}% Done`,
               bg: "bg-emerald-50",
               border: "border-emerald-100"
             },
             {
               icon: <TrendingUp className="w-6 h-6 text-indigo-600" />,
               label: "Progress",
-              value: "73%",
+              value: `${data.metrics?.progress || 0}%`,
               subtext: "Transformation",
               bg: "bg-indigo-50",
               border: "border-indigo-100"
             },
             {
               icon: <Cpu className="w-6 h-6 text-amber-600" />,
-              label: "AI Insights",
-              value: "127",
+              label: "AI Reports",
+              value: data.metrics?.insights || "0",
               subtext: "Generated",
               bg: "bg-amber-50",
               border: "border-amber-100"
@@ -584,7 +713,7 @@ export default function Dashboard() {
             {
               icon: <Clock className="w-6 h-6 text-cyan-600" />,
               label: "Avg. Time",
-              value: "45m",
+              value: data.metrics?.avgTime || "45m",
               subtext: "Per Engine",
               bg: "bg-cyan-50",
               border: "border-cyan-100"
@@ -592,7 +721,7 @@ export default function Dashboard() {
             {
               icon: <Award className="w-6 h-6 text-rose-600" />,
               label: "Maturity",
-              value: "4.2/5",
+              value: data.metrics?.maturity || "0.0/5",
               subtext: "Excellence",
               bg: "bg-rose-50",
               border: "border-rose-100"
@@ -630,7 +759,7 @@ export default function Dashboard() {
               <div className="flex flex-col h-full justify-center">
                 <h2 className="text-slate-500 font-medium mb-1">Overview</h2>
                 <h1 className="text-3xl font-bold text-slate-800 mb-2">
-                  Welcome back, {data.user?.name || 'User'}
+                  Welcome back, {data.user?.first_name || 'User'}
                 </h1>
                 <p className="text-slate-600 max-w-lg mb-6">
                   Track your organizational transformation progress and view your latest assessment insights.
@@ -679,7 +808,6 @@ export default function Dashboard() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="relative w-full rounded-2xl mb-6 p-6 overflow-hidden bg-white border border-gray-200 shadow-xl"
         >
-          {/* Gradient background */}
           <div
             className="absolute inset-0 opacity-5"
             style={{
@@ -687,7 +815,6 @@ export default function Dashboard() {
             }}
           ></div>
 
-          {/* Decorative pattern */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute inset-0" style={{
               backgroundImage: 'radial-gradient(circle, #4facfe 1px, transparent 1px)',

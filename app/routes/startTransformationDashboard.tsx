@@ -146,7 +146,7 @@ export default function HRDigitalTransformationDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 space-y-8">
         {/* Transformation Eligibility Banner */}

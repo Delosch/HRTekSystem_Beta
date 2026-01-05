@@ -3,7 +3,8 @@ import { useEffect, useState, useRef } from "react";
 export function useAutoSaveForm<T extends object>(key: string, initialData: T,
   options?: {
     debounce?: number;
-    onSave?: () => void
+    onSave?: () => void;
+    onSaveError?: (error: Error) => void;
   }
 ) {
   const [formData, setFormData] = useState<T>(initialData);
@@ -46,10 +47,11 @@ export function useAutoSaveForm<T extends object>(key: string, initialData: T,
       options?.onSave?.();  // e.g., show toast
     } catch (e) {
       console.error("Failed to save to server:", e);
+      options?.onSaveError?.(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsSaving(false);
     }
   };
 
-  return { formData, setFormData, saveToServer };
+  return { formData, setFormData, saveToServer, isSaving };
 }

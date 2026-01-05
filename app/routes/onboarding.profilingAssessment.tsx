@@ -3,20 +3,30 @@ import { useLoaderData, useNavigate } from "@remix-run/react";
 import { commitSession, getSession, requireUserSession } from "~/lib/session.server";
 import { getLatestQuestion, save_answers } from "~/utils/question.utils";
 import QuestionnaireEngine from "~/components/QuestionnaireEngine";
-import type { ProfilingSteps } from "~/types/profilingAssessment";
+import type { QuestionSchema } from "./engine.$id/questionSchema";
 import { updateUser } from "~/models/user.model";
 import { generate } from "~/lib/processor.genAi";
 
 // let's keep a single variable just now to manage assessment form
-const variable ="Profiling Assessment"
-const prompt_id= "digital_maturity"
+const variable = "Profiling Assessment"
+const prompt_id = "digital_maturity"
 export const loader: LoaderFunction = async ({ request }: { request: Request }) => {
   const session = await requireUserSession(request)
-  if(session){
-  const questions = await getLatestQuestion(variable);
-  return questions;
+  if (session) {
+    const questions = await getLatestQuestion(variable);
+
+    if (!questions) {
+      // 🔥 Fix: Handle missing questions gracefully instead of crashing
+      console.error(`Assessment questions for '${variable}' not found in DB.`);
+      throw new Response(
+        `Assessment Content Not Found. Please run 'node upload-questions.cjs' to populate the database.`,
+        { status: 404, statusText: "Assessment Not Found" }
+      );
+    }
+
+    return json(questions); // Ensure we return structured JSON
   }
-  return redirect('/auth')
+  return redirect('/auth');
 };
 
 export const action: ActionFunction = async ({ request }) => {
@@ -27,29 +37,32 @@ export const action: ActionFunction = async ({ request }) => {
 
 
   const companyId = user.organisationId;
-  await save_answers(companyId, body.assessment_id.replace("QUESTION#", ""), user.userId, body);
-  if(body.progress)
-  if (body.progress == 100.00) {
-    console.log("completed answers")
-    const session = await getSession(request.headers.get("Cookie"));
-    session.set("onboardingStatus", "Completed");
-    await updateUser(user.userId, { onboardingStatus: "Completed" })
-    //check analyses and saving it
-    console.log("Initiating ai process")
-    // await generate("digital_maturity", "Profiling Assessment", companyId)
-    // Commit the session and redirect
-    return redirect("/intermediate", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
+  if (!companyId || !body.assessment_id) {
+    return json({ error: "Missing required data" }, { status: 400 });
   }
-  
+  await save_answers(companyId, body.assessment_id.replace("QUESTION#", ""), user.userId, body);
+  if (body.progress)
+    if (body.progress == 100.00) {
+      console.log("completed answers")
+      const session = await getSession(request.headers.get("Cookie"));
+      session.set("onboardingStatus", "Completed");
+      await updateUser(user.userId, { onboardingStatus: "Completed" })
+      //check analyses and saving it
+      console.log("Initiating ai process")
+      // await generate("digital_maturity", "Profiling Assessment", companyId)
+      // Commit the session and redirect
+      return redirect("/intermediate", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
   return json({ message: "Received!" });
 };
 
 export default function ProfilingAssessment() {
-  const LoaderData = useLoaderData() as ProfilingSteps;
+  const LoaderData = useLoaderData() as QuestionSchema;
   const navigate = useNavigate();
 
   const handleStepSave = async (stepData: any) => {
