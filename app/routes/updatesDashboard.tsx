@@ -11,8 +11,17 @@ import {
   Sparkles,
   ChevronRight
 } from "lucide-react";
+import { json, LoaderFunction } from "@remix-run/node";
+import { getEnhancedUser } from "~/utils/user.server";
+import { useLoaderData } from "@remix-run/react";
+
+export const loader: LoaderFunction = async ({ request }) => {
+  const user = await getEnhancedUser(request);
+  return json({ user });
+};
 
 export default function UpdatesDashboard() {
+  const { user } = useLoaderData<typeof loader>();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState<number | null>(null);
 
@@ -192,7 +201,7 @@ export default function UpdatesDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-4 sm:p-8">
         {/* Header Section */}

@@ -27,18 +27,54 @@ export interface AssessmentReport {
     maturity_analysis: MaturityAnalysis;
     organization_profile: OrganizationProfile;
     risk_assessment: {
-        transformation_risks: Array<{
-            impact: string,
-            mitigation_strategy: string,
-            probability: string,
-            risk_category: string,
-            risk_description: string
-        }>
+        transformation_risks: TransformationRisks[];
     };
     strategic_insights: StrategicInsights;
     success_metrics: SuccessMetrics
     visualization_data: VisualizationData;
+    consulting_report: ConsultingReport;
+}
 
+export interface ConsultingReport {
+    executive_summary: {
+        overall_maturity_index: number;
+        maturity_category: string;
+        what_this_means: string[];
+        executive_recommendation: string;
+    };
+    maturity_scorecard: Array<{
+        dimension: string;
+        score: number;
+        max_score: number;
+        risk_level: string;
+    }>;
+    dimension_deep_dives: Array<{
+        dimension: string;
+        current_state: string[];
+        business_impact?: string[];
+        risk?: string[];
+        recommendations: string[];
+    }>;
+    business_risk_opportunity: {
+        top_risks: Array<{ risk: string; impact: string }>;
+        opportunity_areas: Array<{ opportunity: string; value: string }>;
+    };
+    transformation_priority_matrix: Array<{
+        initiative: string;
+        priority: string;
+        impact: string;
+        effort: string;
+    }>;
+    transformation_roadmap: Array<{
+        phase: string;
+        timeline: string;
+        actions: string[];
+    }>;
+    investment_indication: Array<{
+        area: string;
+        effort: string;
+        investment_band: string;
+    }>;
 }
 export interface SuccessMetrics {
     kpi_framework: Array<{
@@ -54,6 +90,7 @@ export interface VisualizationData {
     heat_map: HeatMapData;
     gap_bubbles: BubbleData[];
     bar_chart: BarChartData;
+    readiness_metrics?: ReadinessMetric[];
 }
 
 // visualization graphs schemas
@@ -140,25 +177,41 @@ export interface StrategicInsights {
     };
 }
 
+export interface DimensionalScore {
+    dimension: string;
+    raw_score: number;
+    weighted_score: number;
+    percentage: number;
+    maturity_level: string;
+    confidence_score: number;
+    questions_analyzed: number;
+    industry_benchmark: number;
+    key_strengths: string[];
+    critical_gaps: string[];
+    gap_analysis: {
+        gap_to_benchmark: number;
+        gap_to_best_practice: number;
+        improvement_potential: number;
+    };
+}
+
 export interface MaturityAnalysis {
     overall_score: MaturityAnalysis_OverallScrore;
-    dimensional_scores: Array<{
-        dimension: string;
-        raw_score: number;
-        weighted_score: number;
-        percentage: number;
-        maturity_level: string;
-        confidence_score: number;
-        questions_analyzed: number;
-        industry_benchmark: number;
-        gap_analysis: {
-            gap_to_benchmark: number;
-            gap_to_best_practice: number;
-            improvement_potential: number;
-        };
-        key_strengths: string[];
-        critical_gaps: string[];
-    }>;
+    dimensional_scores: DimensionalScore[];
+}
+
+export interface TransformationRisks {
+    impact: string,
+    mitigation_strategy: string,
+    probability: string,
+    risk_category: string,
+    risk_description: string
+}
+
+export interface ReadinessMetric {
+    label: string;
+    score: number;
+    status: string;
 }
 
 export interface MaturityAnalysis_OverallScrore {

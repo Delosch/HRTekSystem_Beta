@@ -1,478 +1,861 @@
 {
     "pk": "QUESTION#profiling-assessment-001",
-    "sk": "VERSION#2",
+    "sk": "VERSION#3",
     "questionSection": "Profiling Assessment",
-    "createdAt": "2025-12-26T14:44:00.000Z",
+    "createdAt": "2026-01-06T12:45:00.000Z",
     "createdBy": "system",
     "parts": [
         {
-            "part": "Section 1: HR Technology Strategy & Alignment",
-            "intro": "Help us understand your HR technology strategy and alignment with business objectives.",
+            "part": "SECTION 1: BUSINESS CONTEXT (Non-Scoring)",
+            "intro": "Help us understand your business context and foundational data.",
             "questions": [
                 {
                     "id": "s1_q1",
                     "number": "1",
-                    "title": "HR Technology Strategy",
-                    "question": "Do you have a formally documented HR Technology or HCM Strategy?",
+                    "title": "Industry",
+                    "question": "What industry does your organization operate in?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No",
-                        "In Progress",
-                        "Not Sure"
+                        "Manufacturing",
+                        "Retail",
+                        "BFSI",
+                        "IT/ITES",
+                        "Services",
+                        "Other"
                     ],
                     "required": true
                 },
                 {
                     "id": "s1_q2",
                     "number": "2",
-                    "title": "Strategy Review Frequency",
-                    "question": "How frequently is your HR Tech strategy reviewed and updated?",
+                    "title": "Years in Operation",
+                    "question": "How many years has your organization been in operation?",
                     "type": "radio",
                     "options": [
-                        "Annually",
-                        "Bi-annually",
-                        "On an ad-hoc basis",
-                        "Not reviewed yet"
+                        "<5",
+                        "5–10",
+                        "10–25",
+                        "25+"
                     ],
                     "required": true
                 },
                 {
                     "id": "s1_q3",
                     "number": "3",
-                    "title": "Digital Transformation Alignment",
-                    "question": "Is your current HCM system aligned with the organization's digital transformation roadmap?",
+                    "title": "Annual Revenue",
+                    "question": "What is your organization's annual revenue?",
                     "type": "radio",
                     "options": [
-                        "Fully Aligned",
-                        "Partially Aligned",
-                        "Not Aligned",
-                        "No Digital Transformation Plan Exists"
+                        "<₹50 Cr",
+                        "₹50–250 Cr",
+                        "₹250–1000 Cr",
+                        "₹1000+ Cr"
                     ],
                     "required": true
                 },
                 {
                     "id": "s1_q4",
                     "number": "4",
-                    "title": "Strategic Participation",
-                    "question": "Does HR have a seat at the table in enterprise-wide digital strategy discussions?",
+                    "title": "Total Employees",
+                    "question": "What is the total number of employees in your organization?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No",
-                        "Occasionally"
+                        "<100",
+                        "100–500",
+                        "500–2000",
+                        "2000-5000",
+                        "5000-10000",
+                        "10000-20000",
+                        "20000+"
                     ],
                     "required": true
-                }
-            ]
-        },
-        {
-            "part": "Section 2: System Adoption & Utilization",
-            "intro": "Tell us about user adoption and satisfaction with your HR systems.",
-            "questions": [
+                },
                 {
-                    "id": "s2_q1",
+                    "id": "s1_q5",
                     "number": "5",
-                    "title": "Self-Service Adoption Rate",
-                    "question": "What is the adoption rate of the Employee/Manager Self-Service Portal?",
+                    "title": "Operating Locations",
+                    "question": "What are your organization's operating locations?",
                     "type": "radio",
                     "options": [
-                        "80%",
-                        "60% - 80%",
-                        "40% - 60%",
-                        "40%",
-                        "Not Measured"
+                        "Single location",
+                        "Multi-city",
+                        "Multi-state",
+                        "Global"
                     ],
                     "required": true
-                },
+                }
+            ]
+        },
+        {
+            "part": "SECTION 2: TECHNOLOGY & SYSTEMS (Scoring)",
+            "intro": "Assessing your current HR technology landscape.",
+            "questions": [
                 {
-                    "id": "s2_q2",
+                    "id": "s2_q6",
                     "number": "6",
-                    "title": "Low Adoption Areas",
-                    "question": "Are there departments or business units with noticeably lower HCM usage?",
+                    "title": "HR Operations Management",
+                    "question": "How are HR operations currently managed?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No",
-                        "Not Measured"
+                        "Manual / Excel",
+                        "Basic HRMS",
+                        "Integrated HCM",
+                        "Cloud HCM with integrations",
+                        "Cloud + Analytics / AI enabled"
                     ],
                     "required": true
                 },
                 {
-                    "id": "s2_q3",
+                    "id": "s2_q7",
                     "number": "7",
-                    "title": "User Satisfaction",
-                    "question": "Are employees and managers satisfied with the ease of use of the HCM system?",
+                    "title": "Payroll Processing",
+                    "question": "How is payroll processing handled?",
                     "type": "radio",
                     "options": [
-                        "Very Satisfied",
-                        "Satisfied",
-                        "Neutral",
-                        "Dissatisfied",
-                        "Not Surveyed"
+                        "Fully manual",
+                        "Semi-automated",
+                        "Automated but standalone",
+                        "Integrated with HR & Finance",
+                        "Fully automated with validations"
                     ],
                     "required": true
-                }
-            ]
-        },
-        {
-            "part": "Section 3: Mobile & Digital Access",
-            "intro": "Share information about mobile capabilities and digital access.",
-            "questions": [
+                },
                 {
-                    "id": "s3_q1",
+                    "id": "s2_q8",
                     "number": "8",
-                    "title": "Mobile App Usage",
-                    "question": "Does your organization use mobile apps for HR transactions (e.g., leave requests, approvals)?",
+                    "title": "Recruitment Management",
+                    "question": "How is the recruitment process managed?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No"
+                        "Manual tracking",
+                        "Standalone ATS",
+                        "ATS integrated with HRMS",
+                        "End-to-end talent suite",
+                        "AI-enabled hiring tools"
                     ],
                     "required": true
                 },
                 {
-                    "id": "s3_q2",
+                    "id": "s2_q9",
                     "number": "9",
-                    "title": "Mobile Barriers",
-                    "question": "If no mobile app, what are the main reasons?",
-                    "type": "checkbox",
+                    "title": "HR Systems Integration",
+                    "question": "What is the level of integration between your HR systems?",
+                    "type": "radio",
                     "options": [
-                        "Security Concerns",
-                        "Lack of Awareness",
-                        "Not Offered by HCM Vendor",
-                        "Low Adoption",
-                        "Not Applicable - We have mobile",
-                        "Other"
+                        "No integration",
+                        "Manual data uploads",
+                        "Partial integration",
+                        "Full system integration",
+                        "Real-time API integration"
                     ],
-                    "hasOther": true,
-                    "required": false
-                }
-            ]
-        },
-        {
-            "part": "Section 4: Manual Processes & System Gaps",
-            "intro": "Help us identify areas where manual processes still exist.",
-            "questions": [
+                    "required": true
+                },
                 {
-                    "id": "s4_q1",
+                    "id": "s2_q10",
                     "number": "10",
-                    "title": "Manual HR Processes",
-                    "question": "Which HR processes are still handled manually despite having an HCM platform? (Select all that apply)",
-                    "type": "checkbox",
+                    "title": "HR Reporting & Analytics",
+                    "question": "What is the status of HR reporting and analytics?",
+                    "type": "radio",
                     "options": [
-                        "Onboarding",
-                        "Payroll Adjustments",
-                        "Time & Attendance",
-                        "Recruitment & Offer Letters",
-                        "Exit/Separation Process",
-                        "Performance Management",
-                        "None - All automated",
-                        "Other"
+                        "Manual reports",
+                        "Excel dashboards",
+                        "System dashboards",
+                        "Predictive analytics",
+                        "Prescriptive / AI-driven insights"
                     ],
-                    "hasOther": true,
                     "required": true
-                },
+                }
+            ]
+        },
+        {
+            "part": "SECTION 3: DIGITAL CULTURE & CHANGE READINESS (Scoring)",
+            "intro": "Evaluating organizational culture and readiness for change.",
+            "questions": [
                 {
-                    "id": "s4_q2",
+                    "id": "s3_q11",
                     "number": "11",
-                    "title": "Reasons for Manual Processes",
-                    "question": "What are the main reasons for these manual processes? (Select all that apply)",
-                    "type": "checkbox",
+                    "title": "Leadership Approach",
+                    "question": "What is leadership's approach to digital transformation?",
+                    "type": "radio",
                     "options": [
-                        "System Limitations",
-                        "Resistance to Change",
-                        "Compliance/Policy Requirements",
-                        "Integration Gaps",
-                        "Not Applicable",
-                        "Other"
+                        "Resistant",
+                        "Cautiously supportive",
+                        "Supportive with approvals",
+                        "Actively driving initiatives",
+                        "Digital-first leadership"
                     ],
-                    "hasOther": true,
-                    "required": false
-                }
-            ]
-        },
-        {
-            "part": "Section 5: Governance & Change Management",
-            "intro": "Tell us about governance structures and change management practices.",
-            "questions": [
+                    "required": true
+                },
                 {
-                    "id": "s5_q1",
+                    "id": "s3_q12",
                     "number": "12",
-                    "title": "Technology Governance",
-                    "question": "Is there a formal governance structure overseeing HR tech initiatives?",
+                    "title": "Employee Adoption",
+                    "question": "How would you describe employee adoption of digital tools?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No",
-                        "Partially (e.g., ad-hoc steering committees)"
+                        "Low",
+                        "Moderate",
+                        "High in select teams",
+                        "High across organization",
+                        "Self-driven digital innovation"
                     ],
                     "required": true
                 },
                 {
-                    "id": "s5_q2",
+                    "id": "s3_q13",
                     "number": "13",
-                    "title": "Change Management Approach",
-                    "question": "How is change management handled during HCM upgrades or new feature rollouts?",
+                    "title": "Change Management Practices",
+                    "question": "What change management practices are in place?",
                     "type": "radio",
                     "options": [
-                        "Dedicated Change Management Team",
-                        "Managed by IT",
-                        "Not Structured",
-                        "N/A"
+                        "Non-existent",
+                        "Informal",
+                        "Structured communication",
+                        "Formal change framework",
+                        "Embedded in culture"
                     ],
                     "required": true
-                }
-            ]
-        },
-        {
-            "part": "Section 6: Feedback & Continuous Improvement",
-            "intro": "Share how you gather feedback and measure success.",
-            "questions": [
+                },
                 {
-                    "id": "s6_q1",
+                    "id": "s3_q14",
                     "number": "14",
-                    "title": "User Feedback Collection",
-                    "question": "Do you collect user feedback to continuously improve HR systems?",
+                    "title": "Learning & Upskilling",
+                    "question": "What is the organization's approach to learning and upskilling?",
                     "type": "radio",
                     "options": [
-                        "Yes (Regularly)",
-                        "Occasionally",
-                        "No"
+                        "No structured learning",
+                        "Classroom / ad-hoc",
+                        "LMS-based learning",
+                        "Continuous digital learning",
+                        "Personalized / AI-driven learning"
                     ],
                     "required": true
-                },
+                }
+            ]
+        },
+        {
+            "part": "SECTION 4: PEOPLE, SKILLS & OPERATING MODEL (Scoring)",
+            "intro": "Assessing HR team capabilities and decision-making models.",
+            "questions": [
                 {
-                    "id": "s6_q2",
+                    "id": "s4_q15",
                     "number": "15",
-                    "title": "KPIs and ROI Tracking",
-                    "question": "Are there KPIs in place to track success and ROI of your HCM platform?",
+                    "title": "HR Technology Capability",
+                    "question": "What is the internal HR Technology capability?",
                     "type": "radio",
                     "options": [
-                        "Yes",
-                        "No",
-                        "In Progress"
+                        "None",
+                        "Vendor dependent",
+                        "Small IT support",
+                        "Dedicated HR Tech team",
+                        "Product-oriented digital team"
                     ],
                     "required": true
-                }
-            ]
-        },
-        {
-            "part": "Section 7: Platform Architecture",
-            "intro": "Tell us about your current HR technology platform and architecture.",
-            "questions": [
+                },
                 {
-                    "id": "s7_q1",
+                    "id": "s4_q16",
                     "number": "16",
-                    "title": "Core HRMS Platform",
-                    "question": "What is your primary HRMS/HCM platform?",
+                    "title": "HR Team Capability",
+                    "question": "What is the capability level of the HR team?",
                     "type": "radio",
                     "options": [
-                        "Cloud-native (Workday, SuccessFactors, Oracle HCM Cloud)",
-                        "Modern cloud (ADP, Paylocity, BambooHR)",
-                        "Hybrid (Mix of cloud and on-premise)",
-                        "Traditional on-premise (PeopleSoft, Oracle EBS)",
-                        "Legacy/Custom-built system",
-                        "Multiple disparate systems",
-                        "Other"
+                        "Transactional",
+                        "Process-focused",
+                        "Tech-aware",
+                        "Data-driven",
+                        "Product & experience driven"
                     ],
-                    "hasOther": true,
                     "required": true
                 },
                 {
-                    "id": "s7_q2",
+                    "id": "s4_q17",
                     "number": "17",
-                    "title": "Module Coverage",
-                    "question": "Which HR modules do you have? (Select all that apply)",
-                    "type": "checkbox",
+                    "title": "HR Decision-Making",
+                    "question": "How is decision-making in HR conducted?",
+                    "type": "radio",
                     "options": [
-                        "Core HR/Employee data",
-                        "Payroll",
-                        "Benefits administration",
-                        "Time & Attendance",
-                        "Talent acquisition/Recruiting",
-                        "Performance management",
-                        "Learning management",
-                        "Compensation management",
-                        "Succession planning",
-                        "Workforce planning",
-                        "Other"
+                        "Intuition based",
+                        "Experience based",
+                        "Data supported",
+                        "Data driven",
+                        "AI augmented"
                     ],
-                    "hasOther": true,
                     "required": true
-                },
+                }
+            ]
+        },
+        {
+            "part": "SECTION 5: PROCESS MATURITY (Scoring)",
+            "intro": "Evaluating the maturity and ownership of HR processes.",
+            "questions": [
                 {
-                    "id": "s7_q3",
+                    "id": "s5_q18",
                     "number": "18",
-                    "title": "Deployment Model",
-                    "question": "How is your HR technology deployed?",
+                    "title": "HR Process Documentation",
+                    "question": "How would you describe your HR processes?",
                     "type": "radio",
                     "options": [
-                        "100% Cloud/SaaS",
-                        "Mostly cloud with some on-premise",
-                        "Hybrid (50/50 cloud and on-premise)",
-                        "Mostly on-premise with some cloud",
-                        "100% On-premise",
-                        "Mixed (varies by module)"
+                        "Manual",
+                        "Partially documented",
+                        "Standardized",
+                        "Automated",
+                        "Optimized & continuously improved"
                     ],
                     "required": true
                 },
                 {
-                    "id": "s7_q4",
+                    "id": "s5_q19",
                     "number": "19",
-                    "title": "Vendor Strategy",
-                    "question": "What is your HR technology vendor strategy?",
+                    "title": "Process Ownership",
+                    "question": "How is ownership of HR processes defined?",
                     "type": "radio",
                     "options": [
-                        "Single vendor/Unified suite",
-                        "Best-of-breed (multiple specialized vendors)",
-                        "Hybrid (suite + best-of-breed)",
-                        "Legacy consolidation in progress",
-                        "No defined strategy",
-                        "Other"
+                        "No clear ownership",
+                        "Individual driven",
+                        "Functional ownership",
+                        "Cross-functional ownership",
+                        "Product owners"
                     ],
-                    "hasOther": true,
                     "required": true
                 },
                 {
-                    "id": "s7_q5",
+                    "id": "s5_q20",
                     "number": "20",
-                    "title": "Platform Age",
-                    "question": "How old is your current core HR platform?",
+                    "title": "Compliance Management",
+                    "question": "How is compliance management handled?",
                     "type": "radio",
                     "options": [
-                        "Less than 2 years",
-                        "2-5 years",
-                        "5-10 years",
-                        "10-15 years",
-                        "More than 15 years",
-                        "Don't know"
+                        "Reactive",
+                        "Manual tracking",
+                        "System controlled",
+                        "Automated compliance",
+                        "Predictive risk monitoring"
                     ],
                     "required": true
                 }
             ]
         },
         {
-            "part": "Section 8: Integration & Data Management",
-            "intro": "Help us understand your integration architecture and data management practices.",
+            "part": "SECTION 6: FINANCIAL & SCALE READINESS (Scoring)",
+            "intro": "Assessing financial health and scalability for digital investments.",
             "questions": [
                 {
-                    "id": "s8_q1",
+                    "id": "s6_q21",
                     "number": "21",
-                    "title": "Integration Approach",
-                    "question": "How are your HR systems integrated?",
+                    "title": "Business Profitability",
+                    "question": "What is the current business profitability status?",
                     "type": "radio",
                     "options": [
-                        "Event-driven/Real-time APIs",
-                        "API-led integration platform (iPaaS)",
-                        "Enterprise Service Bus (ESB)",
-                        "Point-to-point integrations",
-                        "File transfers/Batch processing",
-                        "Manual data entry",
-                        "Minimal/No integration",
-                        "Other"
+                        "Loss-making",
+                        "Break-even",
+                        "Stable profit",
+                        "Growing profit",
+                        "High-growth"
                     ],
-                    "hasOther": true,
                     "required": true
                 },
                 {
-                    "id": "s8_q2",
+                    "id": "s6_q22",
                     "number": "22",
-                    "title": "Data Quality",
-                    "question": "How would you rate your HR data quality?",
-                    "type": "scale",
+                    "title": "Digital/IT Spend",
+                    "question": "What is the Digital / IT spend as a percentage of revenue?",
+                    "type": "radio",
                     "options": [
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5"
+                        "<0.5%",
+                        "0.5–1%",
+                        "1–2%",
+                        "2–4%",
+                        ">4%"
                     ],
                     "required": true
-                }
-            ]
-        },
-        {
-            "part": "Section 9: Analytics & Automation",
-            "intro": "Share information about your analytics capabilities and automation level.",
-            "questions": [
+                },
                 {
-                    "id": "s9_q1",
+                    "id": "s6_q23",
                     "number": "23",
-                    "title": "Analytics Maturity",
-                    "question": "What is your HR analytics maturity level?",
+                    "title": "System Scalability",
+                    "question": "How scalable are your current HR systems?",
                     "type": "radio",
                     "options": [
-                        "Predictive/Prescriptive (AI-driven insights)",
-                        "Advanced (Self-service analytics, dashboards)",
-                        "Intermediate (Standard reports, some dashboards)",
-                        "Basic (Manual reports in Excel)",
-                        "Ad-hoc (Reports on request only)",
-                        "None (No analytics capability)"
-                    ],
-                    "required": true
-                },
-                {
-                    "id": "s9_q2",
-                    "number": "24",
-                    "title": "Workflow Automation",
-                    "question": "What percentage of HR workflows are automated?",
-                    "type": "radio",
-                    "options": [
-                        "80-100% (Highly automated)",
-                        "60-80% (Mostly automated)",
-                        "40-60% (Moderately automated)",
-                        "20-40% (Some automation)",
-                        "0-20% (Mostly manual)",
-                        "Don't track this"
+                        "Not scalable",
+                        "Manual fixes required",
+                        "Moderately scalable",
+                        "Designed for scale",
+                        "Cloud-native & elastic"
                     ],
                     "required": true
                 }
             ]
         },
         {
-            "part": "Section 10: Security & Future Plans",
-            "intro": "Tell us about security, compliance, and your technology roadmap.",
+            "part": "SECTION 7: SECURITY, GOVERNANCE & COMPLIANCE (Scoring)",
+            "intro": "Evaluating data security and regulatory compliance frameworks.",
             "questions": [
                 {
-                    "id": "s10_q1",
-                    "number": "26",
-                    "title": "Security Controls",
-                    "question": "What security controls do you have in place? (Select all that apply)",
-                    "type": "checkbox",
+                    "id": "s7_q24",
+                    "number": "24",
+                    "title": "Data Security Controls",
+                    "question": "What data security controls are in place for HR systems?",
+                    "type": "radio",
                     "options": [
-                        "Multi-factor authentication (MFA)",
-                        "Role-based access control (RBAC)",
-                        "Single sign-on (SSO)",
-                        "Data encryption (at rest and in transit)",
-                        "Regular security audits",
-                        "Penetration testing",
-                        "Data loss prevention (DLP)",
-                        "Compliance certifications (SOC 2, ISO)",
-                        "Other"
+                        "None",
+                        "Basic access control",
+                        "Role-based access",
+                        "Audited controls",
+                        "Zero-trust / ISO aligned"
                     ],
-                    "hasOther": true,
                     "required": true
                 },
                 {
-                    "id": "s10_q2",
-                    "number": "27",
-                    "title": "Technology Roadmap",
-                    "question": "What are your top technology priorities for the next 12-24 months? (Select top 3)",
-                    "type": "checkbox",
+                    "id": "s7_q25",
+                    "number": "25",
+                    "title": "Compliance Regulation Handling",
+                    "question": "How is regulatory and statutory compliance handled?",
+                    "type": "radio",
                     "options": [
-                        "Cloud migration",
-                        "System consolidation",
-                        "Integration improvement",
-                        "Analytics/BI implementation",
-                        "Mobile app development",
-                        "AI/Automation adoption",
-                        "User experience enhancement",
-                        "Security/Compliance upgrades",
-                        "Legacy system replacement",
-                        "Other"
+                        "Reactive",
+                        "Periodic reviews",
+                        "System-driven compliance",
+                        "Continuous compliance",
+                        "Automated audits"
                     ],
-                    "hasOther": true,
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 8: BUSINESS STRATEGY & DIGITAL ALIGNMENT (Scoring)",
+            "intro": "Aligning digital strategy with overall business objectives.",
+            "questions": [
+                {
+                    "id": "s8_q26",
+                    "number": "26",
+                    "title": "Digital Strategy Alignment",
+                    "question": "How is the digital strategy aligned with business goals?",
+                    "type": "radio",
+                    "options": [
+                        "No digital strategy",
+                        "Informal initiatives",
+                        "Documented strategy",
+                        "Board-aligned roadmap",
+                        "Digital-led business model"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s8_q27",
+                    "number": "27",
+                    "title": "Decision Support",
+                    "question": "How often are business decisions supported by digital insights?",
+                    "type": "radio",
+                    "options": [
+                        "Rarely",
+                        "Sometimes",
+                        "Often",
+                        "Mostly",
+                        "Always"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s8_q28",
+                    "number": "28",
+                    "title": "Speed of Decision-Making",
+                    "question": "What is the speed of decision-making using current systems?",
+                    "type": "radio",
+                    "options": [
+                        "Slow & manual",
+                        "Partially digital",
+                        "Digital reports",
+                        "Near real-time",
+                        "Real-time AI insights"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 9: DATA, ANALYTICS & AI READINESS (Scoring)",
+            "intro": "Evaluating data governance, analytics capability, and AI readiness.",
+            "questions": [
+                {
+                    "id": "s9_q29",
+                    "number": "29",
+                    "title": "Data Availability",
+                    "question": "How available is data across different functions?",
+                    "type": "radio",
+                    "options": [
+                        "Highly fragmented",
+                        "Partially consolidated",
+                        "Centralized",
+                        "Governed & standardized",
+                        "Enterprise data lake"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q30",
+                    "number": "30",
+                    "title": "Data Quality Management",
+                    "question": "How is data quality management handled?",
+                    "type": "radio",
+                    "options": [
+                        "No checks",
+                        "Manual checks",
+                        "Periodic validation",
+                        "Automated validation",
+                        "Self-healing data systems"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q31",
+                    "number": "31",
+                    "title": "Use of Analytics",
+                    "question": "How is analytics used in workforce or business planning?",
+                    "type": "radio",
+                    "options": [
+                        "Not used",
+                        "Descriptive only",
+                        "Diagnostic analytics",
+                        "Predictive analytics",
+                        "Prescriptive / AI-based"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q32",
+                    "number": "32",
+                    "title": "Use of Automation",
+                    "question": "What is the level of automation or RPA usage?",
+                    "type": "radio",
+                    "options": [
+                        "Not used",
+                        "Limited pilots",
+                        "Used in few processes",
+                        "Widely used",
+                        "Hyper-automation"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q33",
+                    "number": "33",
+                    "title": "AI Usage",
+                    "question": "To what extent is AI used in business or HR processes?",
+                    "type": "radio",
+                    "options": [
+                        "None",
+                        "Experimental",
+                        "Limited production use",
+                        "Integrated in workflows",
+                        "AI-first processes"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 10: EMPLOYEE EXPERIENCE (EX) & DIGITAL WORKPLACE (Scoring)",
+            "intro": "Assessing employee-facing digital tools and engagement systems.",
+            "questions": [
+                {
+                    "id": "s10_q34",
+                    "number": "34",
+                    "title": "Self-Service Availability",
+                    "question": "What is the level of employee self-service availability?",
+                    "type": "radio",
+                    "options": [
+                        "None",
+                        "Basic ESS",
+                        "ESS + MSS",
+                        "Omni-channel digital workplace",
+                        "Experience-driven EX platform"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q35",
+                    "number": "35",
+                    "title": "Employee Feedback Systems",
+                    "question": "What employee feedback and listening systems are in place?",
+                    "type": "radio",
+                    "options": [
+                        "No formal feedback",
+                        "Annual surveys",
+                        "Periodic pulse surveys",
+                        "Real-time listening",
+                        "AI sentiment analytics"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q36",
+                    "number": "36",
+                    "title": "Digital Onboarding",
+                    "question": "How would you describe the digital onboarding experience?",
+                    "type": "radio",
+                    "options": [
+                        "Fully manual",
+                        "Partially digital",
+                        "Mostly digital",
+                        "End-to-end digital",
+                        "Personalized onboarding journeys"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q37",
+                    "number": "37",
+                    "title": "Communication Platforms",
+                    "question": "What internal communication platforms are currently used?",
+                    "type": "radio",
+                    "options": [
+                        "Email only",
+                        "Basic collaboration tools",
+                        "Integrated collaboration",
+                        "Social & collaborative workplace",
+                        "Intelligent workplace platform"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 11: CUSTOMER EXPERIENCE (CX) ENABLEMENT (Scoring)",
+            "intro": "Evaluating the link between internal operations and customer experience.",
+            "questions": [
+                {
+                    "id": "s11_q38",
+                    "number": "38",
+                    "title": "CX Process Enablement",
+                    "question": "How are customer-facing processes digitally enabled?",
+                    "type": "radio",
+                    "options": [
+                        "Mostly manual",
+                        "Partially digital",
+                        "Digital channels enabled",
+                        "Omni-channel CX",
+                        "AI-driven CX"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s11_q39",
+                    "number": "39",
+                    "title": "Data Integration (HR/Ops/CX)",
+                    "question": "What is the integration level between HR, Operations, and CX data?",
+                    "type": "radio",
+                    "options": [
+                        "No integration",
+                        "Limited",
+                        "Moderate",
+                        "High",
+                        "Fully integrated experience data"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s11_q40",
+                    "number": "40",
+                    "title": "Use of CX Metrics",
+                    "question": "How are CX metrics (NPS, CSAT) used for workforce planning?",
+                    "type": "radio",
+                    "options": [
+                        "Not used",
+                        "Informally referenced",
+                        "Occasionally used",
+                        "Regularly used",
+                        "AI-correlated EX–CX insights"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 12: VENDOR, PARTNER & ECOSYSTEM MATURITY (Scoring)",
+            "intro": "Assessing how you manage technology partners and ecosystems.",
+            "questions": [
+                {
+                    "id": "s12_q41",
+                    "number": "41",
+                    "title": "Vendor Selection Approach",
+                    "question": "What is your primary approach to vendor selection for digital systems?",
+                    "type": "radio",
+                    "options": [
+                        "Price driven",
+                        "Feature driven",
+                        "Short-term need based",
+                        "Long-term roadmap aligned",
+                        "Ecosystem & API aligned"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s12_q42",
+                    "number": "42",
+                    "title": "Vendor Governance",
+                    "question": "How is vendor governance and performance managed?",
+                    "type": "radio",
+                    "options": [
+                        "No governance",
+                        "Reactive",
+                        "SLA-based",
+                        "KPI-based",
+                        "Value & outcome based"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s12_q43",
+                    "number": "43",
+                    "title": "External Integration Capability",
+                    "question": "What is the integration capability with external vendors?",
+                    "type": "radio",
+                    "options": [
+                        "Not possible",
+                        "Manual interfaces",
+                        "Limited integrations",
+                        "Standard APIs",
+                        "Open ecosystem architecture"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 13: ESG, COMPLIANCE & SUSTAINABILITY (Scoring)",
+            "intro": "Evaluating digital tracking for sustainability and ESG goals.",
+            "questions": [
+                {
+                    "id": "s13_q44",
+                    "number": "44",
+                    "title": "ESG Metric Tracking",
+                    "question": "How are ESG or compliance metrics digitally tracked?",
+                    "type": "radio",
+                    "options": [
+                        "Not tracked",
+                        "Manual tracking",
+                        "Partially digital",
+                        "Fully digital",
+                        "Integrated ESG analytics"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s13_q45",
+                    "number": "45",
+                    "title": "Sustainability Enablement",
+                    "question": "How are sustainability practices enabled through digital tools?",
+                    "type": "radio",
+                    "options": [
+                        "Not enabled",
+                        "Informal",
+                        "Tool supported",
+                        "Integrated reporting",
+                        "AI-driven sustainability insights"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 14: INNOVATION & FUTURE READINESS (Scoring)",
+            "intro": "Evaluating innovation frameworks and preparedness for future trends.",
+            "questions": [
+                {
+                    "id": "s14_q46",
+                    "number": "46",
+                    "title": "Innovation Governance",
+                    "question": "How is innovation governance and funding managed?",
+                    "type": "radio",
+                    "options": [
+                        "No formal innovation",
+                        "Ad-hoc initiatives",
+                        "Structured pilots",
+                        "Dedicated innovation budget",
+                        "Continuous innovation engine"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s14_q47",
+                    "number": "47",
+                    "title": "Workforce Model Readiness",
+                    "question": "How prepared is the organization for future workforce models?",
+                    "type": "radio",
+                    "options": [
+                        "Not ready",
+                        "Limited readiness",
+                        "Moderately ready",
+                        "Well prepared",
+                        "Future-native"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s14_q48",
+                    "number": "48",
+                    "title": "Adoption Speed",
+                    "question": "What is the speed of adopting new digital tools?",
+                    "type": "radio",
+                    "options": [
+                        "Very slow",
+                        "Slow",
+                        "Moderate",
+                        "Fast",
+                        "Very fast"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s14_q49",
+                    "number": "49",
+                    "title": "Global Scaling Ability",
+                    "question": "What is the ability to scale globally using current systems?",
+                    "type": "radio",
+                    "options": [
+                        "Not possible",
+                        "Significant constraints",
+                        "Moderate effort",
+                        "Easily scalable",
+                        "Plug-and-play global scale"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "SECTION 15: RISK, RESILIENCE & BUSINESS CONTINUITY (Scoring)",
+            "intro": "Assessing business continuity planning and cyber awareness.",
+            "questions": [
+                {
+                    "id": "s15_q50",
+                    "number": "50",
+                    "title": "Business Continuity Readiness",
+                    "question": "What is the business continuity and disaster recovery readiness?",
+                    "type": "radio",
+                    "options": [
+                        "Not defined",
+                        "Documented only",
+                        "Partially tested",
+                        "Regularly tested",
+                        "Fully automated resilience"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s15_q51",
+                    "number": "51",
+                    "title": "Cybersecurity Awareness",
+                    "question": "How would you describe cybersecurity awareness among employees?",
+                    "type": "radio",
+                    "options": [
+                        "Very low",
+                        "Low",
+                        "Moderate",
+                        "High",
+                        "Embedded culture"
+                    ],
                     "required": true
                 }
             ]

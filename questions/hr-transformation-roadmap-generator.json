@@ -1,0 +1,81 @@
+{
+    "pk": "QUESTION#roadmap-001",
+    "sk": "VERSION#1",
+    "questionSection": "HR Transformation Roadmap Generator",
+    "createdAt": "2026-01-06T13:30:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Transformation Goals",
+            "intro": "Define your primary objectives for HR transformation.",
+            "questions": [
+                {
+                    "id": "r1_q1",
+                    "number": "1",
+                    "title": "Primary Objective",
+                    "question": "What is the primary driver for your HR transformation?",
+                    "type": "radio",
+                    "options": [
+                        "Cost reduction and efficiency",
+                        "Strategic business partnership",
+                        "Digital maturity and innovation",
+                        "Process standardization",
+                        "Employee experience enhancement"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "r1_q2",
+                    "number": "2",
+                    "title": "Success Metric",
+                    "question": "Select your top priority success metric:",
+                    "type": "radio",
+                    "options": [
+                        "Reduced time-to-hire",
+                        "Self-service adoption rate",
+                        "HR cost per employee",
+                        "Employee engagement score",
+                        "System integration efficiency"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: Capability Gaps",
+            "intro": "Identify where the organization currently faces the biggest challenges.",
+            "questions": [
+                {
+                    "id": "r2_q1",
+                    "number": "3",
+                    "title": "Critical Gaps",
+                    "question": "Which area requires the most urgent attention? (Select up to 2)",
+                    "type": "checkbox",
+                    "options": [
+                        "HR Analytics & Insights",
+                        "Integrated Talent Management",
+                        "Payroll & Compliance Automation",
+                        "Digital Onboarding",
+                        "Managerial Self-Service"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "r2_q2",
+                    "number": "4",
+                    "title": "Implementation Readiness",
+                    "question": "Rate your organization's readiness for a 12-month transformation journey:",
+                    "type": "radio",
+                    "options": [
+                        "Highly Ready",
+                        "Somewhat Ready",
+                        "Neutral",
+                        "Not Ready",
+                        "Critically Unprepared"
+                    ],
+                    "required": true
+                }
+            ]
+        }
+    ]
+}
