@@ -27,12 +27,15 @@ const ENGINE_DISPLAY_NAMES: Record<string, string> = {
   "HCM Vendor Fit Engine": "HCM Vendor Fit",
 };
 
+import { getEnhancedUser } from "~/utils/user.server";
+
+
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
   if (!user.organisationId) return redirect("/auth");
 
   // Fetch all engine statuses
-  const enginePromises = ENGINE_NAMES.map(name => findEngineData(user.organisationId, name));
+  const enginePromises = ENGINE_NAMES.map(name => findEngineData(user.organisationId as string, name));
   const engineResults = await Promise.all(enginePromises);
 
   const engineStatuses: Record<string, any> = {};
@@ -40,15 +43,14 @@ export const loader: LoaderFunction = async ({ request }) => {
     const data = engineResults[index];
     engineStatuses[name] = {
       status: data?.usage_status || "Draft",
-      // If we need to allow modification, we'd check something here. For now default to approved/none.
       progress: data?.progress || 0
     };
   });
 
   // Fetch payments
-  let payments = [];
+  let payments: any[] = [];
   try {
-    payments = await getVerifiedPaymentsByCompany(user.organisationId);
+    payments = await getVerifiedPaymentsByCompany(user.organisationId as string);
   } catch (e) {
     console.error("Failed to fetch payments", e);
   }
@@ -57,11 +59,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const latestPayment = payments.length > 0 ? payments[0] : null;
 
   return json({
-    user: {
-      name: `${user.first_name} ${user.last_name}`,
-      role: user.role, // Assuming role is available, otherwise placeholder
-      company: user.organisationId, // Ideally fetch company name
-    },
+    user,
     engineStatuses,
     latestPayment
   });
@@ -83,7 +81,7 @@ export default function statusDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-4 sm:p-6 space-y-4">
         {/* Section Divider: User Details */}
@@ -97,7 +95,7 @@ export default function statusDashboard() {
           <div className="text-left">
             <h2 className="text-lg font-semibold text-[#1F2A5A]">{user.name}</h2>
             <p className="text-sm text-gray-600">{user.role || "Head of HR Department"}</p>
-            <p className="text-sm text-gray-600">{user.company}</p>
+            <p className="text-sm text-gray-600 font-medium text-blue-600">{user.organisationName}</p>
           </div>
 
           {/* Right : Buttons */}

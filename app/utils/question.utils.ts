@@ -25,7 +25,16 @@ export const getLatestQuestion = async (section: string) => {
     });
 
     const { Items } = await ddbDocClient.send(command);
-    return Items?.[0]
+    if (!Items || Items.length === 0) return null;
+
+    // Sort by sk descending to get the latest VERSION
+    const sortedItems = Items.sort((a, b) => {
+        const skA = a.sk || "";
+        const skB = b.sk || "";
+        return skB.localeCompare(skA);
+    });
+
+    return sortedItems[0];
 }
 
 // now we need to make 1 funx to append or we can say update and other fuction to check 

@@ -6,6 +6,7 @@ import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/mo
 import { requireUserSession } from "~/lib/session.server";
 import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
+import { getEnhancedUser } from "~/utils/user.server";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
@@ -41,18 +42,18 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
     throw redirect('/onboarding');
   }
 
-  const currentEngineData = await findEngineData(user.organisationId, ENGINE);
-  const completedEngines = await completedEngine(user.organisationId);
+  const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
+  const completedEngines = await completedEngine(user.organisationId as string);
 
   let recommendations = null;
   try {
-    recommendations = await fetchEngineRecomendations(user.organisationId);
+    recommendations = await fetchEngineRecomendations(user.organisationId as string);
   } catch (error) {
     console.log("No recommendations available yet");
   }
@@ -67,10 +68,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user: {
-      name: user.first_name,
-      company: user.organisationId
-    }
+    user
   });
 };
 
@@ -101,7 +99,7 @@ export default function RoadmapDashboard() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 relative z-10">
         {/* Enhanced Page Header with Gradient Text */}

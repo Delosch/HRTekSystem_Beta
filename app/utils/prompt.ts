@@ -85,10 +85,10 @@ Generate a comprehensive JSON response with this EXACT structure:
   "assessment_metadata": {
     "assessment_id": "DMA-YYYY-MM-DD-XXXX",
     "completion_date": "2025-01-20T10:00:00.000Z",
-    "total_questions": 29,
-    "answered_questions": 29,
+    "total_questions": 51,
+    "answered_questions": 51,
     "completion_percentage": 100,
-    "processing_confidence": 0.95
+    "processing_confidence": 0.98
   },
   "organization_profile": {
     "company_size": "Small|Medium|Large",
@@ -483,6 +483,71 @@ Generate a comprehensive JSON response with this EXACT structure:
       ],
       "answeredQuestions": [4, 5, 4, 5, 4, 5, 5],
       "totalQuestions": [4, 5, 4, 5, 4, 5, 5]
+    },
+    "readiness_metrics": [
+      { "label": "Automation Readiness", "score": 3.8, "status": "Good" },
+      { "label": "ESG & Sustainability", "score": 2.5, "status": "Developing" },
+      { "label": "Cyber Resilience", "score": 4.2, "status": "Strong" },
+      { "label": "Future Readiness", "score": 3.0, "status": "Moderate" }
+    ],
+    "consulting_report": {
+      "executive_summary": {
+        "overall_maturity_index": 56,
+        "maturity_category": "Functional Digital – High Risk at Scale",
+        "what_this_means": [
+          "Core systems exist but lack deep integration",
+          "Digital initiatives are function-led, not business-led",
+          "Organization is vulnerable during rapid growth, audits, or M&A",
+          "High dependency on manual interventions & individuals"
+        ],
+        "executive_recommendation": "Immediate focus required on process standardization, system integration, and change enablement to avoid scale failure within the next 12–18 months."
+      },
+      "maturity_scorecard": [
+        { "dimension": "Technology & Systems", "score": 18, "max_score": 30, "risk_level": "Medium" },
+        { "dimension": "Digital Culture", "score": 11, "max_score": 20, "risk_level": "Low–Medium" },
+        { "dimension": "People & Skills", "score": 9, "max_score": 15, "risk_level": "Medium" },
+        { "dimension": "Process Maturity", "score": 10, "max_score": 15, "risk_level": "Medium" },
+        { "dimension": "Data, AI & Analytics", "score": 6, "max_score": 15, "risk_level": "Low" },
+        { "dimension": "Financial & Scale", "score": 7, "max_score": 10, "risk_level": "Medium" },
+        { "dimension": "Governance & Risk", "score": 5, "max_score": 10, "risk_level": "Low" }
+      ],
+      "dimension_deep_dives": [
+        {
+          "dimension": "Technology & Systems",
+          "current_state": ["Multiple standalone tools", "Manual data dependencies", "Limited real-time visibility"],
+          "business_impact": ["Slower decision-making", "Payroll/compliance risk", "High operational cost"],
+          "recommendations": ["Move towards integrated cloud HCM", "Enable API-based integrations", "Standardize master data"]
+        },
+        {
+          "dimension": "Digital Culture & Change Readiness",
+          "current_state": ["Leadership supportive but not driving", "Adoption uneven across teams", "No formal change framework"],
+          "risk": ["Tool failure despite investment", "Employee resistance", "Low ROI on digital spend"],
+          "recommendations": ["Launch Change & Adoption Program", "Appoint Digital Change Champions", "Embed digital KPIs for leaders"]
+        }
+      ],
+      "business_risk_opportunity": {
+        "top_risks": [
+          { "risk": "Compliance & audit exposure", "impact": "High" },
+          { "risk": "Scale failure during growth", "impact": "Critical" }
+        ],
+        "opportunity_areas": [
+          { "opportunity": "20–30% HR cost optimization", "value": "High" },
+          { "opportunity": "Faster hiring cycles", "value": "Medium" }
+        ]
+      },
+      "transformation_priority_matrix": [
+        { "initiative": "HR Process Re-engineering", "priority": "P1", "impact": "High", "effort": "Medium" },
+        { "initiative": "Core HCM Integration", "priority": "P1", "impact": "High", "effort": "High" },
+        { "initiative": "Change Management Program", "priority": "P2", "impact": "Medium", "effort": "Medium" }
+      ],
+      "transformation_roadmap": [
+        { "phase": "ASSESS", "timeline": "0–1 Month", "actions": ["Deep process diagnostics", "Data & system audit"] },
+        { "phase": "ADVISE", "timeline": "1–2 Months", "actions": ["Target operating model", "Tool selection"] }
+      ],
+      "investment_indication": [
+        { "area": "HR Process & Change", "effort": "Medium", "investment_band": "₹" },
+        { "area": "Technology Implementation", "effort": "High", "investment_band": "₹₹₹" }
+      ]
     }
   }
 }

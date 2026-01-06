@@ -11,7 +11,7 @@ import {
   RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 import { json, LoaderFunction, ActionFunction, redirect } from "@remix-run/node";
-import { requireUserSession } from "~/lib/session.server";
+import { getEnhancedUser } from "~/utils/user.server";
 import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model";
 import { getEnginePriceByName } from "~/lib/pricing";
 import { addOrUpdateCartItem } from "~/models/cart.model";
@@ -50,7 +50,7 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
     throw redirect('/onboarding');
@@ -58,13 +58,13 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   // Check transformation eligibility (requires 3+ verified paid engines)
   const { isEligibleForTransformation } = await import("~/models/payment.model");
-  const eligibility = await isEligibleForTransformation(user.organisationId);
+  const eligibility = await isEligibleForTransformation(user.organisationId as string);
 
-  const completedEngines = await completedEngine(user.organisationId);
+  const completedEngines = await completedEngine(user.organisationId as string);
 
   let recommendations = null;
   try {
-    recommendations = await fetchEngineRecomendations(user.organisationId);
+    recommendations = await fetchEngineRecomendations(user.organisationId as string);
   } catch (error) {
     console.log("No recommendations available yet");
   }
@@ -78,18 +78,15 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user: {
-      name: user.first_name,
-      company: user.organisationId
-    },
+    user,
     transformationEligibility: eligibility,
     enginePrices
   });
 };
 
 export const action: ActionFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
-  if (!user || !user.organisationId) return redirect('/auth');
+  const user = await getEnhancedUser(request);
+  if (!user.organisationId) return redirect('/auth');
 
   const formData = await request.formData();
   const intent = formData.get("intent");
@@ -106,14 +103,14 @@ export const action: ActionFunction = async ({ request }) => {
 
     try {
       await addOrUpdateCartItem({
-        companyId: user.organisationId,
+        companyId: user.organisationId as string,
         productName: engineName,
         price: price,
-        userId: user.userId
+        userId: user.userId,
       });
-      return json({ success: true, message: `${engineName} added to cart` });
+      return json({ success: true, message: `${engineName} added to cart!` });
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error("Cart error:", error);
       return json({ error: "Failed to add item to cart" }, { status: 500 });
     }
   }
@@ -121,16 +118,14 @@ export const action: ActionFunction = async ({ request }) => {
   return json({ error: "Invalid intent" }, { status: 400 });
 };
 
-export default function HRDigitalTransformationDashboard() {
+export default function StartTransformationDashboard() {
   const { completedEngines, recommendations, user, transformationEligibility, enginePrices } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const fetcher = useFetcher(); // Use fetcher for add to cart actions
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsSidebarCollapsed(window.innerWidth < 768);
-    };
+    const handleResize = () => setIsSidebarCollapsed(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);

@@ -4,6 +4,7 @@ import EngineStatusActions from "../components/DashboardComponents/EngineStatusA
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model";
 import { requireUserSession } from "~/lib/session.server";
+import { getEnhancedUser } from "~/utils/user.server";
 import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
 import EnginePricingCard from "~/components/EnginePricingCard";
@@ -41,18 +42,18 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
     throw redirect('/onboarding');
   }
 
-  const currentEngineData = await findEngineData(user.organisationId, ENGINE);
-  const completedEngines = await completedEngine(user.organisationId);
+  const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
+  const completedEngines = await completedEngine(user.organisationId as string);
 
   let recommendations = null;
   try {
-    recommendations = await fetchEngineRecomendations(user.organisationId);
+    recommendations = await fetchEngineRecomendations(user.organisationId as string);
   } catch (error) {
     console.log("No recommendations available yet");
   }
@@ -66,10 +67,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user: {
-      name: user.first_name,
-      company: user.organisationId
-    }
+    user
   });
 };
 
@@ -100,7 +98,7 @@ export default function ChangeDashboard() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 relative z-10">
         {/* Enhanced Page Header with Gradient Text */}
@@ -250,113 +248,119 @@ export default function ChangeDashboard() {
           <EnginePricingCard engineId="change-management" productName="Intelligent Change Management" className="mb-8" />
         </div>
 
-        {completedEngines.length > 0 && (
-          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 mb-8 animate-slide-up" style={{ animationDelay: "700ms" }}>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
-              <CheckCircle className="w-6 h-6 text-green-500" />
-              Completed Engines
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedEngines.map((engineName: string) => (
-                <div
-                  key={engineName}
-                  className="bg-gradient-to-br from-green-50 to-emerald-50/50 border-2 border-green-200/50 rounded-2xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:border-green-300"
-                  onClick={() => navigate(`/engine/${encodeURIComponent(engineName)}`)}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-3xl">{engineDetails[engineName]?.icon || "✅"}</span>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 text-sm">
-                        {engineDetails[engineName]?.name || engineName}
-                      </h4>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {engineDetails[engineName]?.description}
-                      </p>
+        {
+          completedEngines.length > 0 && (
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 mb-8 animate-slide-up" style={{ animationDelay: "700ms" }}>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                Completed Engines
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {completedEngines.map((engineName: string) => (
+                  <div
+                    key={engineName}
+                    className="bg-gradient-to-br from-green-50 to-emerald-50/50 border-2 border-green-200/50 rounded-2xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:border-green-300"
+                    onClick={() => navigate(`/engine/${encodeURIComponent(engineName)}`)}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-3xl">{engineDetails[engineName]?.icon || "✅"}</span>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">
+                          {engineDetails[engineName]?.name || engineName}
+                        </h4>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {engineDetails[engineName]?.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-green-700 font-bold mt-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Completed
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-green-700 font-bold mt-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Completed
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
-        {recommendedEngines.length > 0 && (
-          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 animate-slide-up" style={{ animationDelay: "800ms" }}>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-yellow-500" />
-              AI Recommended Next Steps
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {recommendedEngines.map(([engineName, score]: [string, number]) => (
-                <div
-                  key={engineName}
-                  className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200/50 rounded-2xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 hover:border-blue-300"
-                  onClick={() => navigate(`/engine/${encodeURIComponent(engineName)}`)}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{engineDetails[engineName]?.icon || "🎯"}</span>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-gray-900 text-sm">
-                        {engineDetails[engineName]?.name || engineName}
-                      </h4>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {engineDetails[engineName]?.description}
-                      </p>
+        {
+          recommendedEngines.length > 0 && (
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 animate-slide-up" style={{ animationDelay: "800ms" }}>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-yellow-500" />
+                AI Recommended Next Steps
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recommendedEngines.map(([engineName, score]: [string, number]) => (
+                  <div
+                    key={engineName}
+                    className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200/50 rounded-2xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 hover:border-blue-300"
+                    onClick={() => navigate(`/engine/${encodeURIComponent(engineName)}`)}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{engineDetails[engineName]?.icon || "🎯"}</span>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">
+                          {engineDetails[engineName]?.name || engineName}
+                        </h4>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {engineDetails[engineName]?.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-blue-100">
+                      <div className="flex items-center gap-2 text-xs text-blue-700 font-bold">
+                        <Clock className="w-4 h-4" />
+                        Relevance: {score}/10
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <fetcher.Form method="post" action="/startTransformationDashboard" onSubmit={(e) => e.stopPropagation()}>
+                          <input type="hidden" name="intent" value="addToCart" />
+                          <input type="hidden" name="engineName" value={engineName} />
+                          <button
+                            type="submit"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={fetcher.state === 'submitting'}
+                            className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition-all hover:scale-105 flex items-center gap-1"
+                          >
+                            {fetcher.state === 'submitting' && fetcher.formData?.get('engineName') === engineName ? (
+                              "..."
+                            ) : (
+                              "🛒 Add"
+                            )}
+                          </button>
+                        </fetcher.Form>
+                        <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-auto pt-2 border-t border-blue-100">
-                    <div className="flex items-center gap-2 text-xs text-blue-700 font-bold">
-                      <Clock className="w-4 h-4" />
-                      Relevance: {score}/10
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <fetcher.Form method="post" action="/startTransformationDashboard" onSubmit={(e) => e.stopPropagation()}>
-                        <input type="hidden" name="intent" value="addToCart" />
-                        <input type="hidden" name="engineName" value={engineName} />
-                        <button
-                          type="submit"
-                          onClick={(e) => e.stopPropagation()}
-                          disabled={fetcher.state === 'submitting'}
-                          className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-bold transition-all hover:scale-105 flex items-center gap-1"
-                        >
-                          {fetcher.state === 'submitting' && fetcher.formData?.get('engineName') === engineName ? (
-                            "..."
-                          ) : (
-                            "🛒 Add"
-                          )}
-                        </button>
-                      </fetcher.Form>
-                      <ArrowRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
-        {completedEngines.length === 0 && recommendedEngines.length === 0 && (
-          <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-12 text-center">
-            <div className="text-7xl mb-4 animate-bounce">🚀</div>
-            <h3 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Start Your HR Transformation Journey
-            </h3>
-            <p className="text-gray-600 mb-6 text-lg">
-              Complete the {currentEngine.name} to get personalized recommendations.
-            </p>
-            <button
-              onClick={() => navigate(`/engine/${encodeURIComponent(ENGINE)}`)}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold transition-all shadow-xl hover:shadow-2xl hover:scale-105"
-            >
-              Get Started
-            </button>
-          </div>
-        )}
-      </main>
+        {
+          completedEngines.length === 0 && recommendedEngines.length === 0 && (
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-12 text-center">
+              <div className="text-7xl mb-4 animate-bounce">🚀</div>
+              <h3 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Start Your HR Transformation Journey
+              </h3>
+              <p className="text-gray-600 mb-6 text-lg">
+                Complete the {currentEngine.name} to get personalized recommendations.
+              </p>
+              <button
+                onClick={() => navigate(`/engine/${encodeURIComponent(ENGINE)}`)}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-2xl font-bold transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+              >
+                Get Started
+              </button>
+            </div>
+          )
+        }
+      </main >
 
       <style>{`
         @keyframes fade-in {
@@ -381,6 +385,6 @@ export default function ChangeDashboard() {
           opacity: 0;
         }
       `}</style>
-    </div>
+    </div >
   );
 }

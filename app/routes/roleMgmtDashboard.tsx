@@ -1,4 +1,7 @@
 // Role Management page
+import { json, LoaderFunction } from "@remix-run/node";
+import { getEnhancedUser } from "~/utils/user.server";
+import { useLoaderData } from "@remix-run/react";
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import Sidebar from "../components/DashboardComponents/Sidebar";
@@ -12,7 +15,13 @@ const sampleTasks = Array.from({ length: 24 }, (_, i) => ({
   status: i % 3 === 0 ? "completed" : i % 3 === 1 ? "pending" : "approval",
 }));
 
+export const loader: LoaderFunction = async ({ request }) => {
+  const user = await getEnhancedUser(request);
+  return json({ user });
+};
+
 export default function RoleManagementDashboard() {
+  const { user } = useLoaderData<typeof loader>();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +52,7 @@ export default function RoleManagementDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-[#F9FAFB] to-[#F3F4F6]">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 sm:p-8">
         <div className="border-b border-gray-200 pb-2 mb-6">
@@ -144,9 +153,8 @@ export default function RoleManagementDashboard() {
               <button
                 key={task.id}
                 onClick={() => setSelectedTask(task)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${
-                  statusColors[task.status as keyof typeof statusColors]
-                }
+                className={`px-4 py-2 rounded-xl text-sm font-medium shadow-sm ${statusColors[task.status as keyof typeof statusColors]
+                  }
  hover:opacity-90`}
               >
                 {task.title}

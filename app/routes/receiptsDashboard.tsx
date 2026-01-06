@@ -9,15 +9,17 @@ import { Receipt, Download, CheckCircle, Calendar, CreditCard, FileText } from "
 
 import { getPresignedGetUrl } from "~/lib/s3.server";
 
+import { getEnhancedUser } from "~/utils/user.server";
+
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
-    return json({ error: "No organization found", payments: [] });
+    return json({ user, error: "No organization found", payments: [] });
   }
 
   try {
-    const rawPayments = await getVerifiedPaymentsByCompany(user.organisationId);
+    const rawPayments = await getVerifiedPaymentsByCompany(user.organisationId as string);
 
     // Generate presigned URLs for payment proofs (stored as S3 keys)
     const payments = await Promise.all(rawPayments.map(async (payment) => {
@@ -33,15 +35,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
       return payment;
     }));
 
-    return json({ payments, error: null });
+    return json({ user, payments, error: null });
   } catch (error) {
     console.error("Error loading receipts:", error);
-    return json({ error: "Failed to load payment receipts", payments: [] });
+    return json({ user, error: "Failed to load payment receipts", payments: [] });
   }
 }
 
 export default function ReceiptDashboard() {
-  const { payments, error } = useLoaderData<typeof loader>();
+  const { user, payments, error } = useLoaderData<typeof loader>();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -76,7 +78,7 @@ export default function ReceiptDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-4 sm:p-6">
         {/* Header */}

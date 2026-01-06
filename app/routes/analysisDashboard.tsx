@@ -41,19 +41,21 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
   },
 };
 
+import { getEnhancedUser } from "~/utils/user.server";
+
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
     throw redirect('/onboarding');
   }
 
-  const currentEngineData = await findEngineData(user.organisationId, ENGINE);
-  const completedEngines = await completedEngine(user.organisationId);
+  const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
+  const completedEngines = await completedEngine(user.organisationId as string);
 
   let recommendations = null;
   try {
-    recommendations = await fetchEngineRecomendations(user.organisationId);
+    recommendations = await fetchEngineRecomendations(user.organisationId as string);
   } catch (error) {
     console.log("No recommendations available yet");
   }
@@ -67,10 +69,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user: {
-      name: user.first_name,
-      company: user.organisationId
-    }
+    user
   });
 };
 

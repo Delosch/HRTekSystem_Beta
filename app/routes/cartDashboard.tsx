@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import { getCartItems, deleteCartItem } from "~/models/cart.model"; // Assuming deleteCartItem exists
 import { requireUserSession } from "~/lib/session.server";
+import { getEnhancedUser } from "~/utils/user.server";
 
 // Define the type for items coming from the loader
 interface CartItem {
@@ -18,16 +19,16 @@ interface CartItem {
   addedAt: string;
 }
 
-// 1. LOADER: Fetches cart items for the logged-in user
+// 1. LOADER: Fetches cart items and enhanced user profile
 export const loader: LoaderFunction = async ({ request }: { request: Request }) => {
-  const user = await requireUserSession(request);
-  if (!user) {
+  const user = await getEnhancedUser(request);
+  if (!user.organisationId) {
     return redirect('/auth');
   }
 
   // Assuming getCartItems returns data in the specified format
-  const data = await getCartItems(user.organisationId || "");
-  return json(data || []);
+  const items = await getCartItems(user.organisationId || "");
+  return json({ items, user });
 };
 
 // 2. ACTION: Handles removing an item from the cart and adding test items
@@ -145,19 +146,19 @@ const CostBreakdownChart = ({ data }: { data: { name: string; value: number }[] 
 // 3. MAIN COMPONENT: Ties everything together
 export default function CartDashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const cartItems = useLoaderData<CartItem[]>();
+  const { items: cartItems, user } = useLoaderData<typeof loader>();
   const fetcher = useFetcher();
 
   // Calculate totals with GST
   const { subtotal, gst, total } = useMemo(() => {
-    const currentSubtotal = cartItems.reduce((acc, item) => acc + item.price, 0);
+    const currentSubtotal = cartItems.reduce((acc: number, item: any) => acc + item.price, 0);
     const currentGst = currentSubtotal * 0.18;
     const currentTotal = currentSubtotal + currentGst;
     return { subtotal: currentSubtotal, gst: currentGst, total: currentTotal };
   }, [cartItems]);
 
   const chartData = useMemo(() =>
-    cartItems.map(item => ({ name: item.productName, value: item.price })),
+    cartItems.map((item: any) => ({ name: item.productName, value: item.price })),
     [cartItems]
   );
 
@@ -172,7 +173,7 @@ export default function CartDashboard() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 sm:p-10">
         <div className="max-w-7xl mx-auto">

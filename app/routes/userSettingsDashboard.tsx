@@ -7,8 +7,10 @@ import { requireUserSession, commitSession, getSession } from "~/lib/session.ser
 import { updateUser } from "~/models/user.model";
 import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle } from "lucide-react";
 
+import { getEnhancedUser } from "~/utils/user.server";
+
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
   return json({ user });
 };
 

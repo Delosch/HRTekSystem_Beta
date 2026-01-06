@@ -39,20 +39,21 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     icon: "🎯"
   },
 };
+import { getEnhancedUser } from "~/utils/user.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const user = await requireUserSession(request);
+  const user = await getEnhancedUser(request);
 
   if (!user.organisationId) {
     throw redirect('/onboarding');
   }
 
-  const currentEngineData = await findEngineData(user.organisationId, ENGINE);
-  const completedEngines = await completedEngine(user.organisationId);
+  const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
+  const completedEngines = await completedEngine(user.organisationId as string);
 
   let recommendations = null;
   try {
-    recommendations = await fetchEngineRecomendations(user.organisationId);
+    recommendations = await fetchEngineRecomendations(user.organisationId as string);
   } catch (error) {
     console.log("No recommendations available yet");
   }
@@ -66,10 +67,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user: {
-      name: user.first_name,
-      company: user.organisationId
-    }
+    user
   });
 };
 
@@ -100,7 +98,7 @@ export default function VendorDashboard() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-yellow-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-red-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar />}
+      {!isSidebarCollapsed && <Sidebar user={user} />}
 
       <main className="flex-1 md:ml-64 p-6 relative z-10">
         <div className="mb-8 animate-fade-in">
