@@ -1,0 +1,17 @@
+{
+  "assessment_id": "asm_mock_001",
+  "assessment_date": "2026-01-05",
+  "overall_maturity_score": 3.1,
+  "category_scores": {
+    "strategy": 3.6,
+    "process": 2.9,
+    "technology": 3.2,
+    "governance": 2.5,
+    "people": 3.3
+  },
+  "key_gaps": [
+    "Governance ownership for HR digital initiatives is unclear",
+    "Manual HR processes still exist in core lifecycle areas",
+    "Limited adoption of people analytics for decision-making"
+  ]
+}

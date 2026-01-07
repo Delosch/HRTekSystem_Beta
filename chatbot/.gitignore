@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+logs/
+.DS_Store
+EOF
+@"
+myvenv/
+.venv/
+.env
+__pycache__/
+*.pyc
+*.log
+"@ | Out-File -FilePath .gitignore -Encoding utf8 -Append

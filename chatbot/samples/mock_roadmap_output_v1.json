@@ -1,0 +1,32 @@
+{
+  "roadmap_id": "rdm_mock_001",
+  "generated_on": "2026-01-05",
+  "time_horizon": "12-24 months",
+  "prioritization_method": "impact_vs_readiness",
+  "initiatives": [
+    {
+      "initiative_id": "INIT-01",
+      "title": "Digital Onboarding and Document Automation",
+      "category": "Foundational",
+      "priority": "High",
+      "phase": "0-6 months",
+      "rationale": "High impact on employee experience and operational efficiency, with strong organizational readiness."
+    },
+    {
+      "initiative_id": "INIT-02",
+      "title": "Unified Employee Service Portal",
+      "category": "Tactical",
+      "priority": "Medium",
+      "phase": "6-12 months",
+      "rationale": "Reduces HR service fragmentation and improves case deflection once foundational workflows are digitized."
+    },
+    {
+      "initiative_id": "INIT-03",
+      "title": "People Analytics and Executive Dashboards",
+      "category": "Strategic",
+      "priority": "Medium",
+      "phase": "12-24 months",
+      "rationale": "Enables data-driven decision-making after data standardization and governance foundations are in place."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HR Digital Maturity Assessment Output Schema",
+  "type": "object",
+  "required": [
+    "assessment_id",
+    "assessment_date",
+    "overall_maturity_score",
+    "category_scores",
+    "key_gaps"
+  ],
+  "properties": {
+    "assessment_id": {
+      "type": "string",
+      "description": "Unique identifier for the assessment run"
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "overall_maturity_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Overall HR digital maturity score"
+    },
+    "category_scores": {
+      "type": "object",
+      "required": [
+        "strategy",
+        "process",
+        "technology",
+        "governance",
+        "people"
+      ],
+      "properties": {
+        "strategy": { "type": "number", "minimum": 0, "maximum": 5 },
+        "process": { "type": "number", "minimum": 0, "maximum": 5 },
+        "technology": { "type": "number", "minimum": 0, "maximum": 5 },
+        "governance": { "type": "number", "minimum": 0, "maximum": 5 },
+        "people": { "type": "number", "minimum": 0, "maximum": 5 }
+      }
+    },
+    "key_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
