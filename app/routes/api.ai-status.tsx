@@ -19,7 +19,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }, { status: 400 });
     }
 
-    let status = getAIStatus(companyId.trim()) || 'pending'; // Handle undefined here
+    let status = getAIStatus(companyId.trim());
+
+    if (!status) {
+      // If status is undefined (expired or never started), return timeout to break frontend loop
+      status = 'timeout' as any;
+    }
 
     // ✅ FIX: Force timeout if error persists too long
     if (status === 'error') {

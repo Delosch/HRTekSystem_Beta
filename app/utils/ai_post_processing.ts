@@ -91,6 +91,16 @@ function repairJson(text: string): any {
     return extractByBraceBoundaries(repaired);
 }
 
+/**
+ * Fixes incomplete decimals (e.g., 5.) which are invalid JSON.
+ */
+function fixIncompleteDecimals(text: string): any {
+    // Look for digits followed by a dot, followed by non-digits (like , or ])
+    // Replace "5." with "5.0"
+    const cleaned = text.replace(/(\d+)\.(?=\D)/g, "$1.0");
+    return extractByBraceBoundaries(cleaned);
+}
+
 export function postProcessAiResponse<T = any>(responseText: string): JsonProcessingResult<T> {
     if (!responseText || responseText.trim().length === 0) {
         return { success: false, error: 'Empty response text provided' };
@@ -102,7 +112,8 @@ export function postProcessAiResponse<T = any>(responseText: string): JsonProces
         { name: 'extractByBraceBoundaries', fn: extractByBraceBoundaries },
         { name: 'aggressiveCleanupAndExtract', fn: aggressiveCleanupAndExtract },
         { name: 'asciiCleanupAndExtract', fn: asciiCleanupAndExtract },
-        { name: 'repairJson', fn: repairJson }, // Robust repair
+        { name: 'fixIncompleteDecimals', fn: fixIncompleteDecimals },
+        { name: 'repairJson', fn: repairJson },
     ];
 
     for (const strategy of strategies) {

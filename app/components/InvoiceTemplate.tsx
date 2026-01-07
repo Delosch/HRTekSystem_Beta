@@ -65,14 +65,16 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                         <div className="flex items-center gap-3 mb-2">
                             <div className="bg-white p-2 rounded-lg">
                                 <img
-                                    src="/logoFinal.png"
-                                    alt="HRTekSystem"
+                                    src="/hrtek_logo.png"
+                                    alt="HRTEK SYSTEM"
                                     className="h-12 w-auto"
                                 />
                             </div>
                             <div>
-                                <h1 className="text-3xl font-bold">HRTekSystem</h1>
-                                <p className="text-blue-100 text-sm">Innovating HR with Technology</p>
+                                <h1 className="text-3xl font-black tracking-tighter uppercase leading-none">
+                                    HRTEK <span className="text-blue-100">SYSTEM</span>
+                                </h1>
+                                <p className="text-blue-100 text-[10px] uppercase font-bold tracking-widest mt-1">Cognitive HR Transformation</p>
                             </div>
                         </div>
                         <p className="text-blue-100 text-xs mt-2">A Brand of Delosch Technologies Private Limited</p>

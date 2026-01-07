@@ -221,7 +221,7 @@ export async function store_analysis(
                 sk: sortKey,
                 assessment_id: assessment_id,
                 section: question_section,
-                result: res, // Storing the object directly
+                result: sanitizeDynamoDBItem(res), // Storing the object directly
                 status: "approved", // Auto-approved - reports dispatched directly to dashboard after payment verification
                 createdAt: new Date().toISOString() // This is now redundant but still a good practice
             }
@@ -242,4 +242,24 @@ export async function store_analysis(
         throw error; // Re-throw the error for the calling function to handle
 
     }
+}
+
+/**
+ * Recursively removes empty strings and undefined/null values from an object
+ * to satisfy DynamoDB's "Empty attribute name" / "Empty string" constraints.
+ */
+function sanitizeDynamoDBItem(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(v => sanitizeDynamoDBItem(v)).filter(v => v !== null && v !== undefined && v !== "");
+    } else if (typeof obj === 'object' && obj !== null) {
+        return Object.entries(obj).reduce((acc, [key, value]) => {
+            if (key === "") return acc; // Drop empty keys
+            const cleanedValue = sanitizeDynamoDBItem(value);
+            if (cleanedValue !== null && cleanedValue !== undefined && cleanedValue !== "") {
+                acc[key] = cleanedValue;
+            }
+            return acc;
+        }, {} as any);
+    }
+    return obj;
 }

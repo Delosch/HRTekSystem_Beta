@@ -1,7 +1,7 @@
 //digital/transformation/digital_transformation
 import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import { requireUserSession } from "~/lib/session.server";
 import { getCompanyProfile } from "~/models/company.model";
@@ -65,385 +65,385 @@ type AnalysisPayload = {
   result: ReportResult;
 };
 
-const mock ={
- "pk": "COMPANY#fe5e5521-ede1-4d4a-a2bd-59f68bc1cee5",
- "sk": "ANALYSIS#2025-08-11T07:04:59.908Z",
- "assessment_id": "QUESTION#1b3e5d7a-8f9c-4e2b-a7d1-0f3c5e9a2b4f",
- "createdAt": "2025-08-11T07:04:59.908Z",
- "result": {
-  "longTermBets": [
-   "INIT-006",
-   "INIT-007",
-   "INIT-009"
-  ],
-  "meta": {
-   "assessmentSk": "ASSESSMENT#1b3e5d7a-8f9c-4e2b-a7d1-0f3c5e9a2b4f",
-   "assumptionsAndRisks": [
-    "Major Conflict: Innovation readiness is 'Not relevant currently' (s3_q9) while risk appetite is 'High – Innovation-led' (s7_q24) and priorities include AI/Chatbots (s3_q8). Plan assumes priorities are the true intent, but innovative projects require strong foundational work and business cases first.",
-    "Conflict: The company uses 'SAP SuccessFactors' (s5_q14) but lacks Core HRMS, ESS/MSS, and Payroll coverage (s2_q5). Assumed they have licensed SF but only implemented limited talent modules, not Employee Central.",
-    "Risk: A 'Big-bang' rollout (s3_q10) is selected but is extremely high-risk given 'Not integrated – siloed data pools' (s5_q15) and 'Mixed' change readiness (s4_q12). The proposed roadmap is phased to mitigate this risk.",
-    "Data quality is a known issue ('lacks quality standards' s6_q21), which will delay the impact of any analytics, AI, or planning initiatives until foundational data governance is established."
-   ],
-   "companyPk": "COMPANY#0a457c8f-3a4a-4082-8e6c-3bc963314f89",
-   "generatedAt": "2024-10-27T10:00:00Z"
-  },
-  "prioritizedInitiatives": [
-   {
-    "classification": "Foundational",
-    "dependencies": [
-    ],
-    "horizon": "0-6m",
-    "id": "INIT-001",
-    "impactScore": 5,
-    "kpis": [
-     "% of critical data elements with defined owners",
-     "Data quality score improvement",
-     "Reduction in manual data correction incidents"
-    ],
-    "name": "Establish HR Data Governance and Quality Framework",
-    "owners": [
-     "DTO",
-     "HR",
-     "IT"
-    ],
-    "priorityRank": 1,
-    "rationale": "Directly addresses 'data lacks quality standards' (s6_q21). A critical prerequisite for enabling 'data-driven HR' (s1_q1) and all strategic priorities like workforce planning and analytics.",
-    "readinessScore": 4
-   },
-   {
-    "classification": "Foundational",
-    "dependencies": [
-    ],
-    "horizon": "0-6m",
-    "id": "INIT-002",
-    "impactScore": 5,
-    "kpis": [
-     "Integration blueprint approved",
-     "iPaaS vendor selected",
-     "Time to integrate new application"
-    ],
-    "name": "Define Integration Strategy and Select iPaaS Solution",
-    "owners": [
-     "DTO",
-     "IT",
-     "HR"
-    ],
-    "priorityRank": 2,
-    "rationale": "Addresses top pain points of 'Integration challenges' and 'Fragmented tools' (s2_q6). Essential for connecting SuccessFactors modules and enabling a cohesive ecosystem.",
-    "readinessScore": 4
-   },
-   {
-    "classification": "Foundational",
-    "dependencies": [
-     "INIT-001",
-     "INIT-002"
-    ],
-    "horizon": "6-12m",
-    "id": "INIT-003",
-    "impactScore": 5,
-    "kpis": [
-     "Employee data accuracy",
-     "ESS/MSS adoption rate",
-     "Reduction in HR admin queries"
-    ],
-    "name": "Implement Core HRMS (SuccessFactors EC) with ESS/MSS",
-    "owners": [
-     "HR",
-     "IT",
-     "DTO"
-    ],
-    "priorityRank": 3,
-    "rationale": "Fills a major gap in current coverage (s2_q5) and addresses the 'Lack of mobile/web self-service' pain point (s2_q6). Creates the single source of truth required for all other initiatives.",
-    "readinessScore": 3
-   },
-   {
-    "classification": "Tactical",
-    "dependencies": [
-    ],
-    "horizon": "0-6m",
-    "id": "INIT-004",
-    "impactScore": 4,
-    "kpis": [
-     "Time to onboard",
-     "New hire satisfaction score (NPS)",
-     "Reduction in paper/printing costs"
-    ],
-    "name": "Implement Paperless Onboarding Solution",
-    "owners": [
-     "Talent Acquisition",
-     "HR Ops",
-     "IT"
-    ],
-    "priorityRank": 4,
-    "rationale": "Directly addresses a stated priority (s3_q8) and improves 'Talent experience' (s1_q1). Can be implemented quickly for immediate impact on time-to-hire metrics.",
-    "readinessScore": 4
-   },
-   {
-    "classification": "Tactical",
-    "dependencies": [
-     "INIT-003"
-    ],
-    "horizon": "6-12m",
-    "id": "INIT-005",
-    "impactScore": 4,
-    "kpis": [
-     "Case resolution time",
-     "First contact resolution %",
-     "Employee satisfaction with HR support (CSAT)"
-    ],
-    "name": "Launch HR Case Management and Knowledge Base",
-    "owners": [
-     "HRSS",
-     "IT"
-    ],
-    "priorityRank": 5,
-    "rationale": "A key priority (s3_q8) that improves operational efficiency and employee experience. Foundational for future chatbot expansion.",
-    "readinessScore": 3
-   },
-   {
-    "classification": "Strategic",
-    "dependencies": [
-     "INIT-001",
-     "INIT-003"
-    ],
-    "horizon": "12-24m",
-    "id": "INIT-006",
-    "impactScore": 5,
-    "kpis": [
-     "Forecast accuracy (plan vs. actual)",
-     "Time to model new business scenarios",
-     "Critical role gap analysis"
-    ],
-    "name": "Develop Workforce Scenario Planning Capability",
-    "owners": [
-     "Workforce Planning",
-     "Finance",
-     "HR"
-    ],
-    "priorityRank": 6,
-    "rationale": "High-impact priority (s3_q8) supporting 'Business scalability' (s1_q1). Readiness is low due to heavy dependency on clean, integrated core HR data.",
-    "readinessScore": 2
-   },
-   {
-    "classification": "Strategic",
-    "dependencies": [
-     "INIT-001",
-     "INIT-003"
-    ],
-    "horizon": "12-24m",
-    "id": "INIT-007",
-    "impactScore": 4,
-    "kpis": [
-     "Internal mobility rate",
-     "% of projects staffed internally",
-     "Employee skill profile completion rate"
-    ],
-    "name": "Pilot a Talent Marketplace Platform",
-    "owners": [
-     "Talent Management",
-     "L&D",
-     "IT"
-    ],
-    "priorityRank": 7,
-    "rationale": "Addresses priority for 'Talent marketplace' (s3_q8) and driver of 'Talent experience' (s1_q1). Requires mature skills data and core HR platform.",
-    "readinessScore": 2
-   },
-   {
-    "classification": "Innovative",
-    "dependencies": [
-     "INIT-005"
-    ],
-    "horizon": "12-24m",
-    "id": "INIT-008",
-    "impactScore": 3,
-    "kpis": [
-     "% of queries deflected to chatbot",
-     "Chatbot resolution rate",
-     "User satisfaction with chatbot"
-    ],
-    "name": "Expand HR Chatbot for Tier-0 Support",
-    "owners": [
-     "HRSS",
-     "IT"
-    ],
-    "priorityRank": 8,
-    "rationale": "Builds on existing chatbot capability (s5_q17) and priority (s3_q8). Depends on a well-structured knowledge base from the case management system.",
-    "readinessScore": 3
-   },
-   {
-    "classification": "Innovative",
-    "dependencies": [
-     "INIT-001",
-     "INIT-002"
-    ],
-    "horizon": "12-24m",
-    "id": "INIT-009",
-    "impactScore": 4,
-    "kpis": [
-     "Time-to-shortlist reduction",
-     "Quality of hire from AI-sourced candidates",
-     "Diversity of candidate slate"
-    ],
-    "name": "Pilot AI-enabled Candidate Screening",
-    "owners": [
-     "Talent Acquisition",
-     "IT",
-     "Legal"
-    ],
-    "priorityRank": 9,
-    "rationale": "Addresses a high-innovation priority (s3_q8) and 'Time-to-hire' metric (s7_q25). Gated by data quality, integration, and ethical AI governance which must be built first.",
-    "readinessScore": 2
-   }
-  ],
-  "quickWins": [
-   "INIT-004"
-  ],
-  "roadmap": {
-   "0_6_months": [
-    "INIT-001",
-    "INIT-002",
-    "INIT-004"
-   ],
-   "12_24_months": [
-    "INIT-006",
-    "INIT-007",
-    "INIT-008",
-    "INIT-009"
-   ],
-   "6_12_months": [
-    "INIT-003",
-    "INIT-005"
-   ]
-  },
-  "scenarioPlanning": {
-   "levers": [
-    {
-     "expectedEffects": [
-      "Reduces implementation risk by 50%",
-      "Increases user adoption by focusing change",
-      "Extends overall timeline by 3-6 months but improves outcomes"
-     ],
-     "impactedInitiatives": [
-      "INIT-003",
-      "INIT-005",
-      "INIT-006"
-     ],
-     "name": "Adopt a Phased Rollout vs. Big-Bang",
-     "whatIf": "The DTO enforces a phased implementation, starting with foundational elements, despite the 'big-bang' preference."
-    },
-    {
-     "expectedEffects": [
-      "Readiness +2 for all strategic/innovative initiatives",
-      "Accelerates timeline for Workforce Planning (INIT-006) by 6 months"
-     ],
-     "impactedInitiatives": [
-      "INIT-001",
+const mock = {
+  "pk": "COMPANY#fe5e5521-ede1-4d4a-a2bd-59f68bc1cee5",
+  "sk": "ANALYSIS#2025-08-11T07:04:59.908Z",
+  "assessment_id": "QUESTION#1b3e5d7a-8f9c-4e2b-a7d1-0f3c5e9a2b4f",
+  "createdAt": "2025-08-11T07:04:59.908Z",
+  "result": {
+    "longTermBets": [
       "INIT-006",
       "INIT-007",
       "INIT-009"
-     ],
-     "name": "Accelerate Data Governance Program",
-     "whatIf": "A dedicated data steward team is funded and staffed in Q1."
+    ],
+    "meta": {
+      "assessmentSk": "ASSESSMENT#1b3e5d7a-8f9c-4e2b-a7d1-0f3c5e9a2b4f",
+      "assumptionsAndRisks": [
+        "Major Conflict: Innovation readiness is 'Not relevant currently' (s3_q9) while risk appetite is 'High – Innovation-led' (s7_q24) and priorities include AI/Chatbots (s3_q8). Plan assumes priorities are the true intent, but innovative projects require strong foundational work and business cases first.",
+        "Conflict: The company uses 'SAP SuccessFactors' (s5_q14) but lacks Core HRMS, ESS/MSS, and Payroll coverage (s2_q5). Assumed they have licensed SF but only implemented limited talent modules, not Employee Central.",
+        "Risk: A 'Big-bang' rollout (s3_q10) is selected but is extremely high-risk given 'Not integrated – siloed data pools' (s5_q15) and 'Mixed' change readiness (s4_q12). The proposed roadmap is phased to mitigate this risk.",
+        "Data quality is a known issue ('lacks quality standards' s6_q21), which will delay the impact of any analytics, AI, or planning initiatives until foundational data governance is established."
+      ],
+      "companyPk": "COMPANY#0a457c8f-3a4a-4082-8e6c-3bc963314f89",
+      "generatedAt": "2024-10-27T10:00:00Z"
     },
-    {
-     "expectedEffects": [
-      "Improves 'Mixed' change readiness (s4_q12)",
-      "Increases ESS/MSS adoption by 30%",
-      "Reduces post-go-live support tickets by 40%"
-     ],
-     "impactedInitiatives": [
-      "INIT-003",
-      "INIT-004",
-      "INIT-005"
-     ],
-     "name": "Prioritize Change Management Funding",
-     "whatIf": "Allocate 15-20% of the project budget specifically to change management and communications."
+    "prioritizedInitiatives": [
+      {
+        "classification": "Foundational",
+        "dependencies": [
+        ],
+        "horizon": "0-6m",
+        "id": "INIT-001",
+        "impactScore": 5,
+        "kpis": [
+          "% of critical data elements with defined owners",
+          "Data quality score improvement",
+          "Reduction in manual data correction incidents"
+        ],
+        "name": "Establish HR Data Governance and Quality Framework",
+        "owners": [
+          "DTO",
+          "HR",
+          "IT"
+        ],
+        "priorityRank": 1,
+        "rationale": "Directly addresses 'data lacks quality standards' (s6_q21). A critical prerequisite for enabling 'data-driven HR' (s1_q1) and all strategic priorities like workforce planning and analytics.",
+        "readinessScore": 4
+      },
+      {
+        "classification": "Foundational",
+        "dependencies": [
+        ],
+        "horizon": "0-6m",
+        "id": "INIT-002",
+        "impactScore": 5,
+        "kpis": [
+          "Integration blueprint approved",
+          "iPaaS vendor selected",
+          "Time to integrate new application"
+        ],
+        "name": "Define Integration Strategy and Select iPaaS Solution",
+        "owners": [
+          "DTO",
+          "IT",
+          "HR"
+        ],
+        "priorityRank": 2,
+        "rationale": "Addresses top pain points of 'Integration challenges' and 'Fragmented tools' (s2_q6). Essential for connecting SuccessFactors modules and enabling a cohesive ecosystem.",
+        "readinessScore": 4
+      },
+      {
+        "classification": "Foundational",
+        "dependencies": [
+          "INIT-001",
+          "INIT-002"
+        ],
+        "horizon": "6-12m",
+        "id": "INIT-003",
+        "impactScore": 5,
+        "kpis": [
+          "Employee data accuracy",
+          "ESS/MSS adoption rate",
+          "Reduction in HR admin queries"
+        ],
+        "name": "Implement Core HRMS (SuccessFactors EC) with ESS/MSS",
+        "owners": [
+          "HR",
+          "IT",
+          "DTO"
+        ],
+        "priorityRank": 3,
+        "rationale": "Fills a major gap in current coverage (s2_q5) and addresses the 'Lack of mobile/web self-service' pain point (s2_q6). Creates the single source of truth required for all other initiatives.",
+        "readinessScore": 3
+      },
+      {
+        "classification": "Tactical",
+        "dependencies": [
+        ],
+        "horizon": "0-6m",
+        "id": "INIT-004",
+        "impactScore": 4,
+        "kpis": [
+          "Time to onboard",
+          "New hire satisfaction score (NPS)",
+          "Reduction in paper/printing costs"
+        ],
+        "name": "Implement Paperless Onboarding Solution",
+        "owners": [
+          "Talent Acquisition",
+          "HR Ops",
+          "IT"
+        ],
+        "priorityRank": 4,
+        "rationale": "Directly addresses a stated priority (s3_q8) and improves 'Talent experience' (s1_q1). Can be implemented quickly for immediate impact on time-to-hire metrics.",
+        "readinessScore": 4
+      },
+      {
+        "classification": "Tactical",
+        "dependencies": [
+          "INIT-003"
+        ],
+        "horizon": "6-12m",
+        "id": "INIT-005",
+        "impactScore": 4,
+        "kpis": [
+          "Case resolution time",
+          "First contact resolution %",
+          "Employee satisfaction with HR support (CSAT)"
+        ],
+        "name": "Launch HR Case Management and Knowledge Base",
+        "owners": [
+          "HRSS",
+          "IT"
+        ],
+        "priorityRank": 5,
+        "rationale": "A key priority (s3_q8) that improves operational efficiency and employee experience. Foundational for future chatbot expansion.",
+        "readinessScore": 3
+      },
+      {
+        "classification": "Strategic",
+        "dependencies": [
+          "INIT-001",
+          "INIT-003"
+        ],
+        "horizon": "12-24m",
+        "id": "INIT-006",
+        "impactScore": 5,
+        "kpis": [
+          "Forecast accuracy (plan vs. actual)",
+          "Time to model new business scenarios",
+          "Critical role gap analysis"
+        ],
+        "name": "Develop Workforce Scenario Planning Capability",
+        "owners": [
+          "Workforce Planning",
+          "Finance",
+          "HR"
+        ],
+        "priorityRank": 6,
+        "rationale": "High-impact priority (s3_q8) supporting 'Business scalability' (s1_q1). Readiness is low due to heavy dependency on clean, integrated core HR data.",
+        "readinessScore": 2
+      },
+      {
+        "classification": "Strategic",
+        "dependencies": [
+          "INIT-001",
+          "INIT-003"
+        ],
+        "horizon": "12-24m",
+        "id": "INIT-007",
+        "impactScore": 4,
+        "kpis": [
+          "Internal mobility rate",
+          "% of projects staffed internally",
+          "Employee skill profile completion rate"
+        ],
+        "name": "Pilot a Talent Marketplace Platform",
+        "owners": [
+          "Talent Management",
+          "L&D",
+          "IT"
+        ],
+        "priorityRank": 7,
+        "rationale": "Addresses priority for 'Talent marketplace' (s3_q8) and driver of 'Talent experience' (s1_q1). Requires mature skills data and core HR platform.",
+        "readinessScore": 2
+      },
+      {
+        "classification": "Innovative",
+        "dependencies": [
+          "INIT-005"
+        ],
+        "horizon": "12-24m",
+        "id": "INIT-008",
+        "impactScore": 3,
+        "kpis": [
+          "% of queries deflected to chatbot",
+          "Chatbot resolution rate",
+          "User satisfaction with chatbot"
+        ],
+        "name": "Expand HR Chatbot for Tier-0 Support",
+        "owners": [
+          "HRSS",
+          "IT"
+        ],
+        "priorityRank": 8,
+        "rationale": "Builds on existing chatbot capability (s5_q17) and priority (s3_q8). Depends on a well-structured knowledge base from the case management system.",
+        "readinessScore": 3
+      },
+      {
+        "classification": "Innovative",
+        "dependencies": [
+          "INIT-001",
+          "INIT-002"
+        ],
+        "horizon": "12-24m",
+        "id": "INIT-009",
+        "impactScore": 4,
+        "kpis": [
+          "Time-to-shortlist reduction",
+          "Quality of hire from AI-sourced candidates",
+          "Diversity of candidate slate"
+        ],
+        "name": "Pilot AI-enabled Candidate Screening",
+        "owners": [
+          "Talent Acquisition",
+          "IT",
+          "Legal"
+        ],
+        "priorityRank": 9,
+        "rationale": "Addresses a high-innovation priority (s3_q8) and 'Time-to-hire' metric (s7_q25). Gated by data quality, integration, and ethical AI governance which must be built first.",
+        "readinessScore": 2
+      }
+    ],
+    "quickWins": [
+      "INIT-004"
+    ],
+    "roadmap": {
+      "0_6_months": [
+        "INIT-001",
+        "INIT-002",
+        "INIT-004"
+      ],
+      "12_24_months": [
+        "INIT-006",
+        "INIT-007",
+        "INIT-008",
+        "INIT-009"
+      ],
+      "6_12_months": [
+        "INIT-003",
+        "INIT-005"
+      ]
     },
-    {
-     "expectedEffects": [
-      "De-risks AI pilot (INIT-009)",
-      "Improves stakeholder trust and buy-in",
-      "Readiness +1 for INIT-009"
-     ],
-     "impactedInitiatives": [
-      "INIT-009",
-      "INIT-008"
-     ],
-     "name": "Establish an 'Ethical AI' Steering Committee",
-     "whatIf": "A cross-functional team (HR, Legal, IT, D&I) is formed to create guardrails for AI use in hiring."
+    "scenarioPlanning": {
+      "levers": [
+        {
+          "expectedEffects": [
+            "Reduces implementation risk by 50%",
+            "Increases user adoption by focusing change",
+            "Extends overall timeline by 3-6 months but improves outcomes"
+          ],
+          "impactedInitiatives": [
+            "INIT-003",
+            "INIT-005",
+            "INIT-006"
+          ],
+          "name": "Adopt a Phased Rollout vs. Big-Bang",
+          "whatIf": "The DTO enforces a phased implementation, starting with foundational elements, despite the 'big-bang' preference."
+        },
+        {
+          "expectedEffects": [
+            "Readiness +2 for all strategic/innovative initiatives",
+            "Accelerates timeline for Workforce Planning (INIT-006) by 6 months"
+          ],
+          "impactedInitiatives": [
+            "INIT-001",
+            "INIT-006",
+            "INIT-007",
+            "INIT-009"
+          ],
+          "name": "Accelerate Data Governance Program",
+          "whatIf": "A dedicated data steward team is funded and staffed in Q1."
+        },
+        {
+          "expectedEffects": [
+            "Improves 'Mixed' change readiness (s4_q12)",
+            "Increases ESS/MSS adoption by 30%",
+            "Reduces post-go-live support tickets by 40%"
+          ],
+          "impactedInitiatives": [
+            "INIT-003",
+            "INIT-004",
+            "INIT-005"
+          ],
+          "name": "Prioritize Change Management Funding",
+          "whatIf": "Allocate 15-20% of the project budget specifically to change management and communications."
+        },
+        {
+          "expectedEffects": [
+            "De-risks AI pilot (INIT-009)",
+            "Improves stakeholder trust and buy-in",
+            "Readiness +1 for INIT-009"
+          ],
+          "impactedInitiatives": [
+            "INIT-009",
+            "INIT-008"
+          ],
+          "name": "Establish an 'Ethical AI' Steering Committee",
+          "whatIf": "A cross-functional team (HR, Legal, IT, D&I) is formed to create guardrails for AI use in hiring."
+        }
+      ],
+      "sensitivityNotes": [
+        "The entire strategic and innovative layer of the roadmap (Workforce Planning, Talent Marketplace, AI) is highly sensitive to the successful and timely completion of foundational initiatives INIT-001, INIT-002, and INIT-003.",
+        "The success of ESS/MSS and other employee-facing tools is highly sensitive to the organization's ability to manage change effectively, moving from 'Mixed' to 'High' readiness.",
+        "The 'Big-bang' preference, if enforced, poses the single largest risk to the entire transformation, potentially leading to failure in adoption and ROI realization."
+      ]
+    },
+    "toolsAndVendors": {
+      "categories": [
+        {
+          "advisoryModels": [
+            "Implementation partner selection",
+            "Process redesign for EC/Onboarding",
+            "Change management & adoption"
+          ],
+          "area": "Core HRMS / Onboarding",
+          "fitNotes": "Leverages existing investment in SAP SuccessFactors. Implementing the core modules is the most critical foundational step to create a data backbone.",
+          "recommended": [
+            "SAP SuccessFactors (Employee Central, Onboarding 2.0)"
+          ]
+        },
+        {
+          "advisoryModels": [
+            "Integration architecture design",
+            "Vendor selection (RFP)",
+            "Center for Enablement (C4E) setup"
+          ],
+          "area": "Integration / iPaaS",
+          "fitNotes": "Crucial for resolving 'siloed data pools' (s5_q15). SAP's native tool offers tight coupling, while others provide broader non-SAP connectivity.",
+          "recommended": [
+            "SAP Integration Suite (CPI)",
+            "MuleSoft",
+            "Boomi"
+          ]
+        },
+        {
+          "advisoryModels": [
+            "Shared services operating model design",
+            "Implementation PMO",
+            "Process optimization"
+          ],
+          "area": "HR Case Management",
+          "fitNotes": "Addresses a key priority (s3_q8). These platforms provide robust workflow, knowledge management, and SLA tracking to professionalize HR service delivery.",
+          "recommended": [
+            "ServiceNow HRSD",
+            "Salesforce for HR",
+            "Zendesk"
+          ]
+        },
+        {
+          "advisoryModels": [
+            "Skills taxonomy development",
+            "Internal mobility process design",
+            "Vendor evaluation"
+          ],
+          "area": "Talent Marketplace",
+          "fitNotes": "Aligns with strategic priority (s3_q8). SuccessFactors provides a native option, while Gloat and Eightfold are best-of-breed leaders in the AI-powered talent intelligence space.",
+          "recommended": [
+            "SAP SuccessFactors Opportunity Marketplace",
+            "Gloat",
+            "Eightfold AI"
+          ]
+        }
+      ]
     }
-   ],
-   "sensitivityNotes": [
-    "The entire strategic and innovative layer of the roadmap (Workforce Planning, Talent Marketplace, AI) is highly sensitive to the successful and timely completion of foundational initiatives INIT-001, INIT-002, and INIT-003.",
-    "The success of ESS/MSS and other employee-facing tools is highly sensitive to the organization's ability to manage change effectively, moving from 'Mixed' to 'High' readiness.",
-    "The 'Big-bang' preference, if enforced, poses the single largest risk to the entire transformation, potentially leading to failure in adoption and ROI realization."
-   ]
   },
-  "toolsAndVendors": {
-   "categories": [
-    {
-     "advisoryModels": [
-      "Implementation partner selection",
-      "Process redesign for EC/Onboarding",
-      "Change management & adoption"
-     ],
-     "area": "Core HRMS / Onboarding",
-     "fitNotes": "Leverages existing investment in SAP SuccessFactors. Implementing the core modules is the most critical foundational step to create a data backbone.",
-     "recommended": [
-      "SAP SuccessFactors (Employee Central, Onboarding 2.0)"
-     ]
-    },
-    {
-     "advisoryModels": [
-      "Integration architecture design",
-      "Vendor selection (RFP)",
-      "Center for Enablement (C4E) setup"
-     ],
-     "area": "Integration / iPaaS",
-     "fitNotes": "Crucial for resolving 'siloed data pools' (s5_q15). SAP's native tool offers tight coupling, while others provide broader non-SAP connectivity.",
-     "recommended": [
-      "SAP Integration Suite (CPI)",
-      "MuleSoft",
-      "Boomi"
-     ]
-    },
-    {
-     "advisoryModels": [
-      "Shared services operating model design",
-      "Implementation PMO",
-      "Process optimization"
-     ],
-     "area": "HR Case Management",
-     "fitNotes": "Addresses a key priority (s3_q8). These platforms provide robust workflow, knowledge management, and SLA tracking to professionalize HR service delivery.",
-     "recommended": [
-      "ServiceNow HRSD",
-      "Salesforce for HR",
-      "Zendesk"
-     ]
-    },
-    {
-     "advisoryModels": [
-      "Skills taxonomy development",
-      "Internal mobility process design",
-      "Vendor evaluation"
-     ],
-     "area": "Talent Marketplace",
-     "fitNotes": "Aligns with strategic priority (s3_q8). SuccessFactors provides a native option, while Gloat and Eightfold are best-of-breed leaders in the AI-powered talent intelligence space.",
-     "recommended": [
-      "SAP SuccessFactors Opportunity Marketplace",
-      "Gloat",
-      "Eightfold AI"
-     ]
-    }
-   ]
-  }
- },
- "section": "HR Digital Transformation"
+  "section": "HR Digital Transformation"
 }
 
 // ---------- Loader ----------
 export const loader: LoaderFunction = async ({ request, params }) => {
-    return mock
+  return mock
 };
 // ---------- Small UI helpers ----------
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -533,7 +533,7 @@ function ScatterFallback({
       {/* Axes */}
       <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#e5e7eb" />
       <line x1={padding.left} y1={padding.top} x2={padding.left} y2={height - padding.bottom} stroke="#e5e7eb" />
-      
+
       {/* X ticks */}
       {ticks.map((t) => (
         // FIX: Used template literal for the key
@@ -614,12 +614,20 @@ export default function ReportSingleFile() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-6 py-5 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">HR Digital Transformation — Executive Report</h1>
-            <p className="text-sm text-gray-500">
-              Company: <span className="font-medium text-gray-700">{result.meta.companyPk}</span> - Assessment: {result.meta.assessmentSk} - Generated:{" "}
-              {new Date(result.meta.generatedAt).toLocaleString()}
-            </p>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex-shrink-0">
+              <img src="/hrtek_logo.png" alt="HRTEK Logo" className="h-12 w-auto object-contain" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                HRTEK <span className="text-blue-600">SYSTEM</span>
+                <span className="text-gray-400 font-normal ml-2">— Executive Report</span>
+              </h1>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">
+                Company: <span className="text-gray-800">{result.meta.companyPk}</span> • Generated:{" "}
+                {new Date(result.meta.generatedAt).toLocaleString()}
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-2 rounded border text-sm bg-white hover:bg-gray-50">Download JSON</button>
@@ -751,8 +759,8 @@ export default function ReportSingleFile() {
                 key={c.area}
                 onClick={() => setVendorTab(i)}
                 className={`px-3 py-1.5 rounded border text-sm ${i === vendorTab
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                   }`}
               >
                 {c.area}

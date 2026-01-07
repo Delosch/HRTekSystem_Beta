@@ -114,6 +114,7 @@ export async function generate(
 5. No trailing commas
 6. Use null for missing values
 7. Use ONLY English standard characters (no special regional characters)
+8. Ensure numbers are well-formed (e.g. use 5 or 5.0, NEVER 5.)
 
 ASSESSMENT DATA:
 ${JSON.stringify(answer, null, 2)}

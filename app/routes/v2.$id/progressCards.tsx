@@ -1,16 +1,14 @@
-
-// --- Props Interface ---
-
 import { motion } from "framer-motion";
 import { BarChart2, Check, Target, X } from "lucide-react";
 import { FC, useState } from "react";
 import { HeatMapData, MaturityAnalysis, ProgressBar, SuccessMetrics } from "./schemas";
 
+// --- Props Interface ---
 // Accepts the raw data structures from your main schema.
 export interface MaturityDimensionBreakdownProps {
     dimensionalScores: MaturityAnalysis['dimensional_scores'];
     progressBars: ProgressBar[];
-    heatmap:HeatMapData;
+    heatmap: HeatMapData;
     kpiFramework: SuccessMetrics['kpi_framework'];
 }
 
@@ -33,18 +31,18 @@ export interface CombinedDimensionData {
 // Helper for status colors
 export const getStatusColor = (status: string): string => {
     switch (status.toLowerCase()) {
-        case 'excellent': return '#10b981';
-        case 'on_track': return '#3b82f6';
-        case 'needs_attention': return '#f59e0b';
-        case 'critical': return '#ef4444';
-        default: return '#6b7280';
+        case 'excellent': return '#10b981'; // emerald-500
+        case 'on_track': return '#6366f1'; // indigo-500
+        case 'needs_attention': return '#f59e0b'; // amber-500
+        case 'critical': return '#f43f5e'; // rose-500
+        default: return '#94a3b8'; // slate-400
     }
 };
 
 
 // --- Sub-components for the Flippable Card ---
 
-// Card Front: Animated Progress Ring
+// Card Front: Animated Progress Ring (Dark Mode)
 export const CardFront: FC<{ dimension: string; percentage: number; status: string; }> = ({ dimension, percentage, status }) => {
     const radius = 50;
     const circumference = 2 * Math.PI * radius;
@@ -52,60 +50,76 @@ export const CardFront: FC<{ dimension: string; percentage: number; status: stri
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
     return (
-        <div className="absolute inset-0 w-full h-full bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex flex-col items-center justify-center [backface-visibility:hidden]">
+        <div className="absolute inset-0 w-full h-full glass-card rounded-2xl shadow-xl border border-white/5 p-4 flex flex-col items-center justify-center [backface-visibility:hidden] bg-slate-900/40">
             <div className="relative mb-3">
                 <svg width="120" height="120" viewBox="0 0 120 120" className="transform -rotate-90">
-                    <circle cx="60" cy="60" r={radius} fill="none" stroke="#e5e7eb" strokeWidth="10" />
+                    <circle cx="60" cy="60" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
                     <motion.circle
                         cx="60"
                         cy="60"
                         r={radius}
                         fill="none"
                         stroke={color}
-                        strokeWidth="10"
+                        strokeWidth="8"
                         strokeLinecap="round"
                         strokeDasharray={circumference}
                         initial={{ strokeDashoffset: circumference }}
                         animate={{ strokeDashoffset }}
                         transition={{ duration: 1, ease: "circOut", delay: 0.2 }}
+                        className="drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]"
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-gray-800">{percentage}%</span>
+                    <span className="text-3xl font-black text-white">{percentage}%</span>
                 </div>
             </div>
-            <h4 className="text-md font-semibold text-center text-gray-700">{dimension}</h4>
-            <span className="mt-2 text-xs px-3 py-1 rounded-full text-white font-medium" style={{ backgroundColor: color }}>
+            <h4 className="text-sm font-bold text-center text-slate-200 px-2 leading-tight min-h-[2.5em] flex items-center">{dimension}</h4>
+            <span
+                className="mt-3 text-[10px] uppercase tracking-wider px-3 py-1 rounded-full text-white font-bold"
+                style={{ backgroundColor: `${color}20`, border: `1px solid ${color}40`, color: color }}
+            >
                 {status.replace(/_/g, ' ')}
             </span>
         </div>
     );
 };
 
-// Card Back: Details on a white background
+// Card Back: Details on a dark background
 export const CardBack: FC<{ data: CombinedDimensionData }> = ({ data }) => {
     return (
-        <div className="absolute inset-0 w-full h-full bg-white text-gray-800 rounded-xl shadow-lg p-4 flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)] border">
-            <h3 className="text-lg font-bold text-center border-b border-gray-200 pb-2">{data.dimension}</h3>
-            <div className="mt-2 space-y-2 overflow-y-auto flex-grow text-xs no-scrollbar">
+        <div className="absolute inset-0 w-full h-full glass-card bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-2xl p-5 flex flex-col [backface-visibility:hidden] [transform:rotateY(180deg)]">
+            <h3 className="text-sm font-bold text-center border-b border-white/10 pb-3 text-white mb-2">{data.dimension}</h3>
+            <div className="space-y-3 overflow-y-auto flex-grow text-xs no-scrollbar">
                 <div>
-                    <h4 className="font-semibold text-green-600 flex items-center mb-1"><Check size={14} className="mr-1.5" /> Strengths</h4>
-                    <ul className="list-disc list-inside pl-2 space-y-1">
-                        {data.key_strengths.map((s, i) => <li key={`s-${i}`}>{s}</li>)}
+                    <h4 className="font-bold text-emerald-400 flex items-center mb-1.5 uppercase tracking-wider text-[10px]">
+                        <Check size={12} className="mr-1.5" /> Strengths
+                    </h4>
+                    <ul className="space-y-1.5">
+                        {data.key_strengths.map((s, i) => (
+                            <li key={`s-${i}`} className="text-slate-300 pl-2 border-l-2 border-emerald-500/20">{s}</li>
+                        ))}
                     </ul>
                 </div>
-                <div className="mt-2">
-                    <h4 className="font-semibold text-red-600 flex items-center mb-1"><X size={14} className="mr-1.5" /> Gaps</h4>
-                    <ul className="list-disc list-inside pl-2 space-y-1">
-                        {data.critical_gaps.map((g, i) => <li key={`g-${i}`}>{g}</li>)}
+                <div>
+                    <h4 className="font-bold text-rose-400 flex items-center mb-1.5 uppercase tracking-wider text-[10px]">
+                        <X size={12} className="mr-1.5" /> Gaps
+                    </h4>
+                    <ul className="space-y-1.5">
+                        {data.critical_gaps.map((g, i) => (
+                            <li key={`g-${i}`} className="text-slate-300 pl-2 border-l-2 border-rose-500/20">{g}</li>
+                        ))}
                     </ul>
                 </div>
                 {data.kpis && (
-                    <div className="mt-2">
-                        <h4 className="font-semibold text-blue-600 flex items-center mb-1"><Target size={14} className="mr-1.5" /> KPIs</h4>
-                        <ul className="pl-2 space-y-1">
+                    <div>
+                        <h4 className="font-bold text-indigo-400 flex items-center mb-1.5 uppercase tracking-wider text-[10px]">
+                            <Target size={12} className="mr-1.5" /> Metrics
+                        </h4>
+                        <ul className="space-y-1.5">
                             {data.kpis.primary_kpis.map((kpi, i) => (
-                                <li key={`kpi-${i}`} className="flex items-start"><BarChart2 size={12} className="mr-2 mt-0.5 flex-shrink-0" />{kpi}</li>
+                                <li key={`kpi-${i}`} className="flex items-start text-slate-400 pl-2">
+                                    <BarChart2 size={10} className="mr-2 mt-0.5 flex-shrink-0 text-slate-500" />{kpi}
+                                </li>
                             ))}
                         </ul>
                     </div>
@@ -121,7 +135,7 @@ export const FlippableDimensionCard: FC<{ data: CombinedDimensionData }> = ({ da
 
     return (
         <div
-            className="w-full h-72 [perspective:1000px]"
+            className="w-full h-[340px] [perspective:1000px] cursor-pointer group"
             onMouseEnter={() => setIsFlipped(true)}
             onMouseLeave={() => setIsFlipped(false)}
         >
@@ -129,7 +143,7 @@ export const FlippableDimensionCard: FC<{ data: CombinedDimensionData }> = ({ da
                 className="relative w-full h-full [transform-style:preserve-3d]"
                 initial={false}
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
+                transition={{ duration: 0.6, ease: "backOut" }}
             >
                 <CardFront dimension={data.dimension} percentage={data.percentage} status={data.status} />
                 <CardBack data={data} />

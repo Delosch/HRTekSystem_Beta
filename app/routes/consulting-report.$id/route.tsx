@@ -1,61 +1,129 @@
-import { LoaderFunction } from "@remix-run/node";
-import { Params, useLoaderData } from "@remix-run/react";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { json, LoaderFunction } from "@remix-run/node";
+import { Params, useLoaderData, Link } from "@remix-run/react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import { requireUserSession } from "~/lib/session.server";
 import { getLatestAnalysis } from "~/utils/analysis";
 import { getCompanyProfile } from "~/models/company.model";
 import { DatabaseRecord } from "../v2.$id/schemas";
 import {
-    FileText,
-    Target,
-    TrendingUp,
-    AlertTriangle,
-    ShieldCheck,
-    BarChart3,
-    Clock,
-    Zap,
-    Globe,
-    Settings,
-    Users,
-    Database,
-    Briefcase
+    FileText, Target, TrendingUp, AlertTriangle, ShieldCheck,
+    Clock, Zap, LayoutPanelTop, Lightbulb, Download, ArrowLeft,
+    CheckCircle, Brain, DollarSign, PlayCircle, Star, Sparkles,
+    ChevronRight, ArrowUpRight, Activity, BarChart2, ScanLine
 } from "lucide-react";
+import {
+    ResponsiveContainer, Radar, RadarChart, PolarGrid,
+    PolarAngleAxis, PolarRadiusAxis, ScatterChart, Scatter,
+    XAxis, YAxis, CartesianGrid, Tooltip, Cell, AreaChart, Area,
+    BarChart, Bar, Legend, ReferenceLine
+} from 'recharts';
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import ConsultingReportPDF from "~/components/reports/ConsultingReportPDF";
 
+// --- Loader ---
 export const loader: LoaderFunction = async ({ request, params }: { request: Request, params: Params }) => {
     try {
         const user = await requireUserSession(request);
-        if (!user || !user.organisationId) {
-            return null
-        }
-        if (!params.id) {
-            throw new Response("Assessment ID Required", { status: 404 })
-        }
+        if (!user || !user.organisationId) return null;
+        if (!params.id) throw new Response("Assessment ID Required", { status: 404 });
 
         const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, params.id);
-        if (!data) {
-            throw new Response("No assessment data found", { status: 404 });
-        }
+        if (!data) throw new Response("No assessment data found", { status: 404 });
 
         const company_info = await getCompanyProfile(user.organisationId);
         const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client";
 
-        return { data, brand_name };
-    }
-    catch (e) {
-        console.error("Report loader error:", e)
+        return json({ data, brand_name, assessmentId: params.id });
+    } catch (e) {
+        console.error("Report loader error:", e);
         throw new Response("Internal Server Error", { status: 500 });
     }
 }
 
 interface LoaderReturn {
     data: DatabaseRecord,
-    brand_name: string
+    brand_name: string,
+    assessmentId: string
 }
 
+// --- Components ---
+
+const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; delay?: number; className?: string }) => {
+    const [displayedText, setDisplayedText] = useState("");
+    const controls = useInView({ triggerOnce: true, threshold: 0.5 });
+
+    useEffect(() => {
+        let currentText = "";
+        let currentIndex = 0;
+
+        const timeout = setTimeout(() => {
+            const interval = setInterval(() => {
+                if (currentIndex < text.length) {
+                    currentText += text[currentIndex];
+                    setDisplayedText(currentText);
+                    currentIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 20); // Typing speed
+            return () => clearInterval(interval);
+        }, delay * 1000);
+
+        return () => clearTimeout(timeout);
+    }, [text, delay]);
+
+    return <p className={className}>{displayedText}</p>;
+};
+
+const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        let startTime: number;
+        let animationFrame: number;
+
+        const updateCount = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const percentage = Math.min(progress / (duration * 1000), 1);
+
+            setCount(Math.floor(percentage * value));
+
+            if (percentage < 1) {
+                animationFrame = requestAnimationFrame(updateCount);
+            }
+        };
+
+        animationFrame = requestAnimationFrame(updateCount);
+        return () => cancelAnimationFrame(animationFrame);
+    }, [value, duration]);
+
+    return <>{count}</>;
+};
+
+// --- Main Component ---
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.95 },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
+};
+
 export default function ConsultingReport() {
-    const { data, brand_name } = useLoaderData<LoaderReturn>();
+    const { data, brand_name, assessmentId } = useLoaderData<LoaderReturn>();
     const [isLoading, setIsLoading] = useState(true);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+        const timer = setTimeout(() => setIsLoading(false), 800);
+        return () => clearTimeout(timer);
+    }, []);
 
     const generateFallbackReport = () => {
         const res = data.result;
@@ -66,16 +134,14 @@ export default function ConsultingReport() {
 
         const normalizeScore = (val: number) => {
             if (!val) return 0;
-            // If the value is strictly <= 5 and not a percentage, assume it's on a 1-5 scale
             if (val <= 5 && val > 0) return Math.round(val * 20);
             return Math.round(val);
         };
 
-        // Flatten recommendations for priority matrix
         const allActions = [
-            ...(recommendations.immediate_actions?.actions || []).map(a => ({ ...a, priority: 'P1' })),
-            ...(recommendations.short_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P2' })),
-            ...(recommendations.medium_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P3' }))
+            ...(recommendations.immediate_actions?.actions || []).map(a => ({ ...a, priority: 'P1', impact: 'High', effort: 'Medium' })),
+            ...(recommendations.short_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P2', impact: 'Medium', effort: 'High' })),
+            ...(recommendations.medium_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P3', impact: 'High', effort: 'High' }))
         ];
 
         return {
@@ -85,16 +151,9 @@ export default function ConsultingReport() {
                 what_this_means: [
                     ...(insights.transformation_readiness.enabling_factors || []).slice(0, 2),
                     ...(insights.transformation_readiness.blocking_factors || []).slice(0, 2)
-                ].length > 0 ? [
-                    ...(insights.transformation_readiness.enabling_factors || []).slice(0, 2),
-                    ...(insights.transformation_readiness.blocking_factors || []).slice(0, 2)
-                ] : [
-                    "Core systems exist but operate in departmental silos.",
-                    "Digital strategy lacks formal board-level integration.",
-                    "Manual handling of data creates scalability bottlenecks.",
-                    "Organizational culture is in the early stages of digital adoption."
                 ],
-                executive_recommendation: insights.overall_assessment || "Initiate a structured digital transformation roadmap focusing on core process automation."
+                executive_recommendation: insights.overall_assessment || "Initiate a structured digital transformation roadmap focusing on core process automation.",
+                key_observations: ["Growing profitability", "Adequate IT budget allocation", "Resistant leadership culture", "No digital strategy"]
             },
             maturity_scorecard: analysis.dimensional_scores.map(d => {
                 const finalScore = normalizeScore(d.percentage || d.weighted_score || d.raw_score);
@@ -102,67 +161,84 @@ export default function ConsultingReport() {
                     dimension: d.dimension,
                     score: finalScore,
                     max_score: 100,
-                    risk_level: finalScore < 40 ? "High" : finalScore < 70 ? "Medium" : "Low"
+                    risk_level: finalScore < 40 ? "High Risk" : finalScore < 70 ? "Medium Risk" : "Low Risk"
                 };
             }),
-            dimension_deep_dives: analysis.dimensional_scores.slice(0, 5).map(d => ({
+            radar_data: analysis.dimensional_scores.map(d => ({
+                subject: d.dimension,
+                A: normalizeScore(d.percentage || d.weighted_score || d.raw_score),
+                fullMark: 100
+            })),
+            dimension_deep_dives: analysis.dimensional_scores.slice(0, 6).map(d => ({
                 dimension: d.dimension,
-                current_state: d.critical_gaps.slice(0, 3),
+                score: normalizeScore(d.percentage || d.weighted_score || d.raw_score),
+                current_state: d.critical_gaps.slice(0, 3) || ["Manual processes"],
                 business_impact: d.gap_analysis.improvement_potential > 60 ? ["Significant operational leakage", "High compliance risk"] : ["Optimization opportunity", "Margin improvement potential"],
-                recommendations: d.key_strengths.length > 0 ? d.key_strengths : ["Establish standard KPIs", "Digitalize manual records"]
+                recommendations: d.key_strengths.length > 0 ? d.key_strengths : ["Establish standard KPIs", "Digitalize manual records"],
+                strategic_outlook: d.maturity_level === 'Nascent' ? "Nascent" : d.maturity_level || "Initial"
             })),
             business_risk_opportunity: {
-                top_risks: risks.slice(0, 2).map(r => ({ risk: r.risk_category || r.risk_description, impact: r.impact })),
+                top_risks: risks.slice(0, 3).map((r, i) => ({
+                    category: ["Cultural", "Technical", "Operational"][i] || "Strategic",
+                    risk: r.risk_category || r.risk_description,
+                    impact: r.impact,
+                    mitigation: r.mitigation_strategy || "Implement change management"
+                })),
                 opportunity_areas: analysis.dimensional_scores
                     .sort((a, b) => b.gap_analysis.improvement_potential - a.gap_analysis.improvement_potential)
-                    .slice(0, 2)
-                    .map(d => ({ opportunity: `Optimize ${d.dimension}`, value: "High" }))
+                    .slice(0, 4)
+                    .map(d => ({ opportunity: `Optimize ${d.dimension}`, value: "High VALUE" }))
             },
-            transformation_priority_matrix: allActions.slice(0, 3).map(a => ({
+            transformation_priority_matrix: allActions.slice(0, 4).map(a => ({
                 initiative: a.action,
                 priority: a.priority,
-                impact: a.impact,
-                effort: a.effort
+                impact: a.impact === 'High' ? 3 : a.impact === 'Medium' ? 2 : 1,
+                effort: a.effort === 'High' ? 1 : a.effort === 'Medium' ? 2 : 3
             })),
             transformation_roadmap: [
                 {
                     phase: "IMMEDIATE",
                     timeline: recommendations.immediate_actions.timeline || "0-3 Months",
-                    actions: recommendations.immediate_actions.actions.slice(0, 3).map(a => a.action)
+                    actions: recommendations.immediate_actions.actions.slice(0, 2).map(a => a.action)
                 },
                 {
                     phase: "SHORT-TERM",
-                    timeline: recommendations.short_term_initiatives.timeline || "3-6 Months",
-                    actions: recommendations.short_term_initiatives.actions.slice(0, 3).map(a => a.action)
+                    timeline: recommendations.short_term_initiatives.timeline || "3-12 Months",
+                    actions: recommendations.short_term_initiatives.actions.slice(0, 2).map(a => a.action)
                 },
                 {
                     phase: "MEDIUM-TERM",
-                    timeline: recommendations.medium_term_initiatives?.timeline || "6-12 Months",
-                    actions: (recommendations.medium_term_initiatives?.actions || []).slice(0, 3).map(a => a.action)
+                    timeline: recommendations.medium_term_initiatives?.timeline || "12-24 Months",
+                    actions: (recommendations.medium_term_initiatives?.actions || []).slice(0, 1).map(a => a.action)
                 }
             ].filter(p => p.actions.length > 0),
             investment_indication: [
                 { area: "Core Transformation", effort: "High", investment_band: "₹₹₹" },
-                { area: "Change Management", effort: "Medium", investment_band: "₹₹" }
+                { area: "Digital Infrastructure", effort: "Medium", investment_band: "₹₹" },
+                { area: "Change Management", effort: "Medium", investment_band: "₹₹" },
+                { area: "Data Governance", effort: "Low", investment_band: "₹" }
             ]
         };
     };
 
     const report = data.result.consulting_report || generateFallbackReport();
 
-    useEffect(() => {
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
-    }, []);
+    // Transform data for comparative chart
+    const comparativeData = report.maturity_scorecard.map(item => ({
+        name: item.dimension.length > 15 ? item.dimension.substring(0, 15) + '...' : item.dimension,
+        full_name: item.dimension,
+        Score: item.score,
+        Target: 100,
+        Gap: 100 - item.score
+    }));
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex justify-center items-center">
-                <div className="flex flex-col items-center space-y-6">
-                    <div className="w-20 h-20 border-t-4 border-blue-700 rounded-full animate-spin"></div>
-                    <div className="text-center">
-                        <h2 className="text-xl font-bold text-slate-800">HR Tek Systems</h2>
-                        <p className="text-slate-500">Generating Confidential Deliverable...</p>
+            <div className="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center">
+                <div className="relative">
+                    <div className="w-24 h-24 rounded-full border-t-2 border-r-2 border-indigo-500 animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Brain className="w-10 h-10 text-indigo-400 animate-pulse" />
                     </div>
                 </div>
             </div>
@@ -170,524 +246,379 @@ export default function ConsultingReport() {
     }
 
     return (
-        <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 pb-20 overflow-x-hidden">
-            {/* Page 1: Cover Page */}
-            <section className="min-h-screen flex flex-col justify-between p-12 md:p-24 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-16">
-                        <div className="p-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/20">
-                            <Zap className="w-8 h-8 text-blue-400 fill-blue-400/20" />
-                        </div>
-                        <span className="text-3xl font-black tracking-tighter uppercase">HR TEK SYSTEMS</span>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-6 leading-none">
-                            PROFESSIONAL <br />
-                            <span className="text-blue-400">DIGITAL MATURITY</span> <br />
-                            REPORT
-                        </h1>
-                        <div className="h-1 w-32 bg-blue-500 mb-8"></div>
-                        <h2 className="text-2xl md:text-3xl font-light text-slate-300 tracking-wide uppercase">
-                            Deliverable for: {brand_name}
-                        </h2>
-                    </motion.div>
-                </div>
-
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 mt-20">
-                    <div>
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-4">Report Objective</h3>
-                        <p className="text-xl text-slate-300 leading-relaxed font-light">
-                            This report evaluates the organization’s Digital & HR Transformation Maturity across Technology, Culture, People, Process, Data, and AI.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        {[
-                            "Clear maturity score",
-                            "Key risk areas",
-                            "Business impact assessment",
-                            "Prioritized roadmap",
-                            "Investment guidance",
-                            "Scale readiness"
-                        ].map((item, i) => (
-                            <div key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                {item}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="relative z-10 mt-20 pt-10 border-t border-white/10 flex flex-col md:flex-row justify-between items-end md:items-center">
-                    <div className="text-slate-500 text-sm uppercase tracking-widest">
-                        Confidential Client Deliverable • © {new Date().getFullYear()} HR Tek Systems
-                    </div>
-                    <div className="text-slate-400 text-sm italic font-light">
-                        Designed for CXOs, CHROs, CIOs, and Board-level discussions.
-                    </div>
-                </div>
-            </section>
-
-            {/* Print Button - Floating */}
-            <button
-                onClick={() => window.print()}
-                className="fixed bottom-8 right-8 z-[100] p-4 bg-blue-600 text-white rounded-full shadow-2xl hover:bg-blue-700 transition-all hover:scale-110 active:scale-95 group print:hidden"
-                title="Export to PDF"
-            >
-                <div className="flex items-center gap-2">
-                    <FileText className="w-6 h-6" />
-                    <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 font-bold whitespace-nowrap">EXTRACT PDF</span>
-                </div>
-            </button>
-
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @media print {
-                    @page {
-                        size: A4;
-                        margin: 0;
-                    }
-                    body {
-                        -webkit-print-color-adjust: exact;
-                        print-color-adjust: exact;
-                    }
-                    section {
-                        page-break-after: always;
-                        min-height: 100vh !important;
-                        display: block !important;
-                    }
-                    .print\\:hidden {
-                        display: none !important;
-                    }
+        <div className="min-h-screen bg-[#0f172a] font-sans text-slate-100 selection:bg-indigo-500/30 selection:text-indigo-200 overflow-x-hidden">
+            <style>{`
+                .backface-hidden { backface-visibility: hidden; }
+                .perspective { perspective: 1000px; }
+                .rotate-y-180 { transform: rotateY(180deg); }
+                .preserve-3d { transform-style: preserve-3d; }
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 20px; }
+                .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); }
+                .glass-header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
+                .neon-text { text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+                .glow-box { box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+                @keyframes scan { 
+                    0% { top: 0%; opacity: 0; }
+                    50% { opacity: 0.5; }
+                    100% { top: 100%; opacity: 0; }
                 }
-            ` }} />
+                .scan-line { position: absolute; left:0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, #6366f1, transparent); animation: scan 3s linear infinite; pointer-events: none; }
+            `}</style>
 
-            {/* Page 2: Executive Summary */}
-            <section className="min-h-screen py-24 px-12 md:px-24 bg-slate-50">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-16 px-4 py-3 bg-white rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 rounded-lg font-bold">01</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Executive Summary</span>
+            <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[30%] bg-purple-600/20 rounded-full blur-[120px]"></div>
+                <div className="absolute top-[30%] right-[20%] w-[20%] h-[20%] bg-cyan-600/10 rounded-full blur-[100px]"></div>
+            </div>
+
+            <motion.header
+                initial={{ y: -100 }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                className="sticky top-0 z-50 glass-header"
+            >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                            <Brain className="w-6 h-6" />
                         </div>
-                        <div className="text-xs text-slate-300 uppercase tracking-widest">HR TEK SYSTEMS • Confidential</div>
+                        <div>
+                            <h1 className="text-lg font-bold text-white leading-tight">{brand_name}</h1>
+                            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+                                <span className="text-indigo-400 uppercase tracking-wider">Digital Maturity Report</span>
+                                <span className="opacity-50">•</span>
+                                <span>{assessmentId}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {isClient && (
+                            <PDFDownloadLink
+                                document={<ConsultingReportPDF report={report} brandName={brand_name} />}
+                                fileName={`Digital_Maturity_${brand_name}.pdf`}
+                                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 hover:bg-indigo-50 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-indigo-500/20 hover:scale-105 active:scale-95"
+                            >
+                                {({ loading }) => (
+                                    <>
+                                        <Download className="w-4 h-4" />
+                                        <span>{loading ? "Generating..." : "Download PDF"}</span>
+                                    </>
+                                )}
+                            </PDFDownloadLink>
+                        )}
+                        <Link to="/dashboard" className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors" title="Exit Report">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                    </div>
+                </div>
+            </motion.header>
+
+            <motion.main
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-16 relative z-10"
+            >
+
+                {/* 01 Executive Summary */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
+                        <span className="text-5xl font-black text-indigo-500/20">01</span>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Executive Summary</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                        <div className="lg:col-span-4 text-center lg:text-left">
-                            <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                whileInView={{ scale: 1, opacity: 1 }}
-                                viewport={{ once: true }}
-                                className="relative inline-block"
-                            >
-                                <svg className="w-64 h-64">
-                                    <circle cx="128" cy="128" r="120" stroke="#e2e8f0" strokeWidth="16" fill="transparent" />
-                                    <circle cx="128" cy="128" r="120" stroke="#3b82f6" strokeWidth="16" fill="transparent"
-                                        strokeDasharray={753} strokeDashoffset={753 - (753 * report.executive_summary.overall_maturity_index / 100)}
-                                        strokeLinecap="round" />
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-7xl font-black text-slate-800">{report.executive_summary.overall_maturity_index}</span>
-                                    <span className="text-slate-400 font-bold tracking-widest text-sm uppercase">INDEX SCORE</span>
-                                </div>
-                            </motion.div>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-5 glass-card rounded-[2rem] p-8 flex flex-col items-center justify-center relative overflow-hidden group min-h-[400px]">
+                            <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <motion.div
+                                    animate={{
+                                        boxShadow: ["0 0 20px rgba(99,102,241,0.2)", "0 0 60px rgba(99,102,241,0.6)", "0 0 20px rgba(99,102,241,0.2)"]
+                                    }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    className="w-48 h-48 rounded-full border-4 border-indigo-500/30 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center mb-8 relative"
+                                >
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                        className="absolute inset-0 rounded-full border-t-2 border-r-2 border-indigo-500 opacity-70"
+                                    ></motion.div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-6xl font-black text-white neon-text">
+                                            <AnimatedCounter value={report.executive_summary.overall_maturity_index} />
+                                        </span>
+                                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest mt-1">Index Score</span>
+                                    </div>
+                                </motion.div>
+
+                                <h3 className="text-2xl font-bold text-white mb-2">{report.executive_summary.maturity_category}</h3>
+                                <div className="h-1 w-20 bg-indigo-500 rounded-full mb-4"></div>
+                                <p className="text-sm text-slate-400 max-w-xs">{report.executive_summary.what_this_means[0]}</p>
+                            </div>
                         </div>
 
-                        <div className="lg:col-span-8">
-                            <h2 className="text-4xl font-black text-slate-800 mb-4 tracking-tight">
-                                Maturity Category: <br />
-                                <span className="text-blue-600">{report.executive_summary.maturity_category}</span>
-                            </h2>
-                            <div className="h-1 w-20 bg-blue-600 mb-8"></div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                        <BarChart3 className="w-5 h-5 text-blue-500" />
-                                        What This Means
-                                    </h3>
-                                    <ul className="space-y-4">
-                                        {report.executive_summary.what_this_means.map((item, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-slate-600 text-sm leading-relaxed">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
-                                                {item}
-                                            </li>
-                                        ))}
-                                    </ul>
+                        <div className="lg:col-span-7 flex flex-col gap-6">
+                            <div className="bg-slate-800/50 rounded-2xl p-6 border border-white/5 relative overflow-hidden min-h-[160px]">
+                                <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-blue-500"></div>
+                                <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> Strategic Directive
+                                </h4>
+                                <div className="text-xl font-medium text-slate-100 italic leading-relaxed">
+                                    "<TypewriterText text={report.executive_summary.executive_recommendation} delay={0.5} />"
                                 </div>
+                            </div>
 
-                                <div className="bg-blue-600 p-8 rounded-3xl shadow-xl shadow-blue-200/50 text-white relative overflow-hidden">
-                                    <Target className="absolute top-0 right-0 w-32 h-32 text-blue-500/30 -translate-y-6 translate-x-6" />
-                                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2 relative z-10">
-                                        <Zap className="w-5 h-5 text-yellow-400" />
-                                        Executive Recommendation
-                                    </h3>
-                                    <p className="text-lg leading-relaxed relative z-10 font-medium">
-                                        "{report.executive_summary.executive_recommendation}"
+                            <div className="glass-card rounded-2xl p-6 border border-white/5">
+                                <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <FileText className="w-4 h-4" /> Executive Context
+                                </h4>
+                                <div className="space-y-4">
+                                    <p className="text-sm text-slate-300 leading-relaxed">
+                                        The organization is currently positioned at the <strong className="text-white">{report.executive_summary.maturity_category}</strong> stage.
+                                        This indicates that {report.executive_summary.what_this_means[1] || report.executive_summary.what_this_means[0].toLowerCase()}.
+                                        Critical attention is required in standardizing core processes to unlock the next level of operational efficiency.
+                                    </p>
+                                    <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                                        {report.executive_summary.key_observations.slice(0, 2).map((obs: string, i: number) => (
+                                            <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-400">
+                                                <ArrowUpRight className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" /> {obs}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.section>
+
+                {/* 02 Comparative Gap Analysis (New Section) */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
+                        <span className="text-5xl font-black text-indigo-500/20">02</span>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Comparative Gap Analytics</h2>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-8">
+                        {/* Analytical View */}
+                        <div className="glass-card rounded-3xl p-6 min-h-[350px] relative overflow-hidden">
+                            <div className="scan-line"></div>
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Current vs Target Performance</h4>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={comparativeData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                                    <XAxis type="number" domain={[0, 100]} hide />
+                                    <YAxis dataKey="name" type="category" width={100} tick={{ fill: '#94a3b8', fontSize: 10 }} />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#475569', color: '#fff' }}
+                                    />
+                                    <Bar dataKey="Score" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={12} name="Current Score" />
+                                    <Bar dataKey="Target" fill="#1e293b" radius={[0, 4, 4, 0]} barSize={8} name="Target" stroke="#475569" strokeDasharray="3 3" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Textual Diagnostic */}
+                        <div className="glass-card rounded-3xl p-8 flex flex-col justify-center">
+                            <div className="flex items-center gap-3 mb-6">
+                                <ScanLine className="w-6 h-6 text-indigo-400" />
+                                <h3 className="text-xl font-bold text-white">Diagnostic Report</h3>
+                            </div>
+                            <div className="space-y-6">
+                                {report.dimension_deep_dives.slice(0, 3).map((dim: any, i: number) => (
+                                    <div key={i} className="border-l-2 border-indigo-500/30 pl-4 py-1">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <h5 className="font-bold text-indigo-200 text-sm">{dim.dimension}</h5>
+                                            <span className="text-xs font-mono text-rose-400">GAP: {100 - dim.score}%</span>
+                                        </div>
+                                        <p className="text-xs text-slate-400 leading-relaxed mb-1">
+                                            Analysis reveals {dim.current_state[0].toLowerCase()}.
+                                        </p>
+                                        <p className="text-xs text-emerald-400/80 font-medium">
+                                            → Recommendation: {dim.recommendations[0]}
+                                        </p>
+                                    </div>
+                                ))}
+                                <div className="pt-4 border-t border-white/5">
+                                    <p className="text-xs text-slate-500 italic">
+                                        * Top 3 meaningful gaps selected for immediate strategic review.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </motion.section>
 
-            {/* Page 3: Maturity Scorecard */}
-            <section className="py-24 px-12 md:px-24 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-16 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-blue-700 text-white rounded-lg font-bold">02</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Maturity Scorecard</span>
-                        </div>
+                {/* 03 Maturity Scorecard */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
+                        <span className="text-5xl font-black text-indigo-500/20">03</span>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Analysis Scorecard</h2>
                     </div>
 
-                    <div className="overflow-hidden rounded-3xl border border-slate-200 shadow-2xl">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-900 text-white uppercase text-xs tracking-widest">
-                                <tr>
-                                    <th className="px-8 py-6">Dimension</th>
-                                    <th className="px-8 py-6">Score</th>
-                                    <th className="px-8 py-6">Status / Risk</th>
-                                    <th className="px-8 py-6 w-48">Visualization</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {report.maturity_scorecard.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-8 py-6 font-bold text-slate-700">{item.dimension}</td>
-                                        <td className="px-8 py-6">
-                                            <span className="text-2xl font-black text-slate-900">{item.score}</span>
-                                            <span className="text-slate-400 text-xs ml-1">/ {item.max_score}</span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${item.risk_level === 'Low' ? 'bg-emerald-100 text-emerald-700' :
-                                                item.risk_level.includes('Medium') ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-rose-100 text-rose-700'
-                                                }`}>
-                                                {item.risk_level} Risk
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full ${(item.score / item.max_score) > 0.7 ? 'bg-emerald-500' :
-                                                        (item.score / item.max_score) > 0.4 ? 'bg-amber-500' :
-                                                            'bg-rose-500'
-                                                        }`}
-                                                    style={{ width: `${(item.score / item.max_score) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                        </td>
+                    <div className="grid lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-12 glass-card rounded-3xl overflow-hidden p-1">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-slate-900/50">
+                                    <tr>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">Dimension</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider">Score</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-wider text-right">Metric</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            {/* Page 4: Detailed Deep Dives */}
-            <section className="py-24 px-12 md:px-24 bg-slate-900 text-white">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-16 px-4 py-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-blue-500 text-white rounded-lg font-bold">03</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Dimension Deep Dives</span>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {report.maturity_scorecard.map((item: any, i: number) => (
+                                        <tr key={i} className="group hover:bg-white/5 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <span className="font-bold text-slate-200 block mb-1 group-hover:text-indigo-400 transition-colors">{item.dimension}</span>
+                                                <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase ${item.risk_level.includes('High') ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                                    {item.risk_level}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-2xl font-black text-white"><AnimatedCounter value={item.score} duration={1} /></span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="w-full max-w-[200px] h-2 bg-slate-800 rounded-full ml-auto overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        whileInView={{ width: `${item.score}%` }}
+                                                        transition={{ duration: 1, delay: i * 0.1 }}
+                                                        className={`h-full rounded-full ${item.risk_level.includes('High') ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]'}`}
+                                                    ></motion.div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                </motion.section>
 
-                    <div className="space-y-16">
-                        {report.dimension_deep_dives.map((dive, idx) => (
-                            <div key={idx} className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-b border-white/10 pb-16 last:border-0 last:pb-0">
-                                <div className="lg:col-span-4">
-                                    <h3 className="text-3xl font-black mb-4 tracking-tight">03.{idx + 1} <br /> {dive.dimension}</h3>
-                                    <div className="h-1 w-12 bg-blue-500"></div>
-                                </div>
-                                <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                                    <div className="bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition-all">
-                                        <h4 className="text-sm font-bold uppercase tracking-widest text-blue-400 mb-6 flex items-center justify-between">
-                                            Current State
-                                            <FileText className="w-4 h-4" />
-                                        </h4>
-                                        <ul className="space-y-3">
-                                            {dive.current_state.map((text, i) => (
-                                                <li key={i} className="text-slate-400 text-sm leading-relaxed flex gap-2">
-                                                    <span className="text-blue-500">•</span> {text}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    <div className="bg-rose-500/5 p-6 rounded-2xl border border-rose-500/10 hover:bg-rose-500/10 transition-all">
-                                        <h4 className="text-sm font-bold uppercase tracking-widest text-rose-400 mb-6 flex items-center justify-between">
-                                            {dive.risk ? 'Observed Risks' : 'Business Impact'}
-                                            <AlertTriangle className="w-4 h-4" />
-                                        </h4>
-                                        <ul className="space-y-3">
-                                            {(dive.risk || dive.business_impact || []).map((text, i) => (
-                                                <li key={i} className="text-slate-300 text-sm leading-relaxed flex gap-2">
-                                                    <span className="text-rose-500">•</span> {text}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    <div className="bg-emerald-500/5 p-6 rounded-2xl border border-emerald-500/10 hover:bg-emerald-500/10 transition-all">
-                                        <h4 className="text-sm font-bold uppercase tracking-widest text-emerald-400 mb-6 flex items-center justify-between">
-                                            Strategic Recs
-                                            <Zap className="w-4 h-4" />
-                                        </h4>
-                                        <ul className="space-y-3">
-                                            {dive.recommendations.map((text, i) => (
-                                                <li key={i} className="text-slate-200 text-sm leading-relaxed flex gap-2">
-                                                    <span className="text-emerald-500">✔</span> {text}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Page 5: Business Risk & Opportunity */}
-            <section className="py-24 px-12 md:px-24 bg-slate-50">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-16 px-4 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-slate-800 text-white rounded-lg font-bold">04</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Risk & Opportunity Analysis</span>
-                        </div>
+                {/* 04 Dimension Deep Dives (Flip Cards) */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
+                        <span className="text-5xl font-black text-indigo-500/20">04</span>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Dimension Insights</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div className="bg-rose-600 p-12 rounded-[3rem] text-white shadow-2xl shadow-rose-200 relative overflow-hidden group">
-                            <AlertTriangle className="absolute -bottom-6 -left-6 w-48 h-48 text-rose-500/30 group-hover:scale-110 transition-transform duration-700" />
-                            <h2 className="text-4xl font-black mb-12 relative z-10 tracking-tight">Critical Exposure <br /> Areas</h2>
-                            <div className="space-y-6 relative z-10">
-                                {report.business_risk_opportunity.top_risks.map((item, i) => (
-                                    <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 flex items-center justify-between">
-                                        <span className="font-bold text-lg">{item.risk}</span>
-                                        <span className="px-3 py-1 bg-white text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest">{item.impact} IMPACT</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="bg-emerald-600 p-12 rounded-[3rem] text-white shadow-2xl shadow-emerald-200 relative overflow-hidden group">
-                            <TrendingUp className="absolute -bottom-6 -right-6 w-48 h-48 text-emerald-500/30 group-hover:scale-110 transition-transform duration-700" />
-                            <h2 className="text-4xl font-black mb-12 relative z-10 tracking-tight">Growth & Scale <br /> Opportunities</h2>
-                            <div className="space-y-6 relative z-10">
-                                {report.business_risk_opportunity.opportunity_areas.map((item, i) => (
-                                    <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 flex items-center justify-between">
-                                        <span className="font-bold text-lg">{item.opportunity}</span>
-                                        <span className="px-3 py-1 bg-white text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">{item.value} VALUE</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Page 6: Transformation Priority Matrix */}
-            <section className="py-24 px-12 md:px-24 bg-white">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-16 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-lg font-bold">05</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Transformation Priority Matrix</span>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {report.transformation_priority_matrix.map((item, i) => (
-                            <motion.div
-                                key={i}
-                                whileHover={{ y: -10 }}
-                                className={`p-8 rounded-[2rem] border-2 shadow-xl ${item.priority === 'P1' ? 'border-blue-600 bg-blue-50/30' :
-                                    item.priority === 'P2' ? 'border-indigo-200 bg-white' :
-                                        'border-slate-100 bg-white'
-                                    }`}
-                            >
-                                <div className={`w-12 h-12 flex items-center justify-center rounded-2xl font-black text-xl mb-8 ${item.priority === 'P1' ? 'bg-blue-600 text-white' :
-                                    item.priority === 'P2' ? 'bg-indigo-600 text-white' :
-                                        'bg-slate-200 text-slate-600'
-                                    }`}>
-                                    {item.priority}
-                                </div>
-                                <h3 className="text-xl font-black text-slate-800 mb-8 leading-tight h-14 overflow-hidden">{item.initiative}</h3>
-
-                                <div className="space-y-4 pt-8 border-t border-slate-200">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Impact</span>
-                                        <span className="text-xs font-bold text-blue-600">{item.impact}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resource Effort</span>
-                                        <span className="text-xs font-bold text-slate-600">{item.effort}</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Page 7: Transformation Roadmap */}
-            <section className="py-24 px-12 md:px-24 bg-slate-50 overflow-hidden">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex items-center justify-between mb-24 px-4 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-lg font-bold">06</span>
-                            <span className="font-bold text-slate-400 uppercase tracking-widest text-xs">Transformation Roadmap</span>
-                        </div>
-                    </div>
-
-                    <div className="relative">
-                        {/* Horizontal Line for Desktop */}
-                        <div className="hidden lg:block absolute top-[28px] left-[10%] right-[10%] h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 rounded-full"></div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8">
-                            {report.transformation_roadmap.map((phase, i) => (
-                                <div key={i} className="relative z-10 flex flex-col group">
-                                    <div className="w-14 h-14 bg-white border-4 border-slate-50 flex items-center justify-center rounded-2xl text-slate-800 font-black text-xl mb-8 mx-auto lg:mx-0 shadow-lg group-hover:scale-110 group-hover:border-blue-500 transition-all duration-300">
-                                        {i + 1}
-                                    </div>
-                                    <div className="text-center lg:text-left">
-                                        <h4 className="text-blue-600 font-black uppercase tracking-widest text-xs mb-2">{phase.phase}</h4>
-                                        <div className="text-2xl font-black text-slate-800 mb-2">{phase.timeline}</div>
-                                        <div className="h-0.5 w-10 bg-blue-200 mb-6 mx-auto lg:mx-0"></div>
-                                        <div className="bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100">
-                                            <ul className="space-y-3">
-                                                {phase.actions.map((action, ai) => (
-                                                    <li key={ai} className="text-slate-600 text-sm leading-relaxed flex items-start gap-2">
-                                                        <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                                                        {action}
-                                                    </li>
-                                                ))}
-                                            </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {report.dimension_deep_dives.map((dim: any, i: number) => (
+                            <div key={i} className="group h-[360px] perspective cursor-pointer">
+                                <div className="relative w-full h-full duration-700 preserve-3d group-hover:rotate-y-180 transition-all ease-in-out">
+                                    {/* Front */}
+                                    <div className="absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors">
+                                        <div className="absolute top-0 right-0 p-6 opacity-5">
+                                            <Target className="w-32 h-32 text-white" />
                                         </div>
+
+                                        <div>
+                                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold mb-6 border border-indigo-500/30">
+                                                {i + 1}
+                                            </div>
+                                            <h3 className="font-bold text-white text-xl leading-snug mb-2 pr-4">{dim.dimension}</h3>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{dim.strategic_outlook}</p>
+                                        </div>
+
+                                        <div className="space-y-3 relative z-10">
+                                            <div className="flex items-end gap-2">
+                                                <span className="text-5xl font-black text-white">{dim.score}</span>
+                                                <span className="text-sm font-semibold text-slate-500 mb-2">/100</span>
+                                            </div>
+                                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-full" style={{ width: `${dim.score}%` }}></div>
+                                            </div>
+                                            <div className="flex justify-center mt-4 pt-4 border-t border-white/5">
+                                                <span className="text-xs font-bold text-indigo-300 flex items-center gap-2 group-hover:text-white transition-colors">
+                                                    Tap to reveal analysis <ArrowUpRight className="w-3 h-3" />
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Back */}
+                                    <div className="absolute w-full h-full backface-hidden bg-indigo-950 rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-200 border border-indigo-500/30">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-indigo-500"></div>
+                                        <h3 className="font-bold text-white text-md mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+                                            <Brain className="w-4 h-4 text-cyan-400" /> Analysis
+                                        </h3>
+
+                                        <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                    <AlertTriangle className="w-3 h-3" /> Critical Gaps
+                                                </p>
+                                                <ul className="text-sm text-slate-400 space-y-2">
+                                                    {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-rose-500 mt-1">•</span> {s}</li>)}
+                                                </ul>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                    <Lightbulb className="w-3 h-3" /> Strategic Actions
+                                                </p>
+                                                <ul className="text-sm text-slate-400 space-y-2">
+                                                    {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-emerald-500 mt-1">•</span> {r}</li>)}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.section>
+
+                {/* 05 Transformation Roadmap (Circuit Style) */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
+                        <span className="text-5xl font-black text-indigo-500/20">05</span>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Transformation Roadmap</h2>
+                    </div>
+
+                    <div className="p-8 lg:p-12 relative">
+                        {/* Connecting Line (Vertical on Mobile) */}
+                        <div className="absolute left-8 lg:left-1/2 top-0 bottom-0 w-1 lg:w-full lg:h-1 bg-gradient-to-b lg:bg-gradient-to-r from-indigo-500/20 via-purple-500/50 to-transparent"></div>
+
+                        <div className="grid lg:grid-cols-3 gap-12 relative z-10">
+                            {report.transformation_roadmap.map((phase: any, i: number) => (
+                                <div key={i} className="relative pl-12 lg:pl-0 lg:pt-12">
+                                    {/* Node Point */}
+                                    <div className="absolute left-6 lg:left-1/2 top-0 lg:top-6 w-4 h-4 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,1)] -translate-x-1/2 lg:-translate-y-1/2 border-2 border-white z-20"></div>
+
+                                    <div className="glass-card p-6 rounded-2xl border border-white/10 hover:border-indigo-500/50 transition-colors group">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-bold px-2 py-1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">{phase.timeline}</span>
+                                            <span className="text-4xl font-black text-white/5 absolute right-4 top-4 group-hover:text-indigo-500/10 transition-colors">{i + 1}</span>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white mb-4 uppercase tracking-wider">{phase.phase}</h3>
+                                        <ul className="space-y-3">
+                                            {phase.actions.map((action: string, idx: number) => (
+                                                <li key={idx} className="flex items-start gap-3 text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                                                    <ChevronRight className="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                                    {action}
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                </div>
-            </section>
+                </motion.section>
 
-            {/* Page 8: Investment Indication */}
-            <section className="py-24 px-12 md:px-24 bg-white text-slate-900">
-                <div className="max-w-6xl mx-auto">
-                    <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8">
-                        <div>
-                            <h2 className="text-5xl font-black tracking-tight text-slate-800 mb-4">Investment & Effort <br /> <span className="text-blue-600">Guidance</span></h2>
-                            <p className="text-slate-500 font-medium">Indicative, non-binding estimates based on current maturity levels.</p>
-                        </div>
-                        <div className="bg-slate-50 px-8 py-6 rounded-3xl border border-slate-100">
-                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Primary Partner</div>
-                            <div className="flex items-center gap-3">
-                                <Zap className="w-6 h-6 text-blue-600 fill-blue-600/10" />
-                                <span className="font-bold text-xl tracking-tight uppercase">HR Tek Systems</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                        {report.investment_indication.map((item, i) => (
-                            <div key={i} className="bg-white border-2 border-slate-100 p-8 rounded-[2.5rem] hover:border-blue-200 transition-all shadow-lg hover:shadow-2xl">
-                                <h3 className="text-lg font-bold text-slate-800 mb-10 h-10 overflow-hidden leading-tight">{item.area}</h3>
-                                <div className="space-y-8">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Effort</span>
-                                            <span className="font-bold text-slate-700">{item.effort}</span>
-                                        </div>
-                                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
-                                            <Briefcase className="w-5 h-5 text-slate-400" />
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between pt-8 border-t border-slate-100">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Budget Band</span>
-                                            <span className="text-3xl font-black text-blue-600">{item.investment_band}</span>
-                                        </div>
-                                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                                            <TrendingUp className="w-5 h-5 text-blue-600" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-20 p-8 bg-slate-900 rounded-[2rem] text-white flex flex-col md:flex-row items-center gap-8 justify-between shadow-2xl overflow-hidden relative">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl translate-x-12 -translate-y-12"></div>
-                        <div className="max-w-xl relative z-10">
-                            <h4 className="text-2xl font-bold mb-4 tracking-tight text-white/90">Interested in a high-fidelity implementation roadmap?</h4>
-                            <p className="text-slate-400 font-light">Contact our strategy team to map these recommendations to exact service SKUs, timelines, and implementation frameworks.</p>
-                        </div>
-                        <button className="px-10 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition relative z-10 whitespace-nowrap shadow-xl">
-                            INITIATE ADVISORY →
-                        </button>
+                {/* Footer */}
+                <div className="border-t border-white/10 pt-12 mt-12 pb-12">
+                    <p className="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Confidential Advisory Report</p>
+                    <div className="flex justify-center items-center gap-2 text-slate-600">
+                        <span className="font-black text-lg">HR TEK SYSTEMS</span>
+                        <span>•</span>
+                        <span>© 2026</span>
                     </div>
                 </div>
-            </section>
 
-            {/* Final Page: Why HR Tek Systems */}
-            <section className="py-24 px-12 md:px-24 bg-slate-50">
-                <div className="max-w-6xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-bold text-xs uppercase tracking-widest mb-12">
-                        Execution Partner
-                    </div>
-                    <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-20 leading-none">
-                        WHY <span className="text-blue-600">HR TEK</span> SYSTEMS?
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-                        {[
-                            { title: "Independant Advisory", text: "Vendor-neutral strategy ensuring the best tool for your specific business needs." },
-                            { title: "Business-First", text: "Focusing on ROI and outcomes rather than just tool implementations." },
-                            { title: "Transformation Expertise", text: "Deep bench of specialists in HR technology and change management." },
-                            { title: "Scalable Model", text: "Unique HAAS (HR as a Service) model built for global scale." }
-                        ].map((item, i) => (
-                            <div key={i} className="text-left bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl">
-                                <ShieldCheck className="w-8 h-8 text-blue-600 mb-6" />
-                                <h4 className="text-lg font-black text-slate-800 mb-4">{item.title}</h4>
-                                <p className="text-slate-500 font-light text-sm leading-relaxed">{item.text}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="flex flex-col items-center gap-12">
-                        <div className="h-0.5 w-32 bg-slate-200"></div>
-                        <div className="flex items-center space-x-12 opacity-50 grayscale hover:grayscale-0 transition-all">
-                            <span className="text-2xl font-black tracking-tighter uppercase">ADVISE</span>
-                            <span className="text-2xl font-black tracking-tighter uppercase">IMPLEMENT</span>
-                            <span className="text-2xl font-black tracking-tighter uppercase">OPTIMIZE</span>
-                        </div>
-                        <div className="text-slate-400 text-xs font-bold uppercase tracking-[0.5em] mt-10">
-                            WWW.HRTEKSYSTEMS.COM
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </motion.main>
         </div>
     );
 }
-
-const CheckCircle = ({ className }: { className?: string }) => (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-    </svg>
-);
