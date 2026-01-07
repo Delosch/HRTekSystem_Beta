@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { redirect, useLoaderData } from "@remix-run/react";
+import { redirect, useLoaderData, useRevalidator } from "@remix-run/react";
 import Sidebar from "../../components/DashboardComponents/Sidebar";
 import {
   Radar,
@@ -53,8 +53,8 @@ const setCachedData = (key: string, data: DashboardData): void => {
 };
 
 const createFallbackData = (): DashboardData => ({
-  isEmpty: false,
-  message: "No assessment data available.",
+  isEmpty: true,
+  message: "No assessment data available. Please complete an assessment first.",
   radar_chart: {
     labels: [],
     current_scores: [],
@@ -330,6 +330,30 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 
     if (!data || !data.result || !data.result.visualization_data) {
       console.log("❌ No data found, returning fallback");
+
+      if (user.onboardingStatus === "Completed") {
+        try {
+          const { getAIStatus, setAIStatus } = await import("~/services/ai-status.server");
+          const status = getAIStatus(user.organisationId);
+          console.log(`[Dashboard] Current AI Status: ${status}`);
+
+          if (!status || status === 'error') {
+            console.log("⚠️ Analysis missing for completed user. Triggering regeneration...");
+            setAIStatus(user.organisationId, 'pending');
+
+            // Fire and forget generation
+            import("~/lib/digitalMaturity.genAi").then(({ generate }) => {
+              generate("digital_maturity", "Profiling Assessment", user.organisationId).catch(e => {
+                console.error("🚨 Dashboard generation trigger failed:", e);
+                setAIStatus(user.organisationId, 'error');
+              });
+            });
+          }
+        } catch (err) {
+          console.error("Error checking/triggering AI status in dashboard:", err);
+        }
+      }
+
       const fallbackData = createFallbackData();
       return { ...fallbackData, user };
     }
@@ -553,6 +577,16 @@ export default function Dashboard() {
   if (data.isEmpty) {
     // Check if user has ALREADY completed assessment but analysis is pending/failed
     if (data.user?.onboardingStatus === "Completed") {
+      const revalidator = useRevalidator();
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          console.log("🔄 Checking for analysis results...");
+          revalidator.revalidate();
+        }, 5000);
+        return () => clearInterval(interval);
+      }, [revalidator]);
+
       return (
         <div className="flex flex-col md:flex-row min-h-screen bg-[#F7F6F3]">
           {!isSidebarCollapsed && <Sidebar user={data.user} />}
@@ -561,14 +595,15 @@ export default function Dashboard() {
               <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-100 border-t-blue-600 mb-6"></div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Analysis in Progress</h2>
               <p className="text-gray-600 max-w-md mb-8 leading-relaxed">
-                Great job completing the assessment! Our AI is currently processing your inputs to generate detailed insights. This usually takes less than a minute.
+                Great job completing the assessment! Our AI is currently processing your inputs to generate detailed insights.
+                <br /><span className="text-sm text-blue-600 font-medium">Auto-refreshing every 5 seconds...</span>
               </p>
               <div className="flex gap-4">
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => revalidator.revalidate()}
                   className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-lg hover:shadow-xl"
                 >
-                  Refresh Status
+                  Refresh Now
                 </button>
                 <a
                   href="/onboarding/profilingAssessment"
@@ -784,20 +819,29 @@ export default function Dashboard() {
           ].map((stat, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200"
+              className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
             >
-              <div className="flex flex-col h-full justify-between">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-2 rounded-lg ${stat.bg} ${stat.border} border`}>
+              <div className={`absolute top-0 left-0 w-1 h-full ${stat.bg.replace('bg-', 'bg-').replace('-50', '-500')}`}></div>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.border} border shadow-inner`}>
                     {stat.icon}
                   </div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.subtext.split(' ')[0]}</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-800 tracking-tight mb-1">
+                  <div className="text-3xl font-black text-slate-900 tracking-tighter mb-1 font-outfit">
                     {stat.value}
                   </div>
-                  <div className="text-sm font-medium text-slate-600 mb-1">{stat.label}</div>
-                  <div className="text-xs text-slate-400">{stat.subtext}</div>
+                  <div className="text-sm font-bold text-slate-500 uppercase tracking-tight">{stat.label}</div>
+                  <div className="mt-2 h-1 w-full bg-slate-50 rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: "60%" }}
+                      transition={{ duration: 1, delay: idx * 0.1 }}
+                      className={`h-full ${stat.bg.replace('bg-', 'bg-').replace('-50', '-500')}`}
+                    ></motion.div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -805,46 +849,62 @@ export default function Dashboard() {
         </div>
 
         {/* Enhanced Top Section - Professional Design */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Welcome Card */}
-          <div className="md:col-span-2 bg-white rounded-xl p-8 border border-slate-200 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl translate-x-12 -translate-y-12"></div>
+          <div className="lg:col-span-2 bg-white rounded-3xl p-8 border border-slate-100 shadow-xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-[100px] -translate-x-12 -translate-y-24 group-hover:bg-indigo-50 transition-colors duration-700"></div>
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-50 rounded-full blur-[80px] opacity-60"></div>
 
             <div className="relative z-10">
               <div className="flex flex-col h-full justify-center">
-                <h2 className="text-slate-500 font-medium mb-1">Overview</h2>
-                <h1 className="text-3xl font-bold text-slate-800 mb-2">
-                  Welcome back, {data.user?.first_name || 'User'}
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                  <Zap className="w-3 h-3 fill-current" />
+                  Dashboard Overview
+                </div>
+
+                <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tighter">
+                  Welcome back, <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{data.user?.first_name || 'User'}</span>
                 </h1>
-                <p className="text-slate-600 max-w-lg mb-6">
+
+                <p className="text-slate-500 max-w-lg mb-8 text-lg font-medium leading-relaxed">
                   Track your organizational transformation progress and view your latest assessment insights.
                 </p>
 
-                <div className="flex items-center gap-4">
-                  <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span className="text-sm text-slate-700 font-medium">
-                      {data.user?.role || 'Team Member'}
-                      {data.user?.organisationName ? ` • ${data.user.organisationName}` : ''}
-                    </span>
+                <div className="flex flex-wrap items-center gap-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-lg">
+                      {data.user?.first_name?.[0] || 'U'}
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">
+                        {data.user?.role || 'Founder & CEO'}
+                        {data.user?.organisationName ? ` • ${data.user.organisationName}` : ' • Techninova'}
+                      </div>
+                      <div className="text-xs text-slate-400 font-medium">Verified Account</div>
+                    </div>
                   </div>
-                  <span className="text-sm text-slate-400">|</span>
-                  <span className="text-sm text-slate-500">Last login: Today</span>
+
+                  <div className="h-8 w-[1px] bg-slate-200 hidden sm:block"></div>
+
+                  <div className="flex items-center gap-2 text-slate-500 font-medium">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm">Last login: Today</span>
+                  </div>
                 </div>
 
-                <div className="mt-8 flex flex-wrap gap-4">
+                <div className="mt-10 flex flex-wrap gap-4">
                   <a
                     href="/consulting-report/Profiling Assessment"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition shadow-lg shadow-slate-200"
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-slate-900 text-white font-black rounded-2xl hover:bg-black transition-all shadow-xl shadow-slate-200 hover:-translate-y-1 active:translate-y-0"
                   >
-                    <Zap className="w-4 h-4 text-blue-400 fill-blue-400/20" />
+                    <Zap className="w-5 h-5 text-blue-400 fill-blue-400/20" />
                     View Detailed Analysis Report
                   </a>
                   <a
                     href="/v2/Profiling Assessment"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 bg-white text-slate-700 font-bold rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-slate-900 font-black rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:translate-y-0"
                   >
-                    <FileText className="w-4 h-4 text-slate-400" />
+                    <FileText className="w-5 h-5 text-slate-400" />
                     Standard Report
                   </a>
                 </div>
@@ -853,289 +913,293 @@ export default function Dashboard() {
           </div>
 
           {/* Date Card */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden">
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl translate-x-8 translate-y-8"></div>
-            <div className="relative z-10 h-full flex flex-col justify-center">
-              <div className="mb-2 text-blue-600 font-semibold uppercase tracking-wider text-xs">Today's Date</div>
-              <div className="text-4xl font-bold text-slate-800 mb-1">
-                {new Date().toLocaleDateString("en-IN", { day: "numeric" })}
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <LayoutDashboard className="w-24 h-24 rotate-12" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="text-blue-600 font-black uppercase tracking-[0.2em] text-[10px] mb-6 flex items-center gap-2">
+                <div className="w-4 h-[2px] bg-blue-600"></div>
+                Today's Date
               </div>
-              <div className="text-xl text-slate-600 font-medium mb-4">
-                {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+
+              <div className="relative">
+                <div className="text-7xl font-black text-slate-900 mb-1 tracking-tighter">
+                  {new Date().toLocaleDateString("en-IN", { day: "numeric" })}
+                </div>
+                <div className="text-2xl text-slate-500 font-bold tracking-tight">
+                  {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                </div>
               </div>
-              <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-slate-500 text-sm font-medium">
+            </div>
+
+            <div className="relative z-10 mt-8 pt-8 border-t border-slate-50 flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-slate-900 text-lg font-black tracking-tight">
                   {new Date().toLocaleDateString("en-IN", { weekday: "long" })}
                 </span>
-                <Clock className="w-4 h-4 text-slate-400" />
+                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Business Day</span>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                <Clock className="w-6 h-6" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Progress Steps - Light Theme */}
+        {/* Enhanced Progress Steps - Modern Design */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative w-full rounded-2xl mb-6 p-6 overflow-hidden bg-white border border-gray-200 shadow-xl"
+          className="relative w-full rounded-3xl mb-8 p-8 overflow-hidden bg-white border border-slate-100 shadow-xl"
         >
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            }}
-          ></div>
-
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0" style={{
-              backgroundImage: 'radial-gradient(circle, #4facfe 1px, transparent 1px)',
-              backgroundSize: '20px 20px',
-            }}></div>
-          </div>
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600"></div>
 
           <div className="relative z-10">
-            <h3 className="text-lg font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="w-6 h-6 border-2 border-cyan-600 border-t-transparent rounded-full"
-              ></motion.div>
-              Your Transformation Journey
-            </h3>
-            <div className="flex items-center justify-between text-sm gap-3 overflow-x-auto pb-2">
-              {[
-                { label: "Sign Up", done: true },
-                { label: "Engine Assessment", done: true },
-                { label: "Report Generation", done: true },
-                { label: "Initiate Transformation", done: true },
-                { label: "Transformation Journey", done: false },
-                { label: "Excellence", done: false },
-              ].map((step, index) => (
-                <div key={index} className="flex items-center gap-2 whitespace-nowrap">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-2"
-                  >
-                    {step.done ? (
-                      <motion.div
-                        animate={{
-                          boxShadow: [
-                            '0 0 0px rgba(6, 182, 212, 0.5)',
-                            '0 0 20px rgba(6, 182, 212, 0.8)',
-                            '0 0 0px rgba(6, 182, 212, 0.5)',
-                          ],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-6 h-6 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg"
-                      >
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </motion.div>
-                    ) : (
-                      <div className="w-6 h-6 bg-gray-200 rounded-full border-2 border-gray-300"></div>
-                    )}
-                    <span className={`font-medium ${step.done ? 'text-gray-800' : 'text-gray-400'}`}>
-                      {step.label}
-                    </span>
-                  </motion.div>
-                  {index < 5 && (
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ delay: index * 0.1 + 0.2 }}
-                      className="w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500"
-                    ></motion.div>
-                  )}
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
                 </div>
-              ))}
+                Your Transformation Journey
+              </h3>
+              <div className="text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full">
+                Phase 1: Foundation
+              </div>
+            </div>
+
+            <div className="relative">
+              {/* Connection Line */}
+              <div className="absolute top-[18px] left-0 w-full h-[2px] bg-slate-100 -z-0"></div>
+
+              <div className="flex items-start justify-between relative z-10 overflow-x-auto pb-4 custom-scrollbar-light">
+                {[
+                  { label: "Sign Up", done: true, icon: <CheckCircle className="w-4 h-4" /> },
+                  { label: "Assessment", done: true, icon: <FileText className="w-4 h-4" /> },
+                  { label: "Reports", done: true, icon: <LayoutDashboard className="w-4 h-4" /> },
+                  { label: "Initiation", done: true, icon: <Zap className="w-4 h-4" /> },
+                  { label: "Transformation", done: false, icon: <TrendingUp className="w-4 h-4" /> },
+                  { label: "Excellence", done: false, icon: <Award className="w-4 h-4" /> },
+                ].map((step, index) => (
+                  <div key={index} className="flex flex-col items-center gap-4 min-w-[120px]">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${step.done
+                        ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white'
+                        : 'bg-white border-2 border-slate-100 text-slate-300'
+                        }`}
+                    >
+                      {step.icon}
+                    </motion.div>
+                    <div className="text-center">
+                      <div className={`text-xs font-black uppercase tracking-tighter mb-1 ${step.done ? 'text-slate-900' : 'text-slate-400'}`}>
+                        {step.label}
+                      </div>
+                      <div className={`text-[10px] font-bold ${step.done ? 'text-blue-600' : 'text-slate-300'}`}>
+                        {step.done ? 'COMPLETED' : 'PENDING'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Quick Actions Grid - Light Theme */}
+        {/* Professional Quick Actions Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mb-6"
+          className="mb-8"
         >
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 flex items-center gap-2">
-            <span>⚡</span> Quick Actions
+          <h3 className="text-xl font-black text-slate-900 tracking-tighter mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-purple-600" />
+            </div>
+            Strategic Quick Actions
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
             {[
-              { icon: "🎯", label: "Start Assessment", href: "/startTransformationDashboard", gradient: "from-blue-500 to-cyan-500" },
-              { icon: "📋", label: "View Reports", href: "/analysisDashboard", gradient: "from-purple-500 to-pink-500" },
-              { icon: "🗺️", label: "Roadmap", href: "/roadmapDashboard", gradient: "from-green-500 to-emerald-500" },
-              { icon: "🔄", label: "Change Mgmt", href: "/changeDashboard", gradient: "from-orange-500 to-red-500" },
-              { icon: "🏢", label: "Vendors", href: "/vendorDashboard", gradient: "from-indigo-500 to-purple-500" },
-              { icon: "⚙️", label: "Settings", href: "/userSettingsDashboard", gradient: "from-gray-500 to-slate-500" },
+              { icon: <TrendingUp className="w-6 h-6" />, label: "Start Assessment", href: "/startTransformationDashboard", gradient: "from-blue-600 to-cyan-500", shadow: "shadow-blue-100" },
+              { icon: <FileText className="w-6 h-6" />, label: "View Reports", href: "/analysisDashboard", gradient: "from-purple-600 to-pink-500", shadow: "shadow-purple-100" },
+              { icon: <Award className="w-6 h-6" />, label: "Roadmap", href: "/roadmapDashboard", gradient: "from-emerald-600 to-green-500", shadow: "shadow-emerald-100" },
+              { icon: <Clock className="w-6 h-6" />, label: "Change Mgmt", href: "/changeDashboard", gradient: "from-orange-600 to-red-500", shadow: "shadow-orange-100" },
+              { icon: <Cpu className="w-6 h-6" />, label: "Vendors", href: "/vendorDashboard", gradient: "from-indigo-600 to-purple-500", shadow: "shadow-indigo-100" },
+              { icon: <LayoutDashboard className="w-6 h-6" />, label: "Settings", href: "/userSettingsDashboard", gradient: "from-slate-600 to-gray-500", shadow: "shadow-slate-100" },
             ].map((action, idx) => (
               <motion.a
                 key={idx}
                 href={action.href}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + idx * 0.05 }}
-                whileHover={{ scale: 1.05, y: -3, boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-gray-300 transition-all cursor-pointer group shadow-lg"
+                whileHover={{ y: -8, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-center justify-center text-center transition-all duration-300 shadow-xl shadow-slate-100 hover:shadow-2xl hover:shadow-slate-200 cursor-pointer overflow-hidden relative"
               >
-                <div className={`text-4xl mb-2 group-hover:scale-110 transition-transform bg-gradient-to-br ${action.gradient} bg-clip-text text-transparent`}>{action.icon}</div>
-                <div className="text-gray-700 text-sm font-medium">{action.label}</div>
+                <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center text-white mb-4 shadow-lg ${action.shadow} group-hover:scale-110 transition-transform duration-500`}>
+                  {action.icon}
+                </div>
+
+                <div className="text-slate-900 text-sm font-black tracking-tight group-hover:text-blue-600 transition-colors">
+                  {action.label}
+                </div>
               </motion.a>
             ))}
           </div>
         </motion.div>
 
-        {/* AI Insights & Recent Activity Grid - Light Theme */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* AI Insights & Recent Activity Grid - Premium Polishing */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* AI Insights - 2 columns */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
-                <Cpu className="w-5 h-5 text-purple-600" />
+          <div className="lg:col-span-2 bg-white border border-slate-100 rounded-3xl p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-full blur-[100px] -translate-x-12 -translate-y-12 opacity-50"></div>
+
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-50 rounded-xl">
+                    <Cpu className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tighter">AI-Powered Strategic Insights</h3>
+                </div>
+                <div className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-full">
+                  Real-time Analysis
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">AI-Powered Insights</h3>
-            </div>
-            <div className="space-y-3">
-              {[
-                {
-                  type: "success",
-                  icon: CheckCircle,
-                  title: "Strong Digital Foundation",
-                  desc: "Your cloud-first approach positions you well for rapid transformation.",
-                  color: "emerald",
-                  bgColor: "bg-emerald-50",
-                  iconColor: "text-emerald-600",
-                  borderColor: "border-emerald-200"
-                },
-                {
-                  type: "warning",
-                  icon: TrendingUp,
-                  title: "Change Management Focus",
-                  desc: "Employee engagement scores suggest increased communication needed.",
-                  color: "amber",
-                  bgColor: "bg-amber-50",
-                  iconColor: "text-amber-600",
-                  borderColor: "border-amber-200"
-                },
-                {
-                  type: "info",
-                  icon: Award,
-                  title: "Vendor Optimization",
-                  desc: "Potential 23% cost savings through vendor consolidation identified.",
-                  color: "blue",
-                  bgColor: "bg-blue-50",
-                  iconColor: "text-blue-600",
-                  borderColor: "border-blue-200"
-                },
-              ].map((insight, idx) => {
-                const Icon = insight.icon;
-                return (
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  {
+                    title: "Cloud Potential",
+                    desc: "Your current infrastructure shows 85% readiness for further cloud scaling.",
+                    icon: <CheckCircle className="w-5 h-5" />,
+                    color: "emerald",
+                    gradient: "from-emerald-500 to-teal-600"
+                  },
+                  {
+                    title: "Team Alignment",
+                    desc: "Engagement metrics indicate 92% readiness for the upcoming digital shift.",
+                    icon: <TrendingUp className="w-5 h-5" />,
+                    color: "blue",
+                    gradient: "from-blue-500 to-indigo-600"
+                  },
+                  {
+                    title: "Efficiency Gains",
+                    desc: "Potential for 18% operational efficiency improvement through current roadmap.",
+                    icon: <Award className="w-5 h-5" />,
+                    color: "amber",
+                    gradient: "from-amber-500 to-orange-600"
+                  },
+                ].map((insight, idx) => (
                   <div
                     key={idx}
-                    className={`${insight.bgColor} border ${insight.borderColor} rounded-lg p-4 hover:shadow-md transition-all duration-200`}
+                    className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 bg-white rounded-lg ${insight.iconColor}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-slate-800 font-semibold mb-1 text-sm">{insight.title}</h4>
-                        <p className="text-slate-600 text-xs leading-relaxed">{insight.desc}</p>
-                      </div>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${insight.gradient} text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                      {insight.icon}
                     </div>
+                    <h4 className="text-slate-900 font-black mb-2 tracking-tight">{insight.title}</h4>
+                    <p className="text-slate-500 text-xs font-medium leading-relaxed">{insight.desc}</p>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Recent Activity - 1 column */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
-                <Clock className="w-5 h-5 text-blue-600" />
+          {/* Recent Activity Mini-Feed */}
+          <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl flex flex-col">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2.5 bg-blue-50 rounded-xl">
+                <Clock className="w-6 h-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Recent Activity</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter">System Pulse</h3>
             </div>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+
+            <div className="space-y-4 overflow-y-auto custom-scrollbar-light pr-2">
               {[
-                { action: "Completed Tech Maturity Assessment", time: "2 hours ago", type: "success" },
-                { action: "New Vendor Evaluation Started", time: "5 hours ago", type: "info" },
-                { action: "Change Dashboard Updated", time: "1 day ago", type: "update" },
-                { action: "Roadmap Milestone Achieved", time: "2 days ago", type: "success" },
-                { action: "AI Analysis Report Generated", time: "3 days ago", type: "info" },
+                { action: "Maturity Report Generated", time: "2m ago", type: "success" },
+                { action: "New Engine Verified", time: "1h ago", type: "info" },
+                { action: "Data Matrix Updated", time: "5h ago", type: "update" },
+                { action: "New Security Protocol", time: "1d ago", type: "alert" },
               ].map((activity, idx) => (
                 <div
                   key={idx}
-                  className="bg-slate-50 border border-slate-100 rounded-lg p-3 hover:bg-slate-100 hover:border-slate-200 transition-all group cursor-pointer"
+                  className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-default"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
                       activity.type === 'info' ? 'bg-blue-500' :
-                        'bg-purple-500'
-                      }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-slate-800 text-sm font-medium group-hover:text-blue-600 transition-colors truncate">
-                        {activity.action}
-                      </p>
-                      <p className="text-slate-500 text-xs mt-1">{activity.time}</p>
+                        activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
+                    } group-hover:scale-150 transition-transform`}></div>
+                  <div className="flex-1">
+                    <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
+                      {activity.action}
                     </div>
+                    <div className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{activity.time}</div>
                   </div>
                 </div>
               ))}
             </div>
+
+            <button className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full">
+              View Activity Audit
+            </button>
+          </div>
+        </div>
+
+        {/* Strategic Readiness Scorecard Section */}
+        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl mb-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2.5 bg-indigo-50 rounded-xl">
+              <Award className="w-6 h-6 text-indigo-600" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tighter">Strategic Readiness Matrices</h3>
           </div>
 
-          {/* Strategic Readiness Scorecard - New Metric based on 51 questions */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm overflow-hidden flex flex-col">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-indigo-600" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-800">Strategic Readiness</h3>
-            </div>
-            <div className="flex-1 space-y-5">
-              {(data.readiness_metrics || [
-                { label: "Automation Readiness", score: 0, status: "TBD" },
-                { label: "ESG Maturity", score: 0, status: "TBD" },
-                { label: "Cyber Resilience", score: 0, status: "TBD" },
-                { label: "Future Readiness", score: 0, status: "TBD" }
-              ]).map((metric, idx) => (
-                <div key={idx} className="group cursor-default">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700">{metric.label}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${metric.score >= 4 ? 'bg-emerald-100 text-emerald-700' :
-                      metric.score >= 3 ? 'bg-blue-100 text-blue-700' :
-                        metric.score >= 2 ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-500'
-                      }`}>
-                      {metric.status}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {(data.readiness_metrics || [
+              { label: "Automation Readiness", score: 0, status: "TBD" },
+              { label: "ESG Maturity", score: 0, status: "TBD" },
+              { label: "Cyber Resilience", score: 0, status: "TBD" },
+              { label: "Future Readiness", score: 0, status: "TBD" }
+            ]).map((metric, idx) => (
+              <div key={idx} className="relative p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden">
+                <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 group-hover:opacity-30 transition-opacity ${metric.score >= 4 ? 'bg-emerald-400' :
+                    metric.score >= 3 ? 'bg-blue-400' : 'bg-amber-400'
+                  }`}></div>
+
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${metric.score >= 4 ? 'bg-emerald-50 text-emerald-600' :
+                      metric.score >= 3 ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+                    }`}>
+                    {metric.status}
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(metric.score / 5) * 100}%` }}
-                      transition={{ duration: 1, delay: 0.5 + (idx * 0.1) }}
-                      className={`h-full rounded-full ${metric.score >= 4 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
-                        metric.score >= 3 ? 'bg-gradient-to-r from-blue-400 to-blue-500' :
-                          metric.score >= 2 ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
-                            'bg-slate-300'
-                        }`}
-                    ></motion.div>
-                  </div>
-                  <div className="flex justify-between mt-1">
-                    <span className="text-[10px] text-slate-400">0.0</span>
-                    <span className="text-[10px] font-bold text-slate-600">{(metric.score || 0).toFixed(1)} / 5.0</span>
+                  <div className="text-2xl font-black text-slate-900 tracking-tighter">
+                    {(metric.score || 0).toFixed(1)}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <h4 className="text-sm font-black text-slate-700 mb-4 tracking-tight">{metric.label}</h4>
+
+                <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(metric.score / 5) * 100}%` }}
+                    transition={{ duration: 1.5, type: "spring" }}
+                    className={`h-full rounded-full bg-gradient-to-r ${metric.score >= 4 ? 'from-emerald-400 to-emerald-600' :
+                        metric.score >= 3 ? 'from-blue-400 to-blue-600' : 'from-amber-400 to-amber-600'
+                      } shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+                  ></motion.div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -48,12 +48,24 @@ export interface ConsultingReport {
         max_score: number;
         risk_level: string;
     }>;
+    radar_data: Array<{
+        subject: string;
+        A: number;
+        fullMark: number;
+    }>;
+    gap_data: Array<{
+        name: string;
+        gap: number;
+        impact: number;
+    }>;
     dimension_deep_dives: Array<{
         dimension: string;
+        score?: number;
         current_state: string[];
         business_impact?: string[];
         risk?: string[];
         recommendations: string[];
+        strategic_outlook?: string;
     }>;
     business_risk_opportunity: {
         top_risks: Array<{ risk: string; impact: string }>;

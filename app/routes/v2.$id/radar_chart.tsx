@@ -19,43 +19,46 @@ ChartJS.register(
   Legend
 );
 
-export const NewRadarChart = ({ data }: {data:RadarChartData}) => {
+export const NewRadarChart = ({ data }: { data: RadarChartData }) => {
   const chartData = {
     labels: data.labels,
     datasets: [
       {
         label: 'Current',
         data: data.current_scores,
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(6, 182, 212, 0.3)', // Cyan-500
+        borderColor: '#06b6d4',
+        borderWidth: 3,
+        pointBackgroundColor: '#06b6d4',
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+        pointHoverBorderColor: '#06b6d4',
+        pointRadius: 4,
       },
       {
         label: 'Benchmark',
         data: data.industry_benchmarks,
-        backgroundColor: 'rgba(245, 158, 11, 0.2)',
-        borderColor: 'rgba(245, 158, 11, 1)',
+        backgroundColor: 'rgba(236, 72, 153, 0.2)', // Pink-500
+        borderColor: '#ec4899',
         borderWidth: 2,
-        pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+        pointBackgroundColor: '#ec4899',
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(245, 158, 11, 1)',
+        pointHoverBorderColor: '#ec4899',
+        pointRadius: 3,
       },
       {
         label: 'Target',
         data: data.target_scores,
-        backgroundColor: 'rgba(16, 185, 129, 0.2)',
-        borderColor: 'rgba(16, 185, 129, 1)',
+        backgroundColor: 'transparent',
+        borderColor: '#facc15', // Yellow-400
         borderWidth: 2,
-        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+        pointBackgroundColor: '#facc15',
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(16, 185, 129, 1)',
-        borderDash: [5, 5],
+        pointHoverBorderColor: '#facc15',
+        borderDash: [6, 4],
+        pointRadius: 3,
       },
     ],
   };
@@ -66,22 +69,29 @@ export const NewRadarChart = ({ data }: {data:RadarChartData}) => {
     scales: {
       r: {
         angleLines: {
-          color: '#e5e7eb',
+          color: 'rgba(255, 255, 255, 0.15)',
         },
         grid: {
-          color: '#e5e7eb',
+          color: 'rgba(255, 255, 255, 0.15)',
+          circular: true,
         },
         pointLabels: {
           font: {
-            size: 12,
-            weight: 'bold' as const,
+            size: 11,
+            family: "'Inter', sans-serif",
+            weight: '700' as const,
           },
-          color: '#4b5563',
+          color: '#f1f5f9', // Slate-100 (High contrast)
+          padding: 10,
         },
         ticks: {
           backdropColor: 'transparent',
-          color: '#6b7280',
+          color: 'rgba(255, 255, 255, 0.5)',
           stepSize: 1,
+          showLabelBackdrop: false,
+          font: {
+            weight: 'bold' as const
+          }
         },
         suggestedMin: 0,
         suggestedMax: 5,
@@ -91,36 +101,59 @@ export const NewRadarChart = ({ data }: {data:RadarChartData}) => {
       legend: {
         position: 'top' as const,
         labels: {
-            usePointStyle: true,
-            boxWidth: 8,
-            padding: 20
+          usePointStyle: true,
+          pointStyle: 'circle',
+          boxWidth: 8,
+          padding: 20,
+          color: '#fff',
+          font: {
+            family: "'Inter', sans-serif",
+            size: 13,
+            weight: 'bold' as const
+          }
         }
       },
       tooltip: {
         enabled: true,
-        backgroundColor: '#1f2937',
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#e2e8f0',
+        borderColor: 'rgba(255,255,255,0.2)',
+        borderWidth: 1,
         titleFont: {
-            size: 14,
-            weight: 'bold' as const
+          size: 14,
+          weight: 'bold' as const
         },
         bodyFont: {
-            size: 12
+          size: 13,
+          weight: '600' as const
         },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
         callbacks: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          label: function(context: any) {
-            return `${context.dataset.label}: ${context.raw.toFixed(1)}`;
+          label: function (context: any) {
+            return ` ${context.dataset.label}: ${context.raw.toFixed(1)}`;
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          labelColor: function (context: any) {
+            return {
+              borderColor: context.dataset.borderColor,
+              backgroundColor: context.dataset.borderColor,
+              borderWidth: 2,
+              borderRadius: 2,
+            };
           }
         }
       }
     },
     elements: {
-        line: {
-            tension: 0.1
-        }
+      line: {
+        tension: 0.3
+      }
     }
   };
 
   return <Radar data={chartData} options={options} />;
 };
-

@@ -6,9 +6,12 @@ export default function Footer() {
     <footer className="bg-[#0B2A57] text-white py-10">
       <div className="mx-auto px-6 grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
         {/* Company Info */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">HRTek System</h2>
-          <p className="text-sm text-gray-300">
+        <div className="flex flex-col items-start gap-4">
+          <Link to="/" className="flex items-center gap-3 group">
+            <img src="/hrtek_logo.png" alt="HRTEK Logo" className="h-12 w-auto object-contain bg-white/10 rounded-lg p-1" />
+            <h2 className="text-2xl font-black tracking-tighter">HRTEK <span className="text-blue-400">SYSTEM</span></h2>
+          </Link>
+          <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
             A brand of Delosch Technologies Pvt. Ltd.
             <br />
             Empowering HR transformation through intelligent software solutions

@@ -34,25 +34,31 @@ export default function DashboardHeader({
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
             <div className="max-w-full px-6 py-4">
                 <div className="flex items-center justify-between">
-                    {/* Left: Breadcrumb */}
-                    <div className="flex items-center gap-2 text-sm">
-                        {breadcrumbs.map((crumb, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                {crumb.href ? (
-                                    <a
-                                        href={crumb.href}
-                                        className="text-gray-500 hover:text-gray-700 transition-colors font-medium"
-                                    >
-                                        {crumb.label}
-                                    </a>
-                                ) : (
-                                    <span className="text-gray-900 font-semibold">{crumb.label}</span>
-                                )}
-                                {index < breadcrumbs.length - 1 && (
-                                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                                )}
-                            </div>
-                        ))}
+                    {/* Left: Branding + Breadcrumb */}
+                    <div className="flex items-center gap-6">
+                        <a href="/" className="flex items-center gap-2 group border-r border-gray-200 pr-6">
+                            <img src="/hrtek_logo.png" alt="HRTEK" className="h-8 w-auto object-contain transition-transform group-hover:scale-105" />
+                            <span className="text-gray-900 font-black text-sm tracking-tighter">HRTEK <span className="text-blue-600">SYSTEM</span></span>
+                        </a>
+                        <div className="flex items-center gap-2 text-sm">
+                            {breadcrumbs.map((crumb, index) => (
+                                <div key={index} className="flex items-center gap-2">
+                                    {crumb.href ? (
+                                        <a
+                                            href={crumb.href}
+                                            className="text-gray-500 hover:text-gray-700 transition-colors font-medium"
+                                        >
+                                            {crumb.label}
+                                        </a>
+                                    ) : (
+                                        <span className="text-gray-900 font-semibold">{crumb.label}</span>
+                                    )}
+                                    {index < breadcrumbs.length - 1 && (
+                                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Right: Actions */}

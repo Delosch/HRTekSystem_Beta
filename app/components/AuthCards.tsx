@@ -162,7 +162,11 @@ export default function AuthForm() {
   const [passwordStep, setPasswordStep] = useState("initial");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState({
+  const [passwordStrength, setPasswordStrength] = useState<{
+    score: number;
+    feedback: string[];
+    checks?: any;
+  }>({
     score: 0,
     feedback: [],
   });
@@ -622,33 +626,15 @@ export default function AuthForm() {
           <div className="hidden md:flex flex-col justify-between p-10 bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
             {/* Top Section: Logo and Brand Name */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-900/50 border border-green-400/30 rounded-lg flex items-center justify-center">
-                {/* Custom SVG Logo */}
+              <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center overflow-hidden">
                 <img
-                  src="/logoFinal.png"
-                  alt="Company Logo"
-                  className="h-10 w-auto mr-2 rounded-3xl"
+                  src="/hrtek_logo.png"
+                  alt="HRTEK Logo"
+                  className="h-full w-full object-contain"
                 />
-                {/* <svg
-        className="w-7 h-7 text-green-400"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-        <path d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18z" />
-        <path d="M12 3v2" />
-        <path d="M3 12h2" />
-        <path d="M12 19v2" />
-        <path d="M21 12h-2" />
-      </svg> */}
               </div>
-              <span className="font-semibold text-xl tracking-wider">
-                HR Tek System
+              <span className="font-black text-xl tracking-tighter uppercase">
+                HRTEK <span className="text-blue-400">SYSTEM</span>
               </span>
             </div>
 
