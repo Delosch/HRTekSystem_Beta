@@ -88,7 +88,7 @@ export async function sendWelcomeEmail({ email, firstName, password, role, login
         `;
 
         await transporter.sendMail({
-            from: fromAddress,
+            from: `"HRTek Systems" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
             to: email,
             subject: "Welcome to HRTek - Your Account Credentials",
             html: htmlContent
@@ -144,8 +144,7 @@ export async function sendSupportMessageEmail({ name, email, phone, company, mes
             });
         }
 
-        const supportEmail = process.env.SUPPORT_EMAIL || "support@hrteksystem.com"; // Default or Env
-        // Also use this as FROM or Reply-To
+        const supportEmail = process.env.SUPPORT_EMAIL || "support@hrteksystem.com";
 
         const htmlContent = `
         <!DOCTYPE html>
@@ -173,8 +172,8 @@ export async function sendSupportMessageEmail({ name, email, phone, company, mes
         `;
 
         await transporter.sendMail({
-            from: `"HRTek Support" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`, // Sender must be auth user
-            replyTo: email, // Reply to the sender
+            from: `"${name}" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`, // Authenticated sender remains the system email
+            replyTo: email,
             to: supportEmail,
             subject: `[Support Query] from ${name}`,
             html: htmlContent

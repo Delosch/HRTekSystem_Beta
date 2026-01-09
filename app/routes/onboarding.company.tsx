@@ -75,8 +75,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const uploadHandler = unstable_createMemoryUploadHandler({
     maxPartSize: MAX_FILE_SIZE,
-    filter({ name, contentType }) {
+    filter({ name, contentType, filename }) {
       if (name === "companyLogo") {
+        if (!filename) return false; // Skip empty uploads
         if (!contentType || !ALLOWED_IMAGE_MIMES.includes(contentType)) {
           console.warn(`Rejected file upload for ${name}: Invalid content type ${contentType}. Allowed: ${ALLOWED_IMAGE_MIMES.join(', ')}`);
           throw new Error("Invalid image file type. Only AVIF, JPEG, PNG, WEBP are allowed.");
@@ -702,7 +703,7 @@ export default function CompanyBasics() {
 
               <div>
                 <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
-                  Industry <span className="text-red-500">*</span>
+                  Industry (optional)
                 </label>
                 <HoverSelect
                   id="industry"

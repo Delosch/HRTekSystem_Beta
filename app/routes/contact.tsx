@@ -1,6 +1,19 @@
 import { ActionFunction, json, MetaFunction } from "@remix-run/node";
 import { Form, useActionData, useNavigation } from "@remix-run/react";
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    Mail,
+    Phone,
+    MapPin,
+    Linkedin,
+    Send,
+    CheckCircle2,
+    ArrowRight,
+    MessageSquare,
+    Globe,
+    Clock
+} from "lucide-react";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import Footer from "~/components/Footer";
 import { sendSupportMessageEmail } from "~/lib/email.server";
@@ -10,7 +23,7 @@ import { randomUUID } from "crypto";
 import { ToastContainer, toast } from "react-toastify";
 
 export const meta: MetaFunction = () => {
-    return [{ title: "Contact Us - HRTek System" }];
+    return [{ title: "Contact Us | HRTek System - Transform Your HR" }];
 };
 
 export const action: ActionFunction = async ({ request }) => {
@@ -35,7 +48,7 @@ export const action: ActionFunction = async ({ request }) => {
         await ddb.send(new PutCommand({
             TableName: process.env.DYNAMODB_TABLE_NAME,
             Item: {
-                pk: `CONTACT#${msgId}`, // Unique ID
+                pk: `CONTACT#${msgId}`,
                 sk: "MESSAGE",
                 profile_type: "CONTACT_MSG",
                 firstName,
@@ -73,7 +86,7 @@ export default function ContactUs() {
 
     useEffect(() => {
         if (actionData?.success) {
-            toast.success("Message sent successfully! We'll allow 24-48 hours for a response.");
+            toast.success("Message sent successfully! We'll get back to you shortly.");
             formRef.current?.reset();
         } else if (actionData?.error) {
             toast.error(actionData.error);
@@ -81,132 +94,250 @@ export default function ContactUs() {
     }, [actionData]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-outfit">
             <Navbar />
 
             <main className="flex-grow pt-20">
-                {/* Hero Section */}
-                <div className="bg-[#0B2A57] text-white py-20 px-4">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-6">Get in Touch</h1>
-                        <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-                            Have questions about our HR solutions? We're here to help you transform your organization.
-                        </p>
+                {/* Premium Hero Section */}
+                <div className="relative bg-[#000033] py-24 px-4 overflow-hidden">
+                    <div className="absolute inset-0 opacity-20">
+                        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[128px] -translate-x-1/2 -translate-y-1/2"></div>
+                        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full blur-[128px] translate-x-1/2 translate-y-1/2"></div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6 }}
+                            className="text-center"
+                        >
+                            <span className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-400/20 rounded-full text-blue-400 text-sm font-bold tracking-widest uppercase mb-6">
+                                Connect With Excellence
+                            </span>
+                            <h1 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none">
+                                Let's Build the Future <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                                    of Your Workforce.
+                                </span>
+                            </h1>
+                            <p className="text-xl text-blue-100/70 max-w-2xl mx-auto font-medium leading-relaxed">
+                                Our cognitive AI solutions and strategic advisory teams are standing by to help you redefine what's possible in HR.
+                            </p>
+                        </motion.div>
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 pb-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 pb-24 relative z-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-                        {/* Contact Info Cards */}
-                        <div className="lg:col-span-1 space-y-6">
-                            {/* Info Card */}
-                            <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h3>
-                                    <div className="space-y-6">
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-900">Email</p>
-                                                <a href="mailto:support@hrteksystem.com" className="text-blue-600 hover:underline">support@hrteksystem.com</a>
-                                            </div>
-                                        </div>
+                        {/* Side Information Panel */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                            className="lg:col-span-4 space-y-8"
+                        >
+                            <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 p-10 border border-slate-100 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:bg-blue-100 transition-colors duration-500"></div>
 
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-green-50 rounded-lg text-green-600">
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-900">Phone</p>
-                                                <p className="text-gray-600">+91 9335870619</p>
-                                                <p className="text-gray-600">0522-3195292</p>
-                                            </div>
-                                        </div>
+                                <h3 className="text-2xl font-black text-[#000033] mb-8 tracking-tight flex items-center gap-3">
+                                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                                    Global Support
+                                </h3>
 
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-purple-50 rounded-lg text-purple-600">
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-900">Office</p>
-                                                <p className="text-gray-600">Lucknow, Uttar Pradesh, India</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="space-y-10">
+                                    <ContactItem
+                                        icon={<Mail className="w-6 h-6 text-blue-600" />}
+                                        title="Direct Email"
+                                        value="support@hrteksystem.com"
+                                        href="mailto:support@hrteksystem.com"
+                                        color="blue"
+                                    />
+                                    <ContactItem
+                                        icon={<Phone className="w-6 h-6 text-emerald-600" />}
+                                        title="Customer Success"
+                                        value="+91 9335870619"
+                                        subValue="0522-3195292"
+                                        color="emerald"
+                                    />
+                                    <ContactItem
+                                        icon={<MapPin className="w-6 h-6 text-rose-600" />}
+                                        title="Corporate HQ"
+                                        value="Lucknow, Uttar Pradesh"
+                                        subValue="India, Asia-Pacific"
+                                        color="rose"
+                                    />
+                                    <ContactItem
+                                        icon={<Clock className="w-6 h-6 text-amber-600" />}
+                                        title="Response Time"
+                                        value="Within 24 Hours"
+                                        subValue="Monday - Friday, 9AM - 6PM IST"
+                                        color="amber"
+                                    />
                                 </div>
 
-                                {/* LinkedIn Only */}
-                                <div className="pt-6 border-t border-gray-100">
-                                    <h4 className="font-semibold text-gray-900 mb-3">Connect with us</h4>
+                                <div className="mt-12 pt-8 border-t border-slate-100">
+                                    <h4 className="text-sm font-black text-slate-400 mb-6 uppercase tracking-widest">Connect Digitally</h4>
                                     <a
                                         href="https://in.linkedin.com/company/hr-tek-system"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 text-[#0077b5] hover:text-[#005582] transition-colors"
+                                        className="group inline-flex items-center gap-4 p-4 bg-[#0077b5]/5 border border-[#0077b5]/10 rounded-2xl w-full hover:bg-[#0077b5] hover:text-white transition-all duration-300"
                                     >
-                                        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-                                        <span className="font-medium">Follow us on LinkedIn</span>
+                                        <div className="p-3 bg-white rounded-xl shadow-sm text-[#0077b5] group-hover:bg-white/20 group-hover:text-white transition-colors duration-300">
+                                            <Linkedin className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-sm tracking-tight">HRTEK ON LINKEDIN</p>
+                                            <p className="text-xs font-medium opacity-60">Join 5,000+ professionals</p>
+                                        </div>
+                                        <ArrowRight className="w-5 h-5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </a>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        {/* Contact Form */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-2xl shadow-xl p-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
-                                <Form method="post" ref={formRef} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                                            <input type="text" name="firstName" required className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="John" />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                                            <input type="text" name="lastName" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="Doe" />
-                                        </div>
+                        {/* Glassmorphism Form Panel */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            className="lg:col-span-8"
+                        >
+                            <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 p-10 md:p-14 border border-slate-100 relative">
+                                <div className="mb-12">
+                                    <h2 className="text-3xl font-black text-[#000033] mb-4 tracking-tighter">Initiate Transformation</h2>
+                                    <p className="text-slate-500 font-medium">Please fill out the form below. Our high-performance team will analyze your requirements and reach out with a strategic overview.</p>
+                                </div>
+
+                                <Form method="post" ref={formRef} className="space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <InputField
+                                            label="First Name"
+                                            name="firstName"
+                                            placeholder="John"
+                                            required
+                                        />
+                                        <InputField
+                                            label="Last Name"
+                                            name="lastName"
+                                            placeholder="Doe"
+                                        />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                                            <input type="email" name="email" required className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="john@example.com" />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                            <input type="tel" name="phone" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="+91 98765 43210" />
-                                        </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <InputField
+                                            label="Business Email"
+                                            name="email"
+                                            type="email"
+                                            placeholder="john@company.com"
+                                            required
+                                        />
+                                        <InputField
+                                            label="Phone Number"
+                                            name="phone"
+                                            type="tel"
+                                            placeholder="+91 00000 00000"
+                                        />
                                     </div>
+
+                                    <InputField
+                                        label="Organization Name"
+                                        name="company"
+                                        placeholder="HRTek Solutions Pvt Ltd"
+                                    />
 
                                     <div>
-                                        <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-                                        <input type="text" name="company" className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" placeholder="Your Company Ltd." />
+                                        <label className="block text-sm font-black text-[#000033] mb-3 uppercase tracking-wider">How can we help your organization? *</label>
+                                        <textarea
+                                            name="message"
+                                            required
+                                            rows={5}
+                                            className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all resize-none font-medium placeholder:text-slate-400"
+                                            placeholder="Tell us about your current challenges, desired outcomes, or technology landscape..."
+                                        />
                                     </div>
 
-                                    <div>
-                                        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">Message *</label>
-                                        <textarea name="message" required rows={5} className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none" placeholder="How can we help you?"></textarea>
-                                    </div>
-
-                                    <button
+                                    <motion.button
+                                        whileHover={{ scale: 1.01, translateY: -2 }}
+                                        whileTap={{ scale: 0.98 }}
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-600/20 hover:shadow-2xl hover:shadow-blue-600/30 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-3 group"
                                     >
-                                        {isSubmitting ? "Sending..." : "Send Message"}
-                                    </button>
+                                        {isSubmitting ? (
+                                            <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <span>DEPLOY MESSAGE</span>
+                                                <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                            </>
+                                        )}
+                                    </motion.button>
                                 </Form>
+
+                                <div className="mt-8 flex items-center justify-center gap-6 text-xs font-black text-slate-400 uppercase tracking-widest">
+                                    <div className="flex items-center gap-1.5 hover:text-blue-500 transition-colors cursor-default">
+                                        <Globe className="w-3.5 h-3.5" />
+                                        GDPR COMPLIANT
+                                    </div>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
+                                    <div className="flex items-center gap-1.5 hover:text-emerald-500 transition-colors cursor-default">
+                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                        ISO 27001 SECURE
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             </main>
 
             <Footer />
-            <ToastContainer position="bottom-right" />
+            <ToastContainer position="bottom-right" theme="colored" />
+        </div>
+    );
+}
+
+function ContactItem({ icon, title, value, subValue, href, color }: { icon: React.ReactNode, title: string, value: string, subValue?: string, href?: string, color: string }) {
+    const colorClasses: Record<string, string> = {
+        blue: "bg-blue-50 group-hover:bg-blue-100",
+        emerald: "bg-emerald-50 group-hover:bg-emerald-100",
+        rose: "bg-rose-50 group-hover:bg-rose-100",
+        amber: "bg-amber-50 group-hover:bg-amber-100"
+    };
+
+    return (
+        <div className="flex items-start gap-6 group cursor-pointer">
+            <div className={`p-4 rounded-2xl transition-colors duration-300 ${colorClasses[color]}`}>
+                {icon}
+            </div>
+            <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+                {href ? (
+                    <a href={href} className="text-lg font-black text-[#000033] hover:text-blue-600 transition-colors tracking-tight">{value}</a>
+                ) : (
+                    <p className="text-lg font-black text-[#000033] tracking-tight">{value}</p>
+                )}
+                {subValue && <p className="text-sm font-medium text-slate-500 mt-0.5">{subValue}</p>}
+            </div>
+        </div>
+    );
+}
+
+function InputField({ label, name, type = "text", placeholder, required = false }: { label: string, name: string, type?: string, placeholder: string, required?: boolean }) {
+    return (
+        <div>
+            <label htmlFor={name} className="block text-sm font-black text-[#000033] mb-3 uppercase tracking-wider">{label} {required && "*"}</label>
+            <input
+                type={type}
+                name={name}
+                id={name}
+                required={required}
+                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium placeholder:text-slate-400"
+                placeholder={placeholder}
+            />
         </div>
     );
 }
