@@ -17,7 +17,7 @@ export const companyProfileSchema = z.object({
   premises_image_url: z.string().optional().default(""),
   is_onboarding_completed: z.boolean().optional().default(false),
   website_url: z.string().trim().optional().default(""),
-  industry: z.string().trim().min(1, "Industry is required."),
+  industry: z.string().trim().optional().default(""),
   employee_count: z.number().int().min(0).optional().default(0),
 
   createdBy: z

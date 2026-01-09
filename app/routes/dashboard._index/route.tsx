@@ -1135,8 +1135,8 @@ export default function Dashboard() {
                   className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-default"
                 >
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
-                      activity.type === 'info' ? 'bg-blue-500' :
-                        activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
+                    activity.type === 'info' ? 'bg-blue-500' :
+                      activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
                     } group-hover:scale-150 transition-transform`}></div>
                   <div className="flex-1">
                     <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
@@ -1172,12 +1172,12 @@ export default function Dashboard() {
             ]).map((metric, idx) => (
               <div key={idx} className="relative p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden">
                 <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 group-hover:opacity-30 transition-opacity ${metric.score >= 4 ? 'bg-emerald-400' :
-                    metric.score >= 3 ? 'bg-blue-400' : 'bg-amber-400'
+                  metric.score >= 3 ? 'bg-blue-400' : 'bg-amber-400'
                   }`}></div>
 
                 <div className="flex items-center justify-between mb-6">
                   <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${metric.score >= 4 ? 'bg-emerald-50 text-emerald-600' :
-                      metric.score >= 3 ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+                    metric.score >= 3 ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
                     }`}>
                     {metric.status}
                   </div>
@@ -1194,7 +1194,7 @@ export default function Dashboard() {
                     animate={{ width: `${(metric.score / 5) * 100}%` }}
                     transition={{ duration: 1.5, type: "spring" }}
                     className={`h-full rounded-full bg-gradient-to-r ${metric.score >= 4 ? 'from-emerald-400 to-emerald-600' :
-                        metric.score >= 3 ? 'from-blue-400 to-blue-600' : 'from-amber-400 to-amber-600'
+                      metric.score >= 3 ? 'from-blue-400 to-blue-600' : 'from-amber-400 to-amber-600'
                       } shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
                   ></motion.div>
                 </div>

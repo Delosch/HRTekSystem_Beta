@@ -204,15 +204,15 @@ export default function Navbar() {
             </button>
           </Link>
 
-          <a href="/#contact">
+          <Link to="/contact">
             <button
               className={
-                hash.includes("contact") ? activeStyle : inactiveStyle
+                pathname === "/contact" ? activeStyle : inactiveStyle
               }
             >
               Contact Us
             </button>
-          </a>
+          </Link>
         </div>
 
         {/* Right: Action Button */}
