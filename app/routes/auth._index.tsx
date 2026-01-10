@@ -1,4 +1,4 @@
-import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction, redirect} from "@remix-run/node";
 import { z } from "zod";
 import crypto from "crypto";
 import { signupUser, loginUser } from "~/models/user.model";
@@ -48,25 +48,7 @@ interface FormSecurityData {
 const verifyHCaptcha = async (token: string): Promise<boolean> => {
     try {
         const secret = process.env.HCAPTCHA_SECRET_KEY;
-
-        // DEVELOPMENT MODE BYPASS: Accept test tokens
-        const isTestToken = token.startsWith('10000000-');
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-
-        if (isDevelopment && isTestToken) {
-            console.warn("⚠️  Using hCaptcha test token - BYPASSING in development mode");
-            return true;
-        }
-
-        // TEMPORARY: Allow bypass in development if hCaptcha is not configured
         if (!secret) {
-            console.warn("⚠️  HCAPTCHA_SECRET_KEY not configured - BYPASSING in development mode");
-            console.warn("⚠️  Please add HCAPTCHA_SECRET_KEY to your .env file for production");
-
-            if (isDevelopment) {
-                return true; // Allow in development
-            }
-
             console.error("HCAPTCHA_SECRET_KEY not configured");
             return false;
         }
@@ -86,11 +68,6 @@ const verifyHCaptcha = async (token: string): Promise<boolean> => {
 
         if (!response.ok) {
             console.error(`hCaptcha API error: ${response.status}`);
-            // In development, allow through on API errors
-            if (isDevelopment) {
-                console.warn("⚠️  hCaptcha API error - BYPASSING in development mode");
-                return true;
-            }
             return false;
         }
 
@@ -109,26 +86,10 @@ const verifyHCaptcha = async (token: string): Promise<boolean> => {
             return true;
         }
 
-        // Check for specific error codes
-        const errorCodes = data["error-codes"] || [];
-        console.warn("hCaptcha validation failed:", errorCodes);
-
-        // In development, bypass on dummy secret errors
-        if (isDevelopment && errorCodes.includes('not-using-dummy-secret')) {
-            console.warn("⚠️  hCaptcha dummy secret error - BYPASSING in development mode");
-            return true;
-        }
-
+        console.warn("hCaptcha validation failed:", data["error-codes"]);
         return false;
     } catch (error) {
         console.error("hCaptcha verification error:", error);
-
-        // In development, allow through on errors
-        if (process.env.NODE_ENV !== 'production') {
-            console.warn("⚠️  hCaptcha error - BYPASSING in development mode");
-            return true;
-        }
-
         return false;
     }
 };
@@ -276,40 +237,18 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
         };
 
         // Basic field validation
-        // For sign_up: require email, action, password, confirmedPassword, submissionHash, hcaptchaToken
-        // For sign_in: require email, action, password, submissionHash, hcaptchaToken (NO confirmedPassword)
-        if (!formData.email || !formData.action || !formData.password ||
-            !formData.submissionHash) {
+        if (!formData.email || !formData.action || !formData.password || (!formData.confirmedPassword && formData.action==="sign_up") ||
+            !formData.submissionHash || !formData.hcaptchaToken) {
             return json({ error: "Missing required security fields" }, { status: 400 });
         }
 
-        // hCaptcha token check - optional in development
-        if (!formData.hcaptchaToken && process.env.NODE_ENV === 'production') {
-            return json({ error: "Missing security verification token" }, { status: 400 });
-        }
-
-        // Additional validation for sign_up only
-        if (formData.action === "sign_up" && !formData.confirmedPassword) {
-            return json({ error: "Password confirmation is required for registration" }, { status: 400 });
-        }
-
-        // 1. VALIDATE HCAPTCHA (skip in development if token is missing)
-        if (formData.hcaptchaToken) {
-            const captchaValid = await verifyHCaptcha(formData.hcaptchaToken);
-            if (!captchaValid) {
-                console.warn("Failed captcha attempt", { ip: clientIp, timestamp: Date.now() });
-
-                // In development, allow through with warning
-                if (process.env.NODE_ENV !== 'production') {
-                    console.warn("⚠️  hCaptcha validation failed - BYPASSING in development mode");
-                } else {
-                    return json({
-                        error: "Security verification failed. Please refresh and try again."
-                    }, { status: 400 });
-                }
-            }
-        } else if (process.env.NODE_ENV !== 'production') {
-            console.warn("⚠️  No hCaptcha token provided - BYPASSING in development mode");
+        // 1. VALIDATE HCAPTCHA
+        const captchaValid = await verifyHCaptcha(formData.hcaptchaToken);
+        if (!captchaValid) {
+            console.warn("Failed captcha attempt", { ip: clientIp, timestamp: Date.now() });
+            return json({
+                error: "Security verification failed. Please refresh and try again."
+            }, { status: 400 });
         }
 
         // 2. VALIDATE FORM TIMESTAMP
@@ -340,28 +279,15 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 action: formData.action
             });
 
-            // DEVELOPMENT MODE: Allow through with warning
-            if (process.env.NODE_ENV !== 'production') {
-                console.warn("⚠️  Hash validation failed - BYPASSING in development mode");
-            } else {
-                return json({
-                    error: "Form integrity check failed. Please refresh and try again."
-                }, { status: 400 });
-            }
+            return json({
+                error: "Form integrity check failed. Please refresh and try again."
+            }, { status: 400 });
         }
 
 
 
         // 5. VALIDATE CLIENT-SIDE SECURITY CHECKS
-        // For sign_up: require both passwordsMatchVerified and clientValidationPassed
-        // For sign_in: only require clientValidationPassed (no password matching needed)
-        if (formData.action === "sign_up" && formData.passwordsMatchVerified !== "true") {
-            return json({
-                error: "Password confirmation validation failed. Please refresh and try again."
-            }, { status: 400 });
-        }
-
-        if (formData.clientValidationPassed !== "true") {
+        if (formData.passwordsMatchVerified !== "true" || formData.clientValidationPassed !== "true") {
             return json({
                 error: "Client-side validation failed. Please refresh and try again."
             }, { status: 400 });
@@ -587,10 +513,10 @@ export default function Auth() {
         console.log("toasting effect ran with:", actionData);
     }, [actionData])
     return (
-        <section className="relative w-full h-screen bg-white flex items-center justify-center p-4">
+         <section className="relative w-full h-screen bg-white flex items-center justify-center p-4">
             {/* New Animated Background */}
             <AnimatedCircles />
-
+            
             {/* The AuthForm component now controls the main layout */}
             <div className="relative z-10">
                 <AuthForm />
