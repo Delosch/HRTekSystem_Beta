@@ -173,27 +173,28 @@ export default function AuthForm() {
 
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRef = useRef<HCaptcha>(null);
   const [captchaLoading, setCaptchaLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
-  const [siteKey, setSiteKey] = useState(
-    "10000000-ffff-ffff-ffff-000000000001"
-  );
-  const hcaptchaRef = useRef<HCaptcha>(null);
+
+  const [siteKey, setSiteKey] = useState<string | null>(null);
 
   // FIXED: Ensure client-side only operations
   useEffect(() => {
-    setIsHydrated(true);
+  setIsHydrated(true);
 
-    // Load site key only after hydration
-    try {
-      const envKey = import.meta.env?.VITE_HCAPTCHA_SITE_KEY;
-      if (envKey) {
-        setSiteKey(envKey);
-      }
-    } catch (error) {
-      console.warn("Failed to load hCaptcha site key:", error);
+  if (typeof window !== "undefined") {
+    const key = (window as any).ENV?.VITE_HCAPTCHA_SITE_KEY;
+
+    if (key && typeof key === "string") {
+      setSiteKey(key);
+      console.log("✅ hCaptcha site key loaded");
+    } else {
+      console.error("❌ VITE_HCAPTCHA_SITE_KEY missing in window.ENV");
     }
-  }, []);
+  }
+}, []);
+
 
   // FIXED: Single IP detection with proper error handling and client-side check
   useEffect(() => {
@@ -457,11 +458,13 @@ export default function AuthForm() {
   };
 
   // Captcha handling
-  const handleCaptchaVerify = (token: string) => {
-    setCaptchaVerified(true);
-    setCaptchaToken(token);
-    setCaptchaLoading(false);
-  };
+ const handleCaptchaVerify = (token: string) => {
+  console.log("hCaptcha verified, token:", token);
+  setCaptchaToken(token);
+  setCaptchaVerified(true);
+  setCaptchaLoading(false);
+};
+
 
   const handleCaptchaError = (err: any) => {
     setCaptchaVerified(false);
@@ -478,33 +481,26 @@ export default function AuthForm() {
     showToast("Security verification expired. Please verify again.");
   };
 
-  const triggerCaptcha = () => {
-    if (!captchaLoading && hcaptchaRef.current) {
-      setCaptchaLoading(true);
-      try {
-        hcaptchaRef.current.execute();
-      } catch (error) {
-        console.error("Failed to execute hCaptcha:", error);
-        setCaptchaLoading(false);
-        showToast(
-          "Failed to load security verification. Please refresh the page."
-        );
-      }
-    }
-  };
+const triggerCaptcha = () => {
+  if (captchaVerified || captchaLoading) return;
 
-  const resetCaptchaUi = () => {
-    setCaptchaVerified(false);
-    setCaptchaToken("");
-    setCaptchaLoading(false);
-    if (hcaptchaRef.current) {
-      try {
-        hcaptchaRef.current.resetCaptcha();
-      } catch (err) {
-        console.error("Failed to reset hCaptcha:", err);
-      }
-    }
-  };
+  if (captchaRef.current) {
+    setCaptchaLoading(true);
+    //captchaRef.current.execute();
+  }
+};
+
+
+
+
+
+    const resetCaptchaUi = () => {
+  setCaptchaVerified(false);
+  setCaptchaToken("");
+  setCaptchaLoading(false);
+  captchaRef.current?.resetCaptcha();
+};
+
 
   // ENHANCED: Updated handleSubmit with fresh hash generation
   const handleSubmit = async (e: React.FormEvent) => {
@@ -898,6 +894,20 @@ export default function AuthForm() {
                     </motion.div>
                   )}
 
+{isHydrated && siteKey && (
+  <div className="mt-2 flex justify-start">
+    {console.log("HCAPTCHA siteKey =", siteKey)}
+    <HCaptcha
+    ref={captchaRef}
+    sitekey={siteKey}
+    size="normal"
+    onVerify={handleCaptchaVerify}
+   onError={handleCaptchaError}
+   onExpire={handleCaptchaExpired}
+/>
+  </div>
+)}
+
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -1016,22 +1026,10 @@ export default function AuthForm() {
         </div>
       </div>
 
-      {isHydrated && (
-        <div style={{ display: "none" }}>
-          <HCaptcha
-            ref={hcaptchaRef}
-            sitekey={siteKey}
-            onVerify={handleCaptchaVerify}
-            onError={handleCaptchaError}
-            onExpire={handleCaptchaExpired}
-            size="invisible"
-          />
-        </div>
-      )}
+
     </>
   );
 }
-
 // FIXED: Enhanced SearchableDialCodeSelect with proper ISO2 + dial code mapping
 export const SearchableDialCodeSelect = ({
   value,
