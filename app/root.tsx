@@ -11,6 +11,7 @@ import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import "react-toastify/dist/ReactToastify.css";
 import "./tailwind.css";
 import "./styles/dashboard-premium.css";
+import CookieConsent from "./components/ui/CookieConsent";
 
 /* ============================
    ✅ LOADER
@@ -18,7 +19,7 @@ import "./styles/dashboard-premium.css";
 export async function loader({ request }: LoaderFunctionArgs) {
   return {
     ENV: {
-      VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY ?? "",
+      VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
     },
   };
 }
@@ -87,6 +88,7 @@ export default function App() {
 
       <body suppressHydrationWarning>
         <Outlet />
+        <CookieConsent />
 
         <ScrollRestoration />
         <Scripts />
