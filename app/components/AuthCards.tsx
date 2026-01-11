@@ -181,19 +181,19 @@ export default function AuthForm() {
 
   // FIXED: Ensure client-side only operations
   useEffect(() => {
-  setIsHydrated(true);
+    setIsHydrated(true);
 
-  if (typeof window !== "undefined") {
-    const key = (window as any).ENV?.VITE_HCAPTCHA_SITE_KEY;
+    if (typeof window !== "undefined") {
+      const key = (window as any).ENV?.VITE_HCAPTCHA_SITE_KEY;
 
-    if (key && typeof key === "string") {
-      setSiteKey(key);
-      console.log("✅ hCaptcha site key loaded");
-    } else {
-      console.error("❌ VITE_HCAPTCHA_SITE_KEY missing in window.ENV");
+      if (key && typeof key === "string") {
+        setSiteKey(key);
+        console.log("✅ hCaptcha site key loaded");
+      } else {
+        console.error("❌ VITE_HCAPTCHA_SITE_KEY missing in window.ENV");
+      }
     }
-  }
-}, []);
+  }, []);
 
 
   // FIXED: Single IP detection with proper error handling and client-side check
@@ -458,12 +458,12 @@ export default function AuthForm() {
   };
 
   // Captcha handling
- const handleCaptchaVerify = (token: string) => {
-  console.log("hCaptcha verified, token:", token);
-  setCaptchaToken(token);
-  setCaptchaVerified(true);
-  setCaptchaLoading(false);
-};
+  const handleCaptchaVerify = (token: string) => {
+    console.log("hCaptcha verified, token:", token);
+    setCaptchaToken(token);
+    setCaptchaVerified(true);
+    setCaptchaLoading(false);
+  };
 
 
   const handleCaptchaError = (err: any) => {
@@ -481,25 +481,25 @@ export default function AuthForm() {
     showToast("Security verification expired. Please verify again.");
   };
 
-const triggerCaptcha = () => {
-  if (captchaVerified || captchaLoading) return;
+  const triggerCaptcha = () => {
+    if (captchaVerified || captchaLoading) return;
 
-  if (captchaRef.current) {
-    setCaptchaLoading(true);
-    //captchaRef.current.execute();
-  }
-};
-
-
+    if (captchaRef.current) {
+      setCaptchaLoading(true);
+      //captchaRef.current.execute();
+    }
+  };
 
 
 
-    const resetCaptchaUi = () => {
-  setCaptchaVerified(false);
-  setCaptchaToken("");
-  setCaptchaLoading(false);
-  captchaRef.current?.resetCaptcha();
-};
+
+
+  const resetCaptchaUi = () => {
+    setCaptchaVerified(false);
+    setCaptchaToken("");
+    setCaptchaLoading(false);
+    captchaRef.current?.resetCaptcha();
+  };
 
 
   // ENHANCED: Updated handleSubmit with fresh hash generation
@@ -894,19 +894,19 @@ const triggerCaptcha = () => {
                     </motion.div>
                   )}
 
-{isHydrated && siteKey && (
-  <div className="mt-2 flex justify-start">
-    {console.log("HCAPTCHA siteKey =", siteKey)}
-    <HCaptcha
-    ref={captchaRef}
-    sitekey={siteKey}
-    size="normal"
-    onVerify={handleCaptchaVerify}
-   onError={handleCaptchaError}
-   onExpire={handleCaptchaExpired}
-/>
-  </div>
-)}
+                  {isHydrated && siteKey && (
+                    <div className="mt-2 flex justify-start">
+                      {console.log("HCAPTCHA siteKey =", siteKey)}
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={siteKey}
+                        size="normal"
+                        onVerify={handleCaptchaVerify}
+                        onError={handleCaptchaError}
+                        onExpire={handleCaptchaExpired}
+                      />
+                    </div>
+                  )}
 
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
