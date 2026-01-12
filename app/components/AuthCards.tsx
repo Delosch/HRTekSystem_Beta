@@ -860,8 +860,11 @@ export default function AuthForm() {
                           className="text-xs text-gray-700 leading-tight"
                         >
                           I agree to the{" "}
+
                           <a
                             href="/legal/term"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-green-600 underline"
                           >
                             Terms & Conditions
@@ -869,6 +872,8 @@ export default function AuthForm() {
                           and{" "}
                           <a
                             href="/legal/privacy"
+                             target="_blank"
+                              rel="noopener noreferrer"
                             className="text-green-600 underline"
                           >
                             Privacy Policy
