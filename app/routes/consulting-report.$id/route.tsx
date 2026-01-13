@@ -118,6 +118,7 @@ export default function ConsultingReport() {
     const { data, brand_name, assessmentId } = useLoaderData<LoaderReturn>();
     const [isLoading, setIsLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
+    const [activeDimension, setActiveDimension] = useState<number | null>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -505,8 +506,16 @@ export default function ConsultingReport() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {report.dimension_deep_dives.map((dim: any, i: number) => (
-                            <div key={i} className="group h-[360px] perspective cursor-pointer">
-                                <div className="relative w-full h-full duration-700 preserve-3d group-hover:rotate-y-180 transition-all ease-in-out">
+                            <div
+  key={i}
+  className="h-[360px] perspective cursor-pointer"
+  onClick={() =>
+    setActiveDimension(activeDimension === i ? null : i)
+  }
+>
+
+                                <div className={`relative w-full h-full duration-700 preserve-3d transition-all ease-in-out ${activeDimension === i ? "rotate-y-180" : ""}`}>
+
                                     {/* Front */}
                                     <div className="absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors">
                                         <div className="absolute top-0 right-0 p-6 opacity-5">
@@ -530,7 +539,7 @@ export default function ConsultingReport() {
                                                 <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-full" style={{ width: `${dim.score}%` }}></div>
                                             </div>
                                             <div className="flex justify-center mt-4 pt-4 border-t border-white/5">
-                                                <span className="text-xs font-bold text-indigo-300 flex items-center gap-2 group-hover:text-white transition-colors">
+                                                <span className="text-xs font-bold text-indigo-300 flex items-center gap-2">
                                                     Tap to reveal analysis <ArrowUpRight className="w-3 h-3" />
                                                 </span>
                                             </div>
