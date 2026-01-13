@@ -521,6 +521,29 @@ function QuestionRenderer({
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
   const otherInputValue = value?.otherValue;
+  const getMaxSelections = (q: any) => {
+  // 1️⃣ Explicit backend config always wins
+  if (q.maxSelections) return q.maxSelections;
+
+  const text = `${q.title} ${q.question}`.toLowerCase();
+
+  // 2️⃣ Match ALL known patterns:
+  // - Select 3
+  // - Select up to 3
+  // - Select top 3
+  // - Select max 3
+  const match = text.match(
+    /select\s+(?:up\s+to\s+|top\s+|max\s+)?(\d+)/i
+  );
+
+  return match ? Number(match[1]) : undefined;
+};
+
+
+
+
+  const maxSelections = getMaxSelections(question);
+
 
   return (
     <div className="question-item bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
@@ -536,16 +559,22 @@ function QuestionRenderer({
             <label key={idx} className="flex items-center space-x-2 text-gray-700 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150">
               <input
                 type="checkbox"
-                className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 checked={checkboxValue.includes(opt)}
                 onChange={(e) => {
                   if (e.target.checked) {
+                    if (
+                      maxSelections !== undefined &&
+                      checkboxValue.length >= maxSelections
+                    ) {
+                      return; // 🚫 HARD STOP
+                    }
                     onChange(qId, [...checkboxValue, opt]);
                   } else {
-                    onChange(qId, checkboxValue.filter((v) => v !== opt));
+                    onChange(qId, checkboxValue.filter(v => v !== opt));
                   }
                 }}
               />
+
               <span className="text-sm">{opt}</span>
             </label>
           ))}
