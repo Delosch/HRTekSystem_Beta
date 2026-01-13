@@ -358,6 +358,7 @@ const FormSheet = ({
                   key={question.id}
                   question={question}
                   value={formData[question.id]}
+                  otherValue={formData[`${question.id}_other`]}
                   onChange={handleChange}
                   error={errors[question.id]}
                   otherError={errors[`${question.id}_other`]}
@@ -508,19 +509,21 @@ function ProgressBar({ progress }: { progress: number }) {
 function QuestionRenderer({
   question,
   value,
+  otherValue,
   onChange,
   error,
   otherError
 }: {
   question: Question;
   value: any;
+  otherValue?: string;
   onChange: (questionId: string, value: any) => void;
   error?: string;
   otherError?: string;
 }) {
+
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
-  const otherInputValue = value?.otherValue;
   const getMaxSelections = (q: any) => {
   // 1️⃣ Explicit backend config always wins
   if (q.maxSelections) return q.maxSelections;
@@ -685,7 +688,7 @@ function QuestionRenderer({
               type="text"
               placeholder="Please specify..."
               className="w-full px-3 py-1.5 mt-2 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              value={otherInputValue || ""}
+              value={otherValue || ""}
               onChange={(e) => onChange(`${qId}_other`, e.target.value)}
             />
           )
