@@ -658,9 +658,16 @@ export default function CompanyBasics() {
                   name="pincode"
                   required
                   value={companyData.pincode}
-                  onChange={(e) =>
-                    setCompanyData({ ...companyData, pincode: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (isIndianUser) {
+                      if (/^\d{0,6}$/.test(value)) {
+                        setCompanyData({ ...companyData, pincode: value });
+                      }
+                    } else {
+                      setCompanyData({ ...companyData, pincode: value });
+                    }
+                  }}
                   placeholder="123456"
                 />
               </div>
