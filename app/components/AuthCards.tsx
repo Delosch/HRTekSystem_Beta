@@ -549,9 +549,19 @@ export default function AuthForm() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setPhone(val);
-  };
+  let value = e.target.value;
+
+  // Remove non-numeric characters
+  value = value.replace(/\D/g, "");
+
+  // India-specific restriction
+  if (selectedCountryIso === "IN") {
+    if (value.length > 10) return; // hard stop at 10 digits
+  }
+
+  setPhone(value);
+};
+
 
   // FIXED: Enhanced dial code change handler with ISO2 mapping (no country auto-change)
   const handleDialChange = (dialCode: string, countryIso?: string) => {
