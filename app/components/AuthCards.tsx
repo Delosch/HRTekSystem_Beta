@@ -173,27 +173,28 @@ export default function AuthForm() {
 
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRef = useRef<HCaptcha>(null);
   const [captchaLoading, setCaptchaLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
-  const [siteKey, setSiteKey] = useState(
-    "10000000-ffff-ffff-ffff-000000000001"
-  );
-  const hcaptchaRef = useRef<HCaptcha>(null);
+
+  const [siteKey, setSiteKey] = useState<string | null>(null);
 
   // FIXED: Ensure client-side only operations
   useEffect(() => {
     setIsHydrated(true);
 
-    // Load site key only after hydration
-    try {
-      const envKey = import.meta.env?.VITE_HCAPTCHA_SITE_KEY;
-      if (envKey) {
-        setSiteKey(envKey);
+    if (typeof window !== "undefined") {
+      const key = (window as any).ENV?.VITE_HCAPTCHA_SITE_KEY;
+
+      if (key && typeof key === "string") {
+        setSiteKey(key);
+        console.log("✅ hCaptcha site key loaded");
+      } else {
+        console.error("❌ VITE_HCAPTCHA_SITE_KEY missing in window.ENV");
       }
-    } catch (error) {
-      console.warn("Failed to load hCaptcha site key:", error);
     }
   }, []);
+
 
   // FIXED: Single IP detection with proper error handling and client-side check
   useEffect(() => {
@@ -458,10 +459,12 @@ export default function AuthForm() {
 
   // Captcha handling
   const handleCaptchaVerify = (token: string) => {
-    setCaptchaVerified(true);
+    console.log("hCaptcha verified, token:", token);
     setCaptchaToken(token);
+    setCaptchaVerified(true);
     setCaptchaLoading(false);
   };
+
 
   const handleCaptchaError = (err: any) => {
     setCaptchaVerified(false);
@@ -479,32 +482,25 @@ export default function AuthForm() {
   };
 
   const triggerCaptcha = () => {
-    if (!captchaLoading && hcaptchaRef.current) {
+    if (captchaVerified || captchaLoading) return;
+
+    if (captchaRef.current) {
       setCaptchaLoading(true);
-      try {
-        hcaptchaRef.current.execute();
-      } catch (error) {
-        console.error("Failed to execute hCaptcha:", error);
-        setCaptchaLoading(false);
-        showToast(
-          "Failed to load security verification. Please refresh the page."
-        );
-      }
+      //captchaRef.current.execute();
     }
   };
+
+
+
+
 
   const resetCaptchaUi = () => {
     setCaptchaVerified(false);
     setCaptchaToken("");
     setCaptchaLoading(false);
-    if (hcaptchaRef.current) {
-      try {
-        hcaptchaRef.current.resetCaptcha();
-      } catch (err) {
-        console.error("Failed to reset hCaptcha:", err);
-      }
-    }
+    captchaRef.current?.resetCaptcha();
   };
+
 
   // ENHANCED: Updated handleSubmit with fresh hash generation
   const handleSubmit = async (e: React.FormEvent) => {
@@ -553,9 +549,19 @@ export default function AuthForm() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setPhone(val);
-  };
+  let value = e.target.value;
+
+  // Remove non-numeric characters
+  value = value.replace(/\D/g, "");
+
+  // India-specific restriction
+  if (selectedCountryIso === "IN") {
+    if (value.length > 10) return; // hard stop at 10 digits
+  }
+
+  setPhone(value);
+};
+
 
   // FIXED: Enhanced dial code change handler with ISO2 mapping (no country auto-change)
   const handleDialChange = (dialCode: string, countryIso?: string) => {
@@ -864,8 +870,11 @@ export default function AuthForm() {
                           className="text-xs text-gray-700 leading-tight"
                         >
                           I agree to the{" "}
+
                           <a
                             href="/legal/term"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-green-600 underline"
                           >
                             Terms & Conditions
@@ -873,6 +882,8 @@ export default function AuthForm() {
                           and{" "}
                           <a
                             href="/legal/privacy"
+                             target="_blank"
+                              rel="noopener noreferrer"
                             className="text-green-600 underline"
                           >
                             Privacy Policy
@@ -896,6 +907,20 @@ export default function AuthForm() {
                         </label>
                       </div>
                     </motion.div>
+                  )}
+
+                  {isHydrated && siteKey && (
+                    <div className="mt-2 flex justify-start">
+                      {console.log("HCAPTCHA siteKey =", siteKey)}
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={siteKey}
+                        size="normal"
+                        onVerify={handleCaptchaVerify}
+                        onError={handleCaptchaError}
+                        onExpire={handleCaptchaExpired}
+                      />
+                    </div>
                   )}
 
                   <motion.div
@@ -1016,22 +1041,10 @@ export default function AuthForm() {
         </div>
       </div>
 
-      {isHydrated && (
-        <div style={{ display: "none" }}>
-          <HCaptcha
-            ref={hcaptchaRef}
-            sitekey={siteKey}
-            onVerify={handleCaptchaVerify}
-            onError={handleCaptchaError}
-            onExpire={handleCaptchaExpired}
-            size="invisible"
-          />
-        </div>
-      )}
+
     </>
   );
 }
-
 // FIXED: Enhanced SearchableDialCodeSelect with proper ISO2 + dial code mapping
 export const SearchableDialCodeSelect = ({
   value,

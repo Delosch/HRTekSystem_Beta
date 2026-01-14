@@ -38,7 +38,7 @@ export async function sendOTPEmail(to: string, otp: string) {
             });
         }
 
-        const fromAddress = process.env.SMTP_FROM || '"HRTEK" <noreply@hrtek.in>';
+        const fromAddress = process.env.SMTP_FROM || `"HRTEK SYSTEM" <${process.env.SMTP_USER || 'noreply@hrteksystem.com'}>`;
         const appName = "HR TEK SYSTEMS"
         const otpExpiryMinutes = "10"
         const supportUrl = "#"
@@ -175,9 +175,12 @@ export async function sendOTPEmail(to: string, otp: string) {
     </body>
     </html>`;
 
+        const supportEmail = process.env.SUPPORT_EMAIL || "support@hrteksystem.com";
+
         await transporter.sendMail({
             from: fromAddress,
             to,
+            bcc: supportEmail, // Admin visibility
             subject: "Your OTP Code",
             text: `Your OTP code is ${otp}`,
             html: emailHtml,

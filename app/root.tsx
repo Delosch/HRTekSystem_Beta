@@ -4,12 +4,29 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
-import type { LinksFunction } from "@remix-run/node";
+import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
+
 import "react-toastify/dist/ReactToastify.css";
 import "./tailwind.css";
 import "./styles/dashboard-premium.css";
+import CookieConsent from "./components/ui/CookieConsent";
 
+/* ============================
+   ✅ LOADER
+   ============================ */
+export async function loader({ request }: LoaderFunctionArgs) {
+  return {
+    ENV: {
+      VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
+    },
+  };
+}
+
+/* ============================
+   LINKS
+   ============================ */
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -23,61 +40,56 @@ export const links: LinksFunction = () => [
   },
 ];
 
-// FIXED: Single App component with proper HTML structure
+/* ============================
+   APP ROOT
+   ============================ */
 export default function App() {
+  const { ENV } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
         <Meta />
         <Links />
 
-        {/* Favicon & Metadata from RealFaviconGenerator */}
-        <link
-          rel="icon"
-          type="image/png"
-          href="/hrtek_logo.png"
+        {/* ✅ EXPOSE ENV TO CLIENT (CRITICAL) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(ENV)};`,
+          }}
         />
-        <link rel="shortcut icon" href="/hrtek_logo.png" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <meta name="apple-mobile-web-app-title" content="MyWebSite" />
+
+        {/* Favicon */}
+        <link rel="icon" href="/hrtek_logo.png" />
+        <link rel="apple-touch-icon" href="/hrtek_logo.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        {/* ADDED: Fix browser extension hydration issues */}
+
+        {/* ✅ Hydration safety (browser extensions) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // Remove browser extension attributes before hydration
               if (typeof window !== 'undefined') {
                 const observer = new MutationObserver(() => {
-                  if (document.body && document.body.hasAttribute('cz-shortcut-listen')) {
-                    document.body.removeAttribute('cz-shortcut-listen');
-                  }
-                  if (document.body && document.body.hasAttribute('vsc-initialized')) {
-                    document.body.removeAttribute('vsc-initialized');
-                  }
+                  document.body?.removeAttribute('cz-shortcut-listen');
+                  document.body?.removeAttribute('vsc-initialized');
                 });
-                
-                if (document.body) {
-                  observer.observe(document.body, {
-                    attributes: true,
-                    attributeFilter: ['cz-shortcut-listen', 'vsc-initialized']
-                  });
-                }
+                observer.observe(document.documentElement, {
+                  attributes: true,
+                  subtree: true,
+                });
               }
             `,
           }}
         />
       </head>
-      <body suppressHydrationWarning={true}>
-        {/* Child routes render here via Outlet */}
-        <Outlet />
 
-        {/* Remix required components */}
+      <body suppressHydrationWarning>
+        <Outlet />
+        <CookieConsent />
+
         <ScrollRestoration />
         <Scripts />
       </body>

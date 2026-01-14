@@ -121,8 +121,10 @@ export const action: ActionFunction = async ({ request }) => {
 export default function StartTransformationDashboard() {
   const { completedEngines, recommendations, user, transformationEligibility, enginePrices } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const fetcher = useFetcher(); // Use fetcher for add to cart actions
+  const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const handleResize = () => setIsSidebarCollapsed(window.innerWidth < 768);
@@ -130,6 +132,14 @@ export default function StartTransformationDashboard() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.data?.message) {
+      setToastMessage(fetcher.data.message);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  }, [fetcher.data]);
 
   const allEngines = Object.keys(engineDetails);
   const inProgressEngines = allEngines.filter(
@@ -490,6 +500,13 @@ export default function StartTransformationDashboard() {
           </div>
         </section >
       </main >
+
+      {showToast && (
+        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
+          <CheckCircleIcon className="w-6 h-6" />
+          <span className="font-semibold">{toastMessage}</span>
+        </div>
+      )}
     </div >
   );
 }
