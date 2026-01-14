@@ -64,7 +64,7 @@ class Retriever:
     # Main API
     # ----------------------------
 
-    def retrieve(self, question: str, top_k: int = 5, kb_names: list[str] | None = None, min_score: float = 1.2):
+    def retrieve(self, question: str, top_k: int = 5, kb_names: list[str] | None = None, min_score: float = 0.7):
 
         """
         Input: question (string)
@@ -139,11 +139,20 @@ class Retriever:
         with path.open("r", encoding="utf-8") as f:
             data = json.load(f)
 
-        if not isinstance(data, list):
-            raise ValueError(f"KB file must contain a JSON list: {path}")
+        # ✅ Accept either:
+        # 1) a plain list:  [ {..}, {..} ]
+        # 2) a wrapped dict: { "chunks": [ {..}, {..} ] }
+        if isinstance(data, list):
+            entries = data
+        elif isinstance(data, dict) and isinstance(data.get("chunks"), list):
+            entries = data["chunks"]
+        else:
+            raise ValueError(
+                f"KB file must contain a JSON list or {{'chunks': [...]}}: {path}"
+            )
 
-        self._kb_cache[kb_name] = data
-        return data
+        self._kb_cache[kb_name] = entries
+        return entries
 
     def _get_entry_text_tokens(self, kb_name: str, entry_id: str, entry: Dict[str, Any]) -> set[str]:
         key = (kb_name, entry_id)
