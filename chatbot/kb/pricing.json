@@ -1,0 +1,194 @@
+[
+  {
+    "id": "pricing_001",
+    "title": "How is HR Tek Systems priced overall?",
+    "text": "HR Tek Systems pricing includes annual platform subscription plans by organization size and standalone report pricing (per module).",
+    "tags": ["pricing", "overview"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure) p1-p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_002",
+    "title": "What HR Advisory Engines are offered?",
+    "text": "Engines include: HR Tech Maturity Assessment, Digital Roadmap Generator, HCM Vendor Fit Engine, Shared Services Operating Model Planner, and Emotionally Intelligent Change Management.",
+    "tags": ["pricing", "modules", "engines"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_003",
+    "title": "Can clients subscribe to modules individually or buy a bundle?",
+    "text": "Clients can subscribe to modules individually or access all modules under bundled plans.",
+    "tags": ["pricing", "modules", "subscription"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_004",
+    "title": "What does the annual subscription include?",
+    "text": "Annual platform subscription plans include dashboard, platform access, report engine, user support, and select free modules.",
+    "tags": ["pricing", "subscription", "dashboard"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_005",
+    "title": "What is the Starter tier pricing and what’s included?",
+    "text": "Starter tier is for employee size <250 with annual subscription fee ₹0 (Freemium). Free engines included: Dashboard only.",
+    "tags": ["pricing", "subscription", "starter", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_006",
+    "title": "What is the Growth tier pricing and what’s included?",
+    "text": "Growth tier is for employee size 250-750 with annual subscription fee ₹3,00,000. Free engines included: 1 Engine.",
+    "tags": ["pricing", "subscription", "growth", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_007",
+    "title": "What is the Standard tier pricing and what’s included?",
+    "text": "Standard tier is for employee size 751-1500 with annual subscription fee ₹5,00,000. Free engines included: 2 Engine.",
+    "tags": ["pricing", "subscription", "standard", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_008",
+    "title": "What is the Professional tier pricing and what’s included?",
+    "text": "Professional tier is for employee size 1501-5000 with annual subscription fee ₹7,50,000. Free engines included: 3 Engine.",
+    "tags": ["pricing", "subscription", "professional", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_009",
+    "title": "What is the Enterprise tier pricing and what’s included?",
+    "text": "Enterprise tier is for employee size 5001-20,000 with annual subscription fee ₹10,00,000. Free engines included: All Engine.",
+    "tags": ["pricing", "subscription", "enterprise", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_010",
+    "title": "What is the Global tier pricing and what’s included?",
+    "text": "Global tier is for employee size 20,000+ with custom pricing (starts ₹12,00,000). Includes all engines plus advisory.",
+    "tags": ["pricing", "subscription", "global", "tier"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_011",
+    "title": "What extra benefits do annual plans include?",
+    "text": "Annual plans include centralized dashboard hosting, benchmarking engine, and export access.",
+    "tags": ["pricing", "subscription", "benefits"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_012",
+    "title": "Can free/basic plan clients purchase reports individually?",
+    "text": "Clients on free or basic plans can purchase any report individually using standalone report pricing (per module).",
+    "tags": ["pricing", "standalone", "reports"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_013",
+    "title": "Standalone pricing: HR Tech Maturity Assessment report",
+    "text": "HR Tech Maturity Assessment report price per report is ₹40,000.",
+    "tags": ["pricing", "standalone", "maturity"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_014",
+    "title": "Standalone pricing: Digital HR Roadmap Generator report",
+    "text": "Digital HR Roadmap Generator report price per report is ₹45,000.",
+    "tags": ["pricing", "standalone", "roadmap"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_015",
+    "title": "Standalone pricing: HCM Vendor Fit Engine report",
+    "text": "HCM Vendor Fit Engine report price per report is ₹35,000.",
+    "tags": ["pricing", "standalone", "vendor-fit"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_016",
+    "title": "Standalone pricing: SSC/COE Shared Service Planner report",
+    "text": "SSC/COE Shared Service Planner report price per report is ₹45,000.",
+    "tags": ["pricing", "standalone", "shared-services"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_017",
+    "title": "Standalone pricing: EI Change Management Analysis report",
+    "text": "EI Change Management Analysis report price per report is ₹45,000.",
+    "tags": ["pricing", "standalone", "change-management"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_018",
+    "title": "Standalone pricing: All 5 modules combo",
+    "text": "All 5 Modules Combo is priced at ₹1,85,000 (Save ₹25,000).",
+    "tags": ["pricing", "standalone", "bundle"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_019",
+    "title": "Are prices inclusive of GST?",
+    "text": "All prices are exclusive of GST (18%).",
+    "tags": ["pricing", "gst", "tax"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_020",
+    "title": "How are subscription plans billed?",
+    "text": "Subscription plans are annually billed.",
+    "tags": ["pricing", "billing", "subscription"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_021",
+    "title": "How can users pay for individual reports and add-ons?",
+    "text": "Individual reports and add-ons are pay-per-use via Razor-pay, UPI, Net Banking, or Invoice.",
+    "tags": ["pricing", "billing", "payments"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_022",
+    "title": "When is payment due after invoice?",
+    "text": "Payment is due within 7 days of invoice.",
+    "tags": ["pricing", "billing", "invoice"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_023",
+    "title": "What is the refund policy in the consolidated pricing structure?",
+    "text": "Refunds are offered only in cases of technical failure or billing error.",
+    "tags": ["pricing", "refunds", "policy"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "pricing_024",
+    "title": "Suggested pricing page call-to-action (CTA)",
+    "text": "Suggested CTA: \"Ready to unlock your HR transformation journey? Start with your dashboard for free, and upgrade anytime to access full strategic insights.\"",
+    "tags": ["pricing", "cta", "marketing"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p2",
+    "last_updated": "2026-01-11"
+  }
+]

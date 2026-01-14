@@ -1,0 +1,103 @@
+[
+  {
+    "id": "gq_001",
+    "page_context": "pricing_page",
+    "message": "What is the pricing plan?",
+    "expected_module": "FAQ",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_002",
+    "page_context": "pricing_page",
+    "message": "Is GST included?",
+    "expected_module": "FAQ",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_003",
+    "page_context": "pricing_page",
+    "message": "What is the refund policy?",
+    "expected_module": "FAQ",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_004",
+    "page_context": "pricing_page",
+    "message": "Can I buy a report without subscribing?",
+    "expected_module": "FAQ",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_005",
+    "page_context": "pricing_page",
+    "message": "Who is the founder of Apple?",
+    "expected_module": "SAFE_FALLBACK",
+    "expect_sources": false
+  },
+
+  {
+    "id": "gq_006",
+    "page_context": "roadmap_page",
+    "message": "Explain the roadmap initiatives and phases",
+    "expected_module": "ROADMAP",
+    "expect_sources": false
+  },
+  {
+    "id": "gq_007",
+    "page_context": "assessment_page",
+    "message": "What does the maturity score mean?",
+    "expected_module": "ASSESSMENT",
+    "expect_sources": false
+  },
+
+  {
+    "id": "gq_008",
+    "page_context": "intake",
+    "message": "",
+    "expected_module": "LEAD_CAPTURE",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_009",
+    "page_context": "intake",
+    "message": "1",
+    "expected_module": "LEAD_CAPTURE",
+    "expect_sources": true
+  },
+  {
+    "id": "gq_010",
+    "page_context": "intake",
+    "message": "99",
+    "expected_module": "LEAD_CAPTURE",
+    "expect_sources": true
+  },
+
+  {
+    "id": "gq_011",
+    "page_context": "landing",
+    "message": "hi",
+    "expected_module": "SAFE_FALLBACK",
+    "expect_sources": false
+  },
+  {
+    "id": "gq_012",
+    "page_context": "landing",
+    "message": "I want pricing details",
+    "expected_module": "SAFE_FALLBACK",
+    "expect_sources": false
+  },
+  {
+    "id": "gq_013",
+    "page_context": "landing",
+    "message": "I want a roadmap report",
+    "expected_module": "SAFE_FALLBACK",
+    "expect_sources": false
+  },
+  {
+    "id": "gq_014",
+    "page_context": "landing",
+    "message": "I want an assessment score",
+    "expected_module": "SAFE_FALLBACK",
+    "expect_sources": false
+  }
+]

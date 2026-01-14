@@ -1,0 +1,66 @@
+[
+  {
+    "id": "faq_1",
+    "title": "What HR Advisory engines or modules are available?",
+    "text": "HR Tek Systems offers the following advisory engines: HR Tech Maturity Assessment, Digital Roadmap Generator, HCM Vendor Fit Engine, Shared Services Operating Model Planner, and Emotionally Intelligent Change Management.",
+    "tags": ["faq", "modules", "engines"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_2",
+    "title": "Can I start for free and what does the Starter plan include?",
+    "text": "Yes. The Starter plan is freemium (₹0 annual fee) for organizations with fewer than 250 employees and includes dashboard access only.",
+    "tags": ["faq", "pricing", "starter", "freemium"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_3",
+    "title": "Which subscription tier should I choose based on employee size?",
+    "text": "Subscription tiers are based on employee size: Starter (<250), Growth (250–750), Standard (751–1500), Professional (1501–5000), Enterprise (5001–20,000), and Global (20,000+).",
+    "tags": ["faq", "pricing", "tiers", "employee-size"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_4",
+    "title": "Do subscription plans include any engines for free?",
+    "text": "Yes. Growth includes 1 free engine, Standard includes 2, Professional includes 3, Enterprise includes all engines, and Global includes all engines plus advisory support. Starter includes dashboard access only.",
+    "tags": ["faq", "pricing", "subscription", "modules"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_5",
+    "title": "Can I purchase a single report without subscribing?",
+    "text": "Yes. Clients on free or basic plans can purchase individual reports using standalone per-module pricing without taking an annual subscription.",
+    "tags": ["faq", "pricing", "standalone", "reports"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_6",
+    "title": "What are the standalone prices for individual reports?",
+    "text": "Standalone report prices are: HR Tech Maturity Assessment ₹40,000; Digital HR Roadmap Generator ₹45,000; HCM Vendor Fit Engine ₹35,000; Shared Services Planner ₹45,000; EI Change Management ₹45,000. A combo of all five modules is priced at ₹1,85,000.",
+    "tags": ["faq", "pricing", "standalone", "reports"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_7",
+    "title": "How is billing handled and what payment methods are supported?",
+    "text": "Subscription plans are billed annually. Individual reports and add-ons are pay-per-use and can be paid via Razorpay, UPI, Net Banking, or Invoice. Payment is due within 7 days of invoice. All prices are exclusive of GST (18%).",
+    "tags": ["faq", "pricing", "billing", "payments"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "faq_8",
+    "title": "What is the refund policy?",
+    "text": "Refunds are offered only in cases of technical failure or billing error.",
+    "tags": ["faq", "pricing", "refunds", "policy"],
+    "source": "HR Tek Systems- Pricing Structure.pdf (Consolidated Pricing Structure)",
+    "last_updated": "2026-01-11"
+  }
+]

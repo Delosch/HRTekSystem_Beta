@@ -1,0 +1,42 @@
+[
+  {
+    "id": "module_001",
+    "title": "HR Tech Maturity Assessment — what it outputs",
+    "text": "Key output: Organizational HR digital maturity report.",
+    "tags": ["modules", "engine", "maturity"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "module_002",
+    "title": "Digital Roadmap Generator — what it outputs",
+    "text": "Key output: 12-18 month actionable digital HR roadmap.",
+    "tags": ["modules", "engine", "roadmap"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "module_003",
+    "title": "HCM Vendor Fit Engine — what it outputs",
+    "text": "Key output: Personalized HCM vendor recommendations.",
+    "tags": ["modules", "engine", "vendor-fit"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "module_004",
+    "title": "Shared Services Operating Model Planner — what it outputs",
+    "text": "Key output: SSC / COE operating model design.",
+    "tags": ["modules", "engine", "shared-services"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  },
+  {
+    "id": "module_005",
+    "title": "Emotionally Intelligent Change Management — what it outputs",
+    "text": "Key output: Change strategy, readiness assessment, and stakeholder alignment guide.",
+    "tags": ["modules", "engine", "change-management"],
+    "source": "HR Tek Systems- Pricing Structure.pdf p1",
+    "last_updated": "2026-01-11"
+  }
+]

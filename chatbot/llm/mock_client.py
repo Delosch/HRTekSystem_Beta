@@ -1,14 +1,10 @@
-class MockLLMClient:
+# llm/mock_client.py
+from __future__ import annotations
+
+from llm.base import LLMClient
+
+
+class MockLLMClient(LLMClient):
     def generate(self, prompt: str) -> str:
-        return (
-            "## Summary\n"
-            "- Mock response (AWS isnot connected yet)\n\n"
-            "## Explanation\n"
-            "This is a placeholder.\n\n"
-            "## Next steps\n"
-            "1. Connect Bedrock\n\n"
-            "## What I used\n"
-            "- MockLLMClient\n\n"
-            "## Disclaimer\n"
-            "Advisory only.\n"
-        )
+        # Deterministic placeholder so tests stay stable
+        return "MOCK_RESPONSE: grounded response would be generated here."
