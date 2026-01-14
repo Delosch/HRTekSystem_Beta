@@ -1150,7 +1150,11 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <button onClick={() => navigate("/admin/activity-logs")} className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/activity-logs")}
+              className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full"
+            >
               View Activity Audit
             </button>
           </div>
