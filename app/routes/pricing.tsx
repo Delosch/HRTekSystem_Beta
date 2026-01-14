@@ -68,7 +68,7 @@ export default function PricingPage() {
                         {engines.map((engine, index) => (
                             <Link
                                 key={engine.id}
-                                to={`/engines/${engine.id}`}
+                                to="/auth"
                                 className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
                             >
                                 {/* Gradient Top Border */}
