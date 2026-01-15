@@ -11,9 +11,14 @@ declare module "@remix-run/node" {
 
 export default defineConfig({
   server: {
-        port: 3000,              
+    port: (process.env.NODE_ENV as string) === "staging" ? 3001 : 3000,
     strictPort: true,
-    allowedHosts: ["*.ngrok-free.app"]
+    allowedHosts: [
+      "*.ngrok-free.app",
+      "staging.hrteksystem.com",
+      "www.hrteksystem.com",
+      "hrteksystem.com"
+    ]
   },
   define: {
     'import.meta.env.VITE_HCAPTCHA_SITE_KEY': JSON.stringify(process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY)

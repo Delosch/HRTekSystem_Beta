@@ -1,13 +1,13 @@
 // dynamo db for use auth { mvp_user ~table name }
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { AuthenticatedUser, DbUserItem, signupSchema, updateUserSchema } from "~/schemas/userSchema";
 
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
+const USERS_TABLE = process.env.DYNAMODB_USERS_TABLE || process.env.DYNAMODB_TABLE_NAME;
 const BCRYPT_SALT_ROUNDS = 12;
 
 // prevents multiple initialization of client
@@ -102,6 +102,15 @@ export async function signupUser(
             Item: newUserItem,
             ConditionExpression: "attribute_not_exists(unique_id)", // Ensures a new user is created and not an existing one overwritten
         }));
+
+        // Notify Admin
+        try {
+            const { notifyAdmin } = await import("~/services/admin.notifier.server");
+            await notifyAdmin("New User Signup", `A new user has signed up: ${email} (${first_name} ${last_name})`);
+        } catch (notifierError) {
+            console.warn("Failed to notify admin about signup:", notifierError);
+        }
+
         console.log("User signed up:", email);
         return {
             userId,
@@ -241,6 +250,36 @@ export async function loginUser(
             console.error("Unknown error during login:", error);
             throw new Error("Unexpected error during login");
         }
+    }
+}
+
+/**
+ * Finds a user by their email address.
+ * @param {string} email - The email address to search for.
+ * @returns {Promise<DbUserItem | null>} The user item or null if not found.
+ */
+export async function getUserByEmail(email: string): Promise<DbUserItem | null> {
+    try {
+        const queryCommand = new QueryCommand({
+            TableName: USERS_TABLE,
+            IndexName: "email-index",
+            KeyConditionExpression: "email = :email",
+            ExpressionAttributeValues: {
+                ":email": email.toLowerCase(),
+            },
+            Limit: 1,
+            ConsistentRead: false
+        });
+
+        const res = await ddbDocClient.send(queryCommand);
+        if (!res.Items || res.Items.length === 0) {
+            return null;
+        }
+
+        return res.Items[0] as DbUserItem;
+    } catch (error) {
+        console.error("Error finding user by email:", error);
+        return null;
     }
 }
 
@@ -387,7 +426,19 @@ export async function getUserProfile(userId: string): Promise<DbUserItem | null>
 }
 
 export async function saveOTP(userId: string, otp: string): Promise<void> {
+    // Check for 60-second cooldown
+    const userProfile = await getUserProfile(userId);
+    if (userProfile && (userProfile as any).last_otp_sent_at) {
+        const lastSent = (userProfile as any).last_otp_sent_at;
+        const now = Date.now();
+        const diff = (now - lastSent) / 1000;
+        if (diff < 60) {
+            throw new Error(`Please wait ${Math.ceil(60 - diff)} seconds before requesting a new OTP.`);
+        }
+    }
+
     const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    const now = Date.now();
 
     const command = new UpdateCommand({
         TableName: USERS_TABLE,
@@ -395,10 +446,11 @@ export async function saveOTP(userId: string, otp: string): Promise<void> {
             pk: `USER#${userId}`,
             sk: "PROFILE",
         },
-        UpdateExpression: "SET phone_verification_otp = :otp, phone_verification_expiry = :expiry",
+        UpdateExpression: "SET phone_verification_otp = :otp, phone_verification_expiry = :expiry, last_otp_sent_at = :lastSent",
         ExpressionAttributeValues: {
             ":otp": otp,
-            ":expiry": otpExpiry
+            ":expiry": otpExpiry,
+            ":lastSent": now
         }
     });
 
@@ -487,7 +539,19 @@ export async function verifyStoredOTP(userId: string, otp: string): Promise<bool
 }
 
 export async function saveEmailOTP(userId: string, otp: string): Promise<void> {
+    // Check for 60-second cooldown
+    const userProfile = await getUserProfile(userId);
+    if (userProfile && (userProfile as any).last_email_otp_sent_at) {
+        const lastSent = (userProfile as any).last_email_otp_sent_at;
+        const now = Date.now();
+        const diff = (now - lastSent) / 1000;
+        if (diff < 60) {
+            throw new Error(`Please wait ${Math.ceil(60 - diff)} seconds before requesting a new OTP.`);
+        }
+    }
+
     const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    const now = Date.now();
 
     const command = new UpdateCommand({
         TableName: USERS_TABLE,
@@ -495,10 +559,11 @@ export async function saveEmailOTP(userId: string, otp: string): Promise<void> {
             pk: `USER#${userId}`,
             sk: "PROFILE",
         },
-        UpdateExpression: "SET email_verification_otp = :otp, email_verification_expiry = :expiry",
+        UpdateExpression: "SET email_verification_otp = :otp, email_verification_expiry = :expiry, last_email_otp_sent_at = :lastSent",
         ExpressionAttributeValues: {
             ":otp": otp,
-            ":expiry": otpExpiry
+            ":expiry": otpExpiry,
+            ":lastSent": now
         }
     });
 
@@ -551,5 +616,23 @@ export async function verifyEmailOTP(userId: string, otp: string): Promise<boole
     } catch (error) {
         console.error(`Error verifying Email OTP for user ${userId}:`, error);
         return false;
+    }
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+    const pk = `USER#${userId}`;
+    const sk = "PROFILE";
+
+    const deleteCommand = new DeleteCommand({
+        TableName: USERS_TABLE,
+        Key: { pk, sk },
+    });
+
+    try {
+        await ddbDocClient.send(deleteCommand);
+        console.log(`User ${userId} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting user ${userId}:`, error);
+        throw new Error("Failed to delete user account.");
     }
 }

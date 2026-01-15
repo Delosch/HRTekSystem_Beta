@@ -101,37 +101,37 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
 export const ENGINE_PRICING: EnginePricing[] = [
     {
         id: "hr-tech-maturity",
-        name: "HR Tech Maturity Assessment",
+        name: "AI-driven HR Tech Diagnostics",
         basePrice: 40000,
-        description: "Complete digital diagnosis of HR capabilities, processes, and tech gaps",
+        description: "Assess where you stand and how far you can go. Evaluate your current HR tech landscape across key dimensions.",
         category: "assessment"
     },
     {
         id: "digital-roadmap",
-        name: "Digital HR Roadmap Generator",
+        name: "Auto-generated HR Digital Roadmap & ROI",
         basePrice: 45000,
-        description: "Custom 12-18 month actionable digital HR roadmap",
+        description: "Tailored HR transformation roadmaps strategically phased to drive measurable impact.",
         category: "strategy"
     },
     {
         id: "hcm-vendor-fit",
-        name: "HCM Vendor Fit Engine",
+        name: "Cognitive HCM Vendor Fit Engine",
         basePrice: 35000,
-        description: "Personalized HCM vendor recommendations and shortlist",
+        description: "Intelligent analytics to analyze business needs and match you with best-fit HCM vendors.",
         category: "selection"
     },
     {
         id: "shared-services",
-        name: "SSC/COE Shared Service Planner",
+        name: "Shared Services Operating Model Planner",
         basePrice: 45000,
-        description: "Shared services operating model design with capacity analysis",
+        description: "Design unified service models that scale. Structure and standardize service delivery across departments.",
         category: "operations"
     },
     {
         id: "change-management",
-        name: "EI Change Management Analysis",
+        name: "Intelligent Change Management Systems",
         basePrice: 45000,
-        description: "Emotionally intelligent change strategy and stakeholder alignment",
+        description: "Plan, execute, and monitor transformation initiatives with predictive analytics and impact assessments.",
         category: "transformation"
     }
 ];

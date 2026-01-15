@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { Link, NavLink } from "@remix-run/react";
+import { Link, NavLink, useLocation } from "@remix-run/react";
 import {
   ChevronRightIcon,
+  HomeIcon,
+  BuildingOffice2Icon,
+  CreditCardIcon,
+  AcademicCapIcon,
+  GlobeAltIcon,
+  UserGroupIcon,
+  ShieldCheckIcon,
+  Cog6ToothIcon,
+  ChartPieIcon,
+  PresentationChartLineIcon,
+  ListBulletIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
   isExpanded: boolean;
@@ -11,7 +24,7 @@ interface SidebarProps {
 interface SidebarItem {
   label: string;
   href?: string;
-  icon?: React.ElementType;
+  icon: React.ElementType;
   items?: SidebarItem[];
 }
 
@@ -19,218 +32,195 @@ const adminSidebarItems: SidebarItem[] = [
   {
     label: "Dashboard",
     href: "/admin",
+    icon: HomeIcon,
   },
   {
     label: "Companies",
-    href: "/admin/companies"
+    href: "/admin/companies",
+    icon: BuildingOffice2Icon,
   },
   {
-    label: "Payment Verification",
-    href: "/admin/payments/verification"
+    label: "Users",
+    href: "/admin/users",
+    icon: UserGroupIcon,
+  },
+  {
+    label: "Assessments",
+    href: "/admin/assessments",
+    icon: AcademicCapIcon,
+  },
+  {
+    label: "AI Analysis",
+    href: "/admin/reports",
+    icon: SparklesIcon,
+  },
+  {
+    label: "Payments",
+    href: "/admin/payments/verification",
+    icon: CreditCardIcon,
   },
   {
     label: "HTI Approvals",
-    href: "/admin/hti"
+    href: "/admin/hti",
+    icon: ShieldCheckIcon,
   },
-  //   {
-  //     label: "Company Details",
-  //     items: [
-  //       {
-  //         label: "Overview",
-  //         href: "/admin/companies/:orgId/overview",
-  //       },
-  //       {
-  //         label: "Users & Roles",
-  //         href: "/admin/companies/:orgId/users",
-  //       },
-  //       {
-  //         label: "Response Sheets",
-  //         href: "/admin/companies/:orgId/engines",
-  //       },
-  //       {
-  //         label: "AI Report Reviews",
-  //         href: "/admin/companies/:orgId/ai-reports",
-  //       },
-  //       {
-  //         label: "Invoice Requests",
-  //         href: "/admin/companies/:orgId/invoices",
-  //       },
-  //     ],
-  //   },
   {
-    label: 'Website Settings',
+    label: "System Logs",
+    href: "/admin/activity-logs",
+    icon: ListBulletIcon,
+  },
+  {
+    label: 'Website Analytics',
+    href: "/admin/website/analytics",
+    icon: PresentationChartLineIcon,
+  },
+  {
+    label: 'Website Content',
     href: "/admin/website/home",
-    // items: [
-    //   {
-    //     label: 'Home Page Content',
-    //     href: '/admin/website/home',
-    //   },
-    //   {
-    //     label: 'Testimonials',
-    //     href: '/admin/website/testimonials',
-    //   },
-    //   {
-    //     label: 'Announcements & Banners',
-    //     href: '/admin/website/banners',
-    //   },
-    //   {
-    //     label: 'SEO & Metadata',
-    //     href: '/admin/website/seo',
-    //   },
-    //   {
-    //     label: 'Blog / Insights',
-    //     href: '/admin/website/blogs',
-    //   },
-    //   {
-    //     label: 'Integrations',
-    //     href: '/admin/website/integrations',
-    //   },
-    //   {
-    //     label: 'Analytics Dashboard',
-    //     href: '/admin/website/analytics',
-    //   },
-    // ],
+    icon: GlobeAltIcon,
   },
   {
-    label: "Admin Roles",
+    label: "Roles & Security",
     href: "/admin/roles",
+    icon: ShieldCheckIcon,
   },
 ];
 
-// Utility
 function classNames(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function Sidebar({ isExpanded }: SidebarProps) {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+  const location = useLocation();
 
   const toggleSubMenu = (name: string) => {
     setOpenSubMenu(openSubMenu === name ? null : name);
   };
 
   return (
-    <div
-      className={classNames(
-        "flex flex-col bg-gray-800 text-white shadow-xl h-screen sticky top-0 transition-all duration-300 ease-in-out z-30",
-        isExpanded ? "w-64" : "w-20"
-      )}
+    <motion.div
+      animate={{ width: isExpanded ? 260 : 88 }}
+      className="flex flex-col bg-slate-900 text-white shadow-2xl h-screen sticky top-0 transition-all duration-300 ease-in-out z-30 overflow-hidden"
     >
-      {/* Logo */}
-      <div className="flex items-center h-16 bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-700 px-4 justify-center">
-        <span className="text-2xl font-extrabold text-indigo-400">
-          {isExpanded ? "AdminPanel" : "AP"}
-        </span>
+      {/* Brand Logo */}
+      <div className="flex items-center h-20 px-6 border-b border-white/5 bg-slate-950/20">
+        <div className="h-10 w-10 flex-shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/40">
+          <ChartPieIcon className="h-6 w-6 text-white" />
+        </div>
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="ml-4 text-xl font-bold tracking-tight text-white"
+            >
+              HR<span className="text-indigo-400">Tek</span> Admin
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Profile */}
-      {isExpanded && (
-        <div className="flex items-center p-4 border-b border-gray-700">
-          <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e"
-            alt="Admin Profile"
-            className="h-10 w-10 rounded-full border-2 border-indigo-400"
-          />
-          <div className="ml-3">
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <Link
-              to="/admin/profile"
-              className="text-xs text-gray-400 hover:text-indigo-300"
-            >
-              View Profile
-            </Link>
-          </div>
-        </div>
-      )}
-
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto custom-scrollbar">
-        <ul className="space-y-1">
-          {adminSidebarItems.map((item) => (
-            <li key={item.label}>
-              {item.items ? (
-                <>
-                  <button
-                    onClick={() => toggleSubMenu(item.label)}
-                    className={classNames(
-                      "flex items-center w-full px-4 py-2 rounded-lg text-base font-medium transition-colors duration-200 focus:outline-none",
-                      openSubMenu === item.label
-                        ? "bg-gray-700 text-white"
-                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      !isExpanded && "justify-center"
-                    )}
-                  >
+      <nav className="flex-1 px-4 py-8 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-2">
+        {adminSidebarItems.map((item) => (
+          <div key={item.label}>
+            {item.items ? (
+              <div className="space-y-1">
+                <button
+                  onClick={() => toggleSubMenu(item.label)}
+                  className={classNames(
+                    "flex items-center w-full px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none group",
+                    openSubMenu === item.label
+                      ? "bg-white/5 text-white"
+                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  )}
+                >
+                  <item.icon className={classNames(
+                    "h-6 w-6 shrink-0 transition-colors",
+                    openSubMenu === item.label ? "text-indigo-400" : "group-hover:text-indigo-400"
+                  )} />
+                  <AnimatePresence>
                     {isExpanded && (
-                      <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex flex-1 items-center ml-4"
+                      >
                         <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
                         <ChevronRightIcon
                           className={classNames(
-                            "h-5 w-5 transition-transform duration-200",
+                            "h-4 w-4 transition-transform duration-200 opacity-50",
                             openSubMenu === item.label ? "rotate-90" : ""
                           )}
                         />
-                      </>
+                      </motion.div>
                     )}
-                    {!isExpanded && (
-                      <ChevronRightIcon className="h-5 w-5" />
-                    )}
-                  </button>
-                  {isExpanded && openSubMenu === item.label && (
-                    <ul className="mt-1 ml-6 space-y-1 border-l border-gray-700 pl-2">
-                      {item.items.map((subItem) => (
-                        <li key={subItem.label}>
-                          <NavLink
-                            to={subItem.href || "#"}
-                            className={({ isActive }) =>
-                              classNames(
-                                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 whitespace-nowrap",
-                                isActive
-                                  ? "bg-indigo-600 text-white"
-                                  : "text-gray-400 hover:bg-gray-700 hover:text-white"
-                              )
-                            }
-                            end
-                          >
-                            {subItem.label}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
+                  </AnimatePresence>
+                </button>
+              </div>
+            ) : (
+              <NavLink
+                to={item.href || "#"}
+                className={({ isActive }) =>
+                  classNames(
+                    "flex items-center px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative",
+                    isActive
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  )
+                }
+                end
+              >
+                <item.icon className="h-6 w-6 shrink-0" />
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="ml-4 whitespace-nowrap"
+                    >
+                      {item.label}
+                    </motion.span>
                   )}
-                </>
-              ) : (
-                <NavLink
-                  to={item.href || "#"}
-                  className={({ isActive }) =>
-                    classNames(
-                      "flex items-center px-4 py-2 rounded-lg text-base font-medium transition-colors duration-200",
-                      isActive
-                        ? "bg-indigo-600 text-white shadow-md"
-                        : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      !isExpanded && "justify-center"
-                    )
-                  }
-                  end
-                >
-                  {isExpanded && <span className="whitespace-nowrap">{item.label}</span>}
-                  {!isExpanded && (
-                    <ChevronRightIcon className="h-5 w-5" />
-                  )}
-                </NavLink>
-              )}
-            </li>
-          ))}
-        </ul>
+                </AnimatePresence>
+                {/* Tooltip for collapsed state */}
+                {!isExpanded && (
+                  <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl border border-white/10">
+                    {item.label}
+                  </div>
+                )}
+              </NavLink>
+            )}
+          </div>
+        ))}
       </nav>
 
-      {/* Footer */}
-      {isExpanded && (
-        <div className="border-t border-gray-700 p-4 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} AdminPanel.
-          <br />
-          All rights reserved.
-        </div>
-      )}
-    </div>
+      {/* Footer / Profile Mini */}
+      <div className="p-4 border-t border-white/5 bg-slate-950/20">
+        <Link to="/admin/profile" className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group">
+          <div className="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
+            AD
+          </div>
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 overflow-hidden"
+              >
+                <p className="text-xs font-bold text-white truncate">Administrator</p>
+                <p className="text-[10px] font-medium text-slate-500 truncate italic">Manage Platform</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {isExpanded && <Cog6ToothIcon className="h-5 w-5 text-slate-600 group-hover:text-indigo-400 transition-colors" />}
+        </Link>
+      </div>
+    </motion.div>
   );
 }

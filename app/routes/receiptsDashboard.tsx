@@ -19,7 +19,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    const rawPayments = await getVerifiedPaymentsByCompany(user.organisationId as string);
+    const { getCompanyPayments } = await import("~/models/payment.model");
+
+    const allPayments = await getCompanyPayments(user.organisationId as string);
+    // Filter to show submitted/verified/rejected payments (exclude just invoice generated)
+    const rawPayments = allPayments.filter(p =>
+      ['payment_submitted', 'payment_verified', 'completed', 'payment_rejected'].includes(p.status)
+    );
 
     // Generate presigned URLs for payment proofs (stored as S3 keys)
     const payments = await Promise.all(rawPayments.map(async (payment) => {
@@ -130,10 +136,34 @@ export default function ReceiptDashboard() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                        <span className="text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full">
-                          Verified
-                        </span>
+                        {payment.status === 'payment_verified' || payment.status === 'completed' ? (
+                          <>
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <span className="text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                              Verified
+                            </span>
+                          </>
+                        ) : payment.status === 'payment_submitted' ? (
+                          <>
+                            <Clock className="w-5 h-5 text-yellow-600" />
+                            <span className="text-sm font-semibold text-yellow-700 bg-yellow-50 px-3 py-1 rounded-full">
+                              Verification Pending
+                            </span>
+                          </>
+                        ) : payment.status === 'payment_rejected' ? (
+                          <>
+                            <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center">
+                              <span className="text-red-600 font-bold text-xs">X</span>
+                            </div>
+                            <span className="text-sm font-semibold text-red-700 bg-red-50 px-3 py-1 rounded-full">
+                              Rejected
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                            {payment.status}
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-1">
                         ₹{payment.totalAmount?.toLocaleString('en-IN')}

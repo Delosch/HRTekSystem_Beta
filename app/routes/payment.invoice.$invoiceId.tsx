@@ -8,10 +8,12 @@ import {
     Clock,
     AlertCircle,
     FileText,
-    Building2
+    Building2,
+    Lock
 } from "lucide-react";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { requireUserSession } from "~/lib/session.server";
+import { getEnhancedUser } from "~/utils/user.server";
 import { getPaymentRecord, submitPaymentProof, PaymentMethod, PaymentRecord } from "~/models/payment.model";
 import { uploadToS3 } from "~/lib/s3.server";
 import { InvoiceTemplate } from "~/components/InvoiceTemplate";
@@ -19,10 +21,11 @@ import { InvoiceTemplate } from "~/components/InvoiceTemplate";
 interface LoaderData {
     payment: PaymentRecord;
     companyName: string;
+    user: any;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-    const user = await requireUserSession(request);
+    const user = await getEnhancedUser(request);
     if (!user) return redirect('/auth');
 
     const invoiceId = params.invoiceId;
@@ -37,7 +40,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     return json<LoaderData>({
         payment,
-        companyName: companyProfile?.company_name || "Your Company"
+        companyName: companyProfile?.company_name || "Your Company",
+        user
     });
 };
 
@@ -65,10 +69,10 @@ export const action: ActionFunction = async ({ request, params }) => {
 
             // Upload proof to S3
             console.log("☁️ Uploading to S3...");
-            const buffer = await proofFile.arrayBuffer();
+            const sanitizedFileName = proofFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const proofUrl = await uploadToS3(
-                Buffer.from(buffer),
-                `payment-proofs/${user.organisationId}/${invoiceId}/${proofFile.name}`
+                proofFile,
+                `payment-proofs/${user.organisationId}/${invoiceId}/${sanitizedFileName}`
             );
             console.log("✅ S3 upload done:", proofUrl);
 
@@ -82,14 +86,20 @@ export const action: ActionFunction = async ({ request, params }) => {
             });
             console.log("✅ DynamoDB save done");
 
+            // Also clear the cart here to be absolutely sure
+            const { clearCart } = await import("~/models/cart.model");
+            await clearCart(user.organisationId || "");
+            console.log("✅ Cart cleared after payment proof submission");
+
             return json({
                 success: true,
                 message: "Payment proof submitted successfully! Our team will verify it within 1-2 business days."
             });
         } catch (error) {
             console.error("❌ Payment submission error:", error);
-            console.error("Error details:", error instanceof Error ? error.message : String(error));
-            return json({ error: "Failed to submit payment proof. Please try again." }, { status: 500 });
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            console.error("Error details:", errorMessage);
+            return json({ error: `Failed to submit payment proof: ${errorMessage}` }, { status: 500 });
         }
     }
 
@@ -97,7 +107,7 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 export default function InvoicePage() {
-    const { payment, companyName } = useLoaderData<LoaderData>();
+    const { payment, companyName, user } = useLoaderData<LoaderData>();
     const actionData = useActionData<{ success?: boolean; message?: string; error?: string }>();
     const navigation = useNavigation();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -129,7 +139,7 @@ export default function InvoicePage() {
         const Icon = badge.icon;
 
         return (
-            <span className={`inline - flex items - center gap - 2 px - 3 py - 1 rounded - full text - sm font - semibold ${badge.color} `}>
+            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${badge.color}`}>
                 <Icon className="w-4 h-4" />
                 {badge.text}
             </span>
@@ -138,52 +148,98 @@ export default function InvoicePage() {
 
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-            {!isSidebarCollapsed && <Sidebar />}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @media print {
+                    @page {
+                        margin: 0;
+                        size: auto;
+                    }
+                    body {
+                        margin: 0;
+                        padding: 0 !important;
+                        background: white !important;
+                    }
+                    nav, .sidebar, button, .print-hidden, footer, #payment-upload-form, #payment-methods-section, .success-error-messages {
+                        display: none !important;
+                    }
+                    main {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        width: 100% !important;
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                    }
+                    .max-w-5xl {
+                        max-width: 100% !important;
+                        width: 100% !important;
+                        margin: 0 !important;
+                    }
+                    #invoice-content {
+                        border: none !important;
+                        box-shadow: none !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        width: 100% !important;
+                    }
+                    /* Ensure colors and backgrounds print */
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
+            `}} />
+            <div className="print:hidden">
+                {!isSidebarCollapsed && <Sidebar user={user} />}
+            </div>
 
             <main className="flex-1 md:ml-64 p-6 sm:p-10">
                 <div className="max-w-5xl mx-auto">
                     {/* Success/Error Messages */}
-                    {actionData?.success && (
-                        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                            <div>
-                                <h3 className="font-semibold text-green-900">Success!</h3>
-                                <p className="text-sm text-green-800">{actionData.message}</p>
+                    <div className="success-error-messages">
+                        {actionData?.success && (
+                            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h3 className="font-semibold text-green-900">Success!</h3>
+                                    <p className="text-sm text-green-800">{actionData.message}</p>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {actionData?.error && (
-                        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                            <div>
-                                <h3 className="font-semibold text-red-900">Error</h3>
-                                <p className="text-sm text-red-800">{actionData.error}</p>
+                        {actionData?.error && (
+                            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h3 className="font-semibold text-red-900">Error</h3>
+                                    <p className="text-sm text-red-800">{actionData.error}</p>
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Invoice Header - Locked/Unlocked State */}
-                    <div className="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-200 relative" id="invoice-content">
+                    <div className="bg-white rounded-xl shadow-md p-8 mb-6 border border-gray-200 relative print:shadow-none print:border-none print:m-0 print:p-0" id="invoice-content">
                         {/* Locked Overlay - Show until payment verified */}
                         {payment.status !== "payment_verified" && (
-                            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center">
+                            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center border-4 border-slate-100">
                                 <div className="text-center p-8 max-w-md">
-                                    <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FileText className="w-10 h-10 text-orange-600" />
+                                    <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200">
+                                        <Lock className="w-10 h-10 text-slate-400" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Invoice Locked</h3>
-                                    <p className="text-gray-600 mb-4">
-                                        {payment.status === "pending_payment" && "Complete payment and upload proof to unlock invoice access."}
-                                        {payment.status === "payment_submitted" && "Your payment is under verification. Invoice will be unlocked once admin approves."}
-                                        {payment.status === "payment_rejected" && "Payment was rejected. Please resubmit valid payment proof."}
+                                    <h3 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Document Locked</h3>
+                                    <p className="text-slate-500 font-medium mb-8 leading-relaxed">
+                                        {payment.status === "pending_payment" && "This invoice will be fully accessible once the payment has been initiated and verified by our finance team."}
+                                        {payment.status === "payment_submitted" && "Verification in progress. Your submitted proof is being cross-checked with our bank statements."}
+                                        {payment.status === "payment_rejected" && "Verification failed. The uploaded proof was not acknowledged. Please resubmit the transaction details."}
                                     </p>
-                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-lg">
-                                        <Clock className="w-4 h-4 text-orange-600" />
-                                        <span className="text-sm font-medium text-orange-800">
-                                            {payment.status === "pending_payment" && "Awaiting Payment"}
-                                            {payment.status === "payment_submitted" && "Under Admin Review"}
-                                            {payment.status === "payment_rejected" && "Payment Rejected"}
+                                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-xl shadow-lg">
+                                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
+                                        <span className="text-xs font-black uppercase tracking-widest">
+                                            {payment.status === "pending_payment" && "Awaiting Settlement"}
+                                            {payment.status === "payment_submitted" && "Audit Underway"}
+                                            {payment.status === "payment_rejected" && "Settlement Rejected"}
                                         </span>
                                     </div>
                                 </div>
@@ -219,7 +275,7 @@ export default function InvoicePage() {
 
                         {/* Payment Methods Section */}
                         {(payment.status === "pending_payment" || payment.status === "payment_rejected") && (
-                            <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
+                            <div id="payment-methods-section" className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl">
                                 <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <Building2 className="w-6 h-6 text-blue-600" />
                                     Payment Methods
@@ -305,14 +361,14 @@ export default function InvoicePage() {
                 </div>
 
                 {/* Action Buttons - Only enabled after verification */}
-                <div className="flex gap-4 mb-6">
+                <div className="flex gap-4 mb-6 print:hidden">
                     <button
                         onClick={downloadInvoice}
                         disabled={payment.status !== "payment_verified"}
-                        className={`flex items - center gap - 2 px - 6 py - 3 font - semibold rounded - lg transition - all ${payment.status === "payment_verified"
+                        className={`flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-all ${payment.status === "payment_verified"
                             ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                            } `}
+                            }`}
                         title={payment.status !== "payment_verified" ? "Available after payment verification" : "Download Invoice"}
                     >
                         <Download className="w-5 h-5" />
@@ -329,7 +385,7 @@ export default function InvoicePage() {
 
                 {/* Payment Proof Upload Form */}
                 {(payment.status === "pending_payment" || payment.status === "payment_rejected") && (
-                    <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
+                    <div id="payment-upload-form" className="bg-white rounded-xl shadow-md p-8 border border-gray-200">
                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Upload Payment Proof</h2>
 
                         <Form method="post" encType="multipart/form-data" className="space-y-6">

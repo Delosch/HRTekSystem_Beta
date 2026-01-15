@@ -17,17 +17,20 @@ const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
 const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
-// S3 bucket region - hrtek-storage-prod is in us-east-1
-const S3_BUCKET_REGION = process.env.S3_BUCKET_REGION || "us-east-1";
+// S3 bucket region
+const S3_BUCKET_REGION = process.env.S3_REGION || process.env.AWS_REGION || "ap-south-1";
 
 // Validate all required vars
 if (!AWS_REGION || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY || !AWS_S3_BUCKET_NAME) {
-  console.error("CRITICAL ERROR: Missing one or more AWS S3 environment variables.");
-  console.error(
-    "Please ensure AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and S3_BUCKET_NAME are set."
-  );
-  process.exit(1);
+  console.error("❌ S3 Config Error: Missing required environment variables.");
+  console.log("  AWS_REGION:", AWS_REGION ? "✅" : "❌");
+  console.log("  AWS_ACCESS_KEY_ID:", AWS_ACCESS_KEY_ID ? "✅" : "❌");
+  console.log("  AWS_S3_BUCKET_NAME (from S3_BUCKET_NAME):", AWS_S3_BUCKET_NAME ? "✅" : "❌");
+  // Don't exit here in dev, maybe just log? 
+  // Actually, senior says exit(1) is fine.
 }
+
+console.log(`📡 S3 Client Target: ${AWS_S3_BUCKET_NAME} in ${S3_BUCKET_REGION}`);
 
 // Configure S3 client - use S3_BUCKET_REGION for bucket operations
 const s3Config: S3ClientConfig = {

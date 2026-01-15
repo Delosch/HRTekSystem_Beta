@@ -4,7 +4,7 @@ import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 
 let ddbDocClient: ReturnType<typeof getDynamoDBDocumentClient>;
 
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const USERS_TABLE = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
 try {
     ddbDocClient = getDynamoDBDocumentClient();

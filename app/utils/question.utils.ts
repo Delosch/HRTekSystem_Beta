@@ -17,7 +17,7 @@ try {
 
 export const getLatestQuestion = async (section: string) => {
     const command = new ScanCommand({
-        TableName: "Questions",
+        TableName: process.env.DYNAMODB_QUESTIONS_TABLE || "Questions",
         FilterExpression: "questionSection = :section",
         ExpressionAttributeValues: {
             ":section": section,
@@ -56,7 +56,7 @@ export const save_answers = async (
 
     // Step 1: Check for existing assessment entry for this company and assessment ID
     const queryCommand = new QueryCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         KeyConditionExpression: "pk = :pk AND sk = :sk", // Only PK and SK in KeyConditionExpression
         FilterExpression: "userId = :userId", // userId is a non-key attribute, so use FilterExpression
         ExpressionAttributeValues: {
@@ -80,7 +80,7 @@ export const save_answers = async (
 
             // Create a new item using PutCommand
             const putCommand = new PutCommand({
-                TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+                TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
                 Item: {
                     pk: pk,
                     sk: sk,
@@ -107,7 +107,7 @@ export const save_answers = async (
 
                 // Use UpdateCommand to append/update the 'answers' map
                 const updateCommand = new UpdateCommand({
-                    TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+                    TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
                     Key: {
                         pk: pk,
                         sk: sk,
@@ -139,7 +139,7 @@ export const save_answers = async (
 // get answer by company id and assessment id
 export const getAnswerSheet = async (company_id: string, assessment_id: string) => {
     const command = new QueryCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         KeyConditionExpression: "pk = :pk AND sk= :sk",
         ExpressionAttributeValues: {
             ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
@@ -163,7 +163,7 @@ export const getAnswerSheetByAssessmentName = async (company_id: string, assessm
     }
 
     const command = new QueryCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         KeyConditionExpression: "pk = :pk AND sk= :sk",
         ExpressionAttributeValues: {
             ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
@@ -180,7 +180,7 @@ export const getAnswerSheetByAssessmentName = async (company_id: string, assessm
 
 export const getAllResponseSheet = async (orgId: string) => {
     const command = new QueryCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk_prefix)',
         ExpressionAttributeValues: {
             ':pk': `COMPANY#${orgId}`,
@@ -214,7 +214,7 @@ export async function store_analysis(
         const sortKey = `ANALYSIS#${new Date().toISOString()}`;
 
         const putCommand = new PutCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
             Item: {
                 // Partition Key: Use a standard entity pattern
                 pk: `COMPANY#${company_id.replace("COMPANY#", "")}`,
@@ -241,6 +241,32 @@ export async function store_analysis(
         console.error("Error storing analysis in DynamoDB:", error);
         throw error; // Re-throw the error for the calling function to handle
 
+    }
+}
+
+export async function getLatestAnalysis(company_id: string, question_section: string) {
+    const command = new QueryCommand({
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk_prefix)",
+        FilterExpression: "#section = :section",
+        ExpressionAttributeValues: {
+            ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
+            ":sk_prefix": "ANALYSIS#",
+            ":section": question_section
+        },
+        ExpressionAttributeNames: {
+            "#section": "section"
+        },
+        ScanIndexForward: false, // Latest first
+        Limit: 1
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        return Items?.[0];
+    } catch (error) {
+        console.error("Error fetching analysis:", error);
+        return null;
     }
 }
 

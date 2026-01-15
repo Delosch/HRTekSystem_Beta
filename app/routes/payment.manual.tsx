@@ -55,8 +55,21 @@ export async function action({ request }: ActionFunctionArgs) {
     const amount = formData.get("amount");
     const paymentProof = formData.get("paymentProof");
 
-    // TODO: Save payment submission to DynamoDB for admin verification
-    // This would create a payment record with status "pending_verification"
+    // Notify Admin
+    try {
+        const { notifyAdmin } = await import("~/services/admin.notifier.server");
+        await notifyAdmin(
+            "Manual Payment Submitted",
+            `A user has submitted payment proof for verification:\n
+            User: ${user.first_name} ${user.last_name} (${user.email})\n
+            Method: ${paymentMethod}\n
+            Transaction ID: ${transactionId}\n
+            Amount: ${amount}\n
+            Link to verify: https://hrteksystem.com/admin/payments/verification`
+        );
+    } catch (notifierError) {
+        console.warn("Failed to notify admin about payment:", notifierError);
+    }
 
     return json({
         success: true,

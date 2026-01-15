@@ -11,7 +11,7 @@ import TestimonialsSection from "~/components/HomePageComponents/TestimonialsSec
 import { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
-  const title = "HRTek System – Transforming HR";
+  const title = "HR-Tek System – Transforming HR";
   const description =
     "Revolutionize your HR. Our AI-driven software provides diagnostics and a strategic roadmap, empowering your team to transform operations and save you money.";
   const image = "/landingPage-Preview.jpg"; // replace with actual image URL
@@ -60,10 +60,10 @@ export default function Index() {
               <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">
                 Powered by Cognitive AI
               </span>
-              <h2 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-6 leading-tight">
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 leading-tight px-4 lg:whitespace-nowrap">
                 Reinvent Your HR Ecosystem with Cognitive AI Intelligence
               </h2>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed px-4">
                 Drive transformation across your organization with intelligent solutions tailored to your business size
               </p>
             </div>
@@ -333,10 +333,10 @@ export default function Index() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
           </div>
 
-          <div className="relative max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
-            <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-              Join the organizations that are already optimizing their workforce with HRTek System.
+          <div className="relative max-w-7xl mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
+            <p className="text-lg md:text-xl text-blue-100 mb-10 max-w-5xl mx-auto">
+              Join the organizations that are already optimizing their workforce with HR-Tek System.
             </p>
             <Link
               to="/contact"

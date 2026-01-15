@@ -5,7 +5,7 @@ import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server"; // Ensure thi
 import { companyProfileSchema, CompanyProfileInput, CompanyProfileItem } from "~/schemas/companySchema";
 
 // Centralize configuration
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform"; // Get table name from env for flexibility
+const USERS_TABLE = process.env.DYNAMODB_COMPANIES_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
 let ddbDocClient: ReturnType<typeof getDynamoDBDocumentClient>;
 
@@ -48,6 +48,7 @@ export async function createCompanyProfile(data: CompanyProfileInput): Promise<{
       website_url,
       industry,
       country_iso,
+      employee_count,
       createdBy,
     } = validatedData;
 
@@ -118,7 +119,7 @@ export async function createCompanyProfile(data: CompanyProfileInput): Promise<{
     const newItem: CompanyProfileItem = {
       pk: `COMPANY#${companyId}`,
       sk: "PROFILE",
-      profile_type:"COMPANY",
+      profile_type: "COMPANY",
       company_name,
       brand_name,
       govid_type,
@@ -131,6 +132,7 @@ export async function createCompanyProfile(data: CompanyProfileInput): Promise<{
       logo_url,
       premises_image_url,
       is_onboarding_completed,
+      employee_count,
       createdBy,
       createdAt: new Date().toISOString(),
     };
@@ -191,8 +193,8 @@ export async function getCompanyProfile(companyId: string): Promise<CompanyProfi
 export async function getAllCompanyProfiles(
   pagelimit: number = 20,
   pagekey: string | null = null
-): Promise<{items: CompanyProfileItem[], lastKey: string | null} | null> {
-  
+): Promise<{ items: CompanyProfileItem[], lastKey: string | null } | null> {
+
   const command = new QueryCommand({
     TableName: USERS_TABLE,
     IndexName: "profile_type-index", // Use your GSI
@@ -206,16 +208,16 @@ export async function getAllCompanyProfiles(
 
   try {
     const response = await ddbDocClient.send(command);
-    
+
     console.log('Query Results:', {
       count: response.Count,
       scannedCount: response.ScannedCount,
       items: response.Items?.length,
       lastKey: response.LastEvaluatedKey
     });
-    
+
     return {
-      items: response.Items || [],
+      items: (response.Items as CompanyProfileItem[]) || [],
       lastKey: response.LastEvaluatedKey ? JSON.stringify(response.LastEvaluatedKey) : null,
     };
   } catch (err) {

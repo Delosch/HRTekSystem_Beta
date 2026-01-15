@@ -34,7 +34,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     const cookie_container = await requireUserSession(request);
     console.log("company ", cookie_container.onboardingStatus);
-    if (cookie_container.onboardingStatus !== "Company" || cookie_container.onboardingStatus === "Completed") {
+    if (cookie_container.onboardingStatus !== "Company") {
       throw new Response("Unauthorized", { status: 401 });
     }
     const fullName = `${cookie_container.first_name || ''} ${cookie_container.last_name || ''}`.trim();
@@ -182,6 +182,14 @@ export async function action({ request }: ActionFunctionArgs) {
     // FIX: Extract the id from the result object
     newCompanyId = typeof result === 'string' ? result : result.id;
     console.log("Company profile creation successful. ID:", newCompanyId);
+
+    // Notify Admin
+    try {
+      const { notifyAdmin } = await import("~/services/admin.notifier.server");
+      await notifyAdmin("New Company Onboarded", `A new company has been onboarded:\nName: ${companyName}\nBrand: ${brandName}\nIndustry: ${industry}\nCountry: ${user.country_iso}\nContact Person: ${personName} (${user.email})`);
+    } catch (notifierError) {
+      console.warn("Failed to notify admin about new company:", notifierError);
+    }
   } catch (error) {
     console.error("Company profile creation failed:", error);
     if (error instanceof Error && error.message.startsWith("Validation Failed:")) {
@@ -658,9 +666,21 @@ export default function CompanyBasics() {
                   name="pincode"
                   required
                   value={companyData.pincode}
-                  onChange={(e) =>
-                    setCompanyData({ ...companyData, pincode: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    // Improved Indian user check (ISO code or name)
+                    const isIndia = country_iso === "IN" || country_iso === "IND" || country_iso?.toLowerCase() === "india";
+
+                    if (isIndia) {
+                      // Remove non-numeric characters immediately
+                      const numericVal = val.replace(/\D/g, "");
+                      // Limit to 6 digits
+                      if (numericVal.length > 6) return;
+                      setCompanyData({ ...companyData, pincode: numericVal });
+                    } else {
+                      setCompanyData({ ...companyData, pincode: val });
+                    }
+                  }}
                   placeholder="123456"
                 />
               </div>

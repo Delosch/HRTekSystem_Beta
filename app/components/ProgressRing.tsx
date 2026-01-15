@@ -7,6 +7,7 @@ interface ProgressRingProps {
     className?: string;
     label?: string;
     showPercentage?: boolean;
+    gradientId?: string;
 }
 
 export default function ProgressRing({
@@ -16,6 +17,7 @@ export default function ProgressRing({
     className = "",
     label = "",
     showPercentage = true,
+    gradientId,
 }: ProgressRingProps) {
     const [animatedProgress, setAnimatedProgress] = useState(0);
 
@@ -40,6 +42,7 @@ export default function ProgressRing({
     };
 
     const getGradientId = () => {
+        if (gradientId) return gradientId;
         if (progress >= 80) return "greenGradient";
         if (progress >= 50) return "blueGradient";
         if (progress >= 30) return "amberGradient";

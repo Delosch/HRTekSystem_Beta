@@ -12,6 +12,7 @@ import {
   ShoppingCart,
   Rocket,
   Brain,
+  FileText,
   LucideIcon
 } from "lucide-react";
 
@@ -39,6 +40,12 @@ export const sidebarSections: SidebarSection[] = [
     items: [
       { label: "Status", path: "/statusDashboard", icon: FileChartPie },
       { label: "Updates", path: "/updatesDashboard", icon: RefreshCw },
+    ],
+  },
+  {
+    title: "Reports",
+    items: [
+      { label: "My Reports", path: "/reports", icon: FileText },
     ],
   },
   {

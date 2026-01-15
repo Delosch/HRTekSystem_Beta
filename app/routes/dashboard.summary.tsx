@@ -21,9 +21,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     // Calculate Metrics
     const totalReports = reports.length;
-    const completedReports = reports.filter(r => r.status === 'approved' || r.status === 'payment_verified').length; // Assuming these statuses mean "done"
+    const completedReports = reports.filter(r => r.status === 'approved').length; // Assuming 'approved' means "done"
     // For demo, we might count "pending_review" as active
-    const activeAssessments = reports.filter(r => r.status === 'pending_review' || r.status === 'pending').length;
+    const activeAssessments = reports.filter(r => r.status === 'pending_review').length;
 
     const completionRate = totalReports > 0 ? Math.round((completedReports / totalReports) * 100) : 0;
 
@@ -87,7 +87,7 @@ export default function CompanySummary() {
     }
 
     return (
-        <Layout>
+        <Layout user={user}>
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 p-4 md:p-8">
                 {/* Hero Section */}
                 <motion.div

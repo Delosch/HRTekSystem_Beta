@@ -1,4 +1,4 @@
-import { useLocation, Link } from "@remix-run/react";
+import { useLocation, Link, useRouteLoaderData } from "@remix-run/react";
 import { sidebarSections } from "./sidebarConfig";
 import { Settings } from "lucide-react";
 
@@ -15,7 +15,10 @@ interface SidebarProps {
     };
 }
 
-export default function Sidebar({ user }: SidebarProps = {}) {
+export default function Sidebar({ user: propUser }: SidebarProps = {}) {
+    const rootData = useRouteLoaderData("root") as { user?: any };
+    const user = propUser || rootData?.user;
+
     const location = useLocation();
     const currentPath = location.pathname;
 
@@ -30,6 +33,9 @@ export default function Sidebar({ user }: SidebarProps = {}) {
                     src={user?.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.first_name || user?.name || 'User')}&background=0F172A&color=fff`}
                     alt="Profile"
                     className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.first_name || user?.name || 'User')}&background=0F172A&color=fff`;
+                    }}
                 />
                 <div className="text-center px-2">
                     <p className="text-sm font-bold text-slate-800 truncate max-w-[180px]">

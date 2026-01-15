@@ -48,8 +48,22 @@ export const loader: LoaderFunction = async ({ request }) => {
     throw redirect('/onboarding');
   }
 
+  const { getCompanyPayments } = await import("~/models/payment.model");
+  const { getLatestAnalysis } = await import("~/utils/analysis");
+
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
+
+  // Check payment status
+  const payments = await getCompanyPayments(user.organisationId);
+  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
+
+  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
+  const isPending = paymentRecord?.status === "payment_submitted";
+
+  // Check report existence
+  const report = await getLatestAnalysis(user.organisationId, ENGINE);
+  const hasReport = !!report;
 
   let recommendations = null;
   try {
@@ -67,12 +81,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user
+    user,
+    isPaid,
+    isPending,
+    hasReport
   });
 };
 
 export default function ChangeDashboard() {
-  const { currentEngine, completedEngines, recommendations, user } = useLoaderData<typeof loader>();
+  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -91,6 +108,22 @@ export default function ChangeDashboard() {
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
     .slice(0, 3);
 
+  const handleReportAction = () => {
+    if (hasReport) {
+      if (isPaid || isPending) {
+        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate('/payment/checkout');
+      }
+    } else {
+      if (currentEngine.progress === 100) {
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 relative overflow-hidden">
       {/* Animated Background Orbs */}
@@ -100,15 +133,23 @@ export default function ChangeDashboard() {
 
       {!isSidebarCollapsed && <Sidebar user={user} />}
 
-      <main className="flex-1 md:ml-64 p-6 relative z-10">
-        {/* Enhanced Page Header with Gradient Text */}
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 tracking-tight">
-            {currentEngine.name}
-          </h1>
-          <p className="text-gray-600 text-lg font-medium">
-            Build organizational readiness and drive successful adoption
-          </p>
+      <main className={`flex-1 p-4 md:p-8 transition-all duration-300 relative z-10 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}`}>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 animate-fade-in-down">
+          <div>
+            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center gap-3">
+              {engineDetails[ENGINE].icon} {engineDetails[ENGINE].name}
+              {isPaid && hasReport && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full border border-green-200">Unlocked</span>}
+              {isPending && hasReport && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200">Pending Verification</span>}
+            </h1>
+            <p className="text-gray-500 font-medium mt-1 ml-11">
+              {engineDetails[ENGINE].description}
+            </p>
+          </div>
+          <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-semibold text-gray-600">Last updated: Today</span>
+          </div>
         </div>
 
         {/* Enhanced Metrics Grid with Staggered Animation */}
@@ -126,28 +167,22 @@ export default function ChangeDashboard() {
         </div>
 
         {/* Enhanced Main Content Grid with Glassmorphism */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Enhanced Progress Section with Glassmorphism */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Progress Card */}
           <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: "400ms" }}>
-            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 h-full hover:shadow-3xl transition-all duration-500 hover:-translate-y-1">
-              {/* Gradient Border Effect */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 h-full hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 group">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Analysis Progress</h2>
+                <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl group-hover:rotate-12 transition-transform duration-500">
+                  <Activity className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
 
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-                <Activity className="w-6 h-6 text-blue-600" />
-                Current Progress
-              </h2>
-
-              <div className="flex flex-col items-center justify-center py-8">
+              <div className="flex flex-col items-center mb-6">
                 <div className="relative">
                   {/* Glow Effect for Progress Ring */}
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-2xl opacity-30 animate-pulse" />
-                  <ProgressRing
-                    progress={currentEngine.progress}
-                    size={200}
-                    strokeWidth={16}
-                    label="Complete"
-                  />
+                  <ProgressRing progress={currentEngine.progress} size={160} strokeWidth={12} gradientId="progress-gradient" />
                 </div>
 
                 <div className="mt-8 w-full space-y-3">
@@ -170,20 +205,47 @@ export default function ChangeDashboard() {
               {/* Enhanced View Detailed Dashboard Button */}
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
-                  onClick={() => navigate('/engine/dashboard/change-management')}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden"
+                  onClick={handleReportAction}
+                  className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${isPaid && hasReport
+                    ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white'
+                    : isPending && hasReport
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white'
+                      : hasReport
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                    }`}
                 >
-                  {/* Shimmer Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
 
-                  <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span className="relative z-10">View Detailed Dashboard</span>
+                  {isPaid && hasReport ? (
+                    <>
+                      <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <span className="relative z-10">View Detailed Dashboard</span>
+                    </>
+                  ) : isPending && hasReport ? (
+                    <>
+                      <Clock className="w-5 h-5 relative z-10" />
+                      <span className="relative z-10">Verification Pending</span>
+                    </>
+                  ) : hasReport ? (
+                    <>
+                      <svg className="w-5 h-5 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span className="relative z-10">Unlock Report</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative z-10">{currentEngine.progress === 100 ? "Generate Report" : "Continue Assessment"}</span>
+                    </>
+                  )}
+
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
-                  ✨ Access advanced analytics, insights, and visualizations
+                  {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
               </div>
             </div>
@@ -233,17 +295,21 @@ export default function ChangeDashboard() {
                   param={ENGINE}
                 />
                 <button
-                  onClick={() => navigate('/engine/dashboard/change-management')}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
+                  onClick={handleReportAction}
+                  className={`flex-1 px-6 py-4 font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-white ${isPaid && hasReport
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    : hasReport
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    }`}
                 >
-                  View Detailed Report
+                  {isPaid && hasReport ? "View Detailed Report" : isPending && hasReport ? "Verification Pending" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : "Continue"}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Pricing Card */}
         <div className="animate-slide-up" style={{ animationDelay: "600ms" }}>
           <EnginePricingCard engineId="change-management" productName="Intelligent Change Management" className="mb-8" />
         </div>

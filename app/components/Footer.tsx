@@ -8,8 +8,22 @@ export default function Footer() {
         {/* Company Info */}
         <div className="flex flex-col items-start gap-4">
           <Link to="/" className="flex items-center gap-3 group">
-            <img src="/hrtek_logo.png" alt="HRTEK Logo" className="h-12 w-auto object-contain bg-white/10 rounded-lg p-1" />
-            <h2 className="text-2xl font-black tracking-tighter">HRTEK <span className="text-blue-400">SYSTEM</span></h2>
+            <div className="w-16 h-16 overflow-hidden flex items-center justify-center">
+              <img
+                src="/logo_icon_final.png"
+                alt="HR-Tek"
+                className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
+              />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-black tracking-tighter leading-none">
+                <span className="text-white">HR-TEK</span>{" "}
+                <span className="text-[#00B5E2]">SYSTEM</span>
+              </h1>
+              <p className="text-[10px] text-white/80 font-bold uppercase tracking-widest mt-1">
+                A brand of Delosch Technologies
+              </p>
+            </div>
           </Link>
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
             A brand of Delosch Technologies Pvt. Ltd.
@@ -49,9 +63,24 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/legal/terms" className="hover:text-white">
-                Legal
-              </Link>
+              <a href="/legal/term" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Terms & Conditions
+              </a>
+            </li>
+            <li>
+              <a href="/legal/privacy" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Privacy Policy
+              </a>
+            </li>
+            <li>
+              <a href="/legal/cookie" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Cookie Policy
+              </a>
+            </li>
+            <li>
+              <a href="/legal/gdpr" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                GDPR Compliance
+              </a>
             </li>
           </ul>
         </div>
@@ -61,28 +90,33 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Services</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>
-              <Link to="/" className="hover:text-white">
+              <Link to="/roadmapServicePage" className="hover:text-white">
                 HR Transformation Roadmap Generator
               </Link>
             </li>
             <li>
-              <Link to="/aboutUsPage" className="hover:text-white">
+              <Link to="/hcmServicePage" className="hover:text-white">
                 HCM Vendor Fit Engine
               </Link>
             </li>
             <li>
-              <Link to="/careersPage" className="hover:text-white">
+              <Link to="/sharedServicePage" className="hover:text-white">
                 Shared Service Designer
               </Link>
             </li>
             <li>
-              <Link to="/blogPage" className="hover:text-white">
+              <Link to="/matAnalysisServicePage" className="hover:text-white">
                 Advanced HR Maturity Analysis
               </Link>
             </li>
             <li>
-              <Link to="/blogPage" className="hover:text-white">
+              <Link to="/changeMgmtServicePage" className="hover:text-white">
                 Emotionally Intelligent Change Management
+              </Link>
+            </li>
+            <li>
+              <Link to="/hrtechAdvisoryServicePage" className="hover:text-white">
+                HR Tech Advisory layer
               </Link>
             </li>
           </ul>

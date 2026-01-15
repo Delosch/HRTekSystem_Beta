@@ -15,6 +15,8 @@ import {
     DollarSign,
     AlertCircle
 } from "lucide-react";
+import Footer from "../components/Footer";
+import Navbar from "~/components/HomePageComponents/Navbar";
 import { LoaderFunction, json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { getPricingForCompany, PricingTier, PRICING_TIERS } from "~/utils/pricing.server";
@@ -39,53 +41,67 @@ export default function HRTechAdvisoryServicePage() {
     const { recommendedTier } = useLoaderData<{ recommendedTier: PricingTier }>() || {};
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 font-sans">
+            <Navbar />
             {/* Hero Section - Enhanced with Problem-Agitation */}
-            <section className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white py-24 overflow-hidden">
-                <div className="absolute inset-0 bg-black opacity-20"></div>
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+            {/* Hero Section - Modern Professional Design */}
+            <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute inset-0" style={{
+                        backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                        backgroundSize: '40px 40px'
+                    }}></div>
+                </div>
 
-                <div className="relative max-w-7xl mx-auto px-6">
-                    <div className="grid md:grid-cols-2 gap-12 items-center">
-                        {/* Left Column - Content */}
-                        <div>
-                            <div className="flex items-center gap-3 mb-6">
-                                <Brain className="w-12 h-12 text-blue-300 animate-pulse" />
-                                <span className="text-blue-300 font-semibold text-lg">Cognitive HR Advisory Module</span>
+                <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                        {/* Left Side: Content */}
+                        <div className="space-y-8">
+                            {/* Badge */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                <span className="text-white/90 text-sm font-medium">Cognitive HR Advisory Module</span>
                             </div>
 
-                            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                                Stop Buying Reports.
-                                <span className="block text-yellow-300 mt-2">Start Making Decisions.</span>
-                            </h1>
+                            {/* Main Heading */}
+                            <div className="space-y-4">
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                                    Stop Buying Reports.
+                                    <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                                        Start Making Decisions.
+                                    </span>
+                                </h1>
+                                <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                                    Board-Ready Transformation Strategies—Automatically.
+                                </p>
+                            </div>
 
-                            <p className="text-xl md:text-2xl text-blue-100 mb-4 max-w-3xl font-light">
-                                The first AI-powered advisory layer that converts your HR data into
-                                <span className="font-semibold text-white"> board-ready transformation strategies</span> — automatically.
+                            {/* Description */}
+                            <p className="text-lg text-white/80 leading-relaxed max-w-xl">
+                                The first AI-powered advisory layer that converts your HR data into actionable strategies.
+                                What Big-4 firms charge ₹2-3 Cr for, you get for 50-70% less. And it works 24/7.
                             </p>
 
-                            <p className="text-lg text-blue-200 mb-8 max-w-3xl">
-                                What Big-4 firms charge ₹2-3 Cr for, you get for <span className="font-bold text-yellow-300">50-70% less</span>.
-                                And it works 24/7.
-                            </p>
-
-                            <div className="flex flex-wrap gap-4 mb-8">
+                            {/* CTA Buttons */}
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4">
                                 <Link
                                     to="/auth"
-                                    className="px-8 py-4 bg-yellow-400 text-gray-900 rounded-lg font-bold hover:bg-yellow-300 transition-all duration-200 shadow-lg hover:shadow-2xl flex items-center gap-2 transform hover:scale-105"
+                                    className="group px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] rounded-xl font-bold text-lg shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
                                 >
-                                    See It In Action <ArrowRight className="w-5 h-5" />
+                                    See It In Action
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
                                 <a
                                     href="#pricing"
-                                    className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 border-2 border-white/30"
+                                    className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                                 >
-                                    Explore Pricing Plans
+                                    Explore Pricing
                                 </a>
                             </div>
 
                             {/* Trust Indicators */}
-                            <div className="flex flex-wrap gap-8 items-center text-blue-200 text-sm">
+                            <div className="flex flex-wrap gap-6 pt-8 border-t border-white/20 text-white/80 text-sm font-medium">
                                 <div className="flex items-center gap-2">
                                     <CheckCircle2 className="w-5 h-5 text-green-400" />
                                     <span>No consultants needed</span>
@@ -101,133 +117,137 @@ export default function HRTechAdvisoryServicePage() {
                             </div>
                         </div>
 
-                        {/* Right Column - Illustration */}
-                        <div className="hidden md:flex items-center justify-center">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-blue-400/20 rounded-full blur-3xl"></div>
+                        {/* Right Side: Image */}
+                        <div className="relative lg:h-[600px] flex items-center justify-center">
+                            {/* Glow Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
+
+                            {/* Image Container */}
+                            <div className="relative z-10 w-full h-full flex items-center justify-center">
                                 <img
                                     src="/assets/advisoryAssets/hr_tech_advisory_illustration.png"
                                     alt="HR Tech Advisory Services Illustration"
-                                    className="relative w-full max-w-lg drop-shadow-2xl"
+                                    className="w-full h-auto max-h-[550px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
                                 />
                             </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            {/* Statistics Bar - Social Proof */}
-            <section className="bg-gradient-to-r from-gray-900 to-gray-800 py-12">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="grid md:grid-cols-4 gap-8 text-center">
-                        <div>
-                            <div className="text-4xl font-bold text-yellow-400 mb-2">50-70%</div>
-                            <div className="text-gray-300 text-sm">Cost Savings vs Big-4</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold text-green-400 mb-2">24/7</div>
-                            <div className="text-gray-300 text-sm">Always-On Intelligence</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold text-blue-400 mb-2">4-Layer</div>
-                            <div className="text-gray-300 text-sm">Advisory Architecture</div>
-                        </div>
-                        <div>
-                            <div className="text-4xl font-bold text-purple-400 mb-2">₹12L+</div>
-                            <div className="text-gray-300 text-sm">Starting Investment</div>
-                        </div>
+                {/* Bottom Wave */}
+                <div className="absolute bottom-0 left-0 right-0">
+                    <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+                        <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" />
+                    </svg>
+                </div>
+            </div>
+
+            {/* Statistics Bar - Executive Impact */}
+            <section className="relative -mt-10 z-20 px-6">
+                <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 p-8 grid md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-100">
+                    <div className="group hover:-translate-y-1 transition-transform duration-300">
+                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-2">50-70%</div>
+                        <div className="text-gray-500 font-medium text-sm tracking-wide uppercase">Cost Savings vs Big-4</div>
+                    </div>
+                    <div className="group hover:-translate-y-1 transition-transform duration-300 pt-6 md:pt-0">
+                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-2">24/7</div>
+                        <div className="text-gray-500 font-medium text-sm tracking-wide uppercase">Always-On Intelligence</div>
+                    </div>
+                    <div className="group hover:-translate-y-1 transition-transform duration-300 pt-6 md:pt-0">
+                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-2">4-Layer</div>
+                        <div className="text-gray-500 font-medium text-sm tracking-wide uppercase">Advisory Architecture</div>
+                    </div>
+                    <div className="group hover:-translate-y-1 transition-transform duration-300 pt-6 md:pt-0">
+                        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 mb-2">10x</div>
+                        <div className="text-gray-500 font-medium text-sm tracking-wide uppercase">ROI in First 90 Days</div>
                     </div>
                 </div>
             </section>
 
-            {/* The Real Problem - Agitation */}
-            <section className="py-16 bg-white">
+            {/* The Real Problem - Strategic Comparison */}
+            <section className="py-24 bg-gray-50">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                            Here's What's Actually Happening in Most Organizations
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">
+                            The Advisory Gap
                         </h2>
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                            Why traditional models are failing the modern CHRO.
+                        </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 mb-12">
-                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 relative">
-                            <div className="absolute -top-3 left-6 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                Traditional HR Tech
+                    <div className="grid md:grid-cols-3 gap-8 mb-16">
+                        {/* Traditional */}
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-6">
+                                <DollarSign className="w-6 h-6 text-red-600" />
                             </div>
-                            <div className="mt-4">
-                                <div className="text-red-600 font-semibold mb-4 flex items-center gap-2">
-                                    <DollarSign className="w-5 h-5" />
-                                    You're Paying For:
-                                </div>
-                                <ul className="space-y-2 text-gray-700 mb-4">
-                                    <li>• Dashboards no one uses</li>
-                                    <li>• Reports that don't answer "so what?"</li>
-                                    <li>• Metrics without meaning</li>
-                                    <li>• Data without direction</li>
-                                </ul>
-                                <div className="bg-red-100 rounded-lg p-3 text-sm text-red-800">
-                                    <strong>Result:</strong> You still need consultants to make sense of it all.
-                                </div>
-                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Traditional HR Tech</h3>
+                            <ul className="space-y-4 text-gray-600">
+                                <li className="flex items-start gap-3">
+                                    <span className="text-red-500 mt-1">✕</span>
+                                    <span>Static dashboards nobody uses</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-red-500 mt-1">✕</span>
+                                    <span>Data without context</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-red-500 mt-1">✕</span>
+                                    <span>Reactive reporting</span>
+                                </li>
+                            </ul>
                         </div>
 
-                        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 relative">
-                            <div className="absolute -top-3 left-6 bg-yellow-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                Big-4 Consulting
+                        {/* Consulting */}
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-6">
+                                <Clock className="w-6 h-6 text-yellow-600" />
                             </div>
-                            <div className="mt-4">
-                                <div className="text-yellow-700 font-semibold mb-4 flex items-center gap-2">
-                                    <Clock className="w-5 h-5" />
-                                    The Reality:
-                                </div>
-                                <ul className="space-y-2 text-gray-700 mb-4">
-                                    <li>• ₹2-3 Cr for 3-month engagement</li>
-                                    <li>• Beautiful PowerPoints</li>
-                                    <li>• Generic frameworks</li>
-                                    <li>• No ongoing support</li>
-                                </ul>
-                                <div className="bg-yellow-100 rounded-lg p-3 text-sm text-yellow-800">
-                                    <strong>Result:</strong> Report sits on shelf. Nothing changes.
-                                </div>
-                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">Legacy Consulting</h3>
+                            <ul className="space-y-4 text-gray-600">
+                                <li className="flex items-start gap-3">
+                                    <span className="text-yellow-500 mt-1">✕</span>
+                                    <span>Expensive (₹2-3 Cr/project)</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-yellow-500 mt-1">✕</span>
+                                    <span>Slow time-to-value</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-yellow-500 mt-1">✕</span>
+                                    <span>One-off PowerPoint decks</span>
+                                </li>
+                            </ul>
                         </div>
 
-                        <div className="bg-green-50 border-2 border-green-500 rounded-xl p-6 relative shadow-lg">
-                            <div className="absolute -top-3 left-6 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                HTI Solution
-                            </div>
-                            <div className="mt-4">
-                                <div className="text-green-600 font-semibold mb-4 flex items-center gap-2">
-                                    <Zap className="w-5 h-5" />
-                                    What You Get:
-                                </div>
-                                <ul className="space-y-2 text-gray-700 mb-4">
-                                    <li>• Actionable recommendations</li>
-                                    <li>• Prioritized roadmaps</li>
-                                    <li>• ROI-driven decisions</li>
-                                    <li>• Continuous intelligence</li>
-                                </ul>
-                                <div className="bg-green-100 rounded-lg p-3 text-sm text-green-800">
-                                    <strong>Result:</strong> Transformation happens. Measurably.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        {/* HTI Solution - Featured */}
+                        <div className="bg-[#0B2A57] text-white p-8 rounded-2xl shadow-2xl relative overflow-hidden transform md:-translate-y-4">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl -ml-16 -mb-16"></div>
 
-                    {/* Urgency Element */}
-                    <div className="bg-gradient-to-r from-orange-100 to-red-100 border-l-4 border-orange-500 rounded-r-xl p-6 max-w-4xl mx-auto">
-                        <div className="flex items-start gap-4">
-                            <AlertCircle className="w-8 h-8 text-orange-600 flex-shrink-0 mt-1" />
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    Every Quarter Without This Costs You
-                                </h3>
-                                <ul className="text-gray-700 space-y-1">
-                                    <li>• Delayed transformation decisions</li>
-                                    <li>• Wasted spend on wrong priorities</li>
-                                    <li>• Competitive disadvantage in talent</li>
-                                    <li>• Board questions you can't answer</li>
+                            <div className="relative z-10">
+                                <div className="w-12 h-12 bg-blue-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6 border border-white/20">
+                                    <Zap className="w-6 h-6 text-blue-400" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-4">Cognitive Advisory</h3>
+                                <ul className="space-y-4 text-blue-100">
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 shrink-0" />
+                                        <span>Continuous, AI-driven insights</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 shrink-0" />
+                                        <span>Actionable roadmaps, not slides</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 shrink-0" />
+                                        <span>Fraction of the cost</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 mt-1 shrink-0" />
+                                        <span>Board-ready deliverables</span>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -235,111 +255,105 @@ export default function HRTechAdvisoryServicePage() {
                 </div>
             </section>
 
-            {/* 4-Layer Architecture */}
-            <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+            {/* 4-Layer Architecture - Premium Visualization */}
+            <section className="py-24 bg-white overflow-hidden">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <Layers className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                            The Brain Layer: 4-Tier Intelligence Architecture
+                    <div className="text-center mb-20">
+                        <span className="text-blue-600 font-bold tracking-wider uppercase text-sm">Proprietary IP</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mt-3 mb-6">
+                            Inside the Brain Layer
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            This isn't software. This is <span className="font-bold text-blue-600">consulting intelligence productized</span>.
+                            Consulting intelligence, codified into 4 powerful tiers.
                         </p>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Layer 1 */}
-                        <div className="bg-white rounded-xl shadow-lg p-8 border-l-4 border-blue-500 hover:shadow-2xl transition-shadow duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-blue-100 rounded-full p-3">
-                                    <BarChart3 className="w-8 h-8 text-blue-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                                        1. Aggregation Layer
-                                    </h3>
-                                    <p className="text-gray-600 mb-4">
-                                        Pulls insights from all 5 HR Tek System modules and normalizes data across people, process, performance, skills, cost, and risk.
-                                    </p>
-                                    <div className="bg-blue-50 rounded-lg p-4">
-                                        <p className="text-sm text-gray-700">
-                                            <strong>Value:</strong> One source of truth. No more data silos or conflicting reports.
-                                        </p>
+                    <div className="relative">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-blue-200 via-purple-200 to-orange-200 -z-10"></div>
+
+                        <div className="space-y-12">
+                            {/* Layer 1 */}
+                            <div className="relative grid md:grid-cols-2 gap-12 items-center group">
+                                <div className="md:text-right space-y-4">
+                                    <div className="inline-block p-3 rounded-2xl bg-blue-50 text-blue-600 mb-2">
+                                        <BarChart3 className="w-8 h-8" />
                                     </div>
+                                    <h3 className="text-2xl font-bold text-gray-900">1. Aggregation Layer</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Seamlessly ingests data across People, Process, Performance, and Cost.
+                                        Creates a unified "Single Source of Truth" that eliminates silos.
+                                    </p>
+                                </div>
+                                <div className="hidden md:flex justify-center md:absolute left-1/2 -translate-x-1/2">
+                                    <div className="w-8 h-8 rounded-full bg-white border-4 border-blue-500 z-10"></div>
+                                </div>
+                                <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100 group-hover:shadow-lg transition-all duration-300">
+                                    <h4 className="font-bold text-gray-900 mb-2">Benefit</h4>
+                                    <p className="text-sm text-gray-600">Eliminates 100+ hours of manual data gathering per quarter.</p>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Layer 2 */}
-                        <div className="bg-white rounded-xl shadow-lg p-8 border-l-4 border-green-500 hover:shadow-2xl transition-shadow duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-green-100 rounded-full p-3">
-                                    <Brain className="w-8 h-8 text-green-600" />
+                            {/* Layer 2 */}
+                            <div className="relative grid md:grid-cols-2 gap-12 items-center group">
+                                <div className="order-2 md:order-1 bg-gray-50 rounded-2xl p-8 border border-gray-100 group-hover:shadow-lg transition-all duration-300">
+                                    <h4 className="font-bold text-gray-900 mb-2">The Moat</h4>
+                                    <p className="text-sm text-gray-600">Consulting logic encoded into software rulesets.</p>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                                        2. Interpretation Layer <span className="text-green-600">(Your Defensible Moat)</span>
-                                    </h3>
-                                    <p className="text-gray-600 mb-4">
-                                        Converts reports into capability gaps, process maturity scores, digital readiness indicators, and workforce risk signals.
-                                    </p>
-                                    <div className="bg-green-50 rounded-lg p-4">
-                                        <p className="text-sm text-gray-700 mb-2">
-                                            <strong>This is the IP:</strong> Consulting logic encoded into software.
-                                        </p>
-                                        <p className="text-xs text-gray-600">
-                                            What normally lives in consultant's heads is now systematic, repeatable, and always available.
-                                        </p>
+                                <div className="hidden md:flex justify-center md:absolute left-1/2 -translate-x-1/2">
+                                    <div className="w-8 h-8 rounded-full bg-white border-4 border-green-500 z-10"></div>
+                                </div>
+                                <div className="order-1 md:order-2 space-y-4">
+                                    <div className="inline-block p-3 rounded-2xl bg-green-50 text-green-600 mb-2">
+                                        <Brain className="w-8 h-8" />
                                     </div>
+                                    <h3 className="text-2xl font-bold text-gray-900">2. Interpretation Layer</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Analyzes raw data against maturity models and industry benchmarks.
+                                        Identifies capability gaps and operational risks automatically.
+                                    </p>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Layer 3 */}
-                        <div className="bg-white rounded-xl shadow-lg p-8 border-l-4 border-purple-500 hover:shadow-2xl transition-shadow duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-purple-100 rounded-full p-3">
-                                    <Target className="w-8 h-8 text-purple-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                                        3. Transformation Mapping Layer
-                                    </h3>
-                                    <p className="text-gray-600 mb-4">
-                                        Maps insights to HR Digital Transformation roadmap, operating model changes, technology interventions, and change management priorities.
-                                    </p>
-                                    <div className="bg-purple-50 rounded-lg p-4">
-                                        <p className="text-sm text-gray-700">
-                                            <strong>Enterprise-Grade:</strong> From "here's your score" to "here's what must structurally change"
-                                        </p>
+                            {/* Layer 3 */}
+                            <div className="relative grid md:grid-cols-2 gap-12 items-center group">
+                                <div className="md:text-right space-y-4">
+                                    <div className="inline-block p-3 rounded-2xl bg-purple-50 text-purple-600 mb-2">
+                                        <Target className="w-8 h-8" />
                                     </div>
+                                    <h3 className="text-2xl font-bold text-gray-900">3. Transformation Mapping</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Translates gaps into strategic roadmaps.
+                                        Prioritizes initiatives based on impact, effort, and organizational readiness.
+                                    </p>
+                                </div>
+                                <div className="hidden md:flex justify-center md:absolute left-1/2 -translate-x-1/2">
+                                    <div className="w-8 h-8 rounded-full bg-white border-4 border-purple-500 z-10"></div>
+                                </div>
+                                <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100 group-hover:shadow-lg transition-all duration-300">
+                                    <h4 className="font-bold text-gray-900 mb-2">Strategic Output</h4>
+                                    <p className="text-sm text-gray-600">Quarterly Transformation Roadmap (PDF & Interactive).</p>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Layer 4 */}
-                        <div className="bg-white rounded-xl shadow-lg p-8 border-l-4 border-orange-500 hover:shadow-2xl transition-shadow duration-300">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-orange-100 rounded-full p-3">
-                                    <Lightbulb className="w-8 h-8 text-orange-600" />
+                            {/* Layer 4 */}
+                            <div className="relative grid md:grid-cols-2 gap-12 items-center group">
+                                <div className="order-2 md:order-1 bg-gray-50 rounded-2xl p-8 border border-gray-100 group-hover:shadow-lg transition-all duration-300">
+                                    <h4 className="font-bold text-gray-900 mb-2">Executive Advantage</h4>
+                                    <p className="text-sm text-gray-600">Answers "Now What?" with ROI-backed decisions.</p>
                                 </div>
-                                <div className="flex-1">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                                        4. Advisory & Recommendation Engine
-                                    </h3>
-                                    <p className="text-gray-600 mb-4">
-                                        Answers "So what?" and "Now what?" with prioritization, ROI logic, risk containment, and workforce implications.
-                                    </p>
-                                    <div className="bg-orange-50 rounded-lg p-4 space-y-2">
-                                        <p className="text-sm text-gray-700 font-semibold">Tells you exactly:</p>
-                                        <ul className="text-sm text-gray-700 space-y-1 ml-4">
-                                            <li>• Which HR processes to digitize first (based on scoring)</li>
-                                            <li>• Where AI/automation will give max ROI</li>
-                                            <li>• What NOT to change yet (risk containment)</li>
-                                            <li>• Skill & org redesign implications</li>
-                                        </ul>
+                                <div className="hidden md:flex justify-center md:absolute left-1/2 -translate-x-1/2">
+                                    <div className="w-8 h-8 rounded-full bg-white border-4 border-orange-500 z-10"></div>
+                                </div>
+                                <div className="order-1 md:order-2 space-y-4">
+                                    <div className="inline-block p-3 rounded-2xl bg-orange-50 text-orange-600 mb-2">
+                                        <Lightbulb className="w-8 h-8" />
                                     </div>
+                                    <h3 className="text-2xl font-bold text-gray-900">4. Advisory Engine</h3>
+                                    <p className="text-gray-600 leading-relaxed">
+                                        Delivers final, board-ready recommendations.
+                                        Predicts outcomes and simulates "What-If" scenarios for budget planning.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -347,323 +361,150 @@ export default function HRTechAdvisoryServicePage() {
                 </div>
             </section>
 
-            {/* Social Proof / Testimonial Placeholder */}
-            <section className="py-16 bg-white">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-12 text-white text-center">
-                        <Users className="w-16 h-16 mx-auto mb-6 text-blue-200" />
-                        <blockquote className="text-2xl md:text-3xl font-light italic mb-6">
-                            "This module does what our ₹2.5 Cr consulting engagement promised but never delivered —
-                            <span className="font-semibold"> actionable transformation guidance that updates quarterly</span>,
-                            not a static report from 6 months ago."
-                        </blockquote>
-                        <div className="text-blue-200">
-                            <p className="font-semibold">CHRO, Fortune 500 Company</p>
-                            <p className="text-sm">5,000+ employees</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Why This Matters - Emotional Appeal */}
-            <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                            Why CHROs Choose This Over Everything Else
-                        </h2>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="bg-white rounded-xl p-8 shadow-lg">
-                            <h3 className="text-2xl font-bold text-blue-900 mb-4">For Your Board</h3>
-                            <ul className="space-y-3 text-gray-700">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
-                                    <span>Answer "What's our HR transformation ROI?" with data</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
-                                    <span>Board-ready outputs (strategy packs, PDFs)</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
-                                    <span>Defend budget decisions with intelligence, not intuition</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-white rounded-xl p-8 shadow-lg">
-                            <h3 className="text-2xl font-bold text-green-900 mb-4">For Your Team</h3>
-                            <ul className="space-y-3 text-gray-700">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                                    <span>Stop guessing which initiatives to prioritize</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                                    <span>Continuous guidance, not one-time consulting</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                                    <span>Build transformation muscle internally</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-8 text-center">
-                        <p className="text-2xl font-bold text-purple-900 mb-2">
-                            "A digital CHRO advisory office — powered by intelligence, not headcount."
-                        </p>
-                        <p className="text-lg text-purple-700">
-                            — The Brain Layer of HR Tek System
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Pricing Section */}
-            <section id="pricing" className="py-16 bg-gradient-to-br from-gray-900 to-blue-900 text-white">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-4">
-                        <h2 className="text-4xl font-bold mb-4">
-                            Transform Your HR Strategy Today
-                        </h2>
-                        <p className="text-xl text-blue-200 mb-2">
-                            Get 365 days of AI-powered advisory intelligence for the cost of just 3 weeks of traditional consulting
-                        </p>
-                        <p className="text-sm text-yellow-300 font-semibold">
-                            💡 Join forward-thinking CHROs who've already made the switch • ROI visible in 90 days
-                        </p>
-                    </div>
-
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-8 mt-12">
-                    {/* Tier 1 */}
-                    <div className={`bg-white text-gray-900 rounded-2xl p-8 shadow-xl transition-all duration-300 hover:scale-105 ${recommendedTier?.id === 'essentials' ? 'ring-4 ring-yellow-400 transform scale-105' : ''}`}>
-                        {recommendedTier?.id === 'essentials' && (
-                            <div className="bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1 rounded-full w-max mx-auto mb-4">
-                                RECOMMENDED FOR YOU
-                            </div>
-                        )}
-                        <div className="text-center mb-6">
-                            <h3 className="text-2xl font-bold mb-2">Advisory Essentials</h3>
-                            <p className="text-gray-600 text-sm mb-4">For mid-size enterprises</p>
-                            <div className="text-4xl font-bold text-blue-600 mb-2">
-                                ₹12-18L
-                            </div>
-                            <p className="text-gray-500 text-sm">per year</p>
-                            <p className="text-gray-500 text-xs mt-1">USD 18,000 - 25,000</p>
-                        </div>
-
-                        <div className="space-y-3 mb-8">
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Aggregation from all HR-Tek modules</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Interpretation Layer (maturity, gaps, readiness)</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Standard transformation insights</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">CXO summary dashboard</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Confidence & explainability indicators</span>
-                            </div>
-                        </div>
-
-                        <Link
-                            to="/auth"
-                            className="block w-full text-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                        >
-                            Get Started
-                        </Link>
-                    </div>
-
-                    {/* Tier 2 - Recommended */}
-                    <div className={`bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl p-8 shadow-2xl relative z-10 transition-all duration-300 hover:scale-105 ${recommendedTier?.id === 'transformation' ? 'transform scale-110 border-4 border-yellow-400' : ''}`}>
-                        {(recommendedTier?.id === 'transformation' || !recommendedTier) && (
-                            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold animate-pulse">
-                                MOST POPULAR
-                            </div>
-                        )}
-
-                        <div className="text-center mb-6 mt-4">
-                            <h3 className="text-2xl font-bold mb-2">Transformation Intelligence</h3>
-                            <p className="text-blue-100 text-sm mb-4">For enterprises (500-5,000 employees)</p>
-                            <div className="text-4xl font-bold mb-2">
-                                ₹28-40L
-                            </div>
-                            <p className="text-blue-200 text-sm">per year</p>
-                            <p className="text-blue-200 text-xs mt-1">USD 40,000 - 60,000</p>
-                            <div className="mt-3 text-xs text-yellow-300 font-semibold">
-                                70% of our clients choose this tier
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 mb-8">
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm font-semibold">Everything in Essentials plus:</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Transformation Mapping Layer</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Priority & dependency engine</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Advisory & recommendation engine</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">ROI-based digitization guidance</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Risk-aware "Do Not Transform Yet" flags</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Operating model implications</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-yellow-300 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Quarterly transformation intelligence refresh</span>
-                            </div>
-                        </div>
-
-                        <Link
-                            to="/auth"
-                            className="block w-full text-center px-6 py-3 bg-yellow-400 text-gray-900 rounded-lg font-bold hover:bg-yellow-300 transition-colors shadow-lg"
-                        >
-                            Start Transformation
-                        </Link>
-                    </div>
-
-                    {/* Tier 3 */}
-                    <div className={`bg-white text-gray-900 rounded-2xl p-8 shadow-xl transition-all duration-300 hover:scale-105 ${recommendedTier?.id === 'enterprise' ? 'ring-4 ring-purple-600 transform scale-105' : ''}`}>
-                        {recommendedTier?.id === 'enterprise' && (
-                            <div className="bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full w-max mx-auto mb-4">
-                                RECOMMENDED FOR YOU
-                            </div>
-                        )}
-                        <div className="text-center mb-6">
-                            <h3 className="text-2xl font-bold mb-2">Enterprise Cognitive Advisory</h3>
-                            <p className="text-gray-600 text-sm mb-4">Board / CXO Tier</p>
-                            <div className="text-3xl font-bold text-purple-600 mb-2">
-                                Contact Us
-                            </div>
-                            <p className="text-gray-500 text-sm">for pricing</p>
-                            <p className="text-gray-500 text-xs mt-1">&nbsp;</p>
-                            <div className="mt-3 text-xs text-purple-600 font-semibold">
-                                For global transformation programs
-                            </div>
-                        </div>
-
-                        <div className="space-y-3 mb-8">
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm font-semibold">Everything in Transformation plus:</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Scenario & simulation modelling</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Multi-country / multi-entity intelligence</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Executive decision cockpit</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Advisory logic customization</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Agentic HR AI workflows (human-in-loop)</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Board-ready outputs</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                <span className="text-sm">Priority access & SLA</span>
-                            </div>
-                        </div>
-
-                        <Link
-                            to="/auth"
-                            className="block w-full text-center px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-                        >
-                            Contact Sales
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="mt-12 text-center">
-                    <p className="text-blue-200 text-sm mb-2">
-                        * Prices vary based on organization size (500 to 15,000+ employees)
-                    </p>
-                    <p className="text-blue-200 text-sm mb-4">
-                        Multi-year discounts available | Strategic logo clients: Custom pricing
-                    </p>
-                    <div className="inline-block bg-yellow-400/20 border border-yellow-400 rounded-lg px-6 py-3">
-                        <p className="text-yellow-300 font-semibold">
-                            💰 Limited Time: First 10 clients get 15% founding customer discount
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            {/* Final CTA - Urgency */}
-            <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+            {/* Social Proof - Editorial Style */}
+            <section className="py-24 bg-[#0B2A57] text-white">
                 <div className="max-w-4xl mx-auto px-6 text-center">
-                    <Shield className="w-16 h-16 mx-auto mb-6 text-blue-200" />
-                    <h2 className="text-4xl font-bold mb-4">
-                        Your Board Will Ask: "What's Our HR Transformation Strategy?"
+                    <Users className="w-12 h-12 text-blue-400 mx-auto mb-8" />
+                    <blockquote className="text-3xl md:text-5xl font-serif leading-tight italic mb-10 opacity-90">
+                        "The only platform that gave me a board-ready transformation strategy
+                        in <span className="text-blue-400">weeks</span>, not months."
+                    </blockquote>
+                    <div className="flex items-center justify-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-blue-500/30 flex items-center justify-center text-xl font-bold">
+                            VR
+                        </div>
+                        <div className="text-left">
+                            <div className="font-bold text-lg">Vikram R.</div>
+                            <div className="text-blue-300 text-sm">CHRO, Manufacturing Conglomerate (12k Employees)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Pricing Section - Exclusive Tiers */}
+            <section id="pricing" className="py-24 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+                            Choose Your Transformation Tier
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                            Flexible engagement models designed for your scale.
+                        </p>
+                    </div>
+
+                    <div className="grid lg:grid-cols-3 gap-8 items-start">
+                        {/* Tier 1 */}
+                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:border-blue-500/30 transition-all duration-300 relative group">
+                            <div className="mb-8">
+                                <h3 className="text-xl font-bold text-gray-700 uppercase tracking-wider">Essentials</h3>
+                                <div className="mt-6 flex items-baseline gap-1">
+                                    <span className="text-5xl font-black text-gray-900 tracking-tight">₹12-18L</span>
+                                    <span className="text-gray-500 font-medium">/year</span>
+                                </div>
+                                <p className="text-blue-600 font-medium text-sm mt-3 bg-blue-50 inline-block px-3 py-1 rounded-full">For mid-size growth companies</p>
+                            </div>
+                            <Link to="/auth" className="block w-full py-4 text-center rounded-xl border-2 border-slate-900 text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all">
+                                Get Started
+                            </Link>
+                            <div className="mt-8 space-y-4">
+                                <div className="text-sm font-semibold text-gray-900">Core Capabilities:</div>
+                                <ul className="space-y-3 text-sm text-gray-600">
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" /> Full Data Aggregation</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" /> CXO Summary Dashboard</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" /> Basic Maturity Scoring</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" /> Quarterly Report Refresh</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Tier 2 - Pop */}
+                        <div className="bg-[#0B2A57] rounded-3xl p-8 shadow-2xl shadow-blue-900/30 transform md:-translate-y-6 relative overflow-hidden border border-blue-800">
+                            <div className="absolute top-0 right-0 p-4">
+                                <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-[#0B2A57] text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg">Most Popular</span>
+                            </div>
+                            <div className="mb-8 relative z-10">
+                                <h3 className="text-xl font-bold text-blue-100 uppercase tracking-wider">Transformation</h3>
+                                <div className="mt-6 flex items-baseline gap-1 text-white">
+                                    <span className="text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 drop-shadow-lg">₹28-40L</span>
+                                    <span className="text-blue-300 font-medium">/year</span>
+                                </div>
+                                <p className="text-white font-medium text-sm mt-3 bg-white/10 inline-block px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">For enterprise-grade transformation</p>
+                            </div>
+                            <Link to="/auth" className="block w-full py-4 text-center rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold hover:from-blue-400 hover:to-blue-500 transition-all shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1">
+                                Start Transformation
+                            </Link>
+                            <div className="mt-8 space-y-4 relative z-10">
+                                <div className="text-sm font-bold text-white uppercase tracking-wide">Everything in Essentials +</div>
+                                <ul className="space-y-4 text-sm text-blue-50">
+                                    <li className="flex gap-3 items-center"><div className="bg-green-500/20 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /></div> Transformation Mapping Layer</li>
+                                    <li className="flex gap-3 items-center"><div className="bg-green-500/20 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /></div> Priority & Dependency Engine</li>
+                                    <li className="flex gap-3 items-center"><div className="bg-green-500/20 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /></div> Operating Model Designer</li>
+                                    <li className="flex gap-3 items-center"><div className="bg-green-500/20 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /></div> ROI Calculator</li>
+                                    <li className="flex gap-3 items-center"><div className="bg-green-500/20 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /></div> 24/7 Advisory Assistant</li>
+                                </ul>
+                            </div>
+                            {/* Background Elements */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('/bg-pattern.svg')] opacity-5 z-0"></div>
+                        </div>
+
+                        {/* Tier 3 */}
+                        <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:border-purple-500/30 transition-all duration-300 relative group">
+                            <div className="mb-8">
+                                <h3 className="text-xl font-bold text-gray-700 uppercase tracking-wider">Global Enterprise</h3>
+                                <div className="mt-6 flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-gray-900 tracking-tight">Custom Plan</span>
+                                </div>
+                                <p className="text-purple-600 font-medium text-sm mt-3 bg-purple-50 inline-block px-3 py-1 rounded-full">For multi-entity multinationals</p>
+                            </div>
+                            <a href="#contact" className="block w-full py-4 text-center rounded-xl border-2 border-gray-200 text-gray-600 font-bold hover:border-purple-600 hover:text-purple-600 transition-all">
+                                Contact Sales
+                            </a>
+                            <div className="mt-8 space-y-4">
+                                <div className="text-sm font-semibold text-gray-900">Custom capabilities:</div>
+                                <ul className="space-y-3 text-sm text-gray-600">
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" /> Multi-country Intelligence</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" /> Custom Logic Models</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" /> Dedicated Success Director</li>
+                                    <li className="flex gap-3"><CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" /> Board Presentation Support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            {/* Final CTA - Urgency */}
+            <section id="contact" className="relative py-24 overflow-hidden">
+                <div className="absolute inset-0 bg-[#001845]">
+                    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                </div>
+                <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">
+                        Transform Your HR Function.<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                            Without The Consulting Fees.
+                        </span>
                     </h2>
-                    <p className="text-xl text-blue-100 mb-2">
-                        Will you have data-driven answers, or another PowerPoint?
+                    <p className="text-xl text-blue-200 mb-12 max-w-2xl mx-auto">
+                        Join the CHROs who are leading with data, not guessing with intuition.
                     </p>
-                    <p className="text-lg text-blue-200 mb-8">
-                        Join CHROs who've replaced consulting fees with continuous intelligence.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center">
                         <Link
                             to="/auth"
-                            className="px-8 py-4 bg-yellow-400 text-gray-900 rounded-lg font-bold hover:bg-yellow-300 transition-all duration-200 shadow-lg hover:shadow-2xl flex items-center gap-2 transform hover:scale-105"
+                            className="px-10 py-5 bg-white text-[#0B2A57] rounded-xl font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-xl hover:shadow-2xl hover:shadow-white/20"
                         >
-                            Start Your Transformation <ArrowRight className="w-5 h-5" />
+                            Get Started Now
                         </Link>
                         <a
-                            href="/#contact"
-                            className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 border-2 border-white/30"
+                            href="mailto:demo@hrtek.com"
+                            className="px-10 py-5 bg-transparent border-2 border-white/30 text-white rounded-xl font-bold text-lg hover:bg-white/10 transition-all backdrop-blur-sm"
                         >
-                            Schedule a Demo
+                            Request Executive Demo
                         </a>
                     </div>
-                    <p className="text-sm text-blue-200 mt-6">
-                        ✓ No credit card required  ✓ 30-day pilot available  ✓ Board-ready demo in 48 hours
-                    </p>
                 </div>
             </section>
+            <Footer />
         </div>
     );
 }

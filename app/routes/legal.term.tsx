@@ -212,11 +212,11 @@ export default function TermsAndConditionsPage() {
 
             <TermsSection id="reports" title="9. Reports, Insights & Advisory Outputs">
               <p>The platform provides:</p>
-              <ul className="list-disc pl-5 mt-4 space-y-2 flex flex-wrap gap-x-12">
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">Automated HR insights</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">Digital maturity scores</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">AI-driven recommendations</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">HR strategic roadmaps</li>
+              <ul className="list-disc pl-5 mt-4 space-y-2">
+                <li>Automated HR insights</li>
+                <li>Digital maturity scores</li>
+                <li>AI-driven recommendations</li>
+                <li>HR strategic roadmaps</li>
               </ul>
               <p className="mt-6 text-gray-700">While results aim to be accurate, they are dependent on the data provided by users.</p>
               <p className="mt-2 font-bold text-gray-900">The Company is not liable for any organizational decisions made solely based on system-generated outputs.</p>

@@ -1,30 +1,29 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
-import { requireUserSession } from "~/lib/session.server";
+import { requireAdminSession } from "~/lib/session.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { Receipt, Building2, Calendar, DollarSign, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
-
-/**
- * Admin Invoices Page
- * Route: /admin/invoices
- * 
- * Displays all invoices from DynamoDB with filtering
- */
+import {
+    DocumentTextIcon,
+    BuildingOffice2Icon,
+    CalendarIcon,
+    BanknotesIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    XCircleIcon,
+    ExclamationTriangleIcon,
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    ChevronDownIcon,
+    ArrowDownTrayIcon,
+    ArrowTopRightOnSquareIcon,
+    TableCellsIcon
+} from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const user = await requireUserSession(request);
+    await requireAdminSession(request);
 
-    // Check admin role (with dev mode bypass)
-    const userWithRole = user as any;
-    if (userWithRole.role !== "admin" && process.env.NODE_ENV === "production") {
-        return json({
-            error: "Unauthorized - Admin access required",
-            invoices: []
-        }, { status: 403 });
-    }
-
-    // Get status filter from query params
     const url = new URL(request.url);
     const statusFilter = url.searchParams.get("status");
 
@@ -32,36 +31,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
         const ddbDocClient = getDynamoDBDocumentClient();
         const tableName = process.env.DYNAMODB_TABLE_NAME;
 
-        // Build filter expression
         let filterExpression = "begins_with(pk, :invoicePrefix)";
-        const expressionValues: any = {
-            ":invoicePrefix": "INVOICE#"
-        };
+        const expressionValues: any = { ":invoicePrefix": "INVOICE#" };
 
         if (statusFilter) {
             filterExpression += " AND #status = :statusValue";
             expressionValues[":statusValue"] = statusFilter;
         }
 
-        // Scan for invoices
         const command = new ScanCommand({
             TableName: tableName,
             FilterExpression: filterExpression,
-            ExpressionAttributeNames: statusFilter ? {
-                "#status": "status"
-            } : undefined,
+            ExpressionAttributeNames: statusFilter ? { "#status": "status" } : undefined,
             ExpressionAttributeValues: expressionValues
         });
 
         const response = await ddbDocClient.send(command);
         const invoices = response.Items || [];
 
-        console.log(`📊 Fetched ${invoices.length} invoices from DynamoDB (filter: ${statusFilter || "all"})`);
-
         return json({
             invoices,
             totalCount: invoices.length,
-            statusFilter
+            statusFilter,
+            error: null as string | null
         });
     } catch (error) {
         console.error("Error fetching invoices:", error);
@@ -75,254 +67,183 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function AdminInvoices() {
-    const loaderData = useLoaderData<typeof loader>() as any;
-    const invoices = loaderData?.invoices || [];
-    const totalCount = loaderData?.totalCount || 0;
-    const statusFilter = loaderData?.statusFilter;
+    const { invoices, totalCount, statusFilter, error } = useLoaderData<typeof loader>();
     const [searchParams] = useSearchParams();
 
-    const getStatusBadge = (status: string) => {
+    const getStatusStyles = (status: string) => {
         const styles = {
-            paid: "bg-green-100 text-green-800",
-            pending: "bg-yellow-100 text-yellow-800",
-            overdue: "bg-red-100 text-red-800",
-            cancelled: "bg-gray-100 text-gray-800"
+            paid: { color: "text-emerald-700 bg-emerald-50 border-emerald-100", icon: CheckCircleIcon, label: "Settled" },
+            pending: { color: "text-amber-700 bg-amber-50 border-amber-100", icon: ClockIcon, label: "Processing" },
+            overdue: { color: "text-rose-700 bg-rose-50 border-rose-100", icon: ExclamationTriangleIcon, label: "Overdue" },
+            cancelled: { color: "text-gray-500 bg-gray-50 border-gray-100", icon: XCircleIcon, label: "Voided" }
         };
-
-        return (
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${styles[status as keyof typeof styles] || "bg-gray-100 text-gray-800"}`}>
-                {status?.toUpperCase() || "UNKNOWN"}
-            </span>
-        );
+        return styles[status as keyof typeof styles] || styles.pending;
     };
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case "paid":
-                return <CheckCircle className="w-5 h-5 text-green-500" />;
-            case "pending":
-                return <Clock className="w-5 h-5 text-yellow-500" />;
-            case "overdue":
-                return <AlertCircle className="w-5 h-5 text-red-500" />;
-            default:
-                return <XCircle className="w-5 h-5 text-gray-400" />;
-        }
-    };
+    const stats = [
+        { label: 'Total Volume', value: totalCount, icon: DocumentTextIcon, color: 'indigo' },
+        { label: 'Pending Audit', value: invoices.filter((i: any) => i.status === "pending").length, icon: ClockIcon, color: 'amber' },
+        { label: 'Revenue Finalized', value: invoices.filter((i: any) => i.status === "paid").length, icon: CheckCircleIcon, color: 'emerald' },
+        { label: 'Risk Exposure', value: invoices.filter((i: any) => i.status === "overdue").length, icon: ExclamationTriangleIcon, color: 'rose' },
+    ];
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Receipt className="w-10 h-10 text-blue-600" />
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900">Invoice Management</h1>
-                                <p className="text-gray-600">View and manage all invoices</p>
-                            </div>
+        <div className="max-w-7xl mx-auto space-y-8 p-4 animate-in fade-in duration-700">
+            {/* Ledger Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                        <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
+                            <BanknotesIcon className="h-6 w-6 text-white" />
                         </div>
-                        <div className="bg-blue-100 px-4 py-2 rounded-lg">
-                            <p className="text-sm font-semibold text-blue-900">
-                                {statusFilter ? `${statusFilter.toUpperCase()}: ${totalCount}` : `Total: ${totalCount}`}
-                            </p>
-                        </div>
+                        Financial Ledger
+                    </h1>
+                    <p className="text-gray-500 font-medium mt-1">Audit, reconcile, and synchronize all primary ingress invoices.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search ledger..."
+                            className="pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm font-bold shadow-sm outline-none ring-4 ring-transparent focus:ring-indigo-100 transition-all w-64"
+                        />
                     </div>
                 </div>
+            </div>
 
-                {/* Filter Tabs */}
-                <div className="mb-6 flex gap-2">
+            {/* Micro Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                {stats.map((stat, i) => (
+                    <motion.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="bg-white p-6 rounded-[2rem] border border-gray-50 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all"
+                    >
+                        <div className={`p-3 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 group-hover:scale-110 transition-transform`}>
+                            <stat.icon className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{stat.label}</p>
+                            <p className="text-xl font-black text-gray-900">{stat.value}</p>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Filter Navigation */}
+            <div className="flex flex-wrap gap-2 bg-gray-100/50 p-2 rounded-[1.5rem] w-fit">
+                {[
+                    { label: 'Full Spectrum', value: null, color: 'indigo' },
+                    { label: 'Processing', value: 'pending', color: 'amber' },
+                    { label: 'Settled', value: 'paid', color: 'emerald' },
+                    { label: 'Overdue', value: 'overdue', color: 'rose' }
+                ].map((tab) => (
                     <Link
-                        to="/admin/invoices"
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${!statusFilter ? "bg-blue-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
+                        key={tab.label}
+                        to={tab.value ? `/admin/invoices?status=${tab.value}` : '/admin/invoices'}
+                        className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${(statusFilter === tab.value || (!statusFilter && !tab.value))
+                            ? `bg-white text-gray-900 shadow-sm border border-gray-100`
+                            : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >
-                        All Invoices
+                        {tab.label}
                     </Link>
-                    <Link
-                        to="/admin/invoices?status=pending"
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === "pending" ? "bg-yellow-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
-                            }`}
-                    >
-                        Pending
-                    </Link>
-                    <Link
-                        to="/admin/invoices?status=paid"
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === "paid" ? "bg-green-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
-                            }`}
-                    >
-                        Paid
-                    </Link>
-                    <Link
-                        to="/admin/invoices?status=overdue"
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${statusFilter === "overdue" ? "bg-red-600 text-white" : "bg-white text-gray-700 hover:bg-gray-100"
-                            }`}
-                    >
-                        Overdue
-                    </Link>
+                ))}
+            </div>
+
+            {error && (
+                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-3">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-rose-600" />
+                    <p className="text-sm font-bold text-rose-800">{error}</p>
                 </div>
+            )}
 
-                {/* Error Message */}
-                {loaderData?.error && (
-                    <div className="mb-6 bg-red-50 border-l-4 border-red-500 rounded-r-lg p-4">
-                        <p className="text-sm text-red-800">{loaderData.error}</p>
-                    </div>
-                )}
-
-                {/* Invoices Table */}
-                {invoices.length === 0 ? (
-                    <div className="bg-white shadow-md rounded-lg p-16 text-center">
-                        <Receipt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Invoices Found</h3>
-                        <p className="text-gray-600">
-                            {statusFilter ? `No ${statusFilter} invoices at this time` : "No invoices have been created yet"}
-                        </p>
-                    </div>
-                ) : (
-                    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Invoice
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Company
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Amount
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Date
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {invoices.map((invoice: any) => (
-                                        <tr key={invoice.pk} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
+            {/* Ledger Table */}
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50/50">
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Instrument</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Counterparty</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Audit Value</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">State</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Issuance</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {invoices.map((invoice: any, idx: number) => {
+                                const status = getStatusStyles(invoice.status);
+                                return (
+                                    <motion.tr
+                                        key={invoice.pk}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="group hover:bg-gray-50/50 transition-colors"
+                                    >
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 bg-gray-50 text-gray-400 flex items-center justify-center rounded-xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                                                    <DocumentTextIcon className="h-5 w-5" />
+                                                </div>
                                                 <div>
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {invoice.invoiceNumber || invoice.pk?.replace("INVOICE#", "")}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        ID: {invoice.invoiceId || "N/A"}
-                                                    </div>
+                                                    <p className="text-sm font-black text-gray-900">{invoice.invoiceNumber || invoice.pk?.replace("INVOICE#", "")}</p>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase">UUID: {invoice.invoiceId?.slice(0, 8) || "GEN-ID"}</p>
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900 flex items-center gap-1">
-                                                    {invoice.companyId ? (
-                                                        <>
-                                                            <Building2 className="w-3 h-3" />
-                                                            <Link
-                                                                to={`/admin/companies/${invoice.companyId}`}
-                                                                className="text-blue-600 hover:text-blue-800 underline"
-                                                            >
-                                                                {invoice.companyId}
-                                                            </Link>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-gray-400">No company</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-semibold text-gray-900 flex items-center gap-1">
-                                                    <DollarSign className="w-4 h-4" />
-                                                    {invoice.totalAmount ? `₹${invoice.totalAmount.toLocaleString()}` : "N/A"}
-                                                </div>
-                                                {invoice.gstAmount && (
-                                                    <div className="text-xs text-gray-500">
-                                                        GST: ₹{invoice.gstAmount.toLocaleString()}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-2">
-                                                    {getStatusIcon(invoice.status)}
-                                                    {getStatusBadge(invoice.status)}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900 flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : "N/A"}
-                                                </div>
-                                                {invoice.dueDate && (
-                                                    <div className="text-xs text-gray-500">
-                                                        Due: {new Date(invoice.dueDate).toLocaleDateString()}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <Link
-                                                    to={`/admin/invoices/${invoice.pk?.replace("INVOICE#", "")}`}
-                                                    className="text-blue-600 hover:text-blue-900"
-                                                >
-                                                    View Details
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-2">
+                                                <BuildingOffice2Icon className="h-4 w-4 text-gray-300" />
+                                                <Link to={`/admin/companies/${invoice.companyId}`} className="text-sm font-bold text-indigo-600 hover:underline">
+                                                    {invoice.companyId}
                                                 </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-black text-gray-900">₹{invoice.totalAmount?.toLocaleString()}</p>
+                                            <p className="text-[10px] font-bold text-emerald-600 uppercase">GST Invoiced</p>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${status.color}`}>
+                                                <status.icon className="h-3 w-3" />
+                                                {status.label}
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex flex-col">
+                                                <p className="text-xs font-bold text-gray-700">{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString() : 'N/A'}</p>
+                                                <p className="text-[10px] font-bold text-rose-400">Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'Immediate'}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <Link
+                                                to={`/admin/invoices/${invoice.pk?.replace("INVOICE#", "")}`}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
+                                            >
+                                                Audit
+                                                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                                            </Link>
+                                        </td>
+                                    </motion.tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+
+                {invoices.length === 0 && (
+                    <div className="p-32 text-center">
+                        <TableCellsIcon className="h-24 w-24 text-gray-100 mx-auto mb-6" />
+                        <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Null Dataset Detected</h3>
+                        <p className="text-gray-400 font-medium max-w-sm mx-auto mt-2">No instruments match the current filter criteria in the financial repository.</p>
                     </div>
                 )}
-
-                {/* Stats */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center gap-3">
-                            <Receipt className="w-8 h-8 text-blue-600" />
-                            <div>
-                                <p className="text-sm text-gray-600">Total</p>
-                                <p className="text-2xl font-bold text-gray-900">{totalCount}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center gap-3">
-                            <Clock className="w-8 h-8 text-yellow-600" />
-                            <div>
-                                <p className="text-sm text-gray-600">Pending</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {invoices.filter((i: any) => i.status === "pending").length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center gap-3">
-                            <CheckCircle className="w-8 h-8 text-green-600" />
-                            <div>
-                                <p className="text-sm text-gray-600">Paid</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {invoices.filter((i: any) => i.status === "paid").length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex items-center gap-3">
-                            <AlertCircle className="w-8 h-8 text-red-600" />
-                            <div>
-                                <p className="text-sm text-gray-600">Overdue</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                    {invoices.filter((i: any) => i.status === "overdue").length}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

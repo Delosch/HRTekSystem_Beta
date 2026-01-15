@@ -115,10 +115,14 @@ export default function BillingDetailsForm({ onSubmit, onCancel }: BillingDetail
                             <input
                                 type="tel"
                                 value={billingDetails.phone}
-                                onChange={(e) => setBillingDetails({ ...billingDetails, phone: e.target.value })}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                                    setBillingDetails({ ...billingDetails, phone: value });
+                                }}
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'
                                     }`}
                                 placeholder="9876543210"
+                                maxLength={10}
                             />
                             {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                         </div>

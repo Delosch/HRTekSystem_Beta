@@ -2,7 +2,8 @@ import {
     checkEligibility,
     createEligibilityRecord,
     updateEligibilityStatus,
-    getEligibilityRecord
+    getEligibilityRecord,
+    EligibilityRecord
 } from "~/models/eligibility.model";
 
 /**
@@ -23,6 +24,9 @@ export interface EligibilityProgress {
     required: number;
     percentage: number;
     completedEnginesList: string[];
+    paidEnginesList: string[];
+    completedCount: number;
+    paidCount: number;
     remainingEngines: number;
 }
 
@@ -50,38 +54,62 @@ export async function checkTransformationEligibility(
 }
 
 /**
- * Mark company as eligible for transformation
+ * Sync eligibility record with current assessment and payment status
+ * Updated to ALWAYS update the record, even if not eligible for transformation
+ */
+export async function syncEligibilityRecord(
+    companyId: string
+): Promise<{ success: boolean; record: EligibilityRecord }> {
+    try {
+        const eligibilityCheck = await checkEligibility(companyId);
+
+        // Check if record exists
+        const existingRecord = await getEligibilityRecord(companyId);
+
+        let record;
+        if (existingRecord) {
+            // Update existing record
+            await updateEligibilityStatus(companyId, {
+                isEligible: eligibilityCheck.eligible,
+                completedEngines: eligibilityCheck.completedEngines,
+                paidEngines: eligibilityCheck.paidEngines
+            });
+            record = { ...existingRecord, isEligible: eligibilityCheck.eligible, completedEngines: eligibilityCheck.completedEngines, paidEngines: eligibilityCheck.paidEngines };
+        } else {
+            // Create new record
+            record = await createEligibilityRecord(companyId, {
+                isEligible: eligibilityCheck.eligible,
+                completedEngines: eligibilityCheck.completedEngines,
+                paidEngines: eligibilityCheck.paidEngines
+            });
+        }
+
+        return {
+            success: true,
+            record
+        };
+    } catch (error) {
+        console.error("Error syncing eligibility:", error);
+        throw error;
+    }
+}
+
+/**
+ * Mark company as eligible for transformation (Checks first)
+ * @deprecated Use syncEligibilityRecord for general updates
  */
 export async function markEligibleForTransformation(
     companyId: string
 ): Promise<{ success: boolean; message: string }> {
     try {
-        const eligibilityCheck = await checkEligibility(companyId);
+        const result = await syncEligibilityRecord(companyId);
 
-        if (!eligibilityCheck.eligible) {
+        if (!result.record.isEligible) {
+            const eligibilityCheck = await checkEligibility(companyId);
             return {
                 success: false,
                 message: `Not eligible. Missing: ${eligibilityCheck.missingRequirements.join(", ")}`
             };
-        }
-
-        // Check if record exists
-        const existingRecord = await getEligibilityRecord(companyId);
-
-        if (existingRecord) {
-            // Update existing record
-            await updateEligibilityStatus(companyId, {
-                isEligible: true,
-                completedEngines: eligibilityCheck.completedEngines,
-                paidEngines: eligibilityCheck.paidEngines
-            });
-        } else {
-            // Create new record
-            await createEligibilityRecord(companyId, {
-                isEligible: true,
-                completedEngines: eligibilityCheck.completedEngines,
-                paidEngines: eligibilityCheck.paidEngines
-            });
         }
 
         return {
@@ -122,7 +150,10 @@ export async function getEligibilityProgress(
             100,
             Math.round((eligibilityCheck.paidCount / minimumRequired) * 100)
         ),
-        completedEnginesList: eligibilityCheck.paidEngines,
+        completedEnginesList: eligibilityCheck.completedEngines,
+        paidEnginesList: eligibilityCheck.paidEngines,
+        completedCount: eligibilityCheck.completedCount,
+        paidCount: eligibilityCheck.paidCount,
         remainingEngines: Math.max(0, minimumRequired - eligibilityCheck.paidCount)
     };
 }
@@ -134,12 +165,11 @@ export async function autoCheckEligibility(
     companyId: string
 ): Promise<{ eligible: boolean; message: string; proposalGenerated?: boolean }> {
     try {
-        const status = await checkTransformationEligibility(companyId);
+        // ALWAYS Sync current status to the eligibility record
+        const syncResult = await syncEligibilityRecord(companyId);
 
-        if (status.eligible) {
-            await markEligibleForTransformation(companyId);
-
-            // Auto-generate proposal
+        if (syncResult.record.isEligible) {
+            // Auto-generate proposal if eligible
             const { autoGenerateProposal } = await import("~/services/proposal.service");
             const proposalResult = await autoGenerateProposal(companyId);
 
@@ -150,9 +180,11 @@ export async function autoCheckEligibility(
             };
         }
 
+        const statusResult = await checkTransformationEligibility(companyId);
+
         return {
             eligible: false,
-            message: `Progress: ${status.paidEngines}/3 engines completed. ${status.missingRequirements.join(". ")}`
+            message: `Progress: ${statusResult.paidEngines}/3 engines completed. ${statusResult.missingRequirements.join(". ")}`
         };
     } catch (error) {
         console.error("Error in auto-check eligibility:", error);
