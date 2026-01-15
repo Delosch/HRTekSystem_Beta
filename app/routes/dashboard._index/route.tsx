@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { redirect, useLoaderData, useRevalidator, Link } from "@remix-run/react";
 import Sidebar from "../../components/DashboardComponents/Sidebar";
+import { useNavigate } from "@remix-run/react";
 import {
   Radar,
   RadarChart,
@@ -487,6 +488,7 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const data = useLoaderData<DashboardData>();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -1126,7 +1128,15 @@ export default function Dashboard() {
               ))}
             </div>
 
+<<<<<<< HEAD
             <Link to="/admin/activity-logs" className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full block">
+=======
+            <button
+              type="button"
+              onClick={() => navigate("/admin/activity-logs")}
+              className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full"
+            >
+>>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
               View Activity Audit
             </Link>
           </div>
