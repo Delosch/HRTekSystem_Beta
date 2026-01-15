@@ -118,10 +118,13 @@ export const action: ActionFunction = async ({ request }) => {
   return json({ error: "Invalid intent" }, { status: 400 });
 };
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function StartTransformationDashboard() {
   const { completedEngines, recommendations, user, transformationEligibility, enginePrices } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const fetcher = useFetcher(); // Use fetcher for add to cart actions
+  const fetcher = useFetcher<{ success?: boolean; message?: string; error?: string }>(); // Typed fetcher
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -130,6 +133,14 @@ export default function StartTransformationDashboard() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      toast.success(fetcher.data.message);
+    } else if (fetcher.data?.error) {
+      toast.error(fetcher.data.error);
+    }
+  }, [fetcher.data]);
 
   const allEngines = Object.keys(engineDetails);
   const inProgressEngines = allEngines.filter(
@@ -489,7 +500,8 @@ export default function StartTransformationDashboard() {
             ))}
           </div>
         </section >
-      </main >
-    </div >
+      </main>
+      <ToastContainer />
+    </div>
   );
 }

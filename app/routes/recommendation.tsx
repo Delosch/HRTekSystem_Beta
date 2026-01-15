@@ -37,7 +37,7 @@ const engineDetails: Record<string, EngineDetails> = {
     engineModuleUrl: "/changeDashboard"
   },
   "HR Transformation Roadmap Generator": {
-    name: "HR Transformation Roadmap",
+    name: "HR Transformation Roadmap Generator",
     description:
       "Create a strategic, actionable roadmap to guide your HR digital transformation journey from start to finish.",
     imageUrl:
@@ -67,18 +67,8 @@ const engineDetails: Record<string, EngineDetails> = {
     imageUrl:
       "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600",
     engineModuleUrl: "/vendorDashboard"
-  },
-  
-  "HR Transformation Roadmap": {
-    name: "HR Transformation Roadmap",
-    description:
-      "Create a strategic, actionable roadmap to guide your HR digital transformation journey from start to finish.",
-    imageUrl:
-      "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600",
-    engineModuleUrl: "/roadmapDashboard"
   }
-}
-;
+};
 
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -90,27 +80,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Fetch recommendation data - replace with your real DB fetch
 
 
-  const recommendation: RecommendationItem = await fetchEngineRecomendations(companyId);
-  // {
-  //   pk: `RECOMMENDATION#${companyId}`,
-  //   sk: "RECOMMENDATION",
-  //   allRankings: [
-  //     ["HCM Vendor Fit Engine", 8],
-  //     ["Intelligent Change Management", 8],
-  //     ["HR Technology Maturity Analysis", 4],
-  //     ["HR Transformation Roadmap Generator", 0],
-  //     ["Shared Service Designer", 0],
-  //   ],
-  //   company_id: companyId,
-  //   createdAt: new Date().toISOString(),
-  //   createdBy: user.id,
-  // };
-
+  const recommendation = await fetchEngineRecomendations(companyId) || { allRankings: [] };
   const completedEngines = await completedEngine(companyId);
 
   // Find top recommended not completed engine:
   let topRecommendation: EngineDetails | null = null;
-  for (const [engineName] of recommendation.allRankings) {
+  const rankings = recommendation.allRankings || [];
+  for (const [engineName] of rankings) {
     if (!completedEngines.includes(engineName)) {
       topRecommendation = engineDetails[engineName];
       break;
@@ -121,7 +97,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return json({
     userName: user.first_name || "there",
     topRecommendation,
-    allRankings: recommendation.allRankings,
+    allRankings: rankings as [string, number][],
     completedEngines,
   });
 }

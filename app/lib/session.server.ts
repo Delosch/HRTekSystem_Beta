@@ -168,9 +168,8 @@ export async function createAuthSession(
     try {
         validatedData = authSessionSchema.parse(data);
     } catch (error) {
-        console.error("Session data validation failed:", error);
-        // Return a bad request response if data is invalid
-        return json({ message: "Invalid session data provided." }, { status: 400 });
+        console.error("Session login failed: Invalid data");
+        return json({ error: "Invalid session data provided." }, { status: 400 });
     }
 
     const session = await getSession();
@@ -221,7 +220,8 @@ export async function getUserSession(request: Request): Promise<SessionData | nu
             organisationId: session.get("organisationId"),
             country_iso: session.get("country_iso"),
             photoUrl: session.get("photoUrl"),
-            username: session.get("username")
+            username: session.get("username"),
+            isAdmin: session.get("isAdmin")
         };
 
         // Ensure all required fields are present and valid according to sessionDataSchema
@@ -253,6 +253,24 @@ export async function requireUserSession(request: Request): Promise<SessionData>
         // You might want to add a `?redirectTo=` query param here for better UX.
         // const url = new URL(request.url);
         throw redirect('/auth');
+    }
+
+    return userSession;
+}
+
+/**
+ * Requires an authenticated admin session. If no admin session is found,
+ * it redirects to the admin login page.
+ *
+ * @param request - The incoming Request object.
+ * @returns The user's session data if authenticated as admin.
+ * @throws {Response} A Remix Response object for redirection if no admin session is found.
+ */
+export async function requireAdminSession(request: Request): Promise<SessionData> {
+    const userSession = await getUserSession(request);
+
+    if (!userSession || !userSession.isAdmin) {
+        throw redirect('/admin/login');
     }
 
     return userSession;

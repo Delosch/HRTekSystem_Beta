@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, useAnimation, Variants } from "framer-motion";
 import type { MetaFunction, ActionFunction } from "@remix-run/node";
 import { useNavigate } from "@remix-run/react";
-import { redirect,LoaderFunction } from "@remix-run/node";
+import { redirect, LoaderFunction } from "@remix-run/node";
 import {
   ArrowRightIcon,
   ChartBarIcon,
@@ -15,7 +15,7 @@ import { updateUser } from "~/models/user.model";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Welcome to HR Tek Systems - Your HR Transformation Journey" },
+    { title: "Welcome to HR-Tek Systems - Your HR Transformation Journey" },
     { name: "description", content: "Begin your HR maturity journey with AI-powered insights and precision." },
   ];
 };
@@ -25,7 +25,7 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
   if (cookie_container.onboardingStatus === "None") {
     return "allowed";
   }
-  else if(cookie_container.onboardingStatus === "Completed"){
+  else if (cookie_container.onboardingStatus === "Completed") {
     throw new Response("Unauthorized", { status: 401 });
   }
   return "access denied";
@@ -38,7 +38,7 @@ export const action: ActionFunction = async ({ request }) => {
   // Update the onboarding status
   session.set("onboardingStatus", "Company");
   await updateUser(user.userId, { onboardingStatus: "Company" })
-      
+
   // Commit the session and redirect
   return redirect("/onboarding/company", {
     headers: {
@@ -67,13 +67,13 @@ export default function OnboardingWelcome() {
 
   // Fixed Animation variants with proper TypeScript types
   const modalVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       scale: 0.8,
-      y: 50 
+      y: 50
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       y: 0,
       transition: {
@@ -85,12 +85,12 @@ export default function OnboardingWelcome() {
   };
 
   const contentVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 30 
+    hidden: {
+      opacity: 0,
+      y: 30
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: {
         duration: 0.5,
@@ -100,13 +100,13 @@ export default function OnboardingWelcome() {
   };
 
   const cardVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       y: 20,
       scale: 0.95
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       scale: 1,
       transition: {
@@ -117,12 +117,12 @@ export default function OnboardingWelcome() {
   };
 
   const statsVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.8 
+    hidden: {
+      opacity: 0,
+      scale: 0.8
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: {
         duration: 0.4,
@@ -137,14 +137,14 @@ export default function OnboardingWelcome() {
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div className="flex min-h-screen items-center justify-center p-2 sm:p-4">
         {/* Animated Background */}
-        <motion.div 
+        <motion.div
           className="fixed inset-0 bg-gradient-to-br from-slate-50 via-gray-50 to-stone-100"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
           {/* Refined Corporate Pattern */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0 opacity-15"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.15 }}
@@ -153,42 +153,42 @@ export default function OnboardingWelcome() {
             <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="corporate-grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-                  <path d="M80 0H0V80" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
-                  <path d="M40 0v80M0 40h80" fill="none" stroke="#e5e7eb" strokeWidth="0.25"/>
-                  <circle cx="40" cy="40" r="1.5" fill="#3b82f6" opacity="0.1"/>
+                  <path d="M80 0H0V80" fill="none" stroke="#e5e7eb" strokeWidth="0.5" />
+                  <path d="M40 0v80M0 40h80" fill="none" stroke="#e5e7eb" strokeWidth="0.25" />
+                  <circle cx="40" cy="40" r="1.5" fill="#3b82f6" opacity="0.1" />
                 </pattern>
                 <linearGradient id="professional-overlay" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f8fafc" stopOpacity="0.9"/>
-                  <stop offset="50%" stopColor="#f1f5f9" stopOpacity="0.5"/>
-                  <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0.7"/>
+                  <stop offset="0%" stopColor="#f8fafc" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#f1f5f9" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0.7" />
                 </linearGradient>
               </defs>
-              <rect width="100%" height="100%" fill="url(#corporate-grid)"/>
-              <rect width="100%" height="100%" fill="url(#professional-overlay)"/>
+              <rect width="100%" height="100%" fill="url(#corporate-grid)" />
+              <rect width="100%" height="100%" fill="url(#professional-overlay)" />
             </svg>
           </motion.div>
 
           {/* Animated Geometric Accents */}
           <div className="absolute inset-0 overflow-hidden">
-            <motion.div 
+            <motion.div
               className="absolute top-0 left-0 w-72 h-72 sm:w-96 sm:h-96 bg-gradient-to-br from-blue-100/20 to-transparent rounded-full blur-3xl transform -translate-x-36 -translate-y-36 sm:-translate-x-48 sm:-translate-y-48"
-              animate={{ 
+              animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.2, 0.3, 0.2]
               }}
-              transition={{ 
+              transition={{
                 duration: 8,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
             />
-            <motion.div 
+            <motion.div
               className="absolute bottom-0 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-gradient-to-tl from-indigo-100/15 to-transparent rounded-full blur-3xl transform translate-x-32 translate-y-32 sm:translate-x-40 sm:translate-y-40"
-              animate={{ 
+              animate={{
                 scale: [1.1, 1, 1.1],
                 opacity: [0.15, 0.25, 0.15]
               }}
-              transition={{ 
+              transition={{
                 duration: 10,
                 repeat: Infinity,
                 ease: "easeInOut",
@@ -198,7 +198,7 @@ export default function OnboardingWelcome() {
           </div>
 
           {/* Sophisticated Overlay Lines */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -208,9 +208,9 @@ export default function OnboardingWelcome() {
             <div className="absolute bottom-16 sm:bottom-20 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-200/30 to-transparent"></div>
           </motion.div>
         </motion.div>
-        
+
         {/* Animated Modal */}
-        <motion.div 
+        <motion.div
           className="relative w-full max-w-sm sm:max-w-2xl lg:max-w-5xl h-[85vh] max-h-[600px] transform overflow-hidden rounded-2xl sm:rounded-3xl bg-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)] border border-gray-200/60 transition-all"
           variants={modalVariants}
           initial="hidden"
@@ -219,9 +219,9 @@ export default function OnboardingWelcome() {
           <div className="relative h-full overflow-hidden">
             {/* Premium Modal Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50/30 to-gray-50/40"></div>
-            
+
             {/* Animated Header Accent */}
-            <motion.div 
+            <motion.div
               className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
@@ -234,79 +234,80 @@ export default function OnboardingWelcome() {
               <div className="flex-1 flex flex-col justify-center px-4 py-6 sm:px-6 lg:px-8">
                 <div className="w-full max-w-md mx-auto lg:mx-0">
                   {/* Animated Logo Section */}
-                  <motion.div 
+                  <motion.div
                     className="mb-4 sm:mb-6"
                     variants={contentVariants}
                   >
                     <div className="flex items-center justify-center lg:justify-start">
-                      <motion.div 
+                      <motion.div
                         className="relative"
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
                         {/* Logo Glow Effect */}
-                        <motion.div 
+                        <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl blur-lg opacity-20 scale-110"
-                          animate={{ 
+                          animate={{
                             opacity: [0.2, 0.3, 0.2],
                             scale: [1.1, 1.2, 1.1]
                           }}
-                          transition={{ 
+                          transition={{
                             duration: 3,
                             repeat: Infinity,
                             ease: "easeInOut"
                           }}
                         />
-                        
+
                         {/* Main Logo Container */}
-                        <motion.div 
+                        <motion.div
                           className="relative bg-white rounded-xl p-2 sm:p-3 shadow-xl border border-gray-100 ring-2 ring-blue-100/50"
                           initial={{ scale: 0, rotate: -10 }}
                           animate={{ scale: 1, rotate: 0 }}
-                          transition={{ 
+                          transition={{
                             type: "spring",
                             stiffness: 200,
                             delay: 0.4
                           }}
                         >
-                          <img 
-                            src="https://user-gen-media-assets.s3.amazonaws.com/gpt4o_images/98e0ad4c-bcf1-484a-bf58-e0ee17c061d9.png"
-                            alt="HR Tek Systems Logo"
-                            className="h-10 w-auto max-w-[100px] sm:h-12 lg:h-14 object-contain"
+                          <img
+                            src="/logoNavbar.png"
+                            alt="HR-Tek System Logo"
+                            className="h-10 w-auto max-w-[120px] sm:h-12 lg:h-14 object-contain"
                             style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
                           />
                         </motion.div>
                       </motion.div>
-                      
+
                       {/* Animated Brand Name */}
-                      <motion.div 
+                      <motion.div
                         className="ml-3 sm:ml-4"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
                       >
-                        <h2 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 tracking-tight leading-tight">
-                          HR Tek Systems
+                        <h2 className="text-base sm:text-lg lg:text-xl font-bold tracking-tight leading-none flex items-center gap-1">
+                          <span className="text-gray-900">HR-Tek</span>{" "}
+                          <span className="text-blue-600 font-black">SYSTEM</span>
                         </h2>
-                        <p className="text-xs font-medium text-blue-600 tracking-wider uppercase">
-                          Transformation Platform
+                        <p className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">
+                          A Delosch Brand
                         </p>
                       </motion.div>
                     </div>
                   </motion.div>
 
                   {/* Animated Main Heading */}
-                  <motion.h1 
+                  <motion.h1
                     className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-tight text-center lg:text-left"
                     variants={contentVariants}
                   >
                     Welcome to Your{" "}
-                    <motion.span 
+                    <motion.span
                       className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-                      animate={{ 
+                      animate={{
                         backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
                       }}
-                      transition={{ 
+                      transition={{
                         duration: 3,
                         repeat: Infinity,
                         ease: "linear"
@@ -318,7 +319,7 @@ export default function OnboardingWelcome() {
                   </motion.h1>
 
                   {/* Animated Subheading */}
-                  <motion.div 
+                  <motion.div
                     className="mb-4 text-center lg:text-left"
                     variants={contentVariants}
                   >
@@ -332,11 +333,11 @@ export default function OnboardingWelcome() {
                   </motion.div>
 
                   {/* Animated Trust Indicators */}
-                  <motion.div 
+                  <motion.div
                     className="mb-4"
                     variants={contentVariants}
                   >
-                    <motion.div 
+                    <motion.div
                       className="bg-white rounded-lg border border-gray-200/60 shadow-sm px-3 py-2"
                       whileHover={{ scale: 1.02 }}
                       transition={{ type: "spring", stiffness: 300 }}
@@ -347,12 +348,12 @@ export default function OnboardingWelcome() {
                           { icon: CheckCircleIcon, text: "GDPR" },
                           { icon: CheckCircleIcon, text: "ISO 27001" }
                         ].map((item, index) => (
-                          <motion.div 
+                          <motion.div
                             key={item.text}
                             className="flex items-center"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ 
+                            transition={{
                               duration: 0.3,
                               delay: 0.8 + (index * 0.1)
                             }}
@@ -366,7 +367,7 @@ export default function OnboardingWelcome() {
                   </motion.div>
 
                   {/* Updated CTA Button with Form Submission */}
-                  <motion.div 
+                  <motion.div
                     className="mb-3"
                     variants={contentVariants}
                   >
@@ -374,25 +375,25 @@ export default function OnboardingWelcome() {
                       <motion.button
                         type="submit"
                         className="group relative inline-flex items-center px-6 py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-xl hover:shadow-2xl transition-all duration-300 border border-blue-500/20 overflow-hidden w-full justify-center"
-                        whileHover={{ 
+                        whileHover={{
                           scale: 1.05,
                           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
                         }}
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       >
-                        <motion.div 
+                        <motion.div
                           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12"
                           animate={{ x: "-100%" }}
                           whileHover={{ x: "200%" }}
                           transition={{ duration: 0.6 }}
                         />
-                        
+
                         <span className="relative">Begin Your Journey</span>
                         <motion.div
                           className="ml-2"
                           animate={{ x: [0, 4, 0] }}
-                          transition={{ 
+                          transition={{
                             duration: 2,
                             repeat: Infinity,
                             ease: "easeInOut"
@@ -405,7 +406,7 @@ export default function OnboardingWelcome() {
                   </motion.div>
 
                   {/* Animated Bottom Note */}
-                  <motion.div 
+                  <motion.div
                     className="bg-blue-50/80 border border-blue-200/50 rounded-lg py-2 px-3"
                     variants={contentVariants}
                     whileHover={{ scale: 1.02 }}
@@ -421,11 +422,11 @@ export default function OnboardingWelcome() {
               <div className="flex-1 flex flex-col justify-center px-4 py-4 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50/50 to-slate-50/50 border-t lg:border-t-0 lg:border-l border-gray-200/50">
                 <div className="w-full max-w-sm mx-auto">
                   {/* Animated Value Props */}
-                  <motion.div 
+                  <motion.div
                     className="mb-4"
                     variants={contentVariants}
                   >
-                    <motion.h3 
+                    <motion.h3
                       className="text-sm sm:text-base font-semibold text-gray-900 mb-3 text-center"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -433,31 +434,31 @@ export default function OnboardingWelcome() {
                     >
                       Why Companies Choose Us
                     </motion.h3>
-                    
+
                     <div className="space-y-3">
                       {[
                         { icon: ChartBarIcon, title: "AI Insights", desc: "Predictive analytics for workforce optimization", color: "from-blue-500 to-blue-600" },
                         { icon: BoltIcon, title: "Fast Setup", desc: "Minutes to deploy, immediate impact", color: "from-green-500 to-green-600" },
                         { icon: ShieldCheckIcon, title: "Enterprise Security", desc: "Bank-level security and compliance", color: "from-purple-500 to-purple-600" }
                       ].map((item, index) => (
-                        <motion.div 
+                        <motion.div
                           key={item.title}
                           className="flex items-start space-x-3 p-3 rounded-lg bg-white border border-gray-100 shadow-sm"
                           variants={cardVariants}
                           initial="hidden"
-                          animate="visible" 
+                          animate="visible"
                           transition={{
                             duration: 0.4,
                             delay: 0.6 + (index * 0.1)
                           }}
-                          whileHover={{ 
+                          whileHover={{
                             scale: 1.02,
                             boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
                           }}
                         >
-                          <motion.div 
+                          <motion.div
                             className={`flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r ${item.color} text-white shadow-lg flex-shrink-0`}
-                            whileHover={{ 
+                            whileHover={{
                               scale: 1.1,
                               rotate: 5
                             }}
@@ -475,12 +476,12 @@ export default function OnboardingWelcome() {
                   </motion.div>
 
                   {/* Animated Stats */}
-                  <motion.div 
+                  <motion.div
                     className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                     variants={contentVariants}
                     whileHover={{ scale: 1.02 }}
                   >
-                    <motion.h4 
+                    <motion.h4
                       className="text-sm font-semibold text-gray-900 mb-3 text-center"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -495,7 +496,7 @@ export default function OnboardingWelcome() {
                         { value: "40%", label: "Efficiency", color: "text-purple-600" },
                         { value: "500+", label: "Clients", color: "text-indigo-600" }
                       ].map((stat, index) => (
-                        <motion.div 
+                        <motion.div
                           key={stat.label}
                           className="text-center"
                           variants={statsVariants}
@@ -507,12 +508,12 @@ export default function OnboardingWelcome() {
                           }}
                           whileHover={{ scale: 1.1 }}
                         >
-                          <motion.div 
+                          <motion.div
                             className={`text-lg font-bold ${stat.color}`}
-                            animate={{ 
+                            animate={{
                               scale: [1, 1.05, 1],
                             }}
-                            transition={{ 
+                            transition={{
                               duration: 2,
                               repeat: Infinity,
                               delay: index * 0.5

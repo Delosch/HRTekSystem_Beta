@@ -97,34 +97,48 @@ export default function ContactUs() {
         <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-outfit">
             <Navbar />
 
-            <main className="flex-grow pt-20">
-                {/* Premium Hero Section */}
-                <div className="relative bg-[#000033] py-24 px-4 overflow-hidden">
-                    <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[128px] -translate-x-1/2 -translate-y-1/2"></div>
-                        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500 rounded-full blur-[128px] translate-x-1/2 translate-y-1/2"></div>
+            <main className="flex-grow">
+                {/* Premium Hero Section - Modern Professional Design */}
+                <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0" style={{
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                            backgroundSize: '40px 40px'
+                        }}></div>
                     </div>
 
-                    <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 text-center z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
-                            className="text-center"
                         >
-                            <span className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-400/20 rounded-full text-blue-400 text-sm font-bold tracking-widest uppercase mb-6">
-                                Connect With Excellence
-                            </span>
-                            <h1 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none">
-                                Let's Build the Future <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
-                                    of Your Workforce.
+                            {/* Badge */}
+                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
+                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                <span className="text-white/90 text-sm font-medium">Connect With Excellence</span>
+                            </div>
+
+                            {/* Main Heading */}
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
+                                Let's Build the Future
+                                <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                                    of Your Workforce
                                 </span>
                             </h1>
-                            <p className="text-xl text-blue-100/70 max-w-2xl mx-auto font-medium leading-relaxed">
+
+                            <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed">
                                 Our cognitive AI solutions and strategic advisory teams are standing by to help you redefine what's possible in HR.
                             </p>
                         </motion.div>
+                    </div>
+
+                    {/* Bottom Wave */}
+                    <div className="absolute bottom-0 left-0 right-0">
+                        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+                            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F8FAFC" />
+                        </svg>
                     </div>
                 </div>
 
@@ -189,7 +203,7 @@ export default function ContactUs() {
                                             <Linkedin className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="font-black text-sm tracking-tight">HRTEK ON LINKEDIN</p>
+                                            <p className="font-black text-sm tracking-tight">HR-TEK ON LINKEDIN</p>
                                             <p className="text-xs font-medium opacity-60">Join 5,000+ professionals</p>
                                         </div>
                                         <ArrowRight className="w-5 h-5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />

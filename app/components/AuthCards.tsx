@@ -5,7 +5,7 @@ import {
   useMotionValue,
   useMotionTemplate,
 } from "framer-motion";
-import { Form } from "@remix-run/react";
+import { Form, Link } from "@remix-run/react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import countryCode from "app/data/country_code_order.json";
 import {
@@ -550,7 +550,17 @@ export default function AuthForm() {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setPhone(val);
+    const isIndia = selectedCountryIso === 'IN' || selectedDialCode === '+91';
+
+    if (isIndia) {
+      // Remove non-numeric characters immediately
+      const numericVal = val.replace(/\D/g, "");
+      // Limit to 10 digits
+      if (numericVal.length > 10) return;
+      setPhone(numericVal);
+    } else {
+      setPhone(val);
+    }
   };
 
   // FIXED: Enhanced dial code change handler with ISO2 mapping (no country auto-change)
@@ -624,13 +634,13 @@ export default function AuthForm() {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center overflow-hidden">
                 <img
-                  src="/hrtek_logo.png"
-                  alt="HRTEK Logo"
-                  className="h-full w-full object-contain"
+                  src="/logo_icon_final.png"
+                  alt="HR-Tek Logo"
+                  className="h-full w-auto object-contain"
                 />
               </div>
               <span className="font-black text-xl tracking-tighter uppercase">
-                HRTEK <span className="text-blue-400">SYSTEM</span>
+                HR-TEK <span className="text-[#00B5E2]">SYSTEM</span>
               </span>
             </div>
 
@@ -654,7 +664,7 @@ export default function AuthForm() {
               <div className="mt-6 h-px w-20 bg-gradient-to-r from-green-500 to-transparent"></div>
             </div>
             <div className="mt-8 text-sm text-gray-300 text-center opacity-85 tracking-wide select-none">
-              A Brand of Delosch Technologies (P) Limited
+              A Brand of Delosch Technologies
             </div>
             {/* Decorative background element */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -translate-x-16 -translate-y-16"></div>
@@ -672,7 +682,7 @@ export default function AuthForm() {
               >
                 <div className="text-center mb-4">
                   <h2 className="text-lg font-bold text-neutral-800">
-                    {isLogin ? "Welcome Back" : "Welcome to HR Tek System"}
+                    {isLogin ? "Welcome Back" : "Welcome to HR-Tek System"}
                   </h2>
                   <p className="mt-1 text-xs text-neutral-600">
                     {isLogin
@@ -835,6 +845,14 @@ export default function AuthForm() {
                           show={showPassword}
                           setShow={setShowPassword}
                         />
+                        <div className="flex justify-end mt-1">
+                          <Link
+                            to="/forgot-password"
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-800 uppercase tracking-wider transition-colors"
+                          >
+                            Forgot Password?
+                          </Link>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -863,6 +881,8 @@ export default function AuthForm() {
                           <a
                             href="/legal/term"
                             className="text-green-600 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
                             Terms & Conditions
                           </a>{" "}
@@ -870,6 +890,8 @@ export default function AuthForm() {
                           <a
                             href="/legal/privacy"
                             className="text-green-600 underline"
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
                             Privacy Policy
                           </a>
@@ -896,7 +918,6 @@ export default function AuthForm() {
 
                   {isHydrated && siteKey && (
                     <div className="mt-2 flex justify-start">
-                      {console.log("HCAPTCHA siteKey =", siteKey)}
                       <HCaptcha
                         ref={captchaRef}
                         sitekey={siteKey}
@@ -920,17 +941,6 @@ export default function AuthForm() {
                       onTrigger={triggerCaptcha}
                     />
                   </motion.div>
-                  {isLogin && (
-                    <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={() => alert("Forgot password clicked")}
-                        className="text-xs text-green-600 hover:underline"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                  )}
 
                   <div className="pt-2">
                     <GradientButton
@@ -1251,7 +1261,7 @@ export const SearchableDialCodeSelect = ({
 };
 
 // Clean Password Input Component
-const CleanPasswordInput = ({
+export const CleanPasswordInput = ({
   label,
   id,
   value,
@@ -1420,7 +1430,7 @@ const CleanPasswordInput = ({
 };
 
 // Custom Security Verification Component
-const CustomSecurityVerification = ({
+export const CustomSecurityVerification = ({
   verified,
   loading,
   onTrigger,

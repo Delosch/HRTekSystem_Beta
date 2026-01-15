@@ -2,7 +2,7 @@ import { GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { EngineValidation } from "~/schemas/engineSchemas";
 
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const USERS_TABLE = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
 let ddbDocClient: ReturnType<typeof getDynamoDBDocumentClient>;
 
@@ -79,7 +79,7 @@ export async function createOrUpdateEngineStorage(data: any) {
 export const findEngineData = async (company_id: string, engine_name: string) => {
     try {
         const command = new QueryCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            TableName: USERS_TABLE,
             KeyConditionExpression: "pk = :pk AND sk= :sk ",
             ExpressionAttributeValues: {
                 ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
@@ -103,7 +103,7 @@ export const findEngineData = async (company_id: string, engine_name: string) =>
 export const completedEngine = async (company_id: string) => {
     try {
         const command = new QueryCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            TableName: USERS_TABLE,
             KeyConditionExpression: "pk = :pk",
             FilterExpression: "progress = :progress",
             ExpressionAttributeValues: {
@@ -136,7 +136,7 @@ export const engineRecommendationList = async (data: RecommendationItem) => {
     };
     try {
         const command = new PutCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            TableName: USERS_TABLE,
             Item: recommendationItem,
         });
         const item = await ddbDocClient.send(command);
@@ -155,7 +155,7 @@ export const fetchEngineRecomendations = async (company_id: string): Promise<Rec
     try {
         console.log(company_id)
         const command = new GetCommand({
-            TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            TableName: USERS_TABLE,
             Key: {
                 "pk": `RECOMMENDATION#${company_id}`,
                 "sk": "RECOMMENDATION"

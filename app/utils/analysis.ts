@@ -16,22 +16,18 @@ try {
 
 export const getLatestAnalysis = async (companyPk: string, section: string) => {
     const command = new QueryCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         KeyConditionExpression: "pk = :pk_val AND begins_with(sk, :sk_prefix)",
         FilterExpression: "#section = :section_val",
         ExpressionAttributeValues: {
-            ":pk_val": companyPk,
+            ":pk_val": `COMPANY#${companyPk.replace("COMPANY#", "")}`,
             ":sk_prefix": "ANALYSIS#",
             ":section_val": section,
         },
         ExpressionAttributeNames: {
-            "#section": "section", // 'section' is a reserved keyword, so we still need this alias.
-            // REMOVED: "#result": "result", // This alias is no longer needed if ProjectionExpression is absent
-            // and 'result' is not used in KeyCondition or Filter Expression.
+            "#section": "section",
         },
-        // ProjectionExpression is omitted to get the complete JSON item.
-        // Limit: 1, ~it worked after commenting it out
-        ScanIndexForward: false, // Important for getting the "latest" by SK (descending sort)
+        ScanIndexForward: false,
     });
 
     try {
@@ -40,6 +36,28 @@ export const getLatestAnalysis = async (companyPk: string, section: string) => {
     } catch (error) {
         console.error("Error querying DynamoDB for latest analysis:", error);
         throw error; // Re-throw for higher-level error handling
+    }
+}
+
+/**
+ * Get all analysis reports for a specific company
+ */
+export const getAllAnalysesForCompany = async (companyId: string) => {
+    const command = new QueryCommand({
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        KeyConditionExpression: "pk = :pk_val AND begins_with(sk, :sk_prefix)",
+        ExpressionAttributeValues: {
+            ":pk_val": `COMPANY#${companyId.replace("COMPANY#", "")}`,
+            ":sk_prefix": "ANALYSIS#",
+        },
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        return Items || [];
+    } catch (error) {
+        console.error("Error querying DynamoDB for company analyses:", error);
+        return [];
     }
 }
 
@@ -52,7 +70,7 @@ export const getLatestAnalysis = async (companyPk: string, section: string) => {
 export const getAllAnalysisReports = async () => {
     // Scan for all items where sk begins with ANALYSIS#
     const command = new ScanCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         FilterExpression: "begins_with(sk, :sk_prefix)",
         ExpressionAttributeValues: {
             ":sk_prefix": "ANALYSIS#"
@@ -75,7 +93,7 @@ export const getAllAnalysisReports = async () => {
 export const getAllPendingAnalysis = async () => {
     // Scan for items where sk begins with ANALYSIS# and status is pending
     const command = new ScanCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         FilterExpression: "begins_with(sk, :sk_prefix) AND #status = :status",
         ExpressionAttributeValues: {
             ":sk_prefix": "ANALYSIS#",
@@ -100,7 +118,7 @@ export const getAllPendingAnalysis = async () => {
  */
 export const updateAnalysisStatus = async (pk: string, sk: string, status: "approved" | "rejected") => {
     const command = new UpdateCommand({
-        TableName: process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
         Key: { pk, sk },
         UpdateExpression: "SET #status = :status, approvedAt = :approvedAt",
         ExpressionAttributeValues: {

@@ -36,6 +36,7 @@ interface TechMaturityDashboardProps {
         dates: string[];
         scores: number[];
     };
+    analysisResult?: any;
 }
 
 export default function TechMaturityDashboard({
@@ -44,6 +45,7 @@ export default function TechMaturityDashboard({
     assessmentData,
     insights,
     historicalData,
+    analysisResult
 }: TechMaturityDashboardProps) {
     // Technology maturity dimensions
     const maturityData = {
@@ -58,7 +60,7 @@ export default function TechMaturityDashboard({
         datasets: [
             {
                 label: "Current Maturity",
-                data: [85, 72, 68, 91, 55, 60],
+                data: analysisResult?.maturity_analysis?.dimensional_scores?.map((s: any) => s.percentage) || [85, 72, 68, 91, 55, 60],
                 color: "rgb(59, 130, 246)",
             },
             {

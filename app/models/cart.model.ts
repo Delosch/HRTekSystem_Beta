@@ -1,19 +1,19 @@
-import { PutCommand, QueryCommand, TransactWriteCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, TransactWriteCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from 'uuid';
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 
 let ddbDocClient: ReturnType<typeof getDynamoDBDocumentClient>;
 
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const USERS_TABLE = process.env.DYNAMODB_CART_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
 try {
-  ddbDocClient = getDynamoDBDocumentClient();
+    ddbDocClient = getDynamoDBDocumentClient();
 } catch (error: unknown) {
-  console.error("CRITICAL ERROR: Failed to initialize DynamoDB Document Client.");
-  if (error instanceof Error) {
-    console.error(`Details: ${error.message}`);
-  }
-  process.exit(1);
+    console.error("CRITICAL ERROR: Failed to initialize DynamoDB Document Client.");
+    if (error instanceof Error) {
+        console.error(`Details: ${error.message}`);
+    }
+    process.exit(1);
 }
 
 export interface CartItem {
@@ -23,33 +23,91 @@ export interface CartItem {
     userId: string;
 }
 
-// Add items to company cart with unique sort keys
+// Normalization helper for consistent product comparison
+const normalizeProductName = (name: string): string => {
+    const n = name.toLowerCase().trim();
+
+    // Explicit Alias Mapping
+    if (n.includes('roadmap')) return 'hr-transformation-roadmap';
+    if (n.includes('vendor')) return 'hcm-vendor-fit';
+    if (n.includes('shared service')) return 'shared-service-designer';
+    if (n.includes('maturity') || n.includes('diagnostics') || n.includes('tech analysis')) return 'hr-tech-maturity-analysis';
+    if (n.includes('change management')) return 'intelligent-change-management';
+
+    return n
+        .replace(/generator/g, '')
+        .replace(/analysis|assessment|diagnostics/g, 'analysis')
+        .replace(/designer|planner/g, 'designer')
+        .replace(/\u00A0/g, ' ')
+        .trim();
+};
+
+// Add or update items in company cart
 export const addOrUpdateCartItem = async (item: CartItem) => {
-    console.log("creating cart\n", item);
-    
-    // Create a unique sort key for each cart item using product name + timestamp
-    const uniqueId = uuidv4();
-    const cartSK = `CART#${uniqueId}`;
-    
-    const command = new PutCommand({
-        TableName: USERS_TABLE,
-        Item: {
-            pk: `COMPANY#${item.companyId}`,
-            sk: cartSK, // Unique sort key for each item
-            productName: item.productName,
-            price: item.price,
-            addedBy: item.userId,
-            addedAt: new Date().toISOString(),
-            itemId: uniqueId, // Store the unique ID for easy reference
-        },
-    });
+    console.log("Adding or updating cart item:", item);
 
     try {
+        // 1. Fetch all items and check for existing match using normalized names
+        const allItems = await getCartItems(item.companyId);
+        const normalizedTarget = normalizeProductName(item.productName);
+
+        // Find existing matches (could be multiple if duplicates previously existed)
+        const matches = allItems.filter(i => normalizeProductName(i.productName) === normalizedTarget);
+
+        if (matches.length > 0) {
+            console.log(`Item similar to ${item.productName} already exists in cart. Merging/Updating.`);
+
+            // Update the first match
+            const mainMatch = matches[0];
+            const updateCommand = new UpdateCommand({
+                TableName: USERS_TABLE,
+                Key: {
+                    pk: mainMatch.pk,
+                    sk: mainMatch.sk,
+                },
+                UpdateExpression: "SET price = :price, productName = :productName, addedBy = :addedBy, addedAt = :addedAt",
+                ExpressionAttributeValues: {
+                    ":price": item.price,
+                    ":productName": item.productName, // Keep the latest name variation
+                    ":addedBy": item.userId,
+                    ":addedAt": new Date().toISOString(),
+                },
+            });
+            await ddbDocClient.send(updateCommand);
+
+            // 2. SELF-HEALING: If there were duplicates, remove others
+            if (matches.length > 1) {
+                console.log(`Found ${matches.length - 1} duplicates for ${item.productName}. Cleaning up...`);
+                for (let i = 1; i < matches.length; i++) {
+                    await deleteCartItem(matches[i].pk, matches[i].sk);
+                }
+            }
+
+            return { success: true, itemId: mainMatch.itemId, updated: true };
+        }
+
+        // 3. If no match found, create a new one
+        const uniqueId = uuidv4();
+        const cartSK = `CART#${uniqueId}`;
+
+        const command = new PutCommand({
+            TableName: USERS_TABLE,
+            Item: {
+                pk: `COMPANY#${item.companyId}`,
+                sk: cartSK,
+                productName: item.productName,
+                price: item.price,
+                addedBy: item.userId,
+                addedAt: new Date().toISOString(),
+                itemId: uniqueId,
+            },
+        });
+
         await ddbDocClient.send(command);
         console.log(`Item ${item.productName} added to cart for company ${item.companyId}`);
-        return { success: true, itemId: uniqueId };
+        return { success: true, itemId: uniqueId, updated: false };
     } catch (e) {
-        console.error("Error adding item to cart:", e);
+        console.error("Error adding/updating item in cart:", e);
         throw e;
     }
 };
@@ -78,7 +136,7 @@ export const getCartItems = async (orgId: string) => {
 // Delete a specific cart item
 export const deleteCartItem = async (pk: string, sk: string) => {
     console.log("Deleting cart item:", { pk, sk });
-    
+
     const command = new DeleteCommand({
         TableName: USERS_TABLE,
         Key: {
@@ -102,14 +160,14 @@ export const clearCart = async (orgId: string) => {
     try {
         // First, get all cart items
         const cartItems = await getCartItems(orgId);
-        
+
         if (cartItems.length === 0) {
             console.log("Cart is already empty");
             return { success: true, deletedCount: 0 };
         }
 
         // Delete each item
-        const deletePromises = cartItems.map(item => 
+        const deletePromises = cartItems.map(item =>
             deleteCartItem(item.pk, item.sk)
         );
 

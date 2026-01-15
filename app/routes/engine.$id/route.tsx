@@ -80,10 +80,15 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
         if (body.progress === 100) {
             console.log("__________________________")
             const recommendation = await fetchEngineRecomendations(companyId);
+            const rankings = recommendation && recommendation.allRankings ? recommendation.allRankings : [];
+
             //need profiling assessment response sheet
             const responseSheet = await getAnswerSheetByAssessmentName(companyId, 'Profiling Assessment')
             console.log("Response Sheerrrr \n", responseSheet)
-            const price = calculateFinalPrice(body.params, responseSheet["Section 1: Organization Overview"], user.country_iso, new Map(recommendation?.allRankings || []));
+
+            const orgOverview = responseSheet ? responseSheet["Section 1: Organization Overview"] : {};
+
+            const price = calculateFinalPrice(body.params, orgOverview, user.country_iso, new Map(rankings));
             const items: CartItem = {
                 companyId,
                 productName: body.params,
@@ -100,17 +105,22 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
 
             // Redirect to appropriate dashboard based on engine name
             const dashboardMap: Record<string, string> = {
-                "HR Transformation Roadmap Generator": "/roadmapDashboard",
-                "HCM Vendor Fit Engine": "/vendorDashboard",
-                "Shared Service Designer": "/sharedDashboard",
-                "Intelligent Change Management": "/changeDashboard",
-                "HR Technology Maturity Analysis": "/analysisDashboard"
+                "HR Transformation Roadmap Generator": `/intermediate?promptId=digital_transformation&engine=${encodeURIComponent("HR Transformation Roadmap Generator")}`,
+                "HCM Vendor Fit Engine": `/intermediate?promptId=vendor_fit&engine=${encodeURIComponent("HCM Vendor Fit Engine")}`,
+                "Shared Service Designer": `/intermediate?promptId=shared_service&engine=${encodeURIComponent("Shared Service Designer")}`,
+                "Intelligent Change Management": `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}`,
+                "Change Management Readiness": `/intermediate?promptId=change_management&engine=${encodeURIComponent("Change Management Readiness")}`,
+                "HR Technology Maturity Analysis": `/intermediate?promptId=tech_maturity&engine=${encodeURIComponent("HR Technology Maturity Analysis")}`,
+                "HR Tech Maturity Analysis": `/intermediate?promptId=tech_maturity&engine=${encodeURIComponent("HR Tech Maturity Analysis")}`,
+                "Digital Maturity Assessment": `/intermediate?promptId=digital_maturity&engine=${encodeURIComponent("Digital Maturity Assessment")}`
             };
 
             const dashboardUrl = dashboardMap[body.params] || "/dashboard";
-            throw redirect(dashboardUrl);
+
+            // For fetcher-based submissions, we return the URL so the client can navigate if needed
+            return json({ success: true, redirect: dashboardUrl });
         }
-        return ({ message: "Received!" });
+        return json({ message: "Received!" });
     }
     catch (e) {
         console.error("Error :\n", e)

@@ -6,6 +6,9 @@ import QuestionnaireEngine from "~/components/QuestionnaireEngine";
 import type { QuestionSchema } from "./engine.$id/questionSchema";
 import { updateUser } from "~/models/user.model";
 import { generate } from "~/lib/processor.genAi";
+import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model";
+import { addOrUpdateCartItem, CartItem } from "~/models/cart.model";
+import { calculateFinalPrice } from "~/lib/pricing";
 
 // let's keep a single variable just now to manage assessment form
 const variable = "Profiling Assessment"
@@ -47,9 +50,60 @@ export const action: ActionFunction = async ({ request }) => {
       const session = await getSession(request.headers.get("Cookie"));
       session.set("onboardingStatus", "Completed");
       await updateUser(user.userId, { onboardingStatus: "Completed" })
-      //check analyses and saving it
-      console.log("Initiating ai process")
-      // await generate("digital_maturity", "Profiling Assessment", companyId)
+
+      // Mark engine complete in storage
+      await createOrUpdateEngineStorage({
+        company_id: companyId,
+        user_id: user.userId,
+        engine_name: variable,
+        country: user.country_iso,
+        progress: 100
+      });
+
+      // Notify Admin
+      try {
+        const { notifyAdmin } = await import("~/services/admin.notifier.server");
+        await notifyAdmin(
+          "Profiling Assessment Completed",
+          `A user has completed their profiling assessment:\n
+          User: ${user.first_name} ${user.last_name} (${user.email})\n
+          Company ID: ${companyId}\n
+          Assessment: Digital Maturity`
+        );
+      } catch (notifierError) {
+        console.warn("Failed to notify admin about assessment:", notifierError);
+      }
+
+      // Add to cart logic
+      try {
+        const recommendation = await fetchEngineRecomendations(companyId);
+        const rankings = recommendation && recommendation.allRankings ? recommendation.allRankings : [];
+        const orgOverview = body.answers ? body.answers["Section 1: Organization Overview"] : {};
+
+        // Use "Digital Maturity Assessment" as the product name for pricing since that's what's generated
+        const productName = "Digital Maturity Assessment";
+        const price = calculateFinalPrice(productName, orgOverview, user.country_iso, new Map(rankings));
+
+        const cartItem: CartItem = {
+          companyId,
+          productName,
+          price,
+          userId: user.userId
+        };
+        await addOrUpdateCartItem(cartItem);
+        console.log(`Added ${productName} to cart for profiling assessment`);
+      } catch (cartError) {
+        console.warn("Failed to add profiling assessment to cart:", cartError);
+      }
+
+      // Sync eligibility record
+      try {
+        const { autoCheckEligibility } = await import("~/services/eligibility.service");
+        await autoCheckEligibility(companyId);
+      } catch (eligibilityError) {
+        console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);
+      }
+
       // Commit the session and redirect
       return redirect("/intermediate", {
         headers: {
@@ -66,6 +120,7 @@ export default function ProfilingAssessment() {
   const navigate = useNavigate();
 
   const handleStepSave = async (stepData: any) => {
+    console.log("Saving step:", stepData);
     const response = await fetch('/onboarding/profilingAssessment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -79,14 +134,38 @@ export default function ProfilingAssessment() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to save step');
+      const errorData = await response.json();
+      console.error("Failed to save step:", errorData);
+      throw new Error(errorData.error || 'Failed to save step');
     }
   };
 
   const handleComplete = async (allData: any) => {
     // Handle final completion
-    console.log('Assessment completed:', allData);
-    navigate('/intermediate');
+    console.log('Assessment completed! Submitting final results...', allData);
+
+    const response = await fetch('/onboarding/profilingAssessment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assessment_id: LoaderData.pk,
+        progress: 100,
+        section: "Completion",
+        answers: allData,
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.redirect) {
+        window.location.href = result.redirect;
+      } else {
+        navigate('/intermediate');
+      }
+    } else {
+      console.error("Failed to submit final assessment");
+      alert("Failed to submit final assessment. Please try again.");
+    }
   };
 
   return (

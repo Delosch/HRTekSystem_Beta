@@ -1,6 +1,6 @@
-import { json, LoaderFunction } from "@remix-run/node";
+import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { Params, useLoaderData, Link } from "@remix-run/react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView, Variants } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { requireUserSession } from "~/lib/session.server";
 import { getLatestAnalysis } from "~/utils/analysis";
@@ -21,39 +21,93 @@ import {
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import ConsultingReportPDF from "~/components/reports/ConsultingReportPDF";
 
+import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model";
+import { getEnginePriceByName } from "~/lib/pricing";
+import { addOrUpdateCartItem } from "~/models/cart.model";
+import ChangeManagementReport from "~/components/reports/ChangeManagementReport";
+import RoadmapReport from "~/components/reports/RoadmapReport";
+import SharedServicesReport from "~/components/reports/SharedServicesReport";
+import VendorFitReportDashboard from "~/components/reports/VendorFitReportDashboard";
+import TechMaturityReport from "~/components/reports/TechMaturityReport";
+
 // --- Loader ---
 export const loader: LoaderFunction = async ({ request, params }: { request: Request, params: Params }) => {
     try {
         const user = await requireUserSession(request);
-        if (!user || !user.organisationId) return null;
+        if (!user || !user.organisationId) return redirect('/auth');
         if (!params.id) throw new Response("Assessment ID Required", { status: 404 });
 
-        const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, params.id);
-        if (!data) throw new Response("No assessment data found", { status: 404 });
+        console.log(`[Consulting Report Loader] User: ${user.organisationId}, Engine: ${params.id}`);
+
+
+
+        const allPayments = await getCompanyPayments(user.organisationId);
+        const payment = allPayments.find(p => p.items?.some((i: any) => i.engineName === params.id));
+
+        const isPaid = payment?.status === "payment_verified";
+        const isPending = payment?.status === "payment_submitted";
+        const isAdmin = (user as any).role === "ADMIN";
+
+        console.log(`[Consulting Report Loader] Payment Status - isPaid: ${isPaid}, isPending: ${isPending}, isAdmin: ${isAdmin}`);
+
+        if (!isPaid && !isAdmin) {
+            if (isPending) {
+                return json({ paymentStatus: "pending" });
+            }
+
+            // Redirect to payment: Add to cart first then checkout
+            const price = getEnginePriceByName(params.id);
+            await addOrUpdateCartItem({
+                companyId: user.organisationId,
+                productName: params.id,
+                price: price,
+                userId: user.userId,
+            });
+            return redirect('/payment/checkout');
+        }
+
+        // FIX: Don't add COMPANY# prefix - getLatestAnalysis already does this
+        const data = await getLatestAnalysis(user.organisationId, params.id);
+
+        console.log(`[Consulting Report Loader] Data found: ${!!data}`);
+
+        if (!data) {
+            console.error(`[Consulting Report Loader] No assessment data found for ${params.id}`);
+            throw new Response("No assessment data found", { status: 404 });
+        }
 
         const company_info = await getCompanyProfile(user.organisationId);
         const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client";
 
-        return json({ data, brand_name, assessmentId: params.id });
+        return json({
+            data,
+            brand_name,
+            assessmentId: params.id || "Unknown Assessment"
+        });
     } catch (e) {
-        console.error("Report loader error:", e);
-        throw new Response("Internal Server Error", { status: 500 });
+        console.error("REPORT_LOADER_ERROR:", e);
+        // Provide more context in the error response if possible
+        const errorMessage = e instanceof Error ? e.message : "Unknown error";
+        throw new Response(`Internal Server Error: ${errorMessage}`, { status: 500 });
     }
 }
 
 interface LoaderReturn {
-    data: DatabaseRecord,
-    brand_name: string,
-    assessmentId: string
+    data?: DatabaseRecord,
+    brand_name?: string,
+    assessmentId?: string,
+    paymentStatus?: string
 }
 
 // --- Components ---
 
 const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; delay?: number; className?: string }) => {
     const [displayedText, setDisplayedText] = useState("");
-    const controls = useInView({ triggerOnce: true, threshold: 0.5 });
+    const ref = useRef<HTMLParagraphElement>(null);
+    const isInView = useInView(ref, { once: true, amount: 0.5 });
 
     useEffect(() => {
+        if (!isInView) return;
         let currentText = "";
         let currentIndex = 0;
 
@@ -71,9 +125,9 @@ const TypewriterText = ({ text, delay = 0, className = "" }: { text: string; del
         }, delay * 1000);
 
         return () => clearTimeout(timeout);
-    }, [text, delay]);
+    }, [text, delay, isInView]);
 
-    return <p className={className}>{displayedText}</p>;
+    return <p ref={ref} className={className}>{displayedText}</p>;
 };
 
 const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: number }) => {
@@ -102,20 +156,128 @@ const AnimatedCounter = ({ value, duration = 2 }: { value: number; duration?: nu
     return <>{count}</>;
 };
 
+const FlipCard = ({ dim, index }: { dim: any; index: number }) => {
+    const [isFlipped, setIsFlipped] = useState(false);
+
+    return (
+        <div
+            className="group h-[360px] perspective cursor-pointer"
+            onClick={() => setIsFlipped(!isFlipped)}
+        >
+            <div className={`relative w-full h-full duration-700 preserve-3d transition-all ease-in-out ${isFlipped ? 'rotate-y-180' : ''}`}>
+                {/* Front */}
+                <div className="absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors">
+                    <div className="absolute top-0 right-0 p-6 opacity-5">
+                        <Target className="w-32 h-32 text-white" />
+                    </div>
+
+                    <div>
+                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold mb-6 border border-indigo-500/30">
+                            {index + 1}
+                        </div>
+                        <h3 className="font-bold text-white text-xl leading-snug mb-2 pr-4">{dim.dimension}</h3>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{dim.strategic_outlook}</p>
+                    </div>
+
+                    <div className="space-y-3 relative z-10">
+                        <div className="flex items-end gap-2">
+                            <span className="text-5xl font-black text-white">{dim.score}</span>
+                            <span className="text-sm font-semibold text-slate-500 mb-2">/100</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-full" style={{ width: `${dim.score}%` }}></div>
+                        </div>
+                        <div className="flex justify-center mt-4 pt-4 border-t border-white/5">
+                            <span className="text-xs font-bold text-indigo-300 flex items-center gap-2 group-hover:text-white transition-colors">
+                                {isFlipped ? "Tap to hide analysis" : "Tap to reveal analysis"} <ArrowUpRight className={`w-3 h-3 ${isFlipped ? 'rotate-180' : ''} transition-transform`} />
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Back */}
+                <div className="absolute w-full h-full backface-hidden bg-indigo-950 rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-200 border border-indigo-500/30">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-indigo-500"></div>
+                    <h3 className="font-bold text-white text-md mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+                        <Brain className="w-4 h-4 text-cyan-400" /> Analysis
+                    </h3>
+
+                    <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                        <div>
+                            <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <AlertTriangle className="w-3 h-3" /> Critical Gaps
+                            </p>
+                            <ul className="text-sm text-slate-400 space-y-2">
+                                {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-rose-500 mt-1">•</span> {s}</li>)}
+                            </ul>
+                        </div>
+
+                        <div>
+                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                <Lightbulb className="w-3 h-3" /> Strategic Actions
+                            </p>
+                            <ul className="text-sm text-slate-400 space-y-2">
+                                {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-emerald-500 mt-1">•</span> {r}</li>)}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Component ---
 
-const containerVariants = {
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.15, delayChildren: 0.2 } }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20 } }
 };
 
+// Engine to Report Title Mapping
+const ENGINE_REPORT_TITLES: Record<string, string> = {
+    "HR Technology Maturity Analysis": "HR Technology Maturity Report",
+    "HR Tech Maturity Analysis": "HR Technology Maturity Report",
+    "Intelligent Change Management": "Change Management Report",
+    "Change Management Readiness": "Change Readiness Report",
+    "HR Transformation Roadmap Generator": "Transformation Roadmap Report",
+    "Shared Service Designer": "Shared Services Report",
+    "HCM Vendor Fit Engine": "Vendor Fit Analysis Report",
+    "Digital Maturity Assessment": "Digital Maturity Report",
+    "Profiling Assessment": "Profiling Assessment Report"
+};
+
 export default function ConsultingReport() {
-    const { data, brand_name, assessmentId } = useLoaderData<LoaderReturn>();
+    const loaderData = useLoaderData<LoaderReturn>();
+
+    if (loaderData.paymentStatus === 'pending') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+                <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-lg text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Clock className="w-10 h-10 text-yellow-600" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Verification Pending</h1>
+                    <p className="text-gray-500 mb-8 text-lg leading-relaxed">
+                        Your payment has been submitted and is currently being verified by our administrators.
+                        This usually takes less than 24 hours. You will be notified once the report is unlocked.
+                    </p>
+                    <a href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+                        <ArrowLeft className="w-5 h-5" />
+                        Return to Dashboard
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    const { data, brand_name, assessmentId } = loaderData;
+    const reportTitle = ENGINE_REPORT_TITLES[assessmentId || ""] || "Digital Maturity Report";
     const [isLoading, setIsLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
 
@@ -125,23 +287,83 @@ export default function ConsultingReport() {
         return () => clearTimeout(timer);
     }, []);
 
-    const generateFallbackReport = () => {
-        const res = data.result;
-        const analysis = res.maturity_analysis;
-        const insights = res.strategic_insights;
-        const risks = res.risk_assessment?.transformation_risks || [];
-        const recommendations = res.detailed_recommendations;
+    // Use dashboard-style reports for specific engines
+    if (!isLoading) {
+        if (assessmentId === "Intelligent Change Management") {
+            return <ChangeManagementReport data={data} brandName={brand_name || "Your Organization"} assessmentId={assessmentId} />;
+        }
+        if (assessmentId === "HR Transformation Roadmap Generator") {
+            return <RoadmapReport data={data} brandName={brand_name || "Your Organization"} />;
+        }
+        if (assessmentId === "Shared Service Designer") {
+            return <SharedServicesReport data={data} brandName={brand_name || "Your Organization"} />;
+        }
+        if (assessmentId === "HCM Vendor Fit Engine") {
+            return <VendorFitReportDashboard data={data} brandName={brand_name || "Your Organization"} />;
+        }
+        if (assessmentId === "HR Technology Maturity Analysis" || assessmentId === "HR Tech Maturity Analysis") {
+            return <TechMaturityReport data={data} brandName={brand_name || "Your Organization"} />;
+        }
+    }
 
-        const normalizeScore = (val: number) => {
-            if (!val) return 0;
-            if (val <= 5 && val > 0) return Math.round(val * 20);
-            return Math.round(val);
+    const generateFallbackReport = () => {
+        const res = (data?.result || {}) as any;
+
+        // Normalize results from different engines
+        // Initialize as empty object to avoid crashes
+        let analysis = res?.maturity_analysis || {};
+
+        console.log("[Fallback Generation] res keys:", res ? Object.keys(res) : 'none');
+        console.log("[Fallback Generation] analysis keys:", analysis ? Object.keys(analysis) : 'none');
+
+        if (!analysis.overall_score && res?.dimensions) {
+            // Mapping for tech_maturity prompt structure
+            const dimensions = res.dimensions || [];
+            const totalScore = dimensions.reduce((acc: number, d: any) => acc + (d.score || 0), 0);
+            analysis = {
+                overall_score: { percentage: Math.round(totalScore / (dimensions.length || 1)) },
+                dimensional_scores: dimensions.map((d: any) => ({
+                    dimension: d.name,
+                    percentage: d.score,
+                    maturity_level: d.level,
+                    critical_gaps: d.gaps || [],
+                    key_strengths: d.strengths || [],
+                    gap_analysis: { improvement_potential: 100 - (d.score || 0) }
+                }))
+            };
+        }
+
+        // Ensure dimensional_scores exists
+        if (!analysis.dimensional_scores || !Array.isArray(analysis.dimensional_scores) || analysis.dimensional_scores.length === 0) {
+            console.warn("[Fallback Generation] No dimensional_scores found, creating default structure");
+            analysis.dimensional_scores = [
+                { dimension: "Process Maturity", percentage: 45, maturity_level: "Developing", critical_gaps: ["Manual processes"], key_strengths: ["Basic documentation"], gap_analysis: { improvement_potential: 55 } },
+                { dimension: "Technology Adoption", percentage: 50, maturity_level: "Developing", critical_gaps: ["Legacy systems"], key_strengths: ["Cloud readiness"], gap_analysis: { improvement_potential: 50 } },
+                { dimension: "Data & Analytics", percentage: 40, maturity_level: "Initial", critical_gaps: ["Data silos"], key_strengths: ["Data awareness"], gap_analysis: { improvement_potential: 60 } }
+            ];
+        }
+
+        console.log("[Fallback Generation] dimensional_scores count:", analysis.dimensional_scores?.length || 0);
+
+        // Final safety net for analysis structure
+        if (!analysis.overall_score) analysis.overall_score = { percentage: 0 };
+        if (!analysis.dimensional_scores) analysis.dimensional_scores = [];
+
+        const insights = res?.strategic_insights || { transformation_readiness: { enabling_factors: [], blocking_factors: [] } };
+        const risks = res?.risk_assessment?.transformation_risks || res?.risk_assessment || [];
+        const recommendations = res?.detailed_recommendations || { immediate_actions: { actions: [] }, short_term_initiatives: { actions: [] } };
+
+        const normalizeScore = (val: any) => {
+            const numVal = Number(val);
+            if (isNaN(numVal) || !numVal) return 0;
+            if (numVal <= 10 && numVal > 0) return Math.round(numVal * 10); // Handle 1-10 scale if present
+            return Math.round(numVal);
         };
 
         const allActions = [
-            ...(recommendations.immediate_actions?.actions || []).map(a => ({ ...a, priority: 'P1', impact: 'High', effort: 'Medium' })),
-            ...(recommendations.short_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P2', impact: 'Medium', effort: 'High' })),
-            ...(recommendations.medium_term_initiatives?.actions || []).map(a => ({ ...a, priority: 'P3', impact: 'High', effort: 'High' }))
+            ...(recommendations.immediate_actions?.actions || []).map((a: any) => ({ ...a, priority: 'P1', impact: 'High', effort: 'Medium' })),
+            ...(recommendations.short_term_initiatives?.actions || []).map((a: any) => ({ ...a, priority: 'P2', impact: 'Medium', effort: 'High' })),
+            ...(recommendations.medium_term_initiatives?.actions || []).map((a: any) => ({ ...a, priority: 'P3', impact: 'High', effort: 'High' }))
         ];
 
         return {
@@ -155,7 +377,7 @@ export default function ConsultingReport() {
                 executive_recommendation: insights.overall_assessment || "Initiate a structured digital transformation roadmap focusing on core process automation.",
                 key_observations: ["Growing profitability", "Adequate IT budget allocation", "Resistant leadership culture", "No digital strategy"]
             },
-            maturity_scorecard: analysis.dimensional_scores.map(d => {
+            maturity_scorecard: analysis.dimensional_scores.map((d: any) => {
                 const finalScore = normalizeScore(d.percentage || d.weighted_score || d.raw_score);
                 return {
                     dimension: d.dimension,
@@ -164,12 +386,12 @@ export default function ConsultingReport() {
                     risk_level: finalScore < 40 ? "High Risk" : finalScore < 70 ? "Medium Risk" : "Low Risk"
                 };
             }),
-            radar_data: analysis.dimensional_scores.map(d => ({
+            radar_data: analysis.dimensional_scores.map((d: any) => ({
                 subject: d.dimension,
                 A: normalizeScore(d.percentage || d.weighted_score || d.raw_score),
                 fullMark: 100
             })),
-            dimension_deep_dives: analysis.dimensional_scores.slice(0, 6).map(d => ({
+            dimension_deep_dives: analysis.dimensional_scores.slice(0, 6).map((d: any) => ({
                 dimension: d.dimension,
                 score: normalizeScore(d.percentage || d.weighted_score || d.raw_score),
                 current_state: d.critical_gaps.slice(0, 3) || ["Manual processes"],
@@ -178,40 +400,51 @@ export default function ConsultingReport() {
                 strategic_outlook: d.maturity_level === 'Nascent' ? "Nascent" : d.maturity_level || "Initial"
             })),
             business_risk_opportunity: {
-                top_risks: risks.slice(0, 3).map((r, i) => ({
+                top_risks: risks.slice(0, 3).map((r: any, i: number) => ({
                     category: ["Cultural", "Technical", "Operational"][i] || "Strategic",
                     risk: r.risk_category || r.risk_description,
                     impact: r.impact,
                     mitigation: r.mitigation_strategy || "Implement change management"
                 })),
                 opportunity_areas: analysis.dimensional_scores
-                    .sort((a, b) => b.gap_analysis.improvement_potential - a.gap_analysis.improvement_potential)
+                    .sort((a: any, b: any) => b.gap_analysis.improvement_potential - a.gap_analysis.improvement_potential)
                     .slice(0, 4)
-                    .map(d => ({ opportunity: `Optimize ${d.dimension}`, value: "High VALUE" }))
+                    .map((d: any) => ({ opportunity: `Optimize ${d.dimension}`, value: "High VALUE" }))
             },
-            transformation_priority_matrix: allActions.slice(0, 4).map(a => ({
+            transformation_priority_matrix: allActions.slice(0, 4).map((a: any) => ({
                 initiative: a.action,
                 priority: a.priority,
                 impact: a.impact === 'High' ? 3 : a.impact === 'Medium' ? 2 : 1,
                 effort: a.effort === 'High' ? 1 : a.effort === 'Medium' ? 2 : 3
             })),
-            transformation_roadmap: [
-                {
-                    phase: "IMMEDIATE",
-                    timeline: recommendations.immediate_actions.timeline || "0-3 Months",
-                    actions: recommendations.immediate_actions.actions.slice(0, 2).map(a => a.action)
-                },
-                {
-                    phase: "SHORT-TERM",
-                    timeline: recommendations.short_term_initiatives.timeline || "3-12 Months",
-                    actions: recommendations.short_term_initiatives.actions.slice(0, 2).map(a => a.action)
-                },
-                {
-                    phase: "MEDIUM-TERM",
-                    timeline: recommendations.medium_term_initiatives?.timeline || "12-24 Months",
-                    actions: (recommendations.medium_term_initiatives?.actions || []).slice(0, 1).map(a => a.action)
+            transformation_roadmap: (() => {
+                const roadmap = [
+                    {
+                        phase: "IMMEDIATE",
+                        timeline: recommendations?.immediate_actions?.timeline || "0-3 Months",
+                        actions: (recommendations?.immediate_actions?.actions || []).slice(0, 2).map((a: any) => a.action)
+                    },
+                    {
+                        phase: "SHORT-TERM",
+                        timeline: recommendations?.short_term_initiatives?.timeline || "3-12 Months",
+                        actions: (recommendations?.short_term_initiatives?.actions || []).slice(0, 2).map((a: any) => a.action)
+                    },
+                    {
+                        phase: "MEDIUM-TERM",
+                        timeline: recommendations?.medium_term_initiatives?.timeline || "12-24 Months",
+                        actions: (recommendations?.medium_term_initiatives?.actions || []).slice(0, 1).map((a: any) => a.action)
+                    }
+                ].filter((p: any) => p.actions.length > 0);
+
+                if (roadmap.length === 0) {
+                    return [
+                        { phase: "IMMEDIATE", timeline: "0-3 Months", actions: ["Conduct current state diagnostic", "Establish governance framework"] },
+                        { phase: "SHORT-TERM", timeline: "3-12 Months", actions: ["Pilot core process automation", "Launch change management program"] },
+                        { phase: "MEDIUM-TERM", timeline: "12-24 Months", actions: ["Scale digital initiatives", "Integrate advance analytics"] }
+                    ];
                 }
-            ].filter(p => p.actions.length > 0),
+                return roadmap;
+            })(),
             investment_indication: [
                 { area: "Core Transformation", effort: "High", investment_band: "₹₹₹" },
                 { area: "Digital Infrastructure", effort: "Medium", investment_band: "₹₹" },
@@ -221,10 +454,47 @@ export default function ConsultingReport() {
         };
     };
 
-    const report = data.result.consulting_report || generateFallbackReport();
+    const aiReport = data?.result?.consulting_report;
+    const fallbackReport = generateFallbackReport();
+
+    console.log("[Consulting Report Component] AI Report exists:", !!aiReport);
+    console.log("[Consulting Report Component] AI Report keys:", aiReport ? Object.keys(aiReport) : 'none');
+    console.log("[Consulting Report Component] Fallback Report keys:", Object.keys(fallbackReport));
+
+    // Deep merge AI report with fallback to ensure all fields exist
+    const report = {
+        ...fallbackReport,
+        ...aiReport,
+        executive_summary: {
+            ...fallbackReport.executive_summary,
+            ...(aiReport?.executive_summary || {})
+        },
+        business_risk_opportunity: {
+            ...fallbackReport.business_risk_opportunity,
+            ...(aiReport?.business_risk_opportunity || {})
+        }
+    };
+
+    console.log("[Consulting Report Component] Final Report keys:", Object.keys(report));
+    console.log("[Consulting Report Component] Maturity Scorecard length:", report.maturity_scorecard?.length || 0);
+    console.log("[Consulting Report Component] Dimension Deep Dives length:", report.dimension_deep_dives?.length || 0);
+    console.log("[Consulting Report Component] Transformation Roadmap length:", report.transformation_roadmap?.length || 0);
+
+    // Ensure arrays exist and are populated. Use fallback if AI report arrays are empty.
+    report.maturity_scorecard = (aiReport?.maturity_scorecard && aiReport.maturity_scorecard.length > 0)
+        ? aiReport.maturity_scorecard
+        : fallbackReport.maturity_scorecard;
+
+    report.dimension_deep_dives = (aiReport?.dimension_deep_dives && aiReport.dimension_deep_dives.length > 0)
+        ? aiReport.dimension_deep_dives
+        : fallbackReport.dimension_deep_dives;
+
+    report.transformation_roadmap = (aiReport?.transformation_roadmap && aiReport.transformation_roadmap.length > 0)
+        ? aiReport.transformation_roadmap
+        : fallbackReport.transformation_roadmap;
 
     // Transform data for comparative chart
-    const comparativeData = report.maturity_scorecard.map(item => ({
+    const comparativeData = (report.maturity_scorecard || []).map((item: any) => ({
         name: item.dimension.length > 15 ? item.dimension.substring(0, 15) + '...' : item.dimension,
         full_name: item.dimension,
         Score: item.score,
@@ -285,27 +555,13 @@ export default function ConsultingReport() {
                         <div>
                             <h1 className="text-lg font-bold text-white leading-tight">{brand_name}</h1>
                             <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
-                                <span className="text-indigo-400 uppercase tracking-wider">Digital Maturity Report</span>
+                                <span className="text-indigo-400 uppercase tracking-wider">{reportTitle}</span>
                                 <span className="opacity-50">•</span>
                                 <span>{assessmentId}</span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        {isClient && (
-                            <PDFDownloadLink
-                                document={<ConsultingReportPDF report={report} brandName={brand_name} />}
-                                fileName={`Digital_Maturity_${brand_name}.pdf`}
-                                className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 hover:bg-indigo-50 rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-indigo-500/20 hover:scale-105 active:scale-95"
-                            >
-                                {({ loading }) => (
-                                    <>
-                                        <Download className="w-4 h-4" />
-                                        <span>{loading ? "Generating..." : "Download PDF"}</span>
-                                    </>
-                                )}
-                            </PDFDownloadLink>
-                        )}
                         <Link to="/dashboard" className="p-2.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors" title="Exit Report">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
@@ -375,11 +631,11 @@ export default function ConsultingReport() {
                                 <div className="space-y-4">
                                     <p className="text-sm text-slate-300 leading-relaxed">
                                         The organization is currently positioned at the <strong className="text-white">{report.executive_summary.maturity_category}</strong> stage.
-                                        This indicates that {report.executive_summary.what_this_means[1] || report.executive_summary.what_this_means[0].toLowerCase()}.
+                                        This indicates that {report.executive_summary.what_this_means?.[1] || report.executive_summary.what_this_means?.[0]?.toLowerCase() || "significant opportunities exist for improvement"}.
                                         Critical attention is required in standardizing core processes to unlock the next level of operational efficiency.
                                     </p>
                                     <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                                        {report.executive_summary.key_observations.slice(0, 2).map((obs: string, i: number) => (
+                                        {(report.executive_summary.key_observations || []).slice(0, 2).map((obs: string, i: number) => (
                                             <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-400">
                                                 <ArrowUpRight className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" /> {obs}
                                             </div>
@@ -432,7 +688,7 @@ export default function ConsultingReport() {
                                             <span className="text-xs font-mono text-rose-400">GAP: {100 - dim.score}%</span>
                                         </div>
                                         <p className="text-xs text-slate-400 leading-relaxed mb-1">
-                                            Analysis reveals {dim.current_state[0].toLowerCase()}.
+                                            Analysis reveals {dim.current_state?.[0]?.toLowerCase() || "areas requiring attention"}.
                                         </p>
                                         <p className="text-xs text-emerald-400/80 font-medium">
                                             → Recommendation: {dim.recommendations[0]}
@@ -505,67 +761,7 @@ export default function ConsultingReport() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {report.dimension_deep_dives.map((dim: any, i: number) => (
-                            <div key={i} className="group h-[360px] perspective cursor-pointer">
-                                <div className="relative w-full h-full duration-700 preserve-3d group-hover:rotate-y-180 transition-all ease-in-out">
-                                    {/* Front */}
-                                    <div className="absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors">
-                                        <div className="absolute top-0 right-0 p-6 opacity-5">
-                                            <Target className="w-32 h-32 text-white" />
-                                        </div>
-
-                                        <div>
-                                            <div className="w-10 h-10 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold mb-6 border border-indigo-500/30">
-                                                {i + 1}
-                                            </div>
-                                            <h3 className="font-bold text-white text-xl leading-snug mb-2 pr-4">{dim.dimension}</h3>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{dim.strategic_outlook}</p>
-                                        </div>
-
-                                        <div className="space-y-3 relative z-10">
-                                            <div className="flex items-end gap-2">
-                                                <span className="text-5xl font-black text-white">{dim.score}</span>
-                                                <span className="text-sm font-semibold text-slate-500 mb-2">/100</span>
-                                            </div>
-                                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                                                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full w-full" style={{ width: `${dim.score}%` }}></div>
-                                            </div>
-                                            <div className="flex justify-center mt-4 pt-4 border-t border-white/5">
-                                                <span className="text-xs font-bold text-indigo-300 flex items-center gap-2 group-hover:text-white transition-colors">
-                                                    Tap to reveal analysis <ArrowUpRight className="w-3 h-3" />
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Back */}
-                                    <div className="absolute w-full h-full backface-hidden bg-indigo-950 rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-200 border border-indigo-500/30">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-indigo-500"></div>
-                                        <h3 className="font-bold text-white text-md mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
-                                            <Brain className="w-4 h-4 text-cyan-400" /> Analysis
-                                        </h3>
-
-                                        <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <AlertTriangle className="w-3 h-3" /> Critical Gaps
-                                                </p>
-                                                <ul className="text-sm text-slate-400 space-y-2">
-                                                    {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-rose-500 mt-1">•</span> {s}</li>)}
-                                                </ul>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <Lightbulb className="w-3 h-3" /> Strategic Actions
-                                                </p>
-                                                <ul className="text-sm text-slate-400 space-y-2">
-                                                    {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-emerald-500 mt-1">•</span> {r}</li>)}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <FlipCard key={i} dim={dim} index={i} />
                         ))}
                     </div>
                 </motion.section>

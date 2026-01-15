@@ -52,6 +52,8 @@ export const updateUserSchema = z.object({
     country_iso: z.string().min(2).max(2).optional(),
     photoUrl: z.string().optional(),
     username: z.string().optional(),
+    reset_token: z.string().optional(),
+    reset_token_expiry: z.string().optional(),
 
 }).strict().partial();
 
@@ -76,6 +78,8 @@ export interface DbUserItem {
     country_iso: string;
     photoUrl?: string;
     username?: string;
+    reset_token?: string;
+    reset_token_expiry?: string;
 }
 
 export interface AuthenticatedUser {

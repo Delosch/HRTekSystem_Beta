@@ -1,6 +1,6 @@
 
 import { Link, useLocation, useNavigate } from "@remix-run/react";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Map,
   Puzzle,
@@ -8,12 +8,15 @@ import {
   Shapes,
   FileBarChart2,
   Lightbulb,
+  ChevronDown,
 } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname, hash } = location;
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Scroll to services section if hash exists
   useEffect(() => {
@@ -25,12 +28,30 @@ export default function Navbar() {
     }
   }, [pathname, hash]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsServicesOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleServicesClick = () => {
     if (pathname === "/") {
       navigate("#services");
     } else {
       navigate("/#services");
     }
+  };
+
+  const toggleServicesDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsServicesOpen(!isServicesOpen);
   };
 
   // Active and inactive button styles
@@ -52,17 +73,23 @@ export default function Navbar() {
     <div className="relative z-[9999]">
       <nav className="relative bg-[#000033] px-8 py-4 flex items-center justify-between border-b border-white/5 shadow-2xl backdrop-blur-md">
         {/* Left: Branding */}
-        <Link to="/" className="flex items-center gap-4 group">
-          <div className="bg-white p-1 rounded-lg shadow-inner">
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-14 h-14 overflow-hidden flex items-center justify-center">
             <img
-              src="/hrtek_logo.png"
-              alt="HRTEK Logo"
-              className="h-10 w-auto object-contain"
+              src="/logo_icon_final.png"
+              alt="HR-Tek"
+              className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
             />
           </div>
-          <span className="text-white font-black text-2xl tracking-tighter uppercase group-hover:text-blue-400 transition-colors">
-            HRTEK <span className="text-blue-400">SYSTEM</span>
-          </span>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-black tracking-tighter leading-none">
+              <span className="text-white">HR-TEK</span>{" "}
+              <span className="text-[#00B5E2]">SYSTEM</span>
+            </h1>
+            <p className="text-[10px] text-white/80 font-bold uppercase tracking-widest mt-1">
+              A brand of Delosch Technologies
+            </p>
+          </div>
         </Link>
 
         {/* Center: Navigation Links */}
@@ -91,25 +118,30 @@ export default function Navbar() {
             </button>
           </Link>
 
-          <div className="relative group">
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={handleServicesClick}
+              onClick={toggleServicesDropdown}
               className={`${(servicePaths.includes(pathname) || hash === "#services") ? activeStyle : inactiveStyle
                 } flex items-center gap-1`}
             >
               Services
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
             </button>
-            {/* Dropdown content remains same */}
+            {/* Dropdown content */}
             <div
-              className="absolute left-0 mt-3 w-80 bg-white text-[#03045e] rounded-2xl shadow-2xl ring-1 ring-black/5
-              opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto
-              origin-top transition-all duration-300 ease-out z-[999999]"
+              className={`absolute left-0 mt-3 w-80 bg-white text-[#03045e] rounded-2xl shadow-2xl ring-1 ring-black/5
+              origin-top transition-all duration-300 ease-out z-[999999]
+              ${isServicesOpen
+                  ? 'opacity-100 translate-y-0 pointer-events-auto'
+                  : 'opacity-0 translate-y-2 pointer-events-none'
+                }`}
             >
               <ul className="py-3">
                 <li>
                   <Link
                     to="/roadmapServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-blue-100 p-2 rounded-lg">
                       <Map className="w-6 h-6 text-blue-600" />
@@ -124,6 +156,7 @@ export default function Navbar() {
                   <Link
                     to="/hcmServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-purple-100 p-2 rounded-lg">
                       <Puzzle className="w-6 h-6 text-purple-600" />
@@ -138,6 +171,7 @@ export default function Navbar() {
                   <Link
                     to="/matAnalysisServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-green-100 p-2 rounded-lg">
                       <FileBarChart2 className="w-6 h-6 text-green-600" />
@@ -152,6 +186,7 @@ export default function Navbar() {
                   <Link
                     to="/sharedServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-amber-100 p-2 rounded-lg">
                       <DraftingCompass className="w-6 h-6 text-amber-600" />
@@ -166,6 +201,7 @@ export default function Navbar() {
                   <Link
                     to="/changeMgmtServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-rose-100 p-2 rounded-lg">
                       <Shapes className="w-6 h-6 text-rose-600" />
@@ -180,6 +216,7 @@ export default function Navbar() {
                   <Link
                     to="/hrtechAdvisoryServicePage"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                    onClick={() => setIsServicesOpen(false)}
                   >
                     <div className="bg-yellow-100 p-2 rounded-lg">
                       <Lightbulb className="w-6 h-6 text-yellow-600" />

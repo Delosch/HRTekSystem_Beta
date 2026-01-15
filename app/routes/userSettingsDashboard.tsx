@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
-import { json, unstable_composeUploadHandlers, unstable_createFileUploadHandler, unstable_createMemoryUploadHandler, unstable_parseMultipartFormData } from "@remix-run/node";
+import { json, redirect, unstable_composeUploadHandlers, unstable_createFileUploadHandler, unstable_createMemoryUploadHandler, unstable_parseMultipartFormData } from "@remix-run/node";
 import type { ActionFunction, LoaderFunction, UploadHandler } from "@remix-run/node";
 import { Layout } from "~/components/Layout";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { updateUser } from "~/models/user.model";
-import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle } from "lucide-react";
+import { updateUser, deleteUser, saveOTP, verifyStoredOTP } from "~/models/user.model";
+import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle, Smartphone, Key } from "lucide-react";
+import { sendLoginOTP } from "~/services/sms.server";
 
 import { getEnhancedUser } from "~/utils/user.server";
 
@@ -74,8 +75,56 @@ export const action: ActionFunction = async ({ request }) => {
     return json({ success: true, message: "No data changed." });
   }
 
+  if (intent === "request_delete_otp") {
+    try {
+      if (!user.phone) {
+        return json({ error: "No registered phone number found. Please contact support." }, { status: 400 });
+      }
+
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Save to DB
+      await saveOTP(user.userId, otp);
+
+      // Send SMS
+      const cleanPhone = user.phone.replace(/\D/g, "");
+      const smsResult = await sendLoginOTP(cleanPhone, otp);
+
+      if (!smsResult.success) {
+        return json({ error: "Failed to send verification code. Please try again." }, { status: 500 });
+      }
+
+      return json({ success: true, otpSent: true, message: "Verification code sent to your registered number." });
+    } catch (error: any) {
+      return json({ error: error.message || "Failed to request verification code" }, { status: 400 });
+    }
+  }
+
+  if (intent === "verify_delete_otp") {
+    const otp = formData.get("otp") as string;
+    if (!otp) {
+      return json({ error: "Verification code is required" }, { status: 400 });
+    }
+
+    try {
+      const isValid = await verifyStoredOTP(user.userId, otp);
+      if (isValid) {
+        // Delete user
+        await deleteUser(user.userId);
+
+        // Clear session and redirect to logout
+        return redirect("/auth/logout");
+      } else {
+        return json({ error: "Invalid or expired verification code" }, { status: 400 });
+      }
+    } catch (error: any) {
+      return json({ error: error.message || "Failed to verify code" }, { status: 400 });
+    }
+  }
+
   if (intent === "delete_account") {
-    return json({ error: "For security reasons, please contact support to permanently delete your account." }, { status: 403 });
+    return json({ error: "Use OTP-based deletion instead." }, { status: 403 });
   }
 
   return json({ error: "Invalid action" }, { status: 400 });
@@ -85,10 +134,18 @@ export default function UserSettingsDashboard() {
   const { user } = useLoaderData<typeof loader>();
   const [previewImage, setPreviewImage] = useState<string | null>(user.photoUrl || null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"confirm" | "otp">("confirm");
+  const [otpValue, setOtpValue] = useState("");
 
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  useEffect(() => {
+    if (actionData?.otpSent) {
+      setDeleteStep("otp");
+    }
+  }, [actionData]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -97,6 +154,12 @@ export default function UserSettingsDashboard() {
       reader.onloadend = () => setPreviewImage(reader.result as string);
       reader.readAsDataURL(file);
     }
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteStep("confirm");
+    setOtpValue("");
   };
 
   return (
@@ -109,7 +172,7 @@ export default function UserSettingsDashboard() {
             <p className="text-gray-500 mt-2">Manage your personal information and preferences.</p>
           </div>
 
-          {actionData?.success && (
+          {actionData?.success && actionData?.message && (
             <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2 animate-fadeIn">
               <CheckCircle className="w-5 h-5" />
               {actionData.message}
@@ -235,33 +298,116 @@ export default function UserSettingsDashboard() {
           </div>
 
           {isDeleteModalOpen && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
-                <div className="flex items-center gap-3 text-red-600 mb-4">
-                  <Trash2 className="w-6 h-6" />
-                  <h3 className="text-xl font-bold">Delete Account?</h3>
-                </div>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete your account? All of your data, including company profiles and reports, will be permanently removed.
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <Form method="post">
-                    <input type="hidden" name="intent" value="delete_account" />
-                    <button
-                      type="submit"
-                      onClick={() => setIsDeleteModalOpen(false)}
-                      className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium"
-                    >
-                      Confirm Delete
-                    </button>
-                  </Form>
-                </div>
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fadeIn relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+
+                {deleteStep === "confirm" ? (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 text-red-600">
+                      <div className="p-3 bg-red-100 rounded-full">
+                        <Trash2 className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-2xl font-bold">Delete Account?</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-gray-600 leading-relaxed">
+                        Are you sure you want to delete your account? All of your data, including company profiles and reports, will be <span className="font-bold text-gray-900">permanently removed</span>.
+                      </p>
+
+                      <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-xl flex gap-3 text-sm text-yellow-800">
+                        <Shield className="w-5 h-5 shrink-0" />
+                        <p>We will send a verification code to your registered number <span className="font-bold">{user.phone}</span> to confirm this action.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-2">
+                      <button
+                        onClick={closeDeleteModal}
+                        className="px-6 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <Form method="post">
+                        <input type="hidden" name="intent" value="request_delete_otp" />
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium shadow-md shadow-red-200 transition-all flex items-center gap-2"
+                        >
+                          {isSubmitting ? "Sending..." : (
+                            <>
+                              <Smartphone className="w-4 h-4" />
+                              Send Code
+                            </>
+                          )}
+                        </button>
+                      </Form>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 text-orange-600">
+                      <div className="p-3 bg-orange-100 rounded-full">
+                        <Key className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-2xl font-bold">Verify Deletion</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-gray-600">
+                        Enter the 6-digit code sent to your mobile device to complete account deletion.
+                      </p>
+
+                      <Form method="post" className="space-y-4">
+                        <input type="hidden" name="intent" value="verify_delete_otp" />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
+                          <input
+                            type="text"
+                            name="otp"
+                            maxLength={6}
+                            placeholder="000000"
+                            required
+                            className="w-full px-4 py-3 text-center text-3xl font-mono tracking-[0.5em] border-2 border-orange-100 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none"
+                            autoFocus
+                          />
+                        </div>
+
+                        <div className="flex gap-3 justify-end pt-4">
+                          <button
+                            type="button"
+                            onClick={() => setDeleteStep("confirm")}
+                            className="px-6 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 font-medium transition-colors"
+                          >
+                            Back
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium shadow-md shadow-red-200 transition-all flex items-center gap-2"
+                          >
+                            {isSubmitting ? "Verifying..." : "Confirm Deletion"}
+                          </button>
+                        </div>
+                      </Form>
+
+                      <div className="text-center">
+                        <Form method="post">
+                          <input type="hidden" name="intent" value="request_delete_otp" />
+                          <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="text-sm text-gray-500 hover:text-orange-600 transition-colors"
+                          >
+                            Didn't receive code? Resend
+                          </button>
+                        </Form>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

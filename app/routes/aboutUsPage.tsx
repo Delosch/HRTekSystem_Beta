@@ -49,10 +49,10 @@ export default function AboutUs() {
                   {/* Left Side: Text and CTA */}
                   <div className="space-y-8">
                     <div>
-                      <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                        <span className="text-8xl text-white">About Us</span>
+                      <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
+                        <span className="text-6xl md:text-7xl lg:text-9xl text-white whitespace-nowrap">About Us</span>
                         <br />
-                        <span className="font-light text-[#D4E1F4]">
+                        <span className="font-light text-[#D4E1F4] text-xl md:text-3xl">
                           Driven by purpose, powered by people and innovation
                         </span>
                       </h2>
@@ -363,7 +363,7 @@ export default function AboutUs() {
             <div className="max-w-5xl mx-auto p-6">
               <div className="bg-white shadow-lg rounded-2xl p-6 text-center">
                 <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  Completion of System Diagnosis By HRTEK System
+                  Completion of System Diagnosis By HR-TEK System
                 </h2>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center">

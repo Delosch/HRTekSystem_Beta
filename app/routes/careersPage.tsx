@@ -31,11 +31,11 @@ export default function CareerPage() {
                 {/* Left Side: Text and CTA */}
                 <div className="space-y-8">
                   <div>
-                    <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                      <span className="text-9xl text-white">Careers</span>
+                    <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
+                      <span className="text-6xl md:text-7xl lg:text-9xl text-white whitespace-nowrap">Careers</span>
                       <br />
-                      <span className="font-light text-[#D4E1F4]">
-                        Find Your Place with Us
+                      <span className="font-light text-[#D4E1F4] text-xl md:text-3xl">
+                        Find Your Place with HR-Tek
                       </span>
                     </h2>
                   </div>
@@ -67,7 +67,7 @@ export default function CareerPage() {
             {/* Header */}
             <div className="text-center space-y-4">
               <h2 className="text-4xl font-bold text-[#023e8a]">
-                Life at HRTek System
+                Life at HR-Tek System
               </h2>
               <p className="text-lg text-gray-600">
                 We're building a place where work feels meaningful and fun.

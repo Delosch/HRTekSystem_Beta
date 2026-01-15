@@ -28,20 +28,7 @@ const bedrock = new BedrockRuntimeClient({
   },
 });
 
-/**
- * ✅ JSON repair layer
- * Extracts the first valid JSON object from AI output
- */
-function safeJsonExtract(rawText: string): string {
-  const firstBrace = rawText.indexOf("{");
-  const lastBrace = rawText.lastIndexOf("}");
 
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    throw new Error("No JSON object found in AI response");
-  }
-
-  return rawText.slice(firstBrace, lastBrace + 1);
-}
 
 /**
  * ✅ STRICT backend validator (ROOT FIX)
@@ -96,6 +83,28 @@ export async function generate(
 
     console.log(`📊 Processing assessment: ${assessment_id}`);
 
+    // ✅ FILTER ANSWERS TO SAVE TOKENS
+    // Only send non-null, non-empty answers to the AI
+    const filteredAnswers: any = { ...answer };
+    if (filteredAnswers.answers) {
+      const cleaned: Record<string, any> = {};
+      Object.entries(filteredAnswers.answers as Record<string, any>).forEach(([section, sectionData]) => {
+        if (typeof sectionData === 'object' && sectionData !== null) {
+          const sectionCleaned: Record<string, any> = {};
+          let hasContent = false;
+          Object.entries(sectionData).forEach(([qId, val]) => {
+            if (val !== null && val !== undefined && val !== "" &&
+              !(Array.isArray(val) && val.length === 0)) {
+              sectionCleaned[qId] = val;
+              hasContent = true;
+            }
+          });
+          if (hasContent) cleaned[section] = sectionCleaned;
+        }
+      });
+      filteredAnswers.answers = cleaned;
+    }
+
     const maxRetries = 3;
     let attempt = 0;
     let parsedJson: any = null;
@@ -106,20 +115,15 @@ export async function generate(
 
         const finalPrompt = `${base_prompt}
 
-🚨 CRITICAL JSON OUTPUT REQUIREMENTS:
-1. Return ONLY valid JSON
-2. No markdown, no explanation
-3. Start with { and end with }
-4. Use double quotes only
-5. No trailing commas
-6. Use null for missing values
-7. Use ONLY English standard characters (no special regional characters)
-8. Ensure numbers are well-formed (e.g. use 5 or 5.0, NEVER 5.)
+🚨 CRITICAL:
+1. Return ONLY valid JSON (Start with { and end with })
+2. Ensure full completion. Do not truncate.
+3. Use English standard characters only.
 
 ASSESSMENT DATA:
-${JSON.stringify(answer, null, 2)}
+${JSON.stringify(filteredAnswers)}
 
-Return JSON only:`;
+Return JSON:`;
 
         const command = new InvokeModelCommand({
           modelId: "deepseek.v3-v1:0",
@@ -172,14 +176,11 @@ Return JSON only:`;
           throw new Error("Empty or invalid response from DeepSeek");
         }
 
-        // ✅ Repair JSON BEFORE parsing
-        const cleanedText = safeJsonExtract(text);
-
+        // ✅ Pass raw text to post-processor (it handles extraction strategies)
         console.log("📝 [DEBUG] Raw AI Output:", text?.slice(0, 500) + "...");
-        console.log("🧹 [DEBUG] Extracted JSON Candidate:", cleanedText);
 
         const processed = postProcessAiResponse(
-          cleanedText
+          text
         ) as AssessmentResult;
 
         if (!processed.success || !processed.data) {

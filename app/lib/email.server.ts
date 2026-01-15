@@ -88,7 +88,7 @@ export async function sendWelcomeEmail({ email, firstName, password, role, login
         `;
 
         await transporter.sendMail({
-            from: `"HRTek Systems" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+            from: process.env.SMTP_FROM || `"HRTek Systems" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
             to: email,
             subject: "Welcome to HRTek - Your Account Credentials",
             html: htmlContent
@@ -172,7 +172,7 @@ export async function sendSupportMessageEmail({ name, email, phone, company, mes
         `;
 
         await transporter.sendMail({
-            from: `"${name}" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`, // Authenticated sender remains the system email
+            from: `"${name}" <${email}>`, // Use user's email as the sender
             replyTo: email,
             to: supportEmail,
             subject: `[Support Query] from ${name}`,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import {
   PencilSquareIcon,
   TrashIcon,
@@ -9,11 +9,19 @@ import {
   LockOpenIcon,
   ShieldCheckIcon,
   UserGroupIcon,
+  MagnifyingGlassIcon,
+  FingerPrintIcon,
+  KeyIcon,
+  ChevronRightIcon,
+  ArrowPathIcon,
+  EllipsisHorizontalIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { Sparkles, TrendingUp, ShieldAlert, Cpu } from "lucide-react";
 import { RoleCard } from "~/components/RoleCard";
 import { PermissionEditor } from "~/components/PermissionEditor";
 import { ROLE_DEFINITIONS, type AdminRole, type Permission } from "~/lib/permissions";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Types
 type AdminStatus = "Active" | "Suspended";
@@ -32,7 +40,7 @@ const dummyAdminUsers: AdminUser[] = [
   {
     id: "admin-001",
     name: "Platform Administrator",
-    email: "admin@yourcompany.com",
+    email: "admin@hrtek.ai",
     role: "Super Admin",
     status: "Active",
     lastLogin: "2025-12-26 10:00 AM",
@@ -40,7 +48,7 @@ const dummyAdminUsers: AdminUser[] = [
   {
     id: "admin-002",
     name: "Emily White",
-    email: "emily.w@yourcompany.com",
+    email: "emily.w@hrtek.ai",
     role: "Company Manager",
     status: "Active",
     lastLogin: "2025-12-25 03:30 PM",
@@ -48,7 +56,7 @@ const dummyAdminUsers: AdminUser[] = [
   {
     id: "admin-003",
     name: "David Green",
-    email: "david.g@yourcompany.com",
+    email: "david.g@hrtek.ai",
     role: "Content Editor",
     status: "Active",
     lastLogin: "2025-12-24 11:00 AM",
@@ -56,7 +64,7 @@ const dummyAdminUsers: AdminUser[] = [
   {
     id: "admin-004",
     name: "Sophia Chen",
-    email: "sophia.c@yourcompany.com",
+    email: "sophia.c@hrtek.ai",
     role: "SEO Analyst",
     status: "Suspended",
     lastLogin: "2025-12-15 09:00 AM",
@@ -64,7 +72,7 @@ const dummyAdminUsers: AdminUser[] = [
   {
     id: "admin-005",
     name: "Michael Brown",
-    email: "michael.b@yourcompany.com",
+    email: "michael.b@hrtek.ai",
     role: "Finance Admin",
     status: "Active",
     lastLogin: "2025-12-26 09:15 AM",
@@ -74,10 +82,6 @@ const dummyAdminUsers: AdminUser[] = [
 export const loader = async () => {
   return json({ adminUsers: dummyAdminUsers });
 };
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export default function AdminRolesPage() {
   const { adminUsers } = useLoaderData<typeof loader>();
@@ -100,519 +104,297 @@ export default function AdminRolesPage() {
     ) as Record<AdminRole, Permission[]>
   );
 
-  // Users viewing state
   const [viewingUsersForRole, setViewingUsersForRole] = useState<AdminRole | null>(null);
 
   const handleEditAdmin = (adminId: string) => {
-    alert(`Edit admin user: ${adminId} (Action: Open edit form/modal)`);
+    console.log(`Edit admin: ${adminId}`);
   };
 
   const handleToggleStatus = (adminId: string, currentStatus: AdminStatus) => {
-    const newStatus = currentStatus === "Active" ? "Suspended" : "Active";
-    alert(`Admin user: ${adminId} status changed to ${newStatus}!`);
+    console.log(`Admin ${adminId} toggled`);
   };
 
   const handleDeleteAdmin = (adminId: string) => {
-    if (confirm("Are you sure you want to delete this admin user?")) {
-      alert(`Admin user: ${adminId} deleted!`);
+    if (confirm("Permanently revoke this administrator's credentials?")) {
+      console.log(`Deleted ${adminId}`);
     }
   };
 
   const handleAddAdmin = () => {
-    if (!newAdmin.name || !newAdmin.email) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    if (sendEmailNotification) {
-      alert(`✉️ Welcome email sent to ${newAdmin.email}`);
-    }
-
-    alert(`✅ New admin created successfully!\n\nName: ${newAdmin.name}\nEmail: ${newAdmin.email}\nRole: ${newAdmin.role}`);
     setShowAddAdminModal(false);
     setNewAdmin({ name: "", email: "", role: "Content Editor" });
-    setSendEmailNotification(true);
-  };
-
-  const handleViewActivity = (admin: AdminUser) => {
-    setSelectedAdmin(admin);
-    setShowActivityLog(true);
   };
 
   const handleSavePermissions = (role: AdminRole, permissions: Permission[]) => {
     setRolePermissions(prev => ({ ...prev, [role]: permissions }));
-    alert(`✅ Permissions updated for ${role}!`);
+    setEditingRole(null);
   };
 
-  // Get user count for each role
-  const getRoleUserCount = (role: AdminRole) => {
-    return adminUsers.filter(u => u.role === role).length;
-  };
+  const getRoleUserCount = (role: AdminRole) => adminUsers.filter(u => u.role === role).length;
+  const getUsersForRole = (role: AdminRole) => adminUsers.filter(u => u.role === role);
 
-  // Get users for a specific role
-  const getUsersForRole = (role: AdminRole) => {
-    return adminUsers.filter(u => u.role === role);
-  };
-
-  // Calculate stats
-  const totalAdmins = adminUsers.length;
-  const activeAdmins = adminUsers.filter(u => u.status === "Active").length;
-  const totalRoles = Object.keys(ROLE_DEFINITIONS).length;
+  const stats = [
+    { label: 'Authorized Personas', value: adminUsers.length, icon: UserGroupIcon, color: 'indigo' },
+    { label: 'Active Sessions', value: adminUsers.filter(u => u.status === "Active").length, icon: FingerPrintIcon, color: 'emerald' },
+    { label: 'Governance Tiers', value: Object.keys(ROLE_DEFINITIONS).length, icon: KeyIcon, color: 'violet' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                <ShieldCheckIcon className="w-10 h-10 text-indigo-600" />
-                Admin Roles & Permissions
-              </h1>
-              <p className="text-gray-600">Manage access control and permissions for admin users</p>
-            </div>
-            <button
-              onClick={() => setShowAddAdminModal(true)}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105"
-            >
-              <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" />
-              Add New Admin
-            </button>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-indigo-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Admins</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{totalAdmins}</p>
-                </div>
-                <UserGroupIcon className="w-12 h-12 text-indigo-500 opacity-50" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Active Users</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{activeAdmins}</p>
-                </div>
-                <TrendingUp className="w-12 h-12 text-green-500 opacity-50" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Roles</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{totalRoles}</p>
-                </div>
-                <Sparkles className="w-12 h-12 text-purple-500 opacity-50" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-md mb-6">
-          <nav className="flex border-b border-gray-200" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab("roles-permissions")}
-              className={classNames(
-                activeTab === "roles-permissions"
-                  ? "border-indigo-500 text-indigo-600 bg-indigo-50"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50",
-                "flex-1 whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm transition-all duration-200"
-              )}
-            >
-              <ShieldCheckIcon className="h-5 w-5 inline-block mr-2 -mt-0.5" />
-              Roles & Permissions
-            </button>
-            <button
-              onClick={() => setActiveTab("admin-users")}
-              className={classNames(
-                activeTab === "admin-users"
-                  ? "border-indigo-500 text-indigo-600 bg-indigo-50"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50",
-                "flex-1 whitespace-nowrap py-4 px-6 border-b-2 font-semibold text-sm transition-all duration-200"
-              )}
-            >
-              <UserGroupIcon className="h-5 w-5 inline-block mr-2 -mt-0.5" />
-              Admin Users List
-            </button>
-          </nav>
-        </div>
-
-        {/* Tab Content */}
+    <div className="max-w-7xl mx-auto space-y-10 p-4 animate-in fade-in duration-700">
+      {/* Security Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          {/* Roles & Permissions Tab */}
-          {activeTab === "roles-permissions" && (
-            <section>
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Predefined Roles</h2>
-                <p className="text-gray-600">
-                  Manage access levels and permissions for different admin roles. Click "Edit Permissions" to customize.
-                </p>
-              </div>
-
-              {/* Role Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(Object.keys(ROLE_DEFINITIONS) as AdminRole[]).map((role) => (
-                  <RoleCard
-                    key={role}
-                    role={role}
-                    userCount={getRoleUserCount(role)}
-                    onEditPermissions={() => setEditingRole(role)}
-                    onViewUsers={() => setViewingUsersForRole(role)}
-                  />
-                ))}
-              </div>
-
-              {/* Info Box */}
-              <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-indigo-500 rounded-xl p-6 shadow-md">
-                <div className="flex items-start gap-4">
-                  <ShieldCheckIcon className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <p className="font-semibold text-gray-900 mb-2">About Granular Permissions</p>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      Each role has specific permissions that control access to different areas of the platform.
-                      Super Admins have full access to all features. Other roles have restricted access based on their responsibilities.
-                      You can customize permissions for each role using the "Edit Permissions" button.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Admin Users List Tab */}
-          {activeTab === "admin-users" && (
-            <section>
-              <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                {adminUsers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <UserGroupIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No admin users found.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Email
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Role
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Last Login
-                          </th>
-                          <th className="relative px-6 py-3">
-                            <span className="sr-only">Actions</span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {adminUsers.map((admin) => {
-                          const roleData = ROLE_DEFINITIONS[admin.role];
-                          return (
-                            <tr key={admin.id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${roleData.gradient} flex items-center justify-center text-white font-bold text-lg`}>
-                                    {admin.name[0]}
-                                  </div>
-                                  <div className="ml-4">
-                                    <div className="text-sm font-medium text-gray-900">{admin.name}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {admin.email}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${roleData.gradient} text-white`}>
-                                  <span>{roleData.icon}</span>
-                                  {admin.role}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={classNames(
-                                    admin.status === "Active"
-                                      ? "bg-green-100 text-green-800"
-                                      : "bg-red-100 text-red-800",
-                                    "px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                                  )}
-                                >
-                                  {admin.status}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {admin.lastLogin}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div className="flex items-center justify-end space-x-2">
-                                  <button
-                                    onClick={() => handleEditAdmin(admin.id)}
-                                    className="text-indigo-600 hover:text-indigo-900 p-1 rounded-md hover:bg-gray-100"
-                                    title="Edit Admin"
-                                  >
-                                    <PencilSquareIcon className="h-5 w-5" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleStatus(admin.id, admin.status)}
-                                    className={classNames(
-                                      admin.status === "Active"
-                                        ? "text-orange-600 hover:text-orange-900"
-                                        : "text-green-600 hover:text-green-900",
-                                      "p-1 rounded-md hover:bg-gray-100"
-                                    )}
-                                    title={admin.status === "Active" ? "Suspend Admin" : "Activate Admin"}
-                                  >
-                                    {admin.status === "Active" ? (
-                                      <LockClosedIcon className="h-5 w-5" />
-                                    ) : (
-                                      <LockOpenIcon className="h-5 w-5" />
-                                    )}
-                                  </button>
-                                  <button
-                                    onClick={() => handleViewActivity(admin)}
-                                    className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-gray-100"
-                                    title="View Activity Log"
-                                  >
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteAdmin(admin.id)}
-                                    className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-gray-100"
-                                    title="Delete Admin"
-                                  >
-                                    <TrashIcon className="h-5 w-5" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-1 px-2.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-rose-100 flex items-center gap-2">
+              <ShieldAlert className="h-3 w-3" />
+              Secure Governance Zone
+            </div>
+          </div>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">Access <span className="text-indigo-600">Architect</span></h1>
+          <p className="text-gray-500 font-medium mt-1">Manage recursive permissions and hierarchical authority across the platform.</p>
         </div>
-
-        {/* Permission Editor Modal */}
-        {editingRole && (
-          <PermissionEditor
-            role={editingRole}
-            currentPermissions={rolePermissions[editingRole]}
-            isOpen={!!editingRole}
-            onClose={() => setEditingRole(null)}
-            onSave={(permissions) => handleSavePermissions(editingRole, permissions)}
-          />
-        )}
-
-        {/* View Users Modal */}
-        {viewingUsersForRole && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto shadow-2xl">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">
-                    {viewingUsersForRole} Users
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {getUsersForRole(viewingUsersForRole).length} users with this role
-                  </p>
-                </div>
-                <button
-                  onClick={() => setViewingUsersForRole(null)}
-                  className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {getUsersForRole(viewingUsersForRole).map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${ROLE_DEFINITIONS[user.role].gradient} flex items-center justify-center text-white font-bold text-xl`}>
-                        {user.name[0]}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
-                    </div>
-                    <span
-                      className={classNames(
-                        user.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800",
-                        "px-3 py-1 rounded-full text-xs font-semibold"
-                      )}
-                    >
-                      {user.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setViewingUsersForRole(null)}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Add New Admin Modal */}
-        {showAddAdminModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Add New Admin</h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Name *</label>
-                  <input
-                    type="text"
-                    value={newAdmin.name}
-                    onChange={(e) => setNewAdmin({ ...newAdmin, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                  <input
-                    type="email"
-                    value={newAdmin.email}
-                    onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    placeholder="john@company.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Role *</label>
-                  <select
-                    value={newAdmin.role}
-                    onChange={(e) => setNewAdmin({ ...newAdmin, role: e.target.value as AdminRole })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  >
-                    {(Object.keys(ROLE_DEFINITIONS) as AdminRole[]).map((role) => (
-                      <option key={role} value={role}>
-                        {ROLE_DEFINITIONS[role].icon} {role}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="sendEmail"
-                    checked={sendEmailNotification}
-                    onChange={(e) => setSendEmailNotification(e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <label htmlFor="sendEmail" className="ml-2 text-sm text-gray-700">
-                    Send welcome email to new admin
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowAddAdminModal(false);
-                    setNewAdmin({ name: "", email: "", role: "Content Editor" });
-                    setSendEmailNotification(true);
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddAdmin}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 font-semibold"
-                >
-                  Create Admin
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Activity Log Modal */}
-        {showActivityLog && selectedAdmin && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto shadow-2xl">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Activity Log - {selectedAdmin.name}
-                </h3>
-                <button
-                  onClick={() => setShowActivityLog(false)}
-                  className="text-gray-500 hover:text-gray-700 p-2 hover:bg-gray-100 rounded-lg"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { date: "2025-12-26 10:30 AM", action: "Logged in", details: "IP: 192.168.1.1" },
-                  { date: "2025-12-26 09:15 AM", action: "Updated blog post", details: "Post: HR Tech Trends 2025" },
-                  { date: "2025-12-25 04:45 PM", action: "Approved payment", details: "Invoice #INV-2025-001" },
-                  { date: "2025-12-25 02:30 PM", action: "Created new company", details: "Company: Tech Solutions Ltd" },
-                  { date: "2025-12-24 11:00 AM", action: "Role changed", details: `From Content Editor to ${selectedAdmin.role}` },
-                ].map((log, idx) => (
-                  <div key={idx} className="border-l-4 border-indigo-500 pl-4 py-3 bg-gray-50 rounded-r-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-gray-900">{log.action}</p>
-                        <p className="text-sm text-gray-600">{log.details}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">{log.date}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowActivityLog(false)}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => setShowAddAdminModal(true)}
+          className="inline-flex items-center px-8 py-3.5 bg-gray-900 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all"
+        >
+          <UserPlusIcon className="-ml-1 mr-3 h-5 w-5" />
+          Onboard Admin
+        </button>
       </div>
+
+      {/* Cyber Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-white p-6 rounded-[2.5rem] border border-gray-50 shadow-sm flex items-center gap-6 group hover:shadow-md transition-all"
+          >
+            <div className={`h-16 w-16 rounded-[1.5rem] bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <stat.icon className="h-8 w-8" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{stat.label}</p>
+              <p className="text-3xl font-black text-gray-900 mt-1">{stat.value}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex bg-gray-100/50 p-2 rounded-[2rem] w-fit">
+        {[
+          { id: 'roles-permissions', label: 'Identity Archetypes', icon: ShieldCheckIcon },
+          { id: 'admin-users', label: 'Operator Directory', icon: UserGroupIcon }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-8 py-3 rounded-[1.5rem] text-xs font-black uppercase tracking-widest transition-all flex items-center gap-3 ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm border border-gray-100' : 'text-gray-400 hover:text-gray-600'
+              }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Dynamic Content Buffer */}
+      <AnimatePresence mode="wait">
+        {activeTab === "roles-permissions" ? (
+          <motion.section
+            key="roles"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-8"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(Object.keys(ROLE_DEFINITIONS) as AdminRole[]).map((role) => (
+                <RoleCard
+                  key={role}
+                  role={role}
+                  userCount={getRoleUserCount(role)}
+                  onEditPermissions={() => setEditingRole(role)}
+                  onViewUsers={() => setViewingUsersForRole(role)}
+                />
+              ))}
+            </div>
+
+            <div className="bg-indigo-900 rounded-[3rem] p-12 relative overflow-hidden group shadow-2xl">
+              <div className="absolute top-0 right-0 p-12 opacity-10 scale-150 rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+                <FingerPrintIcon className="h-48 w-48 text-white" />
+              </div>
+              <div className="relative z-10 max-w-2xl">
+                <h3 className="text-white text-2xl font-black uppercase tracking-tight mb-4 flex items-center gap-3">
+                  <Cpu className="h-6 w-6 text-indigo-400" />
+                  Granular Entitlement Protocol
+                </h3>
+                <p className="text-indigo-200 font-medium leading-relaxed">
+                  Security architecture follows the Principle of Least Privilege (PoLP). Each identity archetypes is mapped to specific capability nodes.
+                  Modification of these entries results in immediate systemic reconfiguration across all active operator sessions.
+                </p>
+                <div className="mt-8 flex gap-4">
+                  <div className="flex items-center gap-2 text-indigo-300 text-[10px] font-black uppercase">
+                    <CheckCircleIcon className="h-4 w-4" /> Real-time Sync
+                  </div>
+                  <div className="flex items-center gap-2 text-indigo-300 text-[10px] font-black uppercase">
+                    <CheckCircleIcon className="h-4 w-4" /> Audit Logged
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        ) : (
+          <motion.section
+            key="users"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/50">
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Validated ID</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contact Node</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Assigned Tier</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Utility Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {adminUsers.map((admin) => {
+                    const roleData = ROLE_DEFINITIONS[admin.role];
+                    return (
+                      <tr key={admin.id} className="group hover:bg-gray-50/50 transition-colors">
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-4">
+                            <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${roleData.gradient} flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-100`}>
+                              {admin.name[0]}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-gray-900">{admin.name}</p>
+                              <p className="text-[10px] font-bold text-gray-400">ID: {admin.id}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-sm font-bold text-gray-600">
+                          {admin.email}
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gradient-to-r ${roleData.gradient} text-white shadow-sm`}>
+                            {admin.role}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${admin.status === "Active" ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
+                            <span className={`text-xs font-bold ${admin.status === "Active" ? "text-emerald-700" : "text-rose-700"}`}>{admin.status}</span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center justify-end gap-2 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all">
+                            <button className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                              <PencilSquareIcon className="h-4 w-4" />
+                            </button>
+                            <button className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                            <div className="h-8 w-px bg-gray-100 mx-2" />
+                            <button className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-900 hover:text-white transition-all">
+                              <EllipsisHorizontalIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Overlays (Minimal Revamp) */}
+      <AnimatePresence>
+        {editingRole && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 bg-slate-900/80 backdrop-blur-md">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl p-12 relative overflow-hidden">
+              <PermissionEditor
+                role={editingRole}
+                currentPermissions={rolePermissions[editingRole]}
+                isOpen={!!editingRole}
+                onClose={() => setEditingRole(null)}
+                onSave={(permissions) => handleSavePermissions(editingRole, permissions)}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Admin Modal (Cyber Polished) */}
+      {showAddAdminModal && (
+        <div className="fixed inset-0 z-[100] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-[3rem] max-w-xl w-full p-12 shadow-2xl relative overflow-hidden"
+          >
+            <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-8">
+              <UserPlusIcon className="h-10 w-10" />
+            </div>
+            <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Onboard Persona</h3>
+            <p className="text-gray-500 font-medium mb-10 italic">Configure systemic credentials for a secondary operator.</p>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Full Legal Identity</label>
+                <input
+                  type="text"
+                  className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                  placeholder="Enter identity name..."
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Secured Communication Node (Email)</label>
+                <input
+                  type="email"
+                  className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                  placeholder="operator@system.node"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Governance Authority Tier</label>
+                <select className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-black focus:ring-4 focus:ring-indigo-100 outline-none appearance-none cursor-pointer">
+                  {(Object.keys(ROLE_DEFINITIONS) as AdminRole[]).map((role) => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-12">
+              <button
+                onClick={() => setShowAddAdminModal(false)}
+                className="flex-1 px-4 py-4 rounded-2xl text-xs font-black uppercase text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Abstain
+              </button>
+              <button
+                onClick={handleAddAdmin}
+                className="flex-1 px-8 py-4 bg-gray-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 shadow-xl shadow-gray-900/10 active:scale-95 transition-all"
+              >
+                Commit Entry
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

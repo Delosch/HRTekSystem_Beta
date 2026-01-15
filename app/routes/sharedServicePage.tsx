@@ -9,70 +9,133 @@ import React, { useState } from "react";
 import { Link } from "@remix-run/react";
 
 export default function HRSharedServicesPage() {
-    const [showPopup, setShowPopup] = useState(false);
-    const [selected, setSelected] = useState<Date | undefined>(undefined);
+  const [showPopup, setShowPopup] = useState(false);
+  const [selected, setSelected] = useState<Date | undefined>(undefined);
   return (
     <>
       <Navbar />
 
-      {/* INTRO SECTION */}
-<div className="bg-[#023e8a]">
-          <div className="relative w-full bg-[#023e8a] text-white overflow-hidden">
-            <div className="w-full flex items-center justify-center px-4 py-12 sm:py-12">
-              <div className="bg-[#023e8a] text-white py-2 px-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-                  {/* Left Side: Text and CTA */}
-                  <div className="space-y-8">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                        <span className="text-white">
-                          Shared Service Designer
-                        </span>
-                        <br />
-                        <span className="font-light text-[#D4E1F4]">
-                          Crafting Efficient, Centralized HR Service Experiences
-                        </span>
-                      </h2>
-                    </div>
-                    <p className="text-lg italic text-[#C5D5EC] max-w-xl">
-                      “One Team. Multiple Functions. Seamless Experience.” <br />
-A Shared Services Operating Model (SSOM) in HR is a strategic approach that consolidates transactional and administrative HR tasks into a centralized service delivery hub. Instead of having each business unit or region manage these services independently leading to inconsistencies, inefficiencies, and cost overruns Shared Services ensures that standardized, efficient, and high-quality services are delivered consistently across the organization.
+      {/* Hero Section - Modern Professional Design */}
+      <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
 
-                    </p>
-                  </div>
+        <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Side: Content */}
+            <div className="space-y-8">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="text-white/90 text-sm font-medium">Operating Model Planner</span>
+              </div>
 
-                  {/* Right Side: Static UI Image */}
-                  <div className="flex justify-center">
-                    <img
-                      src="/assets/homepageAssets/scroll0/images/sService.png"
-                      alt="Visual metaphor for Advanced HR Maturity Analysis service"
-                      className="max-w-full h-auto rounded-lg"
-                    />
-                  </div>
+              {/* Main Heading */}
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                  HR-Tek Shared Service
+                  <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    Designer
+                  </span>
+                </h1>
+                <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                  Crafting Efficient, Centralized HR Service Experiences
+                </p>
+              </div>
+
+              {/* Description */}
+              <p className="text-lg text-white/80 leading-relaxed max-w-xl">
+                <span className="font-bold text-white">"One Team. Multiple Functions. Seamless Experience."</span><br />
+                A Shared Services Operating Model (SSOM) in HR is a strategic approach that consolidates
+                transactional and administrative HR tasks into a centralized service delivery hub. Instead of
+                having each business unit or region manage these services independently, Shared Services ensures
+                that standardized, efficient, and high-quality services are delivered consistently across the organization.
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <button
+                  onClick={() => { const isLoggedIn = document.cookie.includes('user_session'); if (isLoggedIn) { window.location.href = '/assessment?engine=Shared%20Service%20Designer'; } else { window.location.href = '/auth'; } }}
+                  className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
+                >
+                  Start Assessment
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setShowPopup(true)}
+                  className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
+                >
+                  Talk to Expert
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/20">
+                <div>
+                  <div className="text-3xl font-black text-white">1</div>
+                  <div className="text-sm text-white/70 mt-1">Unified Team</div>
                 </div>
+                <div>
+                  <div className="text-3xl font-black text-white">100%</div>
+                  <div className="text-sm text-white/70 mt-1">Consistency</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-white">Cost</div>
+                  <div className="text-sm text-white/70 mt-1">Optimized</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side: Image */}
+            <div className="relative lg:h-[600px] flex items-center justify-center">
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
+
+              {/* Image Container */}
+              <div className="relative z-10 w-full h-full flex items-center justify-center">
+                <img
+                  src="/assets/homepageAssets/scroll0/images/sService.png"
+                  alt="Shared Services Visualization"
+                  className="w-full h-auto max-h-[550px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                />
               </div>
             </div>
           </div>
         </div>
 
-{/* Section 1: What is it */}
-<section className="max-w-full mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center bg-white text-gray-800">
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold">
-              What is a Shared Services Model in HR?
-            </h2>
-            <p className="text-lg text-gray-600">
-              A Shared Services Operating Model (SSOM) in HR is a centralized service delivery structure where common HR processes are streamlined and delivered through a single hub (or virtually) across the organization. Rather than duplicating processes in every business unit or location, Shared Services allows organizations to create efficiency, consistency, and cost savings by standardizing key HR functions.
-            </p>    
-          </div>
-          <div>
-            <img
-              src="/assets/homepageAssets/scroll0/images/sServices2.png"
-              alt="Illustration showing HR technology evaluation process"
-              className="w-full h-auto object-contain rounded-lg shadow-lg"
-            />
-          </div>
-        </section>
+        {/* Bottom Wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Section 1: What is it */}
+      <section className="max-w-full mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 items-center bg-white text-gray-800">
+        <div className="space-y-6">
+          <h2 className="text-3xl font-bold">
+            What is a Shared Services Model in HR?
+          </h2>
+          <p className="text-lg text-gray-600">
+            A Shared Services Operating Model (SSOM) in HR is a centralized service delivery structure where common HR processes are streamlined and delivered through a single hub (or virtually) across the organization. Rather than duplicating processes in every business unit or location, Shared Services allows organizations to create efficiency, consistency, and cost savings by standardizing key HR functions.
+          </p>
+        </div>
+        <div>
+          <img
+            src="/assets/homepageAssets/scroll0/images/sServices2.png"
+            alt="Illustration showing HR technology evaluation process"
+            className="w-full h-auto object-contain rounded-lg shadow-lg"
+          />
+        </div>
+      </section>
 
       {/* KEY COMPONENTS */}
       <section className="bg-white py-20">
@@ -161,169 +224,136 @@ A Shared Services Operating Model (SSOM) in HR is a strategic approach that cons
 
       {/* OUR APPROACH */}
       <section className="bg-indigo-50 py-20">
-  <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-start">
-    
-    {/* Left - Our Approach */}
-    <div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-12 text-center lg:text-left">
-        Our Approach to HR Shared Services
-      </h3>
-      <div className="relative border-l-4 border-indigo-400 pl-6 space-y-10">
-        {[
-          "Shared Services Operating Model Design",
-          "HR Process Reengineering",
-          "SLA and Performance Framework Setup",
-          "Technology Enablement (HRIS, Ticketing, Chatbots)",
-          "Build-Operate-Transfer or Managed Service Delivery",
-        ].map((step, idx) => (
-          <div key={idx} className="relative">
-            <div className="absolute -left-[38px] top-0 bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-semibold">
-              {idx + 1}
+        <div className="max-w-4xl mx-auto px-6">
+          {/* Our Approach */}
+          <div className="w-full">
+            <h3 className="text-2xl font-bold text-gray-900 mb-12 text-center lg:text-left">
+              Our Approach to HR Shared Services
+            </h3>
+            <div className="relative border-l-4 border-indigo-400 pl-6 space-y-10">
+              {[
+                "Shared Services Operating Model Design",
+                "HR Process Reengineering",
+                "SLA and Performance Framework Setup",
+                "Technology Enablement (HRIS, Ticketing, Chatbots)",
+                "Build-Operate-Transfer or Managed Service Delivery",
+              ].map((step, idx) => (
+                <div key={idx} className="relative">
+                  <div className="absolute -left-[38px] top-0 bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-semibold">
+                    {idx + 1}
+                  </div>
+                  <p className="text-gray-700">{step}</p>
+                </div>
+              ))}
             </div>
-            <p className="text-gray-700">{step}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Right - How It Works */}
-    <div className="bg-blue-50 p-10 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow duration-300">
-  <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-800">
-    💡 How It Works
-  </h3>
-  <ol className="space-y-6 text-gray-800">
-    {[
-      "Complete our comprehensive Shared Services Readiness Assessment (takes about 15–20 minutes).",
-      "Our system analyzes your responses using advanced AI-driven evaluation to pinpoint your current state.",
-      <>
-        Instantly receive a tailored roadmap highlighting:
-        <ul className="list-disc list-inside mt-2 ml-4 text-gray-700 text-sm space-y-1">
-          <li>Key efficiency improvements and quick wins</li>
-          <li>Strategic priorities to streamline HR operations</li>
-          <li>Opportunities to leverage technology and automation</li>
-          <li>Potential risks and change management considerations</li>
-        </ul>
-      </>,
-      "Optionally, our expert advisory team can support you in implementing the roadmap and achieving measurable results.",
-    ].map((step, idx) => (
-      <li key={idx} className="relative pl-10">
-        <span className="absolute left-0 top-0 flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold">
-          {idx + 1}
-        </span>
-        {step}
-      </li>
-    ))}
-  </ol>
-</div>
-
-
-  </div>
-</section>
-
-      
-
-{/* Final CTA */}
-<section className="bg-blue-700 text-white py-16">
-  <div className="max-w-3xl mx-auto text-center px-6">
-    <h2 className="text-3xl font-bold mb-6">
-      Ready to Begin Your Transformation Journey
-    </h2>
-    <p className="text-lg mb-8">
-      Take the assessment today and let HRTek System show you a smarter
-      path forward.
-    </p>
-
-    <div className="flex flex-col gap-4 items-center">
-      <button
-        onClick={() => setShowPopup(true)}
-        className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300"
-      >
-        Talk to a Consultant
-      </button>
-      <button onClick={() => { const isLoggedIn = document.cookie.includes('user_session'); if (isLoggedIn) { window.location.href = '/assessment?engine=Shared%20Service%20Designer'; } else { window.location.href = '/auth'; } }} className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300">Take the Assessment</button>
-    </div>
-  </div>
-
-  {showPopup && (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center px-4 animate-fadeIn">
-      <div className="relative w-full max-w-5xl bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-blue-100 overflow-auto max-h-[90vh] no-scrollbar transform scale-95 animate-scaleIn">
-        {/* Close Button */}
-        <button
-          onClick={() => setShowPopup(false)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 hover:scale-110 transition-all"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-
-        {/* Modal Content */}
-        <div>
-          <h2 className="text-blue-600 text-3xl font-extrabold mb-4">
-            Ready to Transform Your HR Strategy?
-          </h2>
-          <p className="text-gray-700 leading-relaxed mb-8">
-            If you're interested in learning more about how our solutions can help your
-            organization—or if you'd like expert guidance tailored to your HR goals—
-            <br />
-            <span className="font-semibold text-black">
-              Select a convenient date and time
-            </span>{" "}
-            below, and take the next step toward building a future-ready HR Architecture.
-          </p>
-
-          {/* Calendar and Time Slots */}
-          <div className="flex flex-col lg:flex-row gap-8 mb-8">
-            {/* Calendar */}
-            <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-              <DayPicker
-                mode="single"
-                selected={selected}
-                onSelect={setSelected}
-                fromDate={new Date()}
-                disabled={{ before: new Date() }}
-                modifiersClassNames={{
-                  selected: "bg-blue-600 text-white rounded-full",
-                  today: "text-blue-700 font-bold",
-                }}
-                className="text-center text-black"
-              />
-            </div>
-
-            {/* Time Slots */}
-            <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-              <TimeSelector />
-            </div>
-
-            {/* Image */}
-            <div className="hidden lg:block flex-1">
-              <img
-                src="/assets/homepageAssets/bookAppointment.png"
-                alt="Client booking appointment illustration"
-                className="w-full h-auto rounded-xl shadow-lg"
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end gap-4">
-            <button
-              onClick={() => setShowPopup(false)}
-              className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all"
-            >
-              Cancel
-            </button>
-            <button className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition-all">
-              Book Appointment
-            </button>
           </div>
         </div>
-      </div>
-    </div>
-  )}
-</section>
+      </section>
 
-<style>
-{`
+
+
+      {/* Final CTA */}
+      <section className="bg-blue-700 text-white py-16">
+        <div className="max-w-3xl mx-auto text-center px-6">
+          <h2 className="text-3xl font-bold mb-6">
+            Ready to Begin Your Transformation Journey
+          </h2>
+          <p className="text-lg mb-8">
+            Take the assessment today and let HR-Tek System show you a smarter
+            path forward.
+          </p>
+
+          <div className="flex flex-col gap-4 items-center">
+            <button
+              onClick={() => setShowPopup(true)}
+              className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300"
+            >
+              Talk to a Consultant
+            </button>
+            <button onClick={() => { const isLoggedIn = document.cookie.includes('user_session'); if (isLoggedIn) { window.location.href = '/assessment?engine=Shared%20Service%20Designer'; } else { window.location.href = '/auth'; } }} className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300">Take the Assessment</button>
+          </div>
+        </div>
+
+        {showPopup && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center px-4 animate-fadeIn">
+            <div className="relative w-full max-w-5xl bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-blue-100 overflow-auto max-h-[90vh] no-scrollbar transform scale-95 animate-scaleIn">
+              {/* Close Button */}
+              <button
+                onClick={() => setShowPopup(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 hover:scale-110 transition-all"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+
+              {/* Modal Content */}
+              <div>
+                <h2 className="text-blue-600 text-3xl font-extrabold mb-4">
+                  Ready to Transform Your HR Strategy?
+                </h2>
+                <p className="text-gray-700 leading-relaxed mb-8">
+                  If you're interested in learning more about how our solutions can help your
+                  organization—or if you'd like expert guidance tailored to your HR goals—
+                  <br />
+                  <span className="font-semibold text-black">
+                    Select a convenient date and time
+                  </span>{" "}
+                  below, and take the next step toward building a future-ready HR Architecture.
+                </p>
+
+                {/* Calendar and Time Slots */}
+                <div className="flex flex-col lg:flex-row gap-8 mb-8">
+                  {/* Calendar */}
+                  <div className="flex-1 bg-white rounded-xl shadow-md p-4">
+                    <DayPicker
+                      mode="single"
+                      selected={selected}
+                      onSelect={setSelected}
+                      fromDate={new Date()}
+                      disabled={{ before: new Date() }}
+                      modifiersClassNames={{
+                        selected: "bg-blue-600 text-white rounded-full",
+                        today: "text-blue-700 font-bold",
+                      }}
+                      className="text-center text-black"
+                    />
+                  </div>
+
+                  {/* Time Slots */}
+                  <div className="flex-1 bg-white rounded-xl shadow-md p-4">
+                    <TimeSelector />
+                  </div>
+
+                  {/* Image */}
+                  <div className="hidden lg:block flex-1">
+                    <img
+                      src="/assets/homepageAssets/bookAppointment.png"
+                      alt="Client booking appointment illustration"
+                      className="w-full h-auto rounded-xl shadow-lg"
+                    />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-4">
+                  <button
+                    onClick={() => setShowPopup(false)}
+                    className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition-all">
+                    Book Appointment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <style>
+        {`
   /* Hide scrollbar */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -345,7 +375,7 @@ A Shared Services Operating Model (SSOM) in HR is a strategic approach that cons
   .animate-fadeIn { animation: fadeIn 0.25s ease-out }
   .animate-scaleIn { animation: scaleIn 0.25s ease-out }
 `}
-</style>
+      </style>
 
 
       <Footer />

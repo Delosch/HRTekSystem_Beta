@@ -42,6 +42,7 @@ const MODULE_BASE_PRICES: Record<string, number> = {
     "Intelligent Change Management": 45000,        // Updated from 30000
     "HR Technology Maturity Analysis": 40000,      // Updated from 25000
     "HR Digital Transformation": 35000,
+    "Digital Maturity Assessment": 35000,
 };
 
 const HIGH_INCOME_COUNTRIES: Set<string> = new Set(["US", "AE", "SG", "DE", "FR", "GB", "CA", "AU", "JP"]);

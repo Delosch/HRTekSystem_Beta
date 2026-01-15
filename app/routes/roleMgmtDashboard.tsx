@@ -23,6 +23,7 @@ export const loader: LoaderFunction = async ({ request }) => {
 export default function RoleManagementDashboard() {
   const { user } = useLoaderData<typeof loader>();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [tasks, setTasks] = useState(sampleTasks);
   const [visibleCount, setVisibleCount] = useState(8);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTask, setSelectedTask] = useState<
@@ -40,7 +41,7 @@ export default function RoleManagementDashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const filteredTasks = sampleTasks.filter((task) =>
+  const filteredTasks = tasks.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -48,6 +49,25 @@ export default function RoleManagementDashboard() {
     completed: "bg-green-50 text-green-900 border border-green-200",
     pending: "bg-red-50 text-red-900 border border-red-200",
     approval: "bg-yellow-50 text-yellow-900 border border-yellow-200",
+  };
+
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+
+  const handleTaskAction = (action: string) => {
+    if (!selectedTask) return;
+
+    // Simulate backend process
+    const newStatus = action === 'Approve' ? 'completed' : action === 'Revoke Access' ? 'pending' : 'approval';
+
+    setTasks(prev => prev.map(t =>
+      t.id === selectedTask.id ? { ...t, status: newStatus } : t
+    ));
+
+    setActionFeedback(`${action} successful for ${selectedTask.title}`);
+    setTimeout(() => {
+      setActionFeedback(null);
+      setSelectedTask(null);
+    }, 1500);
   };
 
   return (
@@ -177,44 +197,69 @@ export default function RoleManagementDashboard() {
 
         {/* Task Modal */}
         {selectedTask && (
-          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-2xl w-[350px] shadow-xl">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
-                {selectedTask.title}
-              </h3>
-              <div className="bg-gray-100 rounded-xl p-4 mb-4 space-y-2 text-sm text-gray-700">
-                <p>
-                  <span className="font-semibold">Name:</span>{" "}
-                  {selectedTask.name}
-                </p>
-                <p>
-                  <span className="font-semibold">Position:</span>{" "}
-                  {selectedTask.position}
-                </p>
-                <p>
-                  <span className="font-semibold">Description:</span>{" "}
-                  {selectedTask.description}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button className="bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition">
-                  Approve
-                </button>
-                <button className="bg-yellow-400 text-black py-2 rounded-lg font-medium hover:bg-yellow-500 transition">
-                  Review
-                </button>
-                <button className="bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition">
-                  Revoke Access
-                </button>
-              </div>
-              <div className="flex justify-center mt-4">
-                <button
-                  onClick={() => setSelectedTask(null)}
-                  className="text-sm text-gray-500 underline"
-                >
-                  Close
-                </button>
-              </div>
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300">
+            <div className="bg-white p-8 rounded-[2rem] w-[400px] shadow-2xl relative overflow-hidden">
+              {actionFeedback ? (
+                <div className="flex flex-col items-center justify-center py-10 space-y-4 animate-in zoom-in duration-300">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900">{actionFeedback}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-6">
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight">
+                      {selectedTask.title}
+                    </h3>
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusColors[selectedTask.status as keyof typeof statusColors]}`}>
+                      {selectedTask.status}
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-2xl p-5 mb-8 space-y-4 border border-slate-100">
+                    <div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Assigned To</span>
+                      <p className="font-bold text-slate-900">{selectedTask.name}</p>
+                      <p className="text-xs text-slate-500 font-medium">{selectedTask.position}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Description</span>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">{selectedTask.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      onClick={() => handleTaskAction('Approve')}
+                      className="bg-emerald-600 text-white py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-100"
+                    >
+                      Approve Task
+                    </button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleTaskAction('Review')}
+                        className="bg-amber-100 text-amber-700 py-3 rounded-xl font-bold hover:bg-amber-200 transition-all active:scale-95"
+                      >
+                        Request Review
+                      </button>
+                      <button
+                        onClick={() => handleTaskAction('Revoke Access')}
+                        className="bg-rose-50 text-rose-600 py-3 rounded-xl font-bold hover:bg-rose-100 transition-all active:scale-95"
+                      >
+                        Revoke Access
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedTask(null)}
+                    className="mt-6 w-full text-center text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                  >
+                    Cancel & Close
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

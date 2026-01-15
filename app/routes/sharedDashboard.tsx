@@ -49,8 +49,22 @@ export const loader: LoaderFunction = async ({ request }) => {
     throw redirect('/onboarding');
   }
 
+  const { getCompanyPayments } = await import("~/models/payment.model");
+  const { getLatestAnalysis } = await import("~/utils/analysis");
+
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
+
+  // Check payment status
+  const payments = await getCompanyPayments(user.organisationId);
+  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
+
+  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
+  const isPending = paymentRecord?.status === "payment_submitted";
+
+  // Check report existence
+  const report = await getLatestAnalysis(user.organisationId, ENGINE);
+  const hasReport = !!report;
 
   let recommendations = null;
   try {
@@ -68,12 +82,15 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user
+    user,
+    isPaid,
+    isPending,
+    hasReport
   });
 };
 
 export default function SharedDashboard() {
-  const { currentEngine, completedEngines, recommendations, user } = useLoaderData<typeof loader>();
+  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -90,7 +107,24 @@ export default function SharedDashboard() {
 
   const recommendedEngines = recommendations
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
+    .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
     .slice(0, 3);
+
+  const handleReportAction = () => {
+    if (hasReport) {
+      if (isPaid || isPending) {
+        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate('/payment/checkout');
+      }
+    } else {
+      if (currentEngine.progress === 100) {
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-blue-50/20 relative overflow-hidden">
@@ -159,18 +193,47 @@ export default function SharedDashboard() {
 
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
-                  onClick={() => navigate('/engine/dashboard/shared-services')}
-                  className="w-full py-4 px-6 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden"
+                  onClick={handleReportAction}
+                  className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${isPaid && hasReport
+                    ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white'
+                    : isPending && hasReport
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white'
+                      : hasReport
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                    }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                  <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  <span className="relative z-10">View Detailed Dashboard</span>
+
+                  {isPaid && hasReport ? (
+                    <>
+                      <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <span className="relative z-10">View Detailed Dashboard</span>
+                    </>
+                  ) : isPending && hasReport ? (
+                    <>
+                      <Clock className="w-5 h-5 relative z-10" />
+                      <span className="relative z-10">Verification Pending</span>
+                    </>
+                  ) : hasReport ? (
+                    <>
+                      <svg className="w-5 h-5 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span className="relative z-10">Unlock Report</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative z-10">{currentEngine.progress === 100 ? "Generate Report" : "Continue Assessment"}</span>
+                    </>
+                  )}
+
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
-                  ✨ Access advanced analytics, insights, and visualizations
+                  {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
               </div>
             </div>
@@ -214,7 +277,7 @@ export default function SharedDashboard() {
               <div className="mt-8 pt-6 border-t border-gray-200/50 flex gap-3">
                 <EngineStatusActions engineStatus={currentEngine.status} param={ENGINE} />
                 <button
-                  onClick={() => navigate('/engine/dashboard/shared-services')}
+                  onClick={() => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`)}
                   className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
                 >
                   View Detailed Report

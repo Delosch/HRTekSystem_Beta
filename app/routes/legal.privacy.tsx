@@ -18,7 +18,7 @@ const policySections = [
   { id: "security", title: "5. Data Protection, Security & Retention" },
   { id: "sharing", title: "6. Data Sharing and Disclosure" },
   { id: "cookies", title: "7. Cookies & Tracking Technologies" },
-  { id: "ai-governance", title: "8. Data Processing in HR Co-Pilot & AI" },
+  { id: "ai-governance", title: "8. Data Processing in HR Co-Pilot & Cognitive Intelligence Systems" },
   { id: "transfers", title: "9. International Data Transfers" },
   { id: "rights", title: "10. User Rights" },
   { id: "children", title: "11. Children's Data" },
@@ -140,15 +140,15 @@ export default function PrivacyPolicyPage() {
                       <h5 className="font-semibold text-gray-800 text-sm uppercase tracking-wide mb-2">3. Assessment & Diagnostic Inputs</h5>
                       <ul className="list-disc pl-5 text-sm space-y-1">
                         <li>Answers to HR digital maturity assessments</li>
-                        <li>Roadmap Generator, Vendor Fit Engine, and AI Co-Pilot data</li>
+                        <li>Data submitted in the Roadmap Generator, Vendor Fit Engine, and AI Co-Pilot</li>
                         <li>Operational metrics and strategic preferences</li>
                       </ul>
                     </div>
                     <div>
-                      <h5 className="font-semibold text-gray-800 text-sm uppercase tracking-wide mb-2">4. Communication Data</h5>
+                      <h5 className="font-semibold text-gray-800 text-sm uppercase tracking-wide mb-2">4. Communication and Support Data</h5>
                       <ul className="list-disc pl-5 text-sm space-y-1">
-                        <li>Queries, support messages, and feedback</li>
-                        <li>Meeting notes or shared correspondence</li>
+                        <li>Queries, support messages, and feedback forms</li>
+                        <li>Meeting notes or correspondence shared voluntarily</li>
                       </ul>
                     </div>
                   </div>
@@ -159,11 +159,12 @@ export default function PrivacyPolicyPage() {
                     <span className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xs">B</span>
                     Information Collected Automatically
                   </h4>
-                  <ul className="list-disc pl-5 space-y-2">
+                  <p className="mb-2 text-sm text-gray-700">When users interact with our platform, we collect:</p>
+                  <ul className="list-disc pl-5 space-y-2 text-sm text-gray-700">
                     <li>IP address, log history, and approximate location</li>
                     <li>Browser type, device information, OS, and session identifiers</li>
                     <li>Cookies and tracking data</li>
-                    <li>Behavioural patterns (navigation, clicks, usage)</li>
+                    <li>Behavioural patterns (navigation, clicks, time spent, feature usage)</li>
                     <li>System logs, error reports, and performance metrics</li>
                   </ul>
                 </div>
@@ -171,7 +172,7 @@ export default function PrivacyPolicyPage() {
                 <div className="bg-green-50 p-6 rounded-2xl border border-green-100 shadow-sm">
                   <h4 className="font-bold text-green-900 mb-4 flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs">C</span>
-                    HR & Workforce Data (Advisory and AI)
+                    HR & Workforce Data (For Advisory and AI Models)
                   </h4>
                   <p className="text-sm text-green-800 mb-4">Depending on usage, the platform may process:</p>
                   <ul className="list-disc pl-5 text-sm text-green-800 space-y-2">
@@ -190,34 +191,34 @@ export default function PrivacyPolicyPage() {
                 <div className="p-4 bg-gray-100 rounded-xl">
                   <h5 className="font-bold text-gray-900 mb-2">A. To Deliver and Enhance Services</h5>
                   <ul className="text-sm space-y-1 list-disc pl-4">
-                    <li>HR maturity scores and digital audits</li>
-                    <li>HR Co-Pilot recommendations</li>
-                    <li>Strategic planning automation</li>
-                    <li>Analytics dashboards and reports</li>
+                    <li>Generate HR maturity scores, digital audits, and advisory outputs</li>
+                    <li>Deliver personalized recommendations through the HR Co-Pilot</li>
+                    <li>Automate strategic planning and operating model suggestions</li>
+                    <li>Provide analytics dashboards, benchmarking, and reports</li>
                   </ul>
                 </div>
                 <div className="p-4 bg-gray-100 rounded-xl">
                   <h5 className="font-bold text-gray-900 mb-2">B. Platform Reliability & Improvement</h5>
                   <ul className="text-sm space-y-1 list-disc pl-4">
-                    <li>Refine AI/ML models (anonymized)</li>
-                    <li>Detect usage patterns for improvement</li>
-                    <li>Enhance recommendation accuracy</li>
+                    <li>Train and refine AI/ML models using anonymized data</li>
+                    <li>Detect usage patterns and improve system performance</li>
+                    <li>Enhance recommendation accuracy and cognitive reasoning</li>
                   </ul>
                 </div>
                 <div className="p-4 bg-gray-100 rounded-xl">
                   <h5 className="font-bold text-gray-900 mb-2">C. Communication & Engagement</h5>
                   <ul className="text-sm space-y-1 list-disc pl-4">
-                    <li>Product updates and alerts</li>
-                    <li>Onboarding guidance</li>
-                    <li>Customer support tickets</li>
+                    <li>Send technical notifications, product updates, and alerts</li>
+                    <li>Provide onboarding guidance and customer support</li>
+                    <li>Respond to tickets, issues, or inquiries</li>
                   </ul>
                 </div>
                 <div className="p-4 bg-gray-100 rounded-xl">
-                  <h5 className="font-bold text-gray-900 mb-2">D. Regulatory, Legal & Security</h5>
+                  <h5 className="font-bold text-gray-900 mb-2">D. Regulatory, Legal & Security Purposes</h5>
                   <ul className="text-sm space-y-1 list-disc pl-4">
                     <li>Verify identity and secure accounts</li>
-                    <li>Prevent unauthorized access and fraud</li>
-                    <li>Comply with laws and regulations</li>
+                    <li>Prevent unauthorized access, fraud, or policy violations</li>
+                    <li>Comply with laws, government requests, or data regulations</li>
                   </ul>
                 </div>
               </div>
@@ -230,19 +231,19 @@ export default function PrivacyPolicyPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Consent</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">When users voluntarily provide information</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">when users voluntarily provide information</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Contractual Necessity</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">To deliver subscribed services</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Contractual necessity</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">to deliver subscribed services</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Legitimate Interest</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">Analytics, security, AI refinement</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Legitimate interest</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">analytics, security, AI refinement</td>
                     </tr>
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Legal Obligations</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">Compliance with statutory requirements</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 bg-gray-50/50">Legal obligations</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">compliance with statutory requirements</td>
                     </tr>
                   </tbody>
                 </table>
@@ -256,44 +257,58 @@ export default function PrivacyPolicyPage() {
                   <h5 className="font-bold text-gray-900 border-b border-indigo-200 pb-2">Technical Safeguards</h5>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
                     <li>AES-256 encryption for stored data</li>
-                    <li>TLS/HTTPS for secure transmission</li>
-                    <li>Vulnerability scans & pentesting</li>
-                    <li>Secure MFA authentication</li>
+                    <li>TLS/HTTPS for secure data transmission</li>
+                    <li>Regular vulnerability scans and penetration testing</li>
+                    <li>Secure authentication and controlled access</li>
                   </ul>
                 </div>
                 <div className="flex-1 space-y-4">
                   <h5 className="font-bold text-gray-900 border-b border-indigo-200 pb-2">Organizational Safeguards</h5>
                   <ul className="list-disc pl-5 space-y-1 text-sm">
-                    <li>Strict Role-Based Access Control (RBAC)</li>
-                    <li>Non-disclosure & confidentiality policies</li>
-                    <li>Audit logs & monitoring</li>
+                    <li>Strict role-based access controls (RBAC)</li>
+                    <li>Non-disclosure and confidentiality policies for authorized personnel</li>
+                    <li>Audit logs and monitoring for suspicious activities</li>
                   </ul>
                 </div>
               </div>
               <div className="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
                 <h5 className="font-bold text-indigo-900 mb-3">Data Retention</h5>
-                <p className="text-sm text-indigo-800">Data is retained only for service delivery, legal requirements, or secure archival. It is deleted or anonymized after the retention period.</p>
+                <p className="text-sm text-indigo-800">
+                  Data is retained only for:
+                </p>
+                <ul className="list-disc pl-5 mt-2 mb-2 text-sm text-indigo-800">
+                  <li>Service delivery</li>
+                  <li>Legal requirements</li>
+                  <li>Secure archival (if contractually required)</li>
+                </ul>
+                <p className="text-sm text-indigo-800">Data is deleted or anonymized after the retention period.</p>
               </div>
             </PolicySection>
 
             <PolicySection id="sharing" title="6. Data Sharing and Disclosure">
               <p>Information is shared strictly on a need-to-know basis:</p>
               <ul className="list-disc pl-5 mt-4 space-y-4">
-                <li><strong className="text-gray-900">Internal Authorized Staff:</strong> Only trained personnel under confidentiality are allowed controlled access.</li>
-                <li><strong className="text-gray-900">Verified Third-Party Partners:</strong> Cloud hosting, analytics, and communication providers who comply with strong data protection obligations.</li>
-                <li><strong className="text-gray-900">Legal and Regulatory Bodies:</strong> Only if required by court orders or government authorities.</li>
+                <li><strong className="text-gray-900">A. Internal Authorized Staff:</strong> Only trained personnel under confidentiality are allowed controlled access.</li>
+                <li><strong className="text-gray-900">B. Verified Third-Party Partners:</strong> We may engage: Secure cloud hosting providers, Analytics or workflow automation tools, Communication service providers. All partners comply with strong data protection obligations.</li>
+                <li><strong className="text-gray-900">C. Legal and Regulatory Bodies:</strong> Information may be disclosed if required by: Court orders, Government authorities, Compliance with applicable law.</li>
               </ul>
               <p className="mt-6 font-bold text-green-700 text-lg border-2 border-green-500 border-dashed p-4 text-center rounded-xl">We do NOT sell, trade, or commercially expose user data under any circumstances.</p>
             </PolicySection>
 
             <PolicySection id="cookies" title="7. Cookies & Tracking Technologies">
-              <p>We use cookies to enable secure login, improve UI/UX, and understand usage patterns. Users may disable cookies, however, some functionalities may be restricted.</p>
+              <p>We use cookies to:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Enable secure login and session continuity</li>
+                <li>Improve UI/UX and performance</li>
+                <li>Understand usage patterns and optimize features</li>
+              </ul>
+              <p className="mt-2">Users may disable cookies; however, some functionalities may be restricted.</p>
               <Link to="/legal/cookie" className="mt-4 inline-flex items-center gap-2 text-green-600 font-bold hover:underline">
                 View Full Cookie Policy <ArrowUpRightIcon className="w-4 h-4" />
               </Link>
             </PolicySection>
 
-            <PolicySection id="ai-governance" title="8. Data Processing in HR Co-Pilot & AI">
+            <PolicySection id="ai-governance" title="8. Data Processing in HR Co-Pilot & Cognitive Intelligence Systems">
               <p>Our AI-driven systems follow strict ethical and secure data governance:</p>
               <ul className="list-disc pl-5 mt-4 space-y-2 text-sm bg-gray-50 p-6 rounded-2xl border border-gray-200">
                 <li>No personally identifiable information (PII) is used for AI training</li>
@@ -306,31 +321,53 @@ export default function PrivacyPolicyPage() {
             </PolicySection>
 
             <PolicySection id="transfers" title="9. International Data Transfers">
-              <p>If data is processed outside your jurisdiction, appropriate safeguards are applied, including Standard Contractual Clauses (SCCs), encrypted transfers, and restricted access.</p>
-            </PolicySection>
-
-            <PolicySection id="rights" title="10. User Rights">
-              <p>Depending on your jurisdiction, you may have the following rights:</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">access</span> stored data</li>
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">correct</span> inaccurate info</li>
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">delete</span> or request erasure</li>
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">object</span> to processing</li>
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">withdraw consent</span></li>
-                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">data portability</span></li>
+              <p>If data is processed or stored outside your jurisdiction, appropriate safeguards are applied:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Standard Contractual Clauses (SCCs)</li>
+                <li>Compliance with equivalent data protection standards</li>
+                <li>Encrypted transfers and restricted access</li>
               </ul>
             </PolicySection>
 
+            <PolicySection id="rights" title="10. User Rights">
+              <p>Users may have the following rights depending on their jurisdiction:</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">access</span> their stored data</li>
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">correct</span> inaccurate or incomplete information</li>
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">delete</span> or request erasure</li>
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">restrict or object</span> to certain processing</li>
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">withdraw consent</span> at any time</li>
+                <li className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm text-sm">Right to <span className="font-bold text-gray-900">data portability</span> (machine-readable format)</li>
+              </ul>
+              <p className="mt-4">Requests can be initiated via our contact email.</p>
+            </PolicySection>
+
             <PolicySection id="children" title="11. Children's Data">
-              <p>Our services are designed for business use only. We do not knowingly collect information from individuals under 18. If such data is identified, it will be removed immediately.</p>
+              <p>Our services are designed for professional and business use only.</p>
+              <p>We do not knowingly collect information from individuals under 18.</p>
+              <p>If such data is identified, it will be removed immediately.</p>
             </PolicySection>
 
             <PolicySection id="external-links" title="12. Links to External Websites">
-              <p>We are not responsible for the content, data practices, or security standards of third-party websites linked through our platform.</p>
+              <p>Our platform may contain links to third-party websites or resources.</p>
+              <p>We are not responsible for:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Their content</li>
+                <li>Their data practices</li>
+                <li>Their security standards</li>
+              </ul>
+              <p>Users are encouraged to review respective policies.</p>
             </PolicySection>
 
             <PolicySection id="updates" title="13. Updates to This Privacy Policy">
-              <p>We may update this Policy periodically due to regulatory changes or platform enhancements. Any modifications will be reflected in the “Last Updated” section.</p>
+              <p>We may update this Policy periodically due to:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Regulatory changes</li>
+                <li>Platform enhancements</li>
+                <li>Introduction of new features</li>
+                <li>Security updates</li>
+              </ul>
+              <p className="mt-4">Any modifications will be reflected in the “Last Updated” section.</p>
             </PolicySection>
 
             <PolicySection id="contact" title="14. Contact Information">

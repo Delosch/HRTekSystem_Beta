@@ -41,6 +41,7 @@ export interface ConsultingReport {
         maturity_category: string;
         what_this_means: string[];
         executive_recommendation: string;
+        key_observations?: string[];
     };
     maturity_scorecard: Array<{
         dimension: string;

@@ -141,52 +141,25 @@ export default function HRTechAdvisoryPage() {
                             </p>
                         </div>
 
-                        {/* Two Column Layout */}
-                        <div className="grid lg:grid-cols-2 gap-10">
-
-                            {/* Benefits */}
-                            <div className="bg-white p-10 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-                                <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-700">
-                                    How Our Advisory Services Help
-                                </h3>
-                                <ul className="space-y-6">
-                                    {[
-                                        { title: "Strategic Clarity", text: "Align HR technology with business objectives and priorities." },
-                                        { title: "Cost Optimization", text: "Maximize ROI and avoid costly implementation mistakes." },
-                                        { title: "Vendor Selection", text: "Navigate the market with confidence and choose the right partners." },
-                                        { title: "Change Management", text: "Ensure smooth adoption and user engagement." },
-                                        { title: "Future-Proofing", text: "Build scalable solutions that grow with your organization." }
-                                    ].map((item, idx) => (
-                                        <li key={idx}>
-                                            <span className="block font-semibold text-gray-900">{item.title}</span>
-                                            <span className="text-gray-600">{item.text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {/* How It Works */}
-                            <div className="bg-blue-50 p-10 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow duration-300">
-                                <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-800">
-                                    💡 Our Advisory Process
-                                </h3>
-                                <ol className="space-y-6 text-gray-800">
-                                    {[
-                                        "Discovery: Understand your business needs and current state",
-                                        "Strategy: Develop a tailored HR technology roadmap",
-                                        "Selection: Evaluate and recommend optimal solutions",
-                                        "Implementation: Guide execution and change management",
-                                        "Optimization: Continuous improvement and support"
-                                    ].map((step, idx) => (
-                                        <li key={idx} className="relative pl-10">
-                                            <span className="absolute left-0 top-0 flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold">
-                                                {idx + 1}
-                                            </span>
-                                            {step}
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
+                        {/* Benefits - Single Column */}
+                        <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                            <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-700">
+                                How Our Advisory Services Help
+                            </h3>
+                            <ul className="space-y-6">
+                                {[
+                                    { title: "Strategic Clarity", text: "Align HR technology with business objectives and priorities." },
+                                    { title: "Cost Optimization", text: "Maximize ROI and avoid costly implementation mistakes." },
+                                    { title: "Vendor Selection", text: "Navigate the market with confidence and choose the right partners." },
+                                    { title: "Change Management", text: "Ensure smooth adoption and user engagement." },
+                                    { title: "Future-Proofing", text: "Build scalable solutions that grow with your organization." }
+                                ].map((item, idx) => (
+                                    <li key={idx}>
+                                        <span className="block font-semibold text-gray-900">{item.title}</span>
+                                        <span className="text-gray-600">{item.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
 
                         {/* Who Should Use It */}
