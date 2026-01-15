@@ -126,6 +126,8 @@ export default function StartTransformationDashboard() {
   const navigate = useNavigate();
   const fetcher = useFetcher<{ success?: boolean; message?: string; error?: string }>(); // Typed fetcher
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const handleResize = () => setIsSidebarCollapsed(window.innerWidth < 768);

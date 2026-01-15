@@ -93,6 +93,8 @@ export default function VendorDashboard() {
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const handleResize = () => {
@@ -103,6 +105,14 @@ export default function VendorDashboard() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.data?.message) {
+      setToastMessage(fetcher.data.message);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  }, [fetcher.data]);
 
   const recommendedEngines = recommendations
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
@@ -423,6 +433,13 @@ export default function VendorDashboard() {
           opacity: 0;
         }
       `}</style>
+
+      {showToast && (
+        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
+          <CheckCircle className="w-6 h-6" />
+          <span className="font-semibold">{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

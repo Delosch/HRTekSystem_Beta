@@ -257,6 +257,24 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 return json({ error: "Missing required signup information" }, { status: 400 });
             }
 
+            if (!agreeTerms) {
+                return json({ error: "Terms and conditions must be accepted" }, { status: 400 });
+            }
+
+            const isValidFirstName = firstName.length >= 2;
+
+            // Allows:
+            // - "M"
+            // - "M."
+            // - "Sharma"
+            const isValidLastName =
+                lastName.length >= 2 || /^[A-Za-z]\.?$/.test(lastName);
+
+            if (!isValidFirstName || !isValidLastName) {
+                return json({
+                    error: "Invalid name format. First name must have at least 2 characters. Last name can be an initial (e.g., M or M.) or a full name."
+                }, { status: 400 });
+            }
             if (!validatePhoneNumber(phone)) {
                 return json({ error: "Invalid phone number format" }, { status: 400 });
             }
