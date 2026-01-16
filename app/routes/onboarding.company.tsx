@@ -681,7 +681,7 @@ export default function CompanyBasics() {
                       setCompanyData({ ...companyData, pincode: val });
                     }
                   }
-                  }}
+                  }
                 placeholder="123456"
                 />
               </div>
