@@ -762,21 +762,9 @@ export default function ConsultingReport() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {report.dimension_deep_dives.map((dim: any, i: number) => (
-<<<<<<< HEAD
                             <FlipCard key={i} dim={dim} index={i} />
-=======
-                            <div
-  key={i}
-  className="h-[360px] perspective cursor-pointer"
-  onClick={() =>
-    setActiveDimension(activeDimension === i ? null : i)
-  }
->
-
-                                <div className={`relative w-full h-full duration-700 preserve-3d transition-all ease-in-out ${activeDimension === i ? "rotate-y-180" : ""}`}>
-
-                                    {/* Front */}
-                                    <div className="absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors">
+                                    {/* Front */ }
+                            < div className = "absolute w-full h-full backface-hidden glass-card rounded-3xl p-8 flex flex-col justify-between overflow-hidden border border-white/10 group-hover:border-indigo-500/50 transition-colors" >
                                         <div className="absolute top-0 right-0 p-6 opacity-5">
                                             <Target className="w-32 h-32 text-white" />
                                         </div>
@@ -805,42 +793,42 @@ export default function ConsultingReport() {
                                         </div>
                                     </div>
 
-                                    {/* Back */}
-                                    <div className="absolute w-full h-full backface-hidden bg-indigo-950 rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-200 border border-indigo-500/30">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-indigo-500"></div>
-                                        <h3 className="font-bold text-white text-md mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
-                                            <Brain className="w-4 h-4 text-cyan-400" /> Analysis
-                                        </h3>
+                    {/* Back */}
+                    <div className="absolute w-full h-full backface-hidden bg-indigo-950 rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-200 border border-indigo-500/30">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-indigo-500"></div>
+                        <h3 className="font-bold text-white text-md mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+                            <Brain className="w-4 h-4 text-cyan-400" /> Analysis
+                        </h3>
 
-                                        <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <AlertTriangle className="w-3 h-3" /> Critical Gaps
-                                                </p>
-                                                <ul className="text-sm text-slate-400 space-y-2">
-                                                    {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-rose-500 mt-1">•</span> {s}</li>)}
-                                                </ul>
-                                            </div>
-
-                                            <div>
-                                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                                                    <Lightbulb className="w-3 h-3" /> Strategic Actions
-                                                </p>
-                                                <ul className="text-sm text-slate-400 space-y-2">
-                                                    {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-emerald-500 mt-1">•</span> {r}</li>)}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                            <div>
+                                <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <AlertTriangle className="w-3 h-3" /> Critical Gaps
+                                </p>
+                                <ul className="text-sm text-slate-400 space-y-2">
+                                    {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-rose-500 mt-1">•</span> {s}</li>)}
+                                </ul>
                             </div>
->>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
-                        ))}
-                    </div>
-                </motion.section>
 
-                {/* 05 Transformation Roadmap (Circuit Style) */}
-                <motion.section variants={itemVariants} className="space-y-8">
+                            <div>
+                                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <Lightbulb className="w-3 h-3" /> Strategic Actions
+                                </p>
+                                <ul className="text-sm text-slate-400 space-y-2">
+                                    {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-emerald-500 mt-1">•</span> {r}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    ))
+}
+                    </div >
+                </motion.section >
+
+    {/* 05 Transformation Roadmap (Circuit Style) */ }
+    < motion.section variants = { itemVariants } className = "space-y-8" >
                     <div className="flex items-center gap-4 border-b border-indigo-500/30 pb-4">
                         <span className="text-5xl font-black text-indigo-500/20">05</span>
                         <h2 className="text-3xl font-bold text-white tracking-tight">Transformation Roadmap</h2>
@@ -875,19 +863,19 @@ export default function ConsultingReport() {
                             ))}
                         </div>
                     </div>
-                </motion.section>
+                </motion.section >
 
-                {/* Footer */}
-                <div className="border-t border-white/10 pt-12 mt-12 pb-12">
+    {/* Footer */ }
+    < div className = "border-t border-white/10 pt-12 mt-12 pb-12" >
                     <p className="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Confidential Advisory Report</p>
                     <div className="flex justify-center items-center gap-2 text-slate-600">
                         <span className="font-black text-lg">HR TEK SYSTEMS</span>
                         <span>•</span>
                         <span>© 2026</span>
                     </div>
-                </div>
+                </div >
 
-            </motion.main>
-        </div>
+            </motion.main >
+        </div >
     );
 }

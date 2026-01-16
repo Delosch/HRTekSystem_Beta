@@ -667,7 +667,6 @@ export default function CompanyBasics() {
                   required
                   value={companyData.pincode}
                   onChange={(e) => {
-<<<<<<< HEAD
                     const val = e.target.value;
                     // Improved Indian user check (ISO code or name)
                     const isIndia = country_iso === "IN" || country_iso === "IND" || country_iso?.toLowerCase() === "india";
@@ -680,18 +679,10 @@ export default function CompanyBasics() {
                       setCompanyData({ ...companyData, pincode: numericVal });
                     } else {
                       setCompanyData({ ...companyData, pincode: val });
-=======
-                    const value = e.target.value;
-                    if (isIndianUser) {
-                      if (/^\d{0,6}$/.test(value)) {
-                        setCompanyData({ ...companyData, pincode: value });
-                      }
-                    } else {
-                      setCompanyData({ ...companyData, pincode: value });
->>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
                     }
+                  }
                   }}
-                  placeholder="123456"
+                placeholder="123456"
                 />
               </div>
             </div>
