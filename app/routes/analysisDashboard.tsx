@@ -82,7 +82,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    recommendations: recommendations?.allRankings || [],
+    //recommendations: recommendations?.allRankings || [],
     user,
     isPaid,
     isPending,
