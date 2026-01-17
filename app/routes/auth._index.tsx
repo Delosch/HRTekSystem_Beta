@@ -1,9 +1,9 @@
 import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect } from "react";
-import crypto from "crypto";
 import { signupUser, loginUser } from "~/models/user.model";
 import { createAuthSession } from "~/lib/session.server";
+import { validateSubmissionHash } from "~/lib/auth.server";
 import AuthForm from "~/components/AuthCards";
 import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
@@ -84,46 +84,7 @@ const verifyHCaptcha = async (token: string): Promise<boolean> => {
     }
 };
 
-// Enhanced submission hash validation
-const validateSubmissionHash = (
-    submissionHash: string,
-    formData: FormSecurityData,
-    timestamp: number
-): boolean => {
-    try {
-        const secureData = {
-            action: formData.action,
-            password: formData.password,
-            confirmPassword: formData.confirmedPassword,
-            timestamp: timestamp,
-            countryComposite: `${formData.countryIso2}_${formData.phoneCountryCode}`,
-            email: formData.email || ""
-        };
 
-        const dataString = Object.values(secureData).join('|');
-
-        const secureHash = crypto.createHash('sha256').update(dataString).digest('hex');
-        const expectedSecureHash = secureHash.slice(0, 16);
-
-        if (expectedSecureHash === submissionHash) {
-            return true;
-        }
-
-        let simpleHash = 0;
-        for (let i = 0; i < dataString.length; i++) {
-            const char = dataString.charCodeAt(i);
-            simpleHash = ((simpleHash << 5) - simpleHash) + char;
-            simpleHash = simpleHash & simpleHash;
-        }
-
-        const expectedSimpleHash = Math.abs(simpleHash).toString(36);
-        return expectedSimpleHash === submissionHash;
-
-    } catch (error) {
-        console.warn("Hash validation error:", error);
-        return false;
-    }
-};
 
 // Enhanced password strength validation
 const validatePasswordStrength = (password: string): { score: number; isValid: boolean; feedback: string[] } => {
