@@ -2,7 +2,7 @@ import { json, redirect, ActionFunctionArgs, LoaderFunctionArgs } from "@remix-r
 import { useActionData, useNavigation, Form } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { getSession, commitSession, createAuthSession } from "~/lib/session.server";
-import { createOTP, sendOTPEmail } from "~/lib/email.otp";
+import { createOTP, sendOTPEmail } from "~/lib/email.otp.server";
 import { ShieldCheck, Mail, Lock, Key, ArrowRight, Loader2 } from "lucide-react";
 
 const ADMIN_EMAIL = "atul.dixit@hrteksystems.in";

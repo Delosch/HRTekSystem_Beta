@@ -6,13 +6,14 @@ import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
 import { HoverInput } from "~/components/AuthCards";
 import { getUserByEmail, updateUser } from "~/models/user.model";
-import { sendPasswordResetEmail } from "~/lib/email.otp";
-import crypto from "crypto";
+import { sendPasswordResetEmail } from "~/lib/email.otp.server";
+
 
 export const action: ActionFunction = async ({ request }) => {
     const formData = await request.formData();
     const email = formData.get("email") as string;
     const origin = new URL(request.url).origin;
+    const crypto = await import("crypto");
 
     if (!email) {
         return json({ error: "Email is required" }, { status: 400 });
