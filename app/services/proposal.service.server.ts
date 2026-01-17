@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
-import { createProposal, Proposal } from "~/models/proposal.model";
-import { calculateProposalCost, CostingFactors } from "./proposal.costing.service";
-import { estimateTimeline, TimelineFactors } from "./proposal.timeline.service";
-import { completedEngine } from "~/models/engine.model";
+import { createProposal, Proposal } from "~/models/proposal.model.server";
+import { calculateProposalCost, CostingFactors } from "./proposal.costing.service.server";
+import { estimateTimeline, TimelineFactors } from "./proposal.timeline.service.server";
+import { completedEngine } from "~/models/engine.model.server";
 
 /**
  * Proposal Service

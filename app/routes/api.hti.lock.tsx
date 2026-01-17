@@ -1,6 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
-import { lockReport, unlockReport } from "~/models/hti.model";
+import { lockReport, unlockReport } from "~/models/hti.model.server";
 
 /**
  * API Route: HTI Report Lock/Unlock

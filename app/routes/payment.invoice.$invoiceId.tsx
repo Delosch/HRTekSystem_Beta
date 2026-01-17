@@ -14,7 +14,7 @@ import {
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
-import { getPaymentRecord, submitPaymentProof, PaymentMethod, PaymentRecord } from "~/models/payment.model";
+import { getPaymentRecord, submitPaymentProof, PaymentMethod, PaymentRecord } from "~/models/payment.model.server";
 import { uploadToS3 } from "~/lib/s3.server";
 import { InvoiceTemplate } from "~/components/InvoiceTemplate";
 
@@ -35,7 +35,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     if (!payment) return redirect('/cartDashboard');
 
     // Fetch company details to get company name
-    const { getCompanyProfile } = await import("~/models/company.model");
+    const { getCompanyProfile } = await import("~/models/company.model.server");
     const companyProfile = await getCompanyProfile(user.organisationId || "");
 
     return json<LoaderData>({
@@ -87,7 +87,7 @@ export const action: ActionFunction = async ({ request, params }) => {
             console.log("✅ DynamoDB save done");
 
             // Also clear the cart here to be absolutely sure
-            const { clearCart } = await import("~/models/cart.model");
+            const { clearCart } = await import("~/models/cart.model.server");
             await clearCart(user.organisationId || "");
             console.log("✅ Cart cleared after payment proof submission");
 

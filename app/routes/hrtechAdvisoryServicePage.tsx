@@ -21,7 +21,7 @@ import { LoaderFunction, json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { getPricingForCompany, PricingTier, PRICING_TIERS } from "~/utils/pricing.server";
 import { requireUserSession, getUserSession } from "~/lib/session.server";
-import { getCompanyProfile } from "~/models/company.model";
+import { getCompanyProfile } from "~/models/company.model.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
     const sessionUser = await getUserSession(request);

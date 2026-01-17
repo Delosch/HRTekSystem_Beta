@@ -4,7 +4,7 @@ import { requireUserSession } from "~/lib/session.server";
 import { Brain, CheckCircle, Clock, XCircle, AlertCircle, Sparkles, TrendingUp, DollarSign, Zap, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { getPricingForCompany, PRICING_TIERS } from "~/utils/pricing.server";
-import { getCompanyProfile } from "~/models/company.model";
+import { getCompanyProfile } from "~/models/company.model.server";
 
 /**
  * HTI Dashboard - Ultra-Attractive Design with Pricing
@@ -18,7 +18,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     // Fetch completed engines
-    const { completedEngine } = await import("~/models/engine.model");
+    const { completedEngine } = await import("~/models/engine.model.server");
     const completedEngines = await completedEngine(user.organisationId);
 
     // Fetch company's advisories
@@ -64,9 +64,9 @@ export async function action({ request }: ActionFunctionArgs) {
     try {
         // Auto-add to Cart
         try {
-            const { getCompanyProfile } = await import("~/models/company.model");
+            const { getCompanyProfile } = await import("~/models/company.model.server");
             const { getPricingForCompany } = await import("~/utils/pricing.server");
-            const { addOrUpdateCartItem } = await import("~/models/cart.model");
+            const { addOrUpdateCartItem } = await import("~/models/cart.model.server");
 
             const companyProfile = await getCompanyProfile(user.organisationId);
             const employeeCount = companyProfile?.employee_count || 0;
@@ -84,7 +84,7 @@ export async function action({ request }: ActionFunctionArgs) {
             console.error("⚠️ Failed to auto-add to cart:", cartError);
         }
 
-        const { generateAdvisoryReport } = await import("~/services/hti.service");
+        const { generateAdvisoryReport } = await import("~/services/hti.service.server");
         const result = await generateAdvisoryReport(
             user.organisationId || "",
             user.userId

@@ -5,7 +5,7 @@ import { ClockIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/ou
 import { setAIStatus, hasAIStatus, getAIStatus } from "~/services/ai-status.server";
 import { requireUserSession } from "~/lib/session.server";
 import { generate } from "~/lib/digitalMaturity.genAi";
-import { engineRecommendationList } from "~/models/engine.model";
+import { engineRecommendationList } from "~/models/engine.model.server";
 
 // Types
 interface Question {
@@ -212,7 +212,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   console.log(`[Intermediate Loader] Current AI Status: ${currentStatus}`);
 
   // Check if report already exists in DB
-  const { getLatestAnalysis } = await import("~/utils/analysis");
+  const { getLatestAnalysis } = await import("~/utils/analysis.server");
   const existingReport = await getLatestAnalysis(companyId, engine);
 
   console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}`);

@@ -27,8 +27,8 @@ interface Report {
 }
 
 export const loader: LoaderFunction = async () => {
-    const { getAllAnalysisReports } = await import("~/utils/analysis");
-    const { getCompanyProfile } = await import("~/models/company.model");
+    const { getAllAnalysisReports } = await import("~/utils/analysis.server");
+    const { getCompanyProfile } = await import("~/models/company.model.server");
 
     const allReports = await getAllAnalysisReports();
 
@@ -69,7 +69,7 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
-    const { updateAnalysisStatus } = await import("~/utils/analysis");
+    const { updateAnalysisStatus } = await import("~/utils/analysis.server");
 
     const status = action === "approve" ? "approved" : "rejected";
     const pk = `COMPANY#${companyId}`;
@@ -78,7 +78,7 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (success && action === "approve") {
         try {
-            const { autoGenerateProposal } = await import("~/services/proposal.service");
+            const { autoGenerateProposal } = await import("~/services/proposal.service.server");
             const proposalResult = await autoGenerateProposal(companyId);
             if (proposalResult.success) {
                 console.log("Proposal auto-generated:", proposalResult.message);

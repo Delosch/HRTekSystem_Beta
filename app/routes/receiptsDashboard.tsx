@@ -2,7 +2,7 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { requireUserSession } from "~/lib/session.server";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import { Receipt, Download, CheckCircle, Calendar, CreditCard, FileText } from "lucide-react";
 
@@ -19,7 +19,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    const { getCompanyPayments } = await import("~/models/payment.model");
+    const { getCompanyPayments } = await import("~/models/payment.model.server");
 
     const allPayments = await getCompanyPayments(user.organisationId as string);
     // Filter to show submitted/verified/rejected payments (exclude just invoice generated)

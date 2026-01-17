@@ -1,7 +1,7 @@
 import { json, LoaderFunction } from "@remix-run/node";
-import nodemailer from "nodemailer";
 
 export const loader: LoaderFunction = async () => {
+    const nodemailer = await import("nodemailer");
     // 1. Read config directly to debug what is actually loaded
     const config = {
         host: process.env.SMTP_HOST,

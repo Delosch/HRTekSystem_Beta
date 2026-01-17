@@ -1,10 +1,10 @@
 import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
-import { getCompanyProfile } from "~/models/company.model";
-import { getCompanyAdvisories } from "~/models/hti.model";
-import { getUserProfile } from "~/models/user.model";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
+import { getUserProfile } from "~/models/user.model.server";
 import {
     Download,
     ArrowLeft,
@@ -40,7 +40,7 @@ import {
 import { motion } from "framer-motion";
 
 import { getEnginePriceByName } from "~/lib/pricing";
-import { addOrUpdateCartItem } from "~/models/cart.model";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 
 /**
  * HTI Report View Page

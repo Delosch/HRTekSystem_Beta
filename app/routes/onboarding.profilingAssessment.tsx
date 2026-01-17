@@ -4,10 +4,10 @@ import { commitSession, getSession, requireUserSession } from "~/lib/session.ser
 import { getLatestQuestion, save_answers } from "~/utils/question.utils";
 import QuestionnaireEngine from "~/components/QuestionnaireEngine";
 import type { QuestionSchema } from "./engine.$id/questionSchema";
-import { updateUser } from "~/models/user.model";
+import { updateUser } from "~/models/user.model.server";
 import { generate } from "~/lib/processor.genAi";
-import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model";
-import { addOrUpdateCartItem, CartItem } from "~/models/cart.model";
+import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model.server";
+import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server";
 import { calculateFinalPrice } from "~/lib/pricing";
 
 // let's keep a single variable just now to manage assessment form
@@ -98,7 +98,7 @@ export const action: ActionFunction = async ({ request }) => {
 
       // Sync eligibility record
       try {
-        const { autoCheckEligibility } = await import("~/services/eligibility.service");
+        const { autoCheckEligibility } = await import("~/services/eligibility.service.server");
         await autoCheckEligibility(companyId);
       } catch (eligibilityError) {
         console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);

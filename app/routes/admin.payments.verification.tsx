@@ -26,7 +26,7 @@ import {
     getPendingPaymentVerifications,
     verifyPayment,
     rejectPayment,
-} from "~/models/payment.model";
+} from "~/models/payment.model.server";
 import { getPresignedGetUrl } from "~/lib/s3.server";
 import { requireAdminSession } from "~/lib/session.server";
 

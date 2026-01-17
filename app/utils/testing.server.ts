@@ -122,7 +122,7 @@ export async function setupTestingEnvironment(companyId: string, userId: string)
     console.log(`\n🎯 Triggering eligibility check...\n`);
 
     try {
-        const { autoCheckEligibility } = await import("~/services/eligibility.service");
+        const { autoCheckEligibility } = await import("~/services/eligibility.service.server");
         const eligibilityResult = await autoCheckEligibility(companyId);
 
         console.log(`\n📊 ELIGIBILITY RESULT:`);

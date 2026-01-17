@@ -4,7 +4,7 @@ import { json, redirect, unstable_composeUploadHandlers, unstable_createFileUplo
 import type { ActionFunction, LoaderFunction, UploadHandler } from "@remix-run/node";
 import { Layout } from "~/components/Layout";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { updateUser, deleteUser, saveOTP, verifyStoredOTP } from "~/models/user.model";
+import { updateUser, deleteUser, saveOTP, verifyStoredOTP } from "~/models/user.model.server";
 import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle, Smartphone, Key } from "lucide-react";
 import { sendLoginOTP } from "~/services/sms.server";
 

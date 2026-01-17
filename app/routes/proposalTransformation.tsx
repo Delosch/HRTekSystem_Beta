@@ -36,9 +36,9 @@ import {
   Layout
 } from "lucide-react";
 import { requireUserSession } from "~/lib/session.server";
-import { getUserProfile } from "~/models/user.model";
-import { getCompanyProfile } from "~/models/company.model";
-import { getCompanyAdvisories } from "~/models/hti.model";
+import { getUserProfile } from "~/models/user.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 

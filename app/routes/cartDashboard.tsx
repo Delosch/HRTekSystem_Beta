@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import Sidebar from "../components/DashboardComponents/Sidebar";
-import { getCartItems, deleteCartItem } from "~/models/cart.model"; // Assuming deleteCartItem exists
+import { getCartItems, deleteCartItem } from "~/models/cart.model.server"; // Assuming deleteCartItem exists
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
 

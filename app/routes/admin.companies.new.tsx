@@ -2,7 +2,7 @@ import { json, redirect } from "@remix-run/node";
 import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
 import { ArrowLeftIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline";
-import { createCompanyProfile } from "~/models/company.model";
+import { createCompanyProfile } from "~/models/company.model.server";
 
 export const loader: LoaderFunction = async () => {
     return json({});

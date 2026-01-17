@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { findEngineData } from "~/models/engine.model";
+import { findEngineData } from "~/models/engine.model.server";
 import DashboardHeader from "~/components/DashboardHeader";
 import TechMaturityDashboard from "~/components/dashboards/TechMaturityDashboard";
 import RoadmapDashboard from "~/components/dashboards/RoadmapDashboard";

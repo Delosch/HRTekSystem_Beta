@@ -32,7 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     let approvedReports: any[] = [];
 
     try {
-        const { getPendingApprovals } = await import("~/models/hti.model");
+        const { getPendingApprovals } = await import("~/models/hti.model.server");
         const pendingReports = await getPendingApprovals();
 
         pendingApprovals = pendingReports.map(report => ({
@@ -103,7 +103,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const notes = formData.get("notes");
 
     try {
-        const { processAdminApproval } = await import("~/services/hti.service");
+        const { processAdminApproval } = await import("~/services/hti.service.server");
         const result = await processAdminApproval(
             companyId as string,
             reportId as string,

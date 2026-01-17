@@ -1,6 +1,6 @@
 import { redirect, type ActionFunctionArgs } from "@remix-run/node";
 import { createAuthSession } from "~/lib/session.server";
-import { loginUser } from "~/models/user.model";
+import { loginUser } from "~/models/user.model.server";
 
 /**
  * TEST LOGIN ROUTE - DEVELOPMENT ONLY

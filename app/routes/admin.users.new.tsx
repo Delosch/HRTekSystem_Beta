@@ -1,8 +1,8 @@
 import { ActionFunction, json, redirect, LoaderFunction } from "@remix-run/node";
 import { Form, Link, useActionData, useNavigation, useLoaderData } from "@remix-run/react";
 import { ArrowLeftIcon, UserPlusIcon } from "@heroicons/react/24/outline";
-import { signupUser } from "~/models/user.model";
-import { sendWelcomeEmail } from "~/lib/email.server";
+import { signupUser } from "~/models/user.model.server";
+import { sendWelcomeEmail } from "~/lib/email.service.server";
 import { requireUserSession } from "~/lib/session.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";

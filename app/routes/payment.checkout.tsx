@@ -14,9 +14,9 @@ import {
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
-import { getCartItems, clearCart } from "~/models/cart.model";
-import { generateInvoice, submitPaymentProof, getPaymentRecord, PaymentMethod } from "~/models/payment.model";
-import { getCompanyProfile } from "~/models/company.model";
+import { getCartItems, clearCart } from "~/models/cart.model.server";
+import { generateInvoice, submitPaymentProof, getPaymentRecord, PaymentMethod } from "~/models/payment.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { uploadToS3 } from "~/lib/s3.server";
 import BillingDetailsForm, { BillingContact } from "~/components/BillingDetailsForm";
 

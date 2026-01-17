@@ -9,7 +9,7 @@ import {
   unstable_createMemoryUploadHandler,
   LoaderFunction,
 } from "@remix-run/node";
-import { createCompanyProfile } from "~/models/company.model";
+import { createCompanyProfile } from "~/models/company.model.server";
 import { uploadFileToS3 } from "~/lib/s3.server";
 import { commitSession, getSession, requireUserSession } from "~/lib/session.server";
 import {
@@ -23,7 +23,7 @@ import {
   ExclamationCircleIcon,
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
-import { updateUser } from "~/models/user.model";
+import { updateUser } from "~/models/user.model.server";
 
 interface LoaderData {
   fullName: string;

@@ -13,8 +13,8 @@ import {
   CurrencyDollarIcon,
   ExclamationCircleIcon, // For invoices
 } from "@heroicons/react/24/outline";
-import { getCompanyProfile } from "~/models/company.model";
-import { getUserProfile } from "~/models/user.model";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getUserProfile } from "~/models/user.model.server";
 
 export function ErrorBoundary({ error }: { error: Error }) {
   return <div>Error: {error.message}</div>;

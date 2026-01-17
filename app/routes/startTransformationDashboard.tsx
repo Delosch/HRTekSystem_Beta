@@ -12,9 +12,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { json, LoaderFunction, ActionFunction, redirect } from "@remix-run/node";
 import { getEnhancedUser } from "~/utils/user.server";
-import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model";
+import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model.server";
 import { getEnginePriceByName } from "~/lib/pricing";
-import { addOrUpdateCartItem } from "~/models/cart.model";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 
 const engineDetails: Record<string, { name: string; description: string; icon: string; route: string }> = {
   "Intelligent Change Management": {
@@ -57,7 +57,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   // Check transformation eligibility (requires 3+ verified paid engines)
-  const { isEligibleForTransformation } = await import("~/models/payment.model");
+  const { isEligibleForTransformation } = await import("~/models/payment.model.server");
   const eligibility = await isEligibleForTransformation(user.organisationId as string);
 
   const completedEngines = await completedEngine(user.organisationId as string);

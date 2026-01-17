@@ -15,7 +15,7 @@ import Squares from "~/components/squareBg";
 import countryCode from "app/data/country_code_order.json";
 import { HoverInput, SearchableDialCodeSelect } from "~/components/AuthCards";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { saveOTP, verifyStoredOTP, updateUser } from "~/models/user.model";
+import { saveOTP, verifyStoredOTP, updateUser } from "~/models/user.model.server";
 import { sendLoginOTP } from "~/services/sms.server";
 
 const countryCodes = countryCode.countryCode;

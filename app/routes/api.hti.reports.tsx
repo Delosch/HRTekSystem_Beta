@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
-import { getCompanyAdvisories } from "~/models/hti.model";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
 
 /**
  * API Route: List Company's HTI Advisory Reports

@@ -4,7 +4,7 @@ import { commitSession, getSession, requireUserSession } from "~/lib/session.ser
 import { getLatestQuestion, save_answers } from "~/utils/question.utils";
 import QuestionnaireEngine from "~/components/QuestionnaireEngine";
 import type { ProfilingSteps } from "~/types/profilingAssessment";
-import { updateUser } from "~/models/user.model";
+import { updateUser } from "~/models/user.model.server";
 import { generate } from "~/lib/processor.genAi";
 import { checkEngineAccess } from "~/lib/engineAccess.server";
 
