@@ -79,9 +79,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                             <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.3em]">
                                 Intelligent HR Transformation
                             </p>
-                            <p className="text-[8px] text-[#00B5E2] font-bold uppercase mt-2 opacity-80">
-                                A brand of Delosch Technologies
-                            </p>
+
                         </div>
                     </div>
 
@@ -113,7 +111,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                             From / Origin
                         </h3>
                         <div className="space-y-2">
-                            <p className="font-black text-slate-900 text-lg tracking-tight">Delosch Technologies (P) Ltd.</p>
+                            <p className="font-black text-slate-900 text-lg tracking-tight">HR-Tek System</p>
                             <div className="text-slate-500 text-[13px] font-medium leading-relaxed space-y-0.5">
                                 <p>Plot No. 14-15, Madhusudan Colony</p>
                                 <p>IIM Road, Lucknow - 226013</p>
@@ -242,7 +240,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instant Settlement (UPI)</p>
                                 <p className="text-xs font-black text-slate-700 flex items-center gap-2">
                                     <span className="px-2 py-0.5 bg-slate-900 text-white rounded text-[8px] tracking-tighter">VPA</span>
-                                    deloschtechnologiesprivatelimited@sbi
+                                    hrteksystems@sbi
                                 </p>
                             </div>
                         </div>

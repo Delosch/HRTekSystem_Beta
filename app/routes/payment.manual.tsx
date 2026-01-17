@@ -90,7 +90,7 @@ export default function ManualPayment() {
             name: "Bank Transfer / NEFT",
             icon: Building2,
             details: {
-                accountName: "Delosch Technologies (P) Ltd.",
+                accountName: "HR-Tek System",
                 accountNumber: "00000020532076408",
                 ifscCode: "SBIN0010175",
                 bankName: "State Bank of India",
@@ -210,7 +210,7 @@ export default function ManualPayment() {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Name:</span>
-                                            <span className="font-semibold text-gray-900">Delosch Technologies (P) Ltd.</span>
+                                            <span className="font-semibold text-gray-900">HR-Tek System</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Number:</span>

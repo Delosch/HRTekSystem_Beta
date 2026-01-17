@@ -73,7 +73,7 @@ export default function CookiePolicyPage() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Cookie Policy</h1>
-                    <p className="mt-2 text-lg text-gray-600">HR-Tek System Delosch Technologies Pvt. Ltd</p>
+                    <p className="mt-2 text-lg text-gray-600">HR-Tek System</p>
                     <p className="mt-1 text-sm text-gray-500 font-medium uppercase tracking-wider">Last Updated: November 2025</p>
                 </div>
 
@@ -99,7 +99,7 @@ export default function CookiePolicyPage() {
                     {/* Main Content */}
                     <div className="md:col-span-3 space-y-12">
                         <section className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
-                            <p>This Cookie Policy explains how HR-Tek System, operated by Delosch Technologies Pvt. Ltd. (“Company”, “we”, “us”), uses cookies and similar technologies on its website, web applications, and digital platforms in compliance with the EU General Data Protection Regulation (GDPR) and the ePrivacy Directive (Directive 2002/58/EC).</p>
+                            <p>This Cookie Policy explains how HR-Tek System, operated natively (“Company”, “we”, “us”), uses cookies and similar technologies on its website, web applications, and digital platforms in compliance with the EU General Data Protection Regulation (GDPR) and the ePrivacy Directive (Directive 2002/58/EC).</p>
                             <p className="mt-4">This Policy should be read in conjunction with our Privacy Policy and GDPR Compliance Policy.</p>
                         </section>
 
@@ -345,7 +345,7 @@ export default function CookiePolicyPage() {
                         <PolicySection id="contact" title="11. Contact Information">
                             <p>For questions regarding cookies or data protection:</p>
                             <address className="mt-6 not-italic bg-gray-100 p-6 rounded-2xl border border-gray-200">
-                                <strong className="text-gray-900 block mb-2 font-display text-lg">Delosch Technologies Pvt. Ltd. – HR-Tek System</strong>
+                                <strong className="text-gray-900 block mb-2 font-display text-lg">HR-Tek System</strong>
                                 <div className="space-y-1 text-gray-600">
                                     <p className="flex items-center gap-2">
                                         <span className="font-semibold w-16">Email:</span>

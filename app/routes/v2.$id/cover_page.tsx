@@ -89,7 +89,7 @@ export const CoverPage = ({ metadata, orgName }: { metadata: MetaData, orgName: 
             >
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4"></div>
                 <p className="text-slate-500 text-sm font-medium">Generated on {completion_date}</p>
-                <p className="text-slate-600 text-xs mt-1 uppercase tracking-widest">Powered by Delosh Intelligence Engine</p>
+                <p className="text-slate-600 text-xs mt-1 uppercase tracking-widest">Powered by HR-Tek System Intelligence Engine</p>
             </motion.div>
         </div>
     )

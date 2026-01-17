@@ -663,9 +663,7 @@ export default function AuthForm() {
               </blockquote>
               <div className="mt-6 h-px w-20 bg-gradient-to-r from-green-500 to-transparent"></div>
             </div>
-            <div className="mt-8 text-sm text-gray-300 text-center opacity-85 tracking-wide select-none">
-              A Brand of Delosch Technologies
-            </div>
+
             {/* Decorative background element */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -translate-x-16 -translate-y-16"></div>
           </div>
@@ -884,8 +882,6 @@ export default function AuthForm() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-green-600 underline"
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             Terms & Conditions
                           </a>{" "}
@@ -895,8 +891,6 @@ export default function AuthForm() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-green-600 underline"
-                            target="_blank"
-                            rel="noopener noreferrer"
                           >
                             Privacy Policy
                           </a>
