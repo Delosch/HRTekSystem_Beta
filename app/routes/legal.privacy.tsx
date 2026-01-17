@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Privacy Policy</h1>
-          <p className="mt-2 text-lg text-gray-600">HR-Tek System Delosch Technologies Pvt. Ltd</p>
+          <p className="mt-2 text-lg text-gray-600">HR-Tek System</p>
           <p className="mt-1 text-sm text-gray-500 font-medium uppercase tracking-wider">Last Updated: November 2025</p>
         </div>
 
@@ -373,7 +373,7 @@ export default function PrivacyPolicyPage() {
             <PolicySection id="contact" title="14. Contact Information">
               <p>For data protection concerns, requests, or clarifications, contact:</p>
               <address className="mt-6 not-italic bg-gray-900 p-8 rounded-3xl border border-gray-800 shadow-2xl">
-                <strong className="text-white block mb-4 font-display text-xl">HR-Tek System - Delosch Technologies Pvt</strong>
+                <strong className="text-white block mb-4 font-display text-xl">HR-Tek System</strong>
                 <div className="space-y-3 text-gray-300">
                   <p className="flex items-center gap-3">
                     <span className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">@</span>

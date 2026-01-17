@@ -80,7 +80,7 @@ export default function TermsAndConditionsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Terms and Conditions</h1>
-          <p className="mt-2 text-lg text-gray-600">HR-Tek System Delosch Technologies Pvt. Ltd.</p>
+          <p className="mt-2 text-lg text-gray-600">HR-Tek System</p>
           <p className="mt-1 text-sm text-gray-500 font-medium uppercase tracking-wider">Last Updated: November 2025</p>
         </div>
 
@@ -106,7 +106,7 @@ export default function TermsAndConditionsPage() {
           {/* Main Content */}
           <div className="md:col-span-3 space-y-12">
             <section className="prose prose-lg max-w-none text-gray-700">
-              <p>These Terms and Conditions (“Terms”) govern your use of the HR-Tek System platform, website, AI-driven HR advisory tools, and all services offered by Delosch Technologies Pvt. Ltd. (“Company”, “we”, “our”, “us”).</p>
+              <p>These Terms and Conditions (“Terms”) govern your use of the HR-Tek System platform, website, AI-driven HR advisory tools, and all services offered (“Company”, “we”, “our”, “us”).</p>
               <p>By accessing or using our services, you agree to be bound by these Terms. If you do not agree, you may not access or use the platform.</p>
             </section>
 
@@ -170,7 +170,7 @@ export default function TermsAndConditionsPage() {
 
             <TermsSection id="intellectual-property" title="6. Intellectual Property Rights">
               <ul className="list-disc pl-5 space-y-4">
-                <li>All content, frameworks, algorithms, designs, assessments, AI models, and trademarks belong exclusively to Delosch Technologies Pvt. Ltd.</li>
+                <li>All content, frameworks, algorithms, designs, assessments, AI models, and trademarks belong exclusively to HR-Tek System.</li>
                 <li>Users receive a limited, non-transferable, non-exclusive license to access and use the platform for internal business purposes.</li>
                 <li>Users may not copy, reproduce, or distribute any part of the platform without written approval.</li>
               </ul>
@@ -304,7 +304,7 @@ export default function TermsAndConditionsPage() {
             <TermsSection id="contact" title="18. Contact Information">
               <p>For queries related to these Terms, contact:</p>
               <address className="mt-6 not-italic bg-gray-100 p-6 rounded-2xl border border-gray-200">
-                <strong className="text-gray-900 block mb-2 font-display text-lg">Delosch Technologies Pvt. Ltd. – HR-Tek System</strong>
+                <strong className="text-gray-900 block mb-2 font-display text-lg">HR-Tek System</strong>
                 <div className="space-y-1 text-gray-600">
                   <p className="flex items-center gap-2">
                     <span className="font-semibold w-16">Email:</span>

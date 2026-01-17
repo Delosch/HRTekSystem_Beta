@@ -20,14 +20,11 @@ export default function Footer() {
                 <span className="text-white">HR-TEK</span>{" "}
                 <span className="text-[#00B5E2]">SYSTEM</span>
               </h1>
-              <p className="text-[10px] text-white/80 font-bold uppercase tracking-widest mt-1">
-                A brand of Delosch Technologies
-              </p>
+
             </div>
           </Link>
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
-            A brand of Delosch Technologies Pvt. Ltd.
-            <br />
+
             Empowering HR transformation through intelligent software solutions
             tailored for growth.
           </p>

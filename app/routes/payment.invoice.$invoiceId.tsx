@@ -296,7 +296,7 @@ export default function InvoicePage() {
                                             <div className="text-center mb-3">
                                                 <p className="text-xs text-gray-600 mb-1">UPI ID:</p>
                                                 <p className="text-sm font-mono font-semibold text-gray-900 bg-gray-50 px-3 py-1 rounded">
-                                                    deloschtechnologiesprivatelimited@sbi
+                                                    hrteksystems@sbi
                                                 </p>
                                             </div>
                                             <div className="flex flex-wrap justify-center gap-2 mt-2">
@@ -314,7 +314,7 @@ export default function InvoicePage() {
                                         <div className="space-y-3 text-sm">
                                             <div>
                                                 <p className="text-gray-600 text-xs">Account Name:</p>
-                                                <p className="font-semibold text-gray-900">Delosch Technologies (P) Ltd.</p>
+                                                <p className="font-semibold text-gray-900">HR-Tek System</p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-600 text-xs">Bank Name:</p>

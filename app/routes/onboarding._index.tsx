@@ -289,9 +289,7 @@ export default function OnboardingWelcome() {
                           <span className="text-gray-900">HR-Tek</span>{" "}
                           <span className="text-blue-600 font-black">SYSTEM</span>
                         </h2>
-                        <p className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">
-                          A Delosch Brand
-                        </p>
+
                       </motion.div>
                     </div>
                   </motion.div>

@@ -549,11 +549,7 @@ function QuestionRenderer({
 }: {
   question: Question;
   value: any;
-<<<<<<< HEAD
   otherValue?: any;
-=======
-  otherValue?: string;
->>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
   onChange: (questionId: string, value: any) => void;
   error?: string;
   otherError?: string;
@@ -561,34 +557,27 @@ function QuestionRenderer({
 
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
-<<<<<<< HEAD
-  // Use passed prop instead of checking value?.otherValue
   const otherInputValue = otherValue;
-=======
+
   const getMaxSelections = (q: any) => {
-  // 1️⃣ Explicit backend config always wins
-  if (q.maxSelections) return q.maxSelections;
+    // 1️⃣ Explicit backend config always wins
+    if (q.maxSelections) return q.maxSelections;
 
-  const text = `${q.title} ${q.question}`.toLowerCase();
+    const text = `${q.title} ${q.question}`.toLowerCase();
 
-  // 2️⃣ Match ALL known patterns:
-  // - Select 3
-  // - Select up to 3
-  // - Select top 3
-  // - Select max 3
-  const match = text.match(
-    /select\s+(?:up\s+to\s+|top\s+|max\s+)?(\d+)/i
-  );
+    // 2️⃣ Match ALL known patterns:
+    // - Select 3
+    // - Select up to 3
+    // - Select top 3
+    // - Select max 3
+    const match = text.match(
+      /select\s+(?:up\s+to\s+|top\s+|max\s+)?(\d+)/i
+    );
 
-  return match ? Number(match[1]) : undefined;
-};
-
-
-
+    return match ? Number(match[1]) : undefined;
+  };
 
   const maxSelections = getMaxSelections(question);
-
->>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
 
   return (
     <div className="question-item bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
@@ -607,18 +596,6 @@ function QuestionRenderer({
                 checked={checkboxValue.includes(opt)}
                 onChange={(e) => {
                   if (e.target.checked) {
-<<<<<<< HEAD
-                    // Check for "Select up to X" limit
-                    const limitMatch = (question.title + (question.question || "")).match(/(?:Select|Choose) up to (\d+)/i);
-                    const limit = limitMatch ? parseInt(limitMatch[1], 10) : null;
-
-                    if (!limit || checkboxValue.length < limit) {
-                      onChange(qId, [...checkboxValue, opt]);
-                    } else {
-                      // Optional: Show toast or ignore
-                      // alert(`You can selected only up to ${limit} options.`);
-                    }
-=======
                     if (
                       maxSelections !== undefined &&
                       checkboxValue.length >= maxSelections
@@ -626,7 +603,6 @@ function QuestionRenderer({
                       return; // 🚫 HARD STOP
                     }
                     onChange(qId, [...checkboxValue, opt]);
->>>>>>> 5732c3abcca68481b4051b105ddab826c5670f60
                   } else {
                     onChange(qId, checkboxValue.filter(v => v !== opt));
                   }

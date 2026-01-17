@@ -10,7 +10,7 @@ const SMS_API_URL = "https://api.bulksmsadmin.com/BulkSMSapi/keyApiSendSMS/SendS
 // Fallback to the values you provided if env vars aren't set yet
 const SMS_API_KEY = process.env.SMS_API_KEY || "JHs9zb2GhUMtOCb";
 const SMS_SENDER_ID = process.env.SMS_SENDER_ID || "DELOSC";
-const SMS_TEMPLATE_NAME = "Login ID- Delosch"; // The specific template you requested
+const SMS_TEMPLATE_NAME = process.env.SMS_TEMPLATE_NAME || "Login ID- HR-Tek System";
 
 /**
  * Sends a Login OTP SMS using the configured template

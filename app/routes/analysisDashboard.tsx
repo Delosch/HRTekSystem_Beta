@@ -82,7 +82,6 @@ export const loader: LoaderFunction = async ({ request }) => {
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    //recommendations: recommendations?.allRankings || [],
     user,
     isPaid,
     isPending,
@@ -109,8 +108,9 @@ export default function AnalysisDashboard() {
   }, []);
 
   useEffect(() => {
-    if (fetcher.data?.success && fetcher.data?.message) {
-      setToastMessage(fetcher.data.message);
+    const data = fetcher.data as any;
+    if (data?.success && data?.message) {
+      setToastMessage(data.message);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }

@@ -142,7 +142,7 @@ const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
 
                 {/* Footer */}
                 <Text style={{ position: 'absolute', bottom: 30, left: 30, right: 30, fontSize: 8, textAlign: 'center', color: '#94a3b8' }}>
-                    Powered by Delosh Intelligence • Confidential & Proprietary
+                    Powered by HR-Tek System Intelligence • Confidential & Proprietary
                 </Text>
             </Page>
         </Document>
