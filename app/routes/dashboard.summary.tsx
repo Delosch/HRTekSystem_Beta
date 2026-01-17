@@ -4,8 +4,8 @@ import { Layout } from "~/components/Layout";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
 import { requireUserSession } from "~/lib/session.server";
-import { getCompanyProfile } from "~/models/company.model";
-import { getCompanyReports, EngineReport } from "~/models/report.model";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getCompanyReports, EngineReport } from "~/models/report.model.server";
 
 // --- Loader to Fetch Real Data ---
 export async function loader({ request }: LoaderFunctionArgs) {

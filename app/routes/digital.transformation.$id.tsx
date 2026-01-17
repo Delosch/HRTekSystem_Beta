@@ -4,8 +4,8 @@ import { json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useMemo, useState } from "react";
 import { requireUserSession } from "~/lib/session.server";
-import { getCompanyProfile } from "~/models/company.model";
-import { getLatestAnalysis } from "~/utils/analysis";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getLatestAnalysis } from "~/utils/analysis.server";
 
 // ---------- Types ----------
 type Initiative = {

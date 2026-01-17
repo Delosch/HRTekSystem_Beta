@@ -1,4 +1,4 @@
-import { ProposalPhase } from "~/models/proposal.model";
+import { ProposalPhase } from "~/models/proposal.model.server";
 
 /**
  * Proposal Timeline Service

@@ -1,4 +1,4 @@
-import { hasVerifiedPaymentForEngines, getVerifiedPaidEngines } from "~/models/payment.model";
+import { hasVerifiedPaymentForEngines, getVerifiedPaidEngines } from "~/models/payment.model.server";
 
 /**
  * Engine Access Control

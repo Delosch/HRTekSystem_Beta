@@ -1,6 +1,6 @@
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { getPendingPaymentVerifications } from "~/models/payment.model";
+import { getPendingPaymentVerifications } from "~/models/payment.model.server";
 
 /**
  * Fetches real dashboard statistics from DynamoDB

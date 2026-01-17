@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import EngineStatusActions from "../components/DashboardComponents/EngineStatusActions";
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
-import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model";
+import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
 import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
@@ -51,7 +51,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     throw redirect('/onboarding');
   }
 
-  const { getCompanyPayments } = await import("~/models/payment.model");
+  const { getCompanyPayments } = await import("~/models/payment.model.server");
 
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);

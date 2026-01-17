@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
 import { CleanPasswordInput } from "~/components/AuthCards";
-import { getUserByEmail, updateUser } from "~/models/user.model";
+import { getUserByEmail, updateUser } from "~/models/user.model.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
     const url = new URL(request.url);

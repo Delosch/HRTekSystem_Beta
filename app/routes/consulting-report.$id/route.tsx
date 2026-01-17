@@ -3,8 +3,8 @@ import { Params, useLoaderData, Link } from "@remix-run/react";
 import { motion, AnimatePresence, useInView, Variants } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { requireUserSession } from "~/lib/session.server";
-import { getLatestAnalysis } from "~/utils/analysis";
-import { getCompanyProfile } from "~/models/company.model";
+import { getLatestAnalysis } from "~/utils/analysis.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { DatabaseRecord } from "../v2.$id/schemas";
 import {
     FileText, Target, TrendingUp, AlertTriangle, ShieldCheck,
@@ -21,9 +21,9 @@ import {
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import ConsultingReportPDF from "~/components/reports/ConsultingReportPDF";
 
-import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model";
+import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model.server";
 import { getEnginePriceByName } from "~/lib/pricing";
-import { addOrUpdateCartItem } from "~/models/cart.model";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 import ChangeManagementReport from "~/components/reports/ChangeManagementReport";
 import RoadmapReport from "~/components/reports/RoadmapReport";
 import SharedServicesReport from "~/components/reports/SharedServicesReport";

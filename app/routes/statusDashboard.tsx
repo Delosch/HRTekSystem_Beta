@@ -5,8 +5,8 @@ import EngineStatusActions from "../components/DashboardComponents/EngineStatusA
 import { Link, useLoaderData } from "@remix-run/react";
 import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
-import { findEngineData } from "~/models/engine.model";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+import { findEngineData } from "~/models/engine.model.server";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
 
 type EngineName = "HR Transformation Roadmap Generator" |
   "HCM Vendor Fit Engine" | // Corrected name

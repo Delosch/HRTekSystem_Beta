@@ -4,7 +4,7 @@ import {
     updateEligibilityStatus,
     getEligibilityRecord,
     EligibilityRecord
-} from "~/models/eligibility.model";
+} from "~/models/eligibility.model.server";
 
 /**
  * Eligibility Service
@@ -170,7 +170,7 @@ export async function autoCheckEligibility(
 
         if (syncResult.record.isEligible) {
             // Auto-generate proposal if eligible
-            const { autoGenerateProposal } = await import("~/services/proposal.service");
+            const { autoGenerateProposal } = await import("~/services/proposal.service.server");
             const proposalResult = await autoGenerateProposal(companyId);
 
             return {

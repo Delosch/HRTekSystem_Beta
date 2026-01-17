@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
-import { getPendingApprovals } from "~/models/hti.model";
-import { processAdminApproval } from "~/services/hti.service";
+import { getPendingApprovals } from "~/models/hti.model.server";
+import { processAdminApproval } from "~/services/hti.service.server";
 
 /**
  * API Route: HTI Admin Approvals

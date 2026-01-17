@@ -2,7 +2,7 @@ import {
     BedrockRuntimeClient,
     InvokeModelCommand
 } from "@aws-sdk/client-bedrock-runtime";
-import type { HTIAggregatedInput, HTIAdvisoryContent } from "~/models/hti.model";
+import type { HTIAggregatedInput, HTIAdvisoryContent } from "~/models/hti.model.server";
 
 // ========================================
 // AWS BEDROCK CLIENT

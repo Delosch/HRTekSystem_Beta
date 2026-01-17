@@ -1,9 +1,9 @@
-import { aggregateEngineData, saveAdvisoryReport, updateApprovalStatus } from "~/models/hti.model";
+import { aggregateEngineData, saveAdvisoryReport, updateApprovalStatus } from "~/models/hti.model.server";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
-import { hasVerifiedPaymentForEngines } from "~/models/payment.model";
-import type { HTIApprovalStatus } from "~/models/hti.model";
+import { hasVerifiedPaymentForEngines } from "~/models/payment.model.server";
+import type { HTIApprovalStatus } from "~/models/hti.model.server";
 import { getPricingForCompany } from "~/utils/pricing.server";
-import { getCompanyProfile } from "~/models/company.model";
+import { getCompanyProfile } from "~/models/company.model.server";
 
 // ========================================
 // HTI SERVICE ORCHESTRATION

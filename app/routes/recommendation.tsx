@@ -8,7 +8,7 @@ import {
   CheckBadgeIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/solid";
-import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model";
+import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model.server";
 import { useState } from "react";
 
 interface RecommendationItem {

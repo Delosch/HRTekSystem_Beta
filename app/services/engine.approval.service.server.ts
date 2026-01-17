@@ -5,7 +5,7 @@ import {
     getPendingApprovals,
     markReportGenerated,
     EngineApproval
-} from "~/models/engine.approval.model";
+} from "~/models/engine.approval.model.server";
 
 /**
  * Engine Approval Service

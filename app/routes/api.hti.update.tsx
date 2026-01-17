@@ -32,7 +32,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         console.log(`📝 Admin updating HTI report: ${reportId}, action: ${action || 'save'}`);
 
-        const { updateAdvisoryContent } = await import("~/models/hti.model");
+        const { updateAdvisoryContent } = await import("~/models/hti.model.server");
         const result = await updateAdvisoryContent(companyId, reportId, advisory);
 
         if (!result.success) {
@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         // If action is approve, also update status
         if (action === "approve") {
-            const { processAdminApproval } = await import("~/services/hti.service");
+            const { processAdminApproval } = await import("~/services/hti.service.server");
             const approvalResult = await processAdminApproval(
                 companyId,
                 reportId,

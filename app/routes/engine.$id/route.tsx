@@ -5,9 +5,9 @@ import { getAnswerSheetByAssessmentName, getLatestQuestion, save_answers } from 
 import { QuestionSchema } from "./questionSchema"
 import EngineFormRender from "./RenderEngineForm"
 // import { generate } from "~/lib/processor.genAi"
-import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model"
-import { createLog } from "~/models/companylogs.model"
-import { addOrUpdateCartItem, CartItem } from "~/models/cart.model"
+import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model.server"
+import { createLog } from "~/models/companylogs.model.server"
+import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server"
 import { calculateFinalPrice } from "~/lib/pricing"
 
 //
@@ -99,7 +99,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
             await addOrUpdateCartItem(items)
 
             // Check transformation eligibility
-            const { autoCheckEligibility } = await import("~/services/eligibility.service");
+            const { autoCheckEligibility } = await import("~/services/eligibility.service.server");
             const eligibilityResult = await autoCheckEligibility(companyId);
             console.log("🎯 Eligibility Check:", eligibilityResult.message);
 

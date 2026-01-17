@@ -1,7 +1,7 @@
 import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect } from "react";
-import { signupUser, loginUser } from "~/models/user.model";
+import { signupUser, loginUser } from "~/models/user.model.server";
 import { createAuthSession } from "~/lib/session.server";
 import { validateSubmissionHash } from "~/lib/auth.server";
 import AuthForm from "~/components/AuthCards";

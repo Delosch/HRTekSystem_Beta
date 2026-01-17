@@ -1,8 +1,8 @@
 import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { getAllAnalysesForCompany } from "~/utils/analysis";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+import { getAllAnalysesForCompany } from "~/utils/analysis.server";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { getEnhancedUser } from "~/utils/user.server";
 import { FileText, Lock, CheckCircle, Clock, AlertCircle } from "lucide-react";

@@ -72,7 +72,7 @@ export async function markReportDispatched(
     engineName: string,
     reportUrl: string
 ): Promise<void> {
-    const { markReportGenerated } = await import("~/models/engine.approval.model");
+    const { markReportGenerated } = await import("~/models/engine.approval.model.server");
     await markReportGenerated(companyId, engineName, reportUrl);
     console.log(`✅ Marked report as dispatched for ${engineName}`);
 }

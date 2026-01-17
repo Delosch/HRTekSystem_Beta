@@ -16,10 +16,9 @@ import {
 } from "lucide-react";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import Footer from "~/components/Footer";
-import { sendSupportMessageEmail } from "~/lib/email.server";
+import { sendSupportMessageEmail } from "~/lib/email.service.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { randomUUID } from "crypto";
 import { ToastContainer, toast } from "react-toastify";
 
 export const meta: MetaFunction = () => {
@@ -27,6 +26,7 @@ export const meta: MetaFunction = () => {
 };
 
 export const action: ActionFunction = async ({ request }) => {
+    const { randomUUID } = await import("crypto");
     const formData = await request.formData();
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;

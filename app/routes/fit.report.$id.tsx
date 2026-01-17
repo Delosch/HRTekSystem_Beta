@@ -2,7 +2,7 @@
 import type { LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { getEnginePriceByName } from "~/lib/pricing";
-import { addOrUpdateCartItem } from "~/models/cart.model";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 import { useLoaderData } from "@remix-run/react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
@@ -11,9 +11,9 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 import { requireUserSession } from "~/lib/session.server";
-import { getLatestAnalysis } from "~/utils/analysis";
-import { getCompanyProfile } from "~/models/company.model";
-import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model";
+import { getLatestAnalysis } from "~/utils/analysis.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model.server";
 import { Clock, AlertTriangle, CheckCircle, ArrowLeft } from "lucide-react";
 
 // --- Data Types ---

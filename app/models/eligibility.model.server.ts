@@ -1,7 +1,7 @@
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { PutCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { completedEngine } from "./engine.model";
-import { hasVerifiedPaymentForEngines } from "./payment.model";
+import { completedEngine } from "./engine.model.server";
+import { hasVerifiedPaymentForEngines } from "./payment.model.server";
 
 const DYNAMODB_TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 const ddbDocClient = getDynamoDBDocumentClient();

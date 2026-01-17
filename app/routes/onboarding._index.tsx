@@ -11,7 +11,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { requireUserSession, getSession, commitSession } from "~/lib/session.server";
-import { updateUser } from "~/models/user.model";
+import { updateUser } from "~/models/user.model.server";
 
 export const meta: MetaFunction = () => {
   return [

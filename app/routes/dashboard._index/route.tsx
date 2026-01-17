@@ -21,19 +21,19 @@ import {
 } from "recharts";
 import { CheckCircle, LayoutDashboard, TrendingUp, Cpu, Clock, Award, Zap, FileText } from "lucide-react";
 import { requireUserSession } from "~/lib/session.server";
-import { getUserProfile } from "~/models/user.model";
-import { getCompanyProfile } from "~/models/company.model";
+import { getUserProfile } from "~/models/user.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { LoaderFunction } from "@remix-run/node";
 import { motion, Variants } from "framer-motion";
 import { getHeatmapMatrix, Heatmap, HeatmapDataConfig } from "../v2.$id/heat_map";
-import { getLatestAnalysis, getAllAnalysesForCompany } from "~/utils/analysis";
+import { getLatestAnalysis, getAllAnalysesForCompany } from "~/utils/analysis.server";
 import EligibilityWidget from "~/components/EligibilityWidget";
 import { VisualizationData, DimensionalScore, ReadinessMetric } from "../v2.$id/schemas";
 import { getAIStatus, setAIStatus } from "~/services/ai-status.server";
 import { generate } from "~/lib/digitalMaturity.genAi";
-import { getEligibilityProgress } from "~/services/eligibility.service";
-import { getCompanyAdvisories } from "~/models/hti.model";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+import { getEligibilityProgress } from "~/services/eligibility.service.server";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
 
 
 

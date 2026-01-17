@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
 import { HoverInput } from "~/components/AuthCards";
-import { getUserByEmail, updateUser } from "~/models/user.model";
+import { getUserByEmail, updateUser } from "~/models/user.model.server";
 import { sendPasswordResetEmail } from "~/lib/email.otp.server";
 
 
