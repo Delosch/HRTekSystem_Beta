@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import ChatWidget from "~/components/chatbot/ChatWidget";
 import { redirect, useLoaderData, useRevalidator } from "@remix-run/react";
 import Sidebar from "../../components/DashboardComponents/Sidebar";
 import { useNavigate } from "@remix-run/react";
@@ -1549,6 +1550,7 @@ export default function Dashboard() {
           100% { background-position: 0% 50%; }
         }
       `}</style>
+      <ChatWidget />
     </div>
   );
 }
