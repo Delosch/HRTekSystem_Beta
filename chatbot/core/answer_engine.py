@@ -17,6 +17,10 @@ from core.session_store import get_session, put_session
 from core.lead_capture import load_intake_questions, start_state, handle_turn
 from llm.client_factory import get_llm_client
 
+#added for post processing of output
+from safety.grounding_guard import grounding_guard
+from core.postprocess import postprocess_response
+
 
 # -------------------------
 # Session helpers (sticky mode)
@@ -157,35 +161,47 @@ def generate(
     # 3) Dispatch by module
     # -------------------------
 
-    # --- FAQ ---
+        # --- FAQ ---
     if decision.module == RouteModule.FAQ:
 
         # If user just selected FAQ option, show FAQ intro and don't retrieve on "3"
         if msg == "3":
             _set_active_module(sid, RouteModule.FAQ.value)
-            return {
+            return postprocess_response({
                 "answer": (
                     "Sure — FAQ mode.\n\n"
                     "Ask me anything from these areas:\n"
                     "1) Pricing & plans (GST, tiers, refunds, billing)\n"
                     "2) Modules (what each module does)\n"
-                    "3) General FAQs (how the platform works)\n"
+                    "3) General FAQs (how the platform works)\n\n"
                     "Example questions:\n"
                     "- Is GST included?\n"
                     "- Can I buy a report without subscribing?"
                 ),
                 "module": RouteModule.FAQ.value,
                 "prompt_version": prompt_version,
-                "sources_used": []
-            }
+                "sources_used": [],
+                "no_sources_ok":True,
+            })
 
         retriever = Retriever(kb_dir=KB_DIR)
         chunks = retriever.retrieve(message, top_k=5)
 
-        if not chunks:
-            return _no_kb_info_response(prompt_version=prompt_version)
+        # Grounding guard: if FAQ requires KB chunks and none found → refuse safely
+        guard_resp = grounding_guard(
+            RouteModule.FAQ,
+            report_json=report_json,
+            kb_chunks=chunks,
+            prompt_version=prompt_version,
+        )
+        if guard_resp:
+            return postprocess_response(guard_resp)
 
-        prompt_template = load_prompt("faq_navigator", version=prompt_version, prompts_dir=PROMPTS_DIR)
+        prompt_template = load_prompt(
+            "faq_navigator",
+            version=prompt_version,
+            prompts_dir=PROMPTS_DIR
+        )
         kb_context = _format_kb_chunks_for_prompt(chunks)
 
         prompt = (
@@ -199,18 +215,29 @@ def generate(
         client = get_llm_client()
         text = client.generate(prompt)
 
-        return {
+        return postprocess_response({
             "answer": text,
             "module": RouteModule.FAQ.value,
             "prompt_version": prompt_version,
             "sources_used": [c.entry.get("id") for c in chunks if c.entry.get("id")]
-        }
+        })
+
 
     # --- ROADMAP / ASSESSMENT ---
     if decision.module in (RouteModule.ROADMAP, RouteModule.ASSESSMENT):
         prompt_name = "roadmap_explainer" if decision.module == RouteModule.ROADMAP else "assessment_explainer"
         prompt_template = load_prompt(prompt_name, version=prompt_version, prompts_dir=PROMPTS_DIR)
 
+        guard_resp = grounding_guard(
+        decision.module,
+        report_json=report_json,
+        kb_chunks=None,
+        prompt_version=prompt_version,
+        )
+        if guard_resp:
+            return postprocess_response(guard_resp)
+
+    
         prompt = (
             f"{prompt_template}\n\n"
             f"PageContext: {page_context}\n"
@@ -222,12 +249,12 @@ def generate(
         client = get_llm_client()
         text = client.generate(prompt)
 
-        return {
+        return postprocess_response( {
             "answer": text,
             "module": decision.module.value,
             "prompt_version": prompt_version,
-            "sources_used": []
-        }
+            "sources_used": ["report_json"]
+        })
 
     # --- LEAD_CAPTURE ---
     if decision.module == RouteModule.LEAD_CAPTURE:
@@ -251,9 +278,9 @@ def generate(
         return resp
 
     # Fallback (should rarely happen)
-    return {
-        "answer": _main_menu_text(),
-        "module": RouteModule.SAFE_FALLBACK.value,
-        "prompt_version": prompt_version,
-        "sources_used": []
-    }
+    return postprocess_response({
+    "answer": decision.fallback_message or _main_menu_text(),
+    "module": RouteModule.SAFE_FALLBACK.value,
+    "prompt_version": prompt_version,
+    "sources_used": [],
+    })
