@@ -1,6 +1,6 @@
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Form, Link } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import {
     CheckCircleIcon,
     XCircleIcon,
@@ -8,7 +8,9 @@ import {
     DocumentMagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
-// Dummy Data (replace with actual data fetching)
+import { getCompanyAdvisories, updateApprovalStatus } from "~/models/hti.model.server";
+import { getEnhancedUser } from "~/utils/user.server";
+
 type AiReportStatus = "Pending Review" | "Approved" | "Rejected";
 
 interface AiReport {
@@ -17,52 +19,47 @@ interface AiReport {
     submittedBy: string;
     submittedAt: string;
     status: AiReportStatus;
-    previewUrl: string; // Link to a preview or full report viewer
+    previewUrl: string;
 }
 
-const aiReportsData: Record<string, AiReport[]> = {
-    "org-101": [
-        {
-            id: "ai-001",
-            engine: "Vendor Fit Engine",
-            submittedBy: "Bob Smith",
-            submittedAt: "2025-07-23 03:30 PM",
-            status: "Pending Review",
-            previewUrl: "/admin/ai-reports/ai-001/preview", // Placeholder
-        },
-        {
-            id: "ai-002",
-            engine: "Roadmap Generator",
-            submittedBy: "Alice Johnson",
-            submittedAt: "2025-07-22 09:45 AM",
-            status: "Approved",
-            previewUrl: "/admin/ai-reports/ai-002/preview",
-        },
-        {
-            id: "ai-003",
-            engine: "Vendor Fit Engine",
-            submittedBy: "Charlie Brown",
-            submittedAt: "2025-07-20 01:00 PM",
-            status: "Rejected",
-            previewUrl: "/admin/ai-reports/ai-003/preview",
-        },
-    ],
-    "org-102": [
-        {
-            id: "ai-004",
-            engine: "Market Analysis Tool",
-            submittedBy: "Eve Green",
-            submittedAt: "2025-07-26 11:00 AM",
-            status: "Pending Review",
-            previewUrl: "/admin/ai-reports/ai-004/preview",
-        },
-    ],
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
+    const orgId = params.orgId;
+    if (!orgId) throw new Error("Organization ID required");
+
+    const reports = await getCompanyAdvisories(orgId);
+
+    // Transform data for the UI
+    const transformedReports = reports.map(r => ({
+        id: r.reportId,
+        engine: "HTI Advisory Report",
+        submittedBy: r.generatedBy,
+        submittedAt: new Date(r.generatedAt).toLocaleString(),
+        status: r.status === "approved" ? "Approved" : r.status === "rejected" ? "Rejected" : "Pending Review",
+        previewUrl: `/api/hti/reports/${r.reportId}/pdf`,
+        companyId: r.companyId
+    }));
+
+    return json({ reports: transformedReports, orgId });
 };
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-    const orgId = "org-101"//params.orgId;
-    const reports = aiReportsData[orgId || ""] || [];
-    return json({ reports });
+export const action = async ({ request, params }: LoaderFunctionArgs) => {
+    const user = await getEnhancedUser(request);
+    const formData = await request.formData();
+    const action = formData.get("_action") as string;
+    const reportId = formData.get("reportId") as string;
+    const orgId = params.orgId || "";
+
+    if (action === "approve") {
+        await updateApprovalStatus(orgId, reportId, "approved", user.userId, "Approved via Admin Panel");
+        return json({ success: true, message: "Report approved successfully" });
+    }
+
+    if (action === "reject") {
+        await updateApprovalStatus(orgId, reportId, "rejected", user.userId, "Rejected via Admin Panel");
+        return json({ success: true, message: "Report rejected" });
+    }
+
+    return json({ success: false, error: "Invalid action" });
 };
 
 // Helper for conditional classes
@@ -114,6 +111,8 @@ export default function CompanyAIReportsPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
+                            {/* ... inside the table loop ... */}
+
                             {reports.map((report) => (
                                 <tr key={report.id}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -141,18 +140,23 @@ export default function CompanyAIReportsPage() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div className="flex items-center justify-end space-x-2">
-                                            <button
-                                                type="button"
+                                            <a
+                                                href={report.previewUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="text-indigo-600 hover:text-indigo-900 p-1 rounded-md hover:bg-gray-100 inline-flex items-center"
                                                 title="View Full Report"
                                             >
                                                 <DocumentMagnifyingGlassIcon className="h-5 w-5" />
                                                 <span className="ml-1">View</span>
-                                            </button>
+                                            </a>
                                             {report.status === "Pending Review" && (
-                                                <>
+                                                <Form method="post" className="flex items-center space-x-2">
+                                                    <input type="hidden" name="reportId" value={report.id} />
                                                     <button
-                                                        type="button"
+                                                        type="submit"
+                                                        name="_action"
+                                                        value="approve"
                                                         className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-gray-100"
                                                         title="Approve & Forward"
                                                     >
@@ -166,13 +170,15 @@ export default function CompanyAIReportsPage() {
                                                         <PencilSquareIcon className="h-5 w-5" />
                                                     </button>
                                                     <button
-                                                        type="button"
+                                                        type="submit"
+                                                        name="_action"
+                                                        value="reject"
                                                         className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-gray-100"
                                                         title="Reject & Comment"
                                                     >
                                                         <XCircleIcon className="h-5 w-5" />
                                                     </button>
-                                                </>
+                                                </Form>
                                             )}
                                         </div>
                                     </td>
@@ -181,6 +187,6 @@ export default function CompanyAIReportsPage() {
                         </tbody>
                     </table>
                 </div>)}
-      </div>
-                        )
+        </div>
+    )
 }

@@ -18,34 +18,40 @@ import { calculateFinalPrice } from "~/lib/pricing"
 // const prompt_id = "digital_transformation"
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
-    // Decode the URL parameter to get the actual engine name
-    const question_section = params.id ? decodeURIComponent(params.id) : undefined;
+    // Require authentication first - this will redirect to login if not authenticated
+    const user = await requireUserSession(request);
+
+    // Map URL slug IDs to actual question section names in the DB
+    const ENGINE_SLUG_MAP: Record<string, string> = {
+        "hr-tech-maturity": "HR Technology Maturity Analysis",
+        "digital-roadmap": "HR Transformation Roadmap Generator",
+        "hcm-vendor-fit": "HCM Vendor Fit Engine",
+        "shared-services": "Shared Service Designer",
+        "change-management": "Intelligent Change Management"
+    };
+
+    const slug = params.id ? decodeURIComponent(params.id) : undefined;
+    const question_section = slug ? (ENGINE_SLUG_MAP[slug] || slug) : undefined;
 
     if (!question_section) {
         throw new Response("wrong parameters", { status: 404 })
     }
 
-    console.log("Loading questions for:", question_section);
+    console.log("Loading questions for section:", question_section, "(Slug:", slug, ")");
     const questions = await getLatestQuestion(question_section);
 
     if (!questions) {
         console.error(`No questions found for section: ${question_section}`);
     }
 
-    // Fetch existing responses if user is authenticated
+    // Fetch existing responses for the authenticated user
     let existingResponses = null;
-    try {
-        const user = await requireUserSession(request);
-        if (user && user.organisationId) {
-            existingResponses = await getAnswerSheetByAssessmentName(
-                user.organisationId,
-                question_section
-            );
-            console.log("📝 Existing responses loaded:", existingResponses ? "Yes" : "No");
-        }
-    } catch (error) {
-        // User might not be authenticated, continue without existing responses
-        console.log("No existing responses found or user not authenticated");
+    if (user && user.organisationId) {
+        existingResponses = await getAnswerSheetByAssessmentName(
+            user.organisationId,
+            question_section
+        );
+        console.log("📝 Existing responses loaded:", existingResponses ? "Yes" : "No");
     }
 
     return { questions, question_section, existingResponses };

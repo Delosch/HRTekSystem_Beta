@@ -56,34 +56,43 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
     const user = await requireUserSession(request);
+    const formData = await request.formData();
+    const intent = formData.get("intent");
 
     if (!user.organisationId) {
         return json({ error: "Organization ID required" }, { status: 400 });
     }
 
-    try {
-        // Auto-add to Cart
+    if (intent === "add_to_cart") {
+        const tierId = formData.get("tierId");
         try {
-            const { getCompanyProfile } = await import("~/models/company.model.server");
-            const { getPricingForCompany } = await import("~/utils/pricing.server");
             const { addOrUpdateCartItem } = await import("~/models/cart.model.server");
+            const { getPricingForCompany, PRICING_TIERS } = await import("~/utils/pricing.server");
+            const { getCompanyProfile } = await import("~/models/company.model.server");
 
-            const companyProfile = await getCompanyProfile(user.organisationId);
-            const employeeCount = companyProfile?.employee_count || 0;
-            const pricingTier = getPricingForCompany(employeeCount);
+            const company = await getCompanyProfile(user.organisationId);
+            const tier = tierId === 'essentials' ? PRICING_TIERS.ESSENTIALS : PRICING_TIERS.TRANSFORMATION;
 
-            if (pricingTier.basePrice > 0) {
-                await addOrUpdateCartItem({
-                    companyId: user.organisationId,
-                    productName: `HTI Advisory: ${pricingTier.name}`,
-                    price: pricingTier.basePrice,
-                    userId: user.userId
-                });
-            }
-        } catch (cartError) {
-            console.error("⚠️ Failed to auto-add to cart:", cartError);
+            await addOrUpdateCartItem({
+                companyId: user.organisationId,
+                productName: `HTI Advisory: ${tier.name}`,
+                price: tier.basePrice,
+                userId: user.userId
+            });
+            const { redirect } = await import("@remix-run/node");
+            return redirect("/cartDashboard");
+        } catch (error) {
+            console.error("Cart error:", error);
+            return json({ error: "Failed to add to cart" }, { status: 500 });
         }
+    }
 
+    if (intent === "contact_sales") {
+        const { redirect } = await import("@remix-run/node");
+        return redirect("/contact");
+    }
+
+    try {
         const { generateAdvisoryReport } = await import("~/services/hti.service.server");
         const result = await generateAdvisoryReport(
             user.organisationId || "",
@@ -255,8 +264,8 @@ export default function HTIDashboard() {
                             transition={{ delay: 0.1 }}
                             whileHover={{ scale: 1.03, y: -5 }}
                             className={`relative bg-white rounded-3xl p-8 shadow-xl border-2 ${pricingTier?.id === 'essentials'
-                                    ? 'border-blue-500 ring-4 ring-blue-200'
-                                    : 'border-gray-200'
+                                ? 'border-blue-500 ring-4 ring-blue-200'
+                                : 'border-gray-200'
                                 }`}
                         >
                             {pricingTier?.id === 'essentials' && (
@@ -295,9 +304,13 @@ export default function HTIDashboard() {
                                 ))}
                             </div>
 
-                            <button className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg">
-                                Get Started
-                            </button>
+                            <Form method="post">
+                                <input type="hidden" name="intent" value="add_to_cart" />
+                                <input type="hidden" name="tierId" value="essentials" />
+                                <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-lg">
+                                    Get Started
+                                </button>
+                            </Form>
                         </motion.div>
 
                         {/* Tier 2: Transformation (Most Popular) */}
@@ -307,8 +320,8 @@ export default function HTIDashboard() {
                             transition={{ delay: 0.2 }}
                             whileHover={{ scale: 1.03, y: -5 }}
                             className={`relative bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl p-8 shadow-2xl border-2 transform ${pricingTier?.id === 'transformation' || !pricingTier
-                                    ? 'scale-105 border-yellow-400 ring-4 ring-yellow-200'
-                                    : 'border-purple-400'
+                                ? 'scale-105 border-yellow-400 ring-4 ring-yellow-200'
+                                : 'border-purple-400'
                                 }`}
                         >
                             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-6 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
@@ -353,9 +366,13 @@ export default function HTIDashboard() {
                                 ))}
                             </div>
 
-                            <button className="w-full py-3 bg-yellow-400 text-gray-900 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-xl">
-                                Start Transformation
-                            </button>
+                            <Form method="post">
+                                <input type="hidden" name="intent" value="add_to_cart" />
+                                <input type="hidden" name="tierId" value="transformation" />
+                                <button type="submit" className="w-full py-3 bg-yellow-400 text-gray-900 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-xl">
+                                    Start Transformation
+                                </button>
+                            </Form>
                         </motion.div>
 
                         {/* Tier 3: Enterprise */}
@@ -365,8 +382,8 @@ export default function HTIDashboard() {
                             transition={{ delay: 0.3 }}
                             whileHover={{ scale: 1.03, y: -5 }}
                             className={`relative bg-white rounded-3xl p-8 shadow-xl border-2 ${pricingTier?.id === 'enterprise'
-                                    ? 'border-purple-500 ring-4 ring-purple-200'
-                                    : 'border-gray-200'
+                                ? 'border-purple-500 ring-4 ring-purple-200'
+                                : 'border-gray-200'
                                 }`}
                         >
                             {pricingTier?.id === 'enterprise' && (
@@ -410,9 +427,12 @@ export default function HTIDashboard() {
                                 ))}
                             </div>
 
-                            <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg">
-                                Contact Sales
-                            </button>
+                            <Form method="post">
+                                <input type="hidden" name="intent" value="contact_sales" />
+                                <button type="submit" className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg">
+                                    Contact Sales
+                                </button>
+                            </Form>
                         </motion.div>
                     </div>
 

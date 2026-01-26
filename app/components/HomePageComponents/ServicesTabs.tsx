@@ -21,7 +21,7 @@ const services = [
       "We craft tailored HR transformation roadmaps that align with your business goals. Each step is strategically phased to drive measurable impact. From automation to culture change, we guide your journey end-to-end.",
     image: "/assets/homepageAssets/scroll0/images/roadmap1.png",
     cta: "Explore Roadmap Generator →",
-    link: "/roadmapServicePage",
+    link: "/roadmap-service",
     features: [
       "Current State Mapping",
       "Digitalization Coverage",
@@ -37,7 +37,7 @@ const services = [
       "Take the guesswork out of choosing your HCM partner. Our intelligent HCM Vendor Fit Engine analyzes your unique business needs and instantly matches you with the best-fit HCM vendors saving you time, effort, and costly missteps.",
     image: "/assets/homepageAssets/scroll0/images/hcm.png",
     cta: "Explore Engine →",
-    link: "/hcmServicePage",
+    link: "/hcm-service",
     features: [
       "HCM Analysis",
       "Vendor Matching",
@@ -53,7 +53,7 @@ const services = [
       "Assess where you stand and how far you can go. Our HR Technology Maturity Analysis evaluates your current HR tech landscape across key dimensions like automation, integration, analytics, and user experience. Gain clear insights into your maturity level and receive actionable guidance to advance to the next stage.",
     image: "/assets/homepageAssets/scroll0/images/matAnalysis.png",
     cta: "Explore Analyzer →",
-    link: "/matAnalysisServicePage",
+    link: "/maturity-analysis-service",
     features: [
       "Capability Benchmarking",
       "Fit-Gap Analysis",
@@ -69,7 +69,7 @@ const services = [
       "Design unified service models that scale. Our Shared Service Designer enables you to structure and standardize service delivery across departments and functions. It ensures operational efficiency, governance, and consistency helping your organization reduce duplication and drive value at scale.",
     image: "/assets/homepageAssets/scroll0/images/sService.png",
     cta: "Explore Designer →",
-    link: "/sharedServicePage",
+    link: "/shared-service",
     features: [
       "Process Governance",
       "Decentralized or Centeralized",
@@ -85,7 +85,7 @@ const services = [
       "Proactively navigate organizational shifts with data-driven insights. Our Intelligent Change Management module empowers HR leaders to plan, execute, and monitor transformation initiatives with precision. By leveraging predictive analytics, stakeholder impact assessments, and adaptive communication strategies, this tool ensures smooth transitions, minimal disruption, and sustained employee engagement.",
     image: "/assets/homepageAssets/scroll0/images/changeMan.png",
     cta: "Explore Manager →",
-    link: "/changeMgmtServicePage",
+    link: "/change-management-service",
     features: [
       "Change Readiness & Culture",
       "Change Champions",
@@ -101,7 +101,7 @@ const services = [
       "Strategic guidance for your HR technology journey. Our HR Tech Advisory service provides expert consultation to help you navigate the complex landscape of HR technology solutions. From vendor selection to implementation strategy, we offer tailored advice to ensure your HR tech investments deliver maximum value and align with your business objectives.",
     image: "/assets/homepageAssets/scroll0/images/advisory.png",
     cta: "Explore Advisory Services ",
-    link: "/hrtechAdvisoryServicePage",
+    link: "/hrtech-advisory-service",
     features: [
       "Technology Strategy",
       "Vendor Evaluation",
@@ -121,7 +121,7 @@ export default function ServicesTabs() {
     <section className="bg-gray-50 py-10 px-4">
       {/* Section Heading */}
       <div className="text-center mb-16 max-w-7xl mx-auto px-4">
-        <h3 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800 lg:whitespace-nowrap">
+        <h3 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
           HR Cognitive Autopilot Systems – Decision Making Engines that Diagnose, Predict, Execute
         </h3>
       </div>

@@ -249,10 +249,10 @@ export async function requireUserSession(request: Request): Promise<SessionData>
     const userSession = await getUserSession(request);
 
     if (!userSession) {
-        // If no user session, redirect to login page.
-        // You might want to add a `?redirectTo=` query param here for better UX.
-        // const url = new URL(request.url);
-        throw redirect('/auth');
+        // If no user session, redirect to login page with the original URL as redirectTo
+        const url = new URL(request.url);
+        const redirectTo = url.pathname + url.search;
+        throw redirect(`/auth?redirectTo=${encodeURIComponent(redirectTo)}`);
     }
 
     return userSession;

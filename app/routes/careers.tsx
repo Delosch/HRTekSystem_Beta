@@ -1,9 +1,18 @@
-//Careers page
-
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { json, type ActionFunctionArgs, type MetaFunction } from "@remix-run/node";
 import { useActionData, Form } from "@remix-run/react";
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
+import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
+
+export const meta: MetaFunction = () => {
+  return generateMeta({
+    title: "Careers at HRTek System - Join Our Team",
+    description: "Explore exciting career opportunities at HRTek System. Join our innovative team transforming HR technology. We're hiring talented professionals passionate about HR innovation.",
+    keywords: "HRTek careers, HR tech jobs, join HRTek, HR technology careers, work at HRTek, HR transformation jobs",
+    url: "https://hrteksystem.com/careers",
+    image: "https://hrteksystem.com/og-careers.jpg",
+  });
+};
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -18,9 +27,19 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function CareerPage() {
   const actionData = useActionData<typeof action>();
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Careers", url: "/careers" }
+  ]);
+
   return (
     <>
-      <link rel="canonical" href="https://yourdomain.com/careers" />
+      <link rel="canonical" href="https://hrteksystem.com/careers" />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="bg-[#023e8a] text-justify">
         <Navbar />
         {/* Top Ribbon */}
@@ -52,8 +71,10 @@ export default function CareerPage() {
                 <div className="flex justify-center">
                   <img
                     src="/assets/careersAssets/careerArt.png"
-                    alt="AI Powered HCM UI"
+                    alt="Workplace innovation at HRTek System - Team collaboration and technology"
                     className="max-w-full h-auto rounded-lg"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </div>
@@ -79,8 +100,10 @@ export default function CareerPage() {
             <div className="w-full rounded-xl overflow-hidden shadow-lg">
               <img
                 src="/assets/careersAssets/life.png"
-                alt="Illustration showing team culture"
+                alt="Vibrant team culture and life at HRTek System"
                 className="w-full object-contain h-64 md:h-96"
+                loading="lazy"
+                decoding="async"
               />
             </div>
 
@@ -148,8 +171,10 @@ export default function CareerPage() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <img
                   src="/assets/careersAssets/innovation.png"
-                  alt="Abstract illustration of Innovation"
+                  alt="Commitment to HR technology innovation and bold ideas"
                   className="w-full md:w-1/2 h-auto md:h-[300px] object-contain rounded-xl"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="md:w-1/2 space-y-4">
                   <h3 className="text-2xl font-semibold text-[#023e8a]">
@@ -188,8 +213,10 @@ export default function CareerPage() {
                 </div>
                 <img
                   src="/assets/careersAssets/empathy.png"
-                  alt="Abstract illustration of Empathy"
+                  alt="Culture of empathy and people-first approach in HR"
                   className="w-full md:w-1/2 h-auto md:h-[300px] object-contain rounded-xl"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
 
@@ -197,8 +224,10 @@ export default function CareerPage() {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <img
                   src="/assets/careersAssets/ownership.png"
-                  alt="Abstract illustration of Ownership"
+                  alt="Ownership and accountability values at HRTek System"
                   className="w-full md:w-1/2 h-auto md:h-[300px] object-contain rounded-xl"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="md:w-1/2 space-y-4">
                   <h3 className="text-2xl font-semibold text-[#023e8a]">

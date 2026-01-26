@@ -6,7 +6,7 @@ import { Link } from "@remix-run/react";
 import { ArrowUpRightIcon } from '@heroicons/react/24/solid';
 
 export const meta: MetaFunction = () => {
-  return [{ title: "Terms and Conditions | HRTek Systems" }];
+  return [{ title: "Terms and Conditions | HRTek System" }];
 };
 
 // --- Data for the Terms and Conditions Page ---
@@ -68,8 +68,8 @@ export default function TermsAndConditionsPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2">
-            <svg className="w-8 h-8 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18z" /><path d="M12 3v2" /><path d="M3 12h2" /><path d="M12 19v2" /><path d="M21 12h-2" /></svg>
-            <span className="font-semibold text-lg text-gray-800">HRTek Systems</span>
+            <img src="/logo_icon_final.png" alt="HRTek System" className="w-8 h-8 object-contain" />
+            <span className="font-semibold text-lg text-gray-800">HRTek System</span>
           </Link>
           <Link to="/auth" className="text-sm font-medium text-green-600 hover:text-green-800 flex items-center gap-1">
             Go to App <ArrowUpRightIcon className="w-4 h-4" />

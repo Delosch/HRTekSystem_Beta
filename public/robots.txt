@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and private routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /dashboard/
+Disallow: /onboarding/
+Disallow: /engine/
+Disallow: /payment/
+Disallow: /settings/
+
+# Allow important pages
+Allow: /
+Allow: /about-us
+Allow: /careers
+Allow: /blog
+Allow: /pricing
+Allow: /contact
+Allow: /testimonials
+Allow: /video-tutorials
+Allow: /services/
+
+# Sitemap location
+Sitemap: https://hrteksystem.com/sitemap.xml

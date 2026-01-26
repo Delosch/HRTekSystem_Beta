@@ -1,10 +1,11 @@
-// Role Management page
-import { json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
 import { getEnhancedUser } from "~/utils/user.server";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import Sidebar from "../components/DashboardComponents/Sidebar";
+import { sendTaskAssignedEmail } from "~/lib/email.service.server";
+import { toast } from "react-toastify";
 
 const sampleTasks = Array.from({ length: 24 }, (_, i) => ({
   id: i + 1,
@@ -20,6 +21,38 @@ export const loader: LoaderFunction = async ({ request }) => {
   return json({ user });
 };
 
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+  const intent = formData.get("intent") as string;
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const position = formData.get("position") as string;
+  const task = formData.get("task") as string;
+  const id = formData.get("id") as string;
+
+  if (intent === "assign_task") {
+    if (!name || !email || !position || !task || !id) {
+      return json({ success: false, error: "All fields are required" }, { status: 400 });
+    }
+    const emailSent = await sendTaskAssignedEmail({ name, email, task, position, id });
+    if (emailSent) {
+      return json({ success: true, message: `Task assigned and email sent to ${email}` });
+    }
+    return json({ success: false, error: "Failed to send email notification" }, { status: 500 });
+  }
+
+  if (intent === "approve_task" || intent === "revoke_access" || intent === "review_task") {
+    const taskId = formData.get("taskId");
+    // In a real app, you would update the database here.
+    return json({
+      success: true,
+      message: `${intent.replace('_', ' ').toUpperCase()} successful for task ID ${taskId}`
+    });
+  }
+
+  return json({ success: false, error: "Unknown action" }, { status: 400 });
+};
+
 export default function RoleManagementDashboard() {
   const { user } = useLoaderData<typeof loader>();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -30,6 +63,17 @@ export default function RoleManagementDashboard() {
     (typeof sampleTasks)[0] | null
   >(null);
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+
+  const fetcher = useFetcher<{ success: boolean; message?: string; error?: string }>();
+
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      toast.success(fetcher.data.message);
+      setShowCreateUserModal(false);
+    } else if (fetcher.data?.error) {
+      toast.error(fetcher.data.error);
+    }
+  }, [fetcher.data]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,17 +97,28 @@ export default function RoleManagementDashboard() {
 
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
-  const handleTaskAction = (action: string) => {
+  const handleTaskAction = (actionType: string) => {
     if (!selectedTask) return;
 
-    // Simulate backend process
-    const newStatus = action === 'Approve' ? 'completed' : action === 'Revoke Access' ? 'pending' : 'approval';
+    const intent = actionType === 'Approve' ? 'approve_task'
+      : actionType === 'Revoke Access' ? 'revoke_access'
+        : 'review_task';
+
+    fetcher.submit(
+      { intent, taskId: selectedTask.id.toString() },
+      { method: "post" }
+    );
+
+    // Locally update for immediate feedback
+    const newStatus = actionType === 'Approve' ? 'completed'
+      : actionType === 'Revoke Access' ? 'pending'
+        : 'approval';
 
     setTasks(prev => prev.map(t =>
-      t.id === selectedTask.id ? { ...t, status: newStatus } : t
+      t.id === (selectedTask as any).id ? { ...t, status: newStatus } : t
     ));
 
-    setActionFeedback(`${action} successful for ${selectedTask.title}`);
+    setActionFeedback(`${actionType} successful for ${selectedTask.title}`);
     setTimeout(() => {
       setActionFeedback(null);
       setSelectedTask(null);
@@ -266,30 +321,56 @@ export default function RoleManagementDashboard() {
 
         {/* Create User Modal */}
         {showCreateUserModal && (
-          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-2xl w-[300px] flex flex-col gap-3">
-              <h3 className="text-lg font-bold text-gray-800">
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center animate-in fade-in duration-300 backdrop-blur-sm">
+            <fetcher.Form method="post" className="bg-white p-8 rounded-[2rem] w-[400px] shadow-2xl flex flex-col gap-5 border border-slate-100">
+              <input type="hidden" name="intent" value="assign_task" />
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">
                 Create New User
               </h3>
-              {"Name Position Task ID".split(" ").map((label) => (
-                <div key={label} className="flex flex-col gap-1">
-                  <label className="text-sm text-gray-700">{label}</label>
-                  <input
-                    type="text"
-                    className="bg-green-300 px-3 py-2 rounded-md text-sm text-black"
-                  />
-                </div>
-              ))}
-              <button className="bg-green-600 text-white mt-2 py-2 rounded">
-                Create
-              </button>
-              <button
-                onClick={() => setShowCreateUserModal(false)}
-                className="text-sm text-gray-500 underline"
-              >
-                Cancel
-              </button>
-            </div>
+
+              <div className="space-y-4">
+                {[
+                  { label: "Name", name: "name", placeholder: "e.g. John Doe", type: "text" },
+                  { label: "Email", name: "email", placeholder: "e.g. john@example.com", type: "email" },
+                  { label: "Position", name: "position", placeholder: "e.g. Senior Designer", type: "text" },
+                  { label: "Task Title", name: "task", placeholder: "e.g. Brand Refresh", type: "text" },
+                  { label: "User ID", name: "id", placeholder: "e.g. USER-123", type: "text" },
+                ].map((field) => (
+                  <div key={field.name} className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
+                    <input
+                      name={field.name}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      required
+                      className="bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl text-sm text-emerald-900 placeholder:text-emerald-300 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all font-semibold"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={fetcher.state !== "idle"}
+                  className="bg-emerald-600 text-white py-4 rounded-xl font-bold hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {fetcher.state !== "idle" ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Creating...
+                    </>
+                  ) : "Create & Send Task"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateUserModal(false)}
+                  className="w-full text-center text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors py-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </fetcher.Form>
           </div>
         )}
       </main>
