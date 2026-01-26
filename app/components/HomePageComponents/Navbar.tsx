@@ -1,5 +1,4 @@
-
-import { Link, useLocation, useNavigate } from "@remix-run/react";
+import { Link, useLocation, useNavigate, useRouteLoaderData } from "@remix-run/react";
 import { useEffect, useState, useRef } from "react";
 import {
   Map,
@@ -9,14 +8,20 @@ import {
   FileBarChart2,
   Lightbulb,
   ChevronDown,
+  User,
+  LogOut
 } from "lucide-react";
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const rootData = useRouteLoaderData("root") as { user: any } | undefined;
+  const user = rootData?.user;
   const { pathname, hash } = location;
   const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // Scroll to services section if hash exists
   useEffect(() => {
@@ -33,6 +38,9 @@ export default function Navbar() {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsServicesOpen(false);
+      }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
       }
     };
 
@@ -61,12 +69,12 @@ export default function Navbar() {
     "px-6 py-2 text-white/90 hover:text-[#000033] hover:bg-white rounded-lg transition-all duration-300 font-semibold tracking-wide transform hover:scale-105";
 
   const servicePaths = [
-    "/roadmapServicePage",
-    "/hcmServicePage",
-    "/matAnalysisServicePage",
-    "/sharedServicePage",
-    "/changeMgmtServicePage",
-    "/hrtechAdvisoryServicePage",
+    "/roadmap-service",
+    "/hcm-service",
+    "/maturity-analysis-service",
+    "/shared-service",
+    "/change-management-service",
+    "/hrtech-advisory-service",
   ];
 
   return (
@@ -104,10 +112,10 @@ export default function Navbar() {
             </button>
           </Link>
 
-          <Link to="/aboutUsPage">
+          <Link to="/about-us">
             <button
               className={
-                pathname === "/aboutUsPage"
+                pathname === "/about-us"
                   ? activeStyle
                   : inactiveStyle
               }
@@ -137,7 +145,7 @@ export default function Navbar() {
               <ul className="py-3">
                 <li>
                   <Link
-                    to="/roadmapServicePage"
+                    to="/roadmap-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -152,7 +160,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/hcmServicePage"
+                    to="/hcm-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -167,7 +175,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/matAnalysisServicePage"
+                    to="/maturity-analysis-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -182,7 +190,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/sharedServicePage"
+                    to="/shared-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -197,7 +205,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/changeMgmtServicePage"
+                    to="/change-management-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -212,7 +220,7 @@ export default function Navbar() {
                 </li>
                 <li>
                   <Link
-                    to="/hrtechAdvisoryServicePage"
+                    to="/hrtech-advisory-service"
                     className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
                     onClick={() => setIsServicesOpen(false)}
                   >
@@ -252,15 +260,71 @@ export default function Navbar() {
 
         {/* Right: Action Button */}
         <div className="flex items-center gap-4">
-          <Link to="/auth">
-            <button
-              className="px-8 py-2.5 rounded-full bg-white text-[#000033] 
-                font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 
-                transform hover:scale-105 active:scale-95 border border-white"
-            >
-              Login | SignUp
-            </button>
-          </Link>
+          {user ? (
+            <div className="relative" ref={userDropdownRef}>
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-4 hover:bg-white/5 p-1 px-2 rounded-xl transition-all duration-300"
+              >
+                <div className="flex flex-col items-end hidden sm:flex">
+                  <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
+                  <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:scale-105 transition-transform">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+              </button>
+
+              {/* User Dropdown */}
+              <div
+                className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl py-2 z-[99999] 
+                origin-top-right transition-all duration-300 flex flex-col items-stretch ring-1 ring-black/5
+                ${isUserDropdownOpen
+                    ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                    : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                  }`}
+              >
+                <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
+                  <p className="text-gray-900 font-bold text-sm truncate">{user.first_name} {user.last_name}</p>
+                  <p className="text-blue-500 text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
+                </div>
+
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsUserDropdownOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors font-bold text-sm"
+                >
+                  <div className="bg-blue-100 p-1.5 rounded-lg">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  Dashboard
+                </Link>
+
+                <div className="h-px bg-gray-100 my-1"></div>
+
+                <Link
+                  to="/logout"
+                  onClick={() => setIsUserDropdownOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold text-sm"
+                >
+                  <div className="bg-red-100 p-1.5 rounded-lg">
+                    <LogOut className="w-4 h-4 text-red-600" />
+                  </div>
+                  Logout
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <Link to="/auth">
+              <button
+                className="px-8 py-2.5 rounded-full bg-white text-[#000033] 
+                  font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 
+                  transform hover:scale-105 active:scale-95 border border-white"
+              >
+                Login | SignUp
+              </button>
+            </Link>
+          )}
         </div>
       </nav>
     </div>

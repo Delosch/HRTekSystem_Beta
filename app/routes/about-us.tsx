@@ -4,40 +4,35 @@ import React from "react";
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import { MetaFunction } from "@remix-run/node";
+import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
 
 export const meta: MetaFunction = () => {
-  const title = "HRTek System – About Us";
-  const description =
-    "Revolutionize your HR. Our AI-driven software provides diagnostics and a strategic roadmap, empowering your team to transform operations and save you money.";
-  const image = "/landingPage-Preview.jpg"; // replace with actual image URL
-  const url = ""; // replace with actual domain
-
-  return [
-    // Standard meta
-    { title },
-    { name: "description", content: description },
-
-    // Open Graph (Facebook, LinkedIn, etc.)
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: url },
-    { property: "og:title", content: title },
-    { property: "og:description", content: description },
-    { property: "og:image", content: image },
-    { property: "og:site_name", content: "HRTek System" },
-
-    // Twitter Card
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:url", content: url },
-    { name: "twitter:title", content: title },
-    { name: "twitter:description", content: description },
-    { name: "twitter:image", content: image },
-  ];
+  return generateMeta({
+    title: "About HRTek System - Transforming HR with AI",
+    description: "Learn how HRTek System is revolutionizing HR transformation through AI-powered diagnostics, strategic consulting, and innovative technology solutions. Meet our team and discover our mission.",
+    keywords: "about HRTek, HR technology company, AI HR solutions, HR transformation experts, Atul Dixit, HR consulting",
+    url: "https://hrteksystem.com/about-us",
+    image: "https://hrteksystem.com/og-about.jpg",
+  });
 };
 
 export default function AboutUs() {
+  // Breadcrumb Schema
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "About Us", url: "/about-us" }
+  ]);
+
   return (
     <>
-      <link rel="canonical" href="/aboutUsPage" />
+      <link rel="canonical" href="https://hrteksystem.com/about-us" />
+
+      {/* Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+
       <div className="flex flex-col w-full bg-[#023e8a]">
         <Navbar />
         {/* Top Ribbon */}

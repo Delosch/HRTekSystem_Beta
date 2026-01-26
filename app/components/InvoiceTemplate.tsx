@@ -124,7 +124,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-black text-slate-400 uppercase w-12">Email</span>
-                                    <span className="text-xs font-bold text-slate-700">support@hr-teksystem.com</span>
+                                    <span className="text-xs font-bold text-slate-700">support@hrteksystem.com</span>
                                 </div>
                             </div>
                         </div>
@@ -269,7 +269,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
                             <div className="pt-8 border-t border-slate-100 flex flex-col gap-2">
                                 <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Support Inquiries</p>
-                                <p className="text-[11px] font-bold text-slate-400">EMAIL / support@hr-teksystem.com</p>
+                                <p className="text-[11px] font-bold text-slate-400">EMAIL / support@hrteksystem.com</p>
                                 <p className="text-[11px] font-bold text-slate-400">TEL / +91 93358 70619</p>
                             </div>
                         </div>

@@ -1,73 +1,74 @@
+// @ts-nocheck
 import React from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { 
-    Building, Target, BarChart, CheckCircle, XCircle, ArrowRight, TrendingUp, TrendingDown, 
+import {
+    Building, Target, BarChart, CheckCircle, XCircle, ArrowRight, TrendingUp, TrendingDown,
     Shield, Users, Lightbulb, Briefcase, AlertTriangle, Zap, Clock, DollarSign, Gauge
 } from 'lucide-react';
 
 // --- Data ---
 // Using the complete data object provided.
 const reportData = {
- "pk": "COMPANY#8f3b5935-677e-4bcb-a4db-2649a15832a0",
- "sk": "ANALYSIS#2025-08-05T11:10:08.369Z",
- "assessment_id": "QUESTION#5f41bdc9-67f0-478d-bba3-0271141d0eae",
- "createdAt": "2025-08-05T11:10:08.369Z",
- "result": {
-  "assessment_metadata": { "assessment_id": "DMA-2025-01-20-A4B1", "completion_date": "2025-01-20T10:00:00.000Z" },
-  "detailed_recommendations": {
-   "immediate_actions": {
-    "actions": [{ "action": "Establish Digital Transformation Steering Committee", "dimension": "Innovation & Governance", "effort": "Medium", "estimated_cost": "$10,000 - $25,000", "impact": "High", "success_metrics": ["Committee charter approved and signed by executive sponsor", "Monthly governance meetings scheduled with clear agendas"] }],
-    "priority": "Critical", "timeline": "0-3 months"
-   },
-   "short_term_initiatives": {
-    "actions": [{ "action": "Deploy customer data platform (CDP) to unify customer view", "dimension": "Customer Experience", "effort": "High", "estimated_cost": "$100,000 - $250,000", "impact": "High", "success_metrics": ["CDP implementation complete and integrated with 2+ key systems", "Customer segmentation capabilities improved by 25%"] }],
-    "priority": "High", "timeline": "3-12 months"
-   }
-  },
-  "industry_benchmarking": {
-   "capability_rankings": [
-    { "dimension": "Strategic Foundation", "improvement_urgency": "Low", "industry_rank": "Top 25%", "score_gap_to_leaders": 0.7 },
-    { "dimension": "Operations & Process", "improvement_urgency": "High", "industry_rank": "Bottom 30%", "score_gap_to_leaders": 1.5 }
-   ],
-   "peer_analysis": { "bottom_quartile_threshold": 2.8, "industry_average": 3.5, "similar_size_average": 3.4, "top_performers_average": 4.2 }
-  },
-  "maturity_analysis": {
-   "dimensional_scores": [
-    { "dimension": "Strategic Foundation", "confidence_score": 0.98, "critical_gaps": ["Budget allocation limitations", "Change resistance barriers"], "key_strengths": ["Strong executive leadership support", "Clear digital transformation roadmap"], "maturity_level": "Advanced", "raw_score": 4.3, "status": "Excellent" },
-    { "dimension": "Technology & Infrastructure", "confidence_score": 0.95, "critical_gaps": ["Legacy system integration challenges", "Data quality and accessibility issues"], "key_strengths": ["Scalable IT infrastructure", "Effective cybersecurity measures"], "maturity_level": "Advanced", "raw_score": 3.5, "status": "On Track" },
-    { "dimension": "Customer Experience", "confidence_score": 0.98, "critical_gaps": ["Limited personalization capabilities", "Weak customer feedback integration"], "key_strengths": ["Multi-channel digital presence", "Basic omnichannel capabilities"], "maturity_level": "Developing", "raw_score": 3.3, "status": "Needs Attention" },
-    { "dimension": "Operations & Process", "confidence_score": 0.9, "critical_gaps": ["Manual workflow dependencies", "Limited operational efficiency measurement"], "key_strengths": ["Identified automation priorities", "Some process digitization"], "maturity_level": "Developing", "raw_score": 2.7, "status": "Critical" },
-    { "dimension": "People & Culture", "confidence_score": 1, "critical_gaps": ["Moderate digital skills baseline", "Change management effectiveness"], "key_strengths": ["Cultural openness to digital change", "Clear skill development priorities"], "maturity_level": "Developing", "raw_score": 3.3, "status": "Needs Attention" },
-    { "dimension": "Innovation & Governance", "confidence_score": 0.95, "critical_gaps": ["Budget constraints for innovation", "Systematic innovation processes"], "key_strengths": ["Some digital governance framework", "Risk awareness"], "maturity_level": "Developing", "raw_score": 2.7, "status": "Critical" },
-    { "dimension": "Organization Overview", "confidence_score": 1, "critical_gaps": ["Current digital maturity stage limitations"], "key_strengths": ["Clear digital transformation awareness", "Appropriate organizational scale"], "maturity_level": "Developing", "raw_score": 3, "status": "Needs Attention" }
-   ],
-   "overall_score": { "maturity_level": "Developing", "industry_benchmark": { "peer_comparison": "Below" } }
-  },
-  "risk_assessment": {
-   "transformation_risks": [
-    { "impact": "High", "mitigation_strategy": "Implement a comprehensive change management program with clear communication, training, and employee involvement.", "probability": "Medium", "risk_category": "Cultural", "risk_description": "Employee resistance to digital transformation initiatives due to perceived threats to job security or increased workload." },
-    { "impact": "Medium", "mitigation_strategy": "Adopt a phased implementation approach with thorough testing in a sandbox environment before full rollout.", "probability": "High", "risk_category": "Operational", "risk_description": "Disruption to core business processes during the integration of new technologies with legacy systems." }
-   ]
-  },
-  "strategic_insights": {
-   "competitive_position": "Currently positioned slightly below the industry average, your organization's strong strategic foundation provides a competitive advantage that can be leveraged by improving operational and customer-facing capabilities.",
-   "transformation_readiness": { "readiness_level": "Medium", "score": 3.5, "enabling_factors": ["Strong executive leadership support", "Clear digital strategy", "Cultural openness to change"], "blocking_factors": ["Budget constraints", "Skills gaps", "Legacy system dependencies"] }
-  },
-  "success_metrics": {
-   "kpi_framework": [
-    { "dimension": "Strategic Foundation", "measurement_frequency": "Quarterly", "primary_kpis": ["Digital initiative success rate", "Strategic alignment score (survey-based)"], "target_improvement": "10% increase in success rate within 12 months" },
-    { "dimension": "Customer Experience", "measurement_frequency": "Quarterly", "primary_kpis": ["Customer Lifetime Value (CLV)", "Net Promoter Score (NPS)"], "target_improvement": "5-point increase in NPS within 6 months of CDP implementation" }
-   ]
-  },
-  "visualization_data": {
-   "radar_chart": {
-    "labels": ["Strategy", "Tech", "Customer", "Operations", "People", "Innovation", "Overview"],
-    "current_scores": [4.3, 3.5, 3.3, 2.7, 3.3, 2.7, 3],
-    "industry_benchmarks": [4, 3.8, 3.7, 3.2, 3.5, 3, 3],
-    "target_scores": [5, 5, 5, 5, 5, 5, 5]
-   }
-  }
- }
+    "pk": "COMPANY#8f3b5935-677e-4bcb-a4db-2649a15832a0",
+    "sk": "ANALYSIS#2025-08-05T11:10:08.369Z",
+    "assessment_id": "QUESTION#5f41bdc9-67f0-478d-bba3-0271141d0eae",
+    "createdAt": "2025-08-05T11:10:08.369Z",
+    "result": {
+        "assessment_metadata": { "assessment_id": "DMA-2025-01-20-A4B1", "completion_date": "2025-01-20T10:00:00.000Z" },
+        "detailed_recommendations": {
+            "immediate_actions": {
+                "actions": [{ "action": "Establish Digital Transformation Steering Committee", "dimension": "Innovation & Governance", "effort": "Medium", "estimated_cost": "$10,000 - $25,000", "impact": "High", "success_metrics": ["Committee charter approved and signed by executive sponsor", "Monthly governance meetings scheduled with clear agendas"] }],
+                "priority": "Critical", "timeline": "0-3 months"
+            },
+            "short_term_initiatives": {
+                "actions": [{ "action": "Deploy customer data platform (CDP) to unify customer view", "dimension": "Customer Experience", "effort": "High", "estimated_cost": "$100,000 - $250,000", "impact": "High", "success_metrics": ["CDP implementation complete and integrated with 2+ key systems", "Customer segmentation capabilities improved by 25%"] }],
+                "priority": "High", "timeline": "3-12 months"
+            }
+        },
+        "industry_benchmarking": {
+            "capability_rankings": [
+                { "dimension": "Strategic Foundation", "improvement_urgency": "Low", "industry_rank": "Top 25%", "score_gap_to_leaders": 0.7 },
+                { "dimension": "Operations & Process", "improvement_urgency": "High", "industry_rank": "Bottom 30%", "score_gap_to_leaders": 1.5 }
+            ],
+            "peer_analysis": { "bottom_quartile_threshold": 2.8, "industry_average": 3.5, "similar_size_average": 3.4, "top_performers_average": 4.2 }
+        },
+        "maturity_analysis": {
+            "dimensional_scores": [
+                { "dimension": "Strategic Foundation", "confidence_score": 0.98, "critical_gaps": ["Budget allocation limitations", "Change resistance barriers"], "key_strengths": ["Strong executive leadership support", "Clear digital transformation roadmap"], "maturity_level": "Advanced", "raw_score": 4.3, "status": "Excellent" },
+                { "dimension": "Technology & Infrastructure", "confidence_score": 0.95, "critical_gaps": ["Legacy system integration challenges", "Data quality and accessibility issues"], "key_strengths": ["Scalable IT infrastructure", "Effective cybersecurity measures"], "maturity_level": "Advanced", "raw_score": 3.5, "status": "On Track" },
+                { "dimension": "Customer Experience", "confidence_score": 0.98, "critical_gaps": ["Limited personalization capabilities", "Weak customer feedback integration"], "key_strengths": ["Multi-channel digital presence", "Basic omnichannel capabilities"], "maturity_level": "Developing", "raw_score": 3.3, "status": "Needs Attention" },
+                { "dimension": "Operations & Process", "confidence_score": 0.9, "critical_gaps": ["Manual workflow dependencies", "Limited operational efficiency measurement"], "key_strengths": ["Identified automation priorities", "Some process digitization"], "maturity_level": "Developing", "raw_score": 2.7, "status": "Critical" },
+                { "dimension": "People & Culture", "confidence_score": 1, "critical_gaps": ["Moderate digital skills baseline", "Change management effectiveness"], "key_strengths": ["Cultural openness to digital change", "Clear skill development priorities"], "maturity_level": "Developing", "raw_score": 3.3, "status": "Needs Attention" },
+                { "dimension": "Innovation & Governance", "confidence_score": 0.95, "critical_gaps": ["Budget constraints for innovation", "Systematic innovation processes"], "key_strengths": ["Some digital governance framework", "Risk awareness"], "maturity_level": "Developing", "raw_score": 2.7, "status": "Critical" },
+                { "dimension": "Organization Overview", "confidence_score": 1, "critical_gaps": ["Current digital maturity stage limitations"], "key_strengths": ["Clear digital transformation awareness", "Appropriate organizational scale"], "maturity_level": "Developing", "raw_score": 3, "status": "Needs Attention" }
+            ],
+            "overall_score": { "maturity_level": "Developing", "industry_benchmark": { "peer_comparison": "Below" } }
+        },
+        "risk_assessment": {
+            "transformation_risks": [
+                { "impact": "High", "mitigation_strategy": "Implement a comprehensive change management program with clear communication, training, and employee involvement.", "probability": "Medium", "risk_category": "Cultural", "risk_description": "Employee resistance to digital transformation initiatives due to perceived threats to job security or increased workload." },
+                { "impact": "Medium", "mitigation_strategy": "Adopt a phased implementation approach with thorough testing in a sandbox environment before full rollout.", "probability": "High", "risk_category": "Operational", "risk_description": "Disruption to core business processes during the integration of new technologies with legacy systems." }
+            ]
+        },
+        "strategic_insights": {
+            "competitive_position": "Currently positioned slightly below the industry average, your organization's strong strategic foundation provides a competitive advantage that can be leveraged by improving operational and customer-facing capabilities.",
+            "transformation_readiness": { "readiness_level": "Medium", "score": 3.5, "enabling_factors": ["Strong executive leadership support", "Clear digital strategy", "Cultural openness to change"], "blocking_factors": ["Budget constraints", "Skills gaps", "Legacy system dependencies"] }
+        },
+        "success_metrics": {
+            "kpi_framework": [
+                { "dimension": "Strategic Foundation", "measurement_frequency": "Quarterly", "primary_kpis": ["Digital initiative success rate", "Strategic alignment score (survey-based)"], "target_improvement": "10% increase in success rate within 12 months" },
+                { "dimension": "Customer Experience", "measurement_frequency": "Quarterly", "primary_kpis": ["Customer Lifetime Value (CLV)", "Net Promoter Score (NPS)"], "target_improvement": "5-point increase in NPS within 6 months of CDP implementation" }
+            ]
+        },
+        "visualization_data": {
+            "radar_chart": {
+                "labels": ["Strategy", "Tech", "Customer", "Operations", "People", "Innovation", "Overview"],
+                "current_scores": [4.3, 3.5, 3.3, 2.7, 3.3, 2.7, 3],
+                "industry_benchmarks": [4, 3.8, 3.7, 3.2, 3.5, 3, 3],
+                "target_scores": [5, 5, 5, 5, 5, 5, 5]
+            }
+        }
+    }
 };
 
 // --- Helper Components ---
@@ -141,7 +142,7 @@ const CoverPage = ({ data }) => {
 const ExecutiveSummary = ({ data }) => {
     const { strategic_insights, maturity_analysis } = data.result;
     const { radar_chart } = data.result.visualization_data;
-    
+
     const chartData = radar_chart.labels.map((label, i) => ({
         subject: label,
         'Current': radar_chart.current_scores[i],
@@ -162,22 +163,22 @@ const ExecutiveSummary = ({ data }) => {
                             <h4 className="text-sm font-semibold text-green-700">Competitive Position</h4>
                             <p className="text-2xl font-bold text-green-900">{maturity_analysis.overall_score.industry_benchmark.peer_comparison} Average</p>
                         </div>
-                         <div className="p-4 rounded-lg bg-purple-50 border border-purple-200 col-span-1 sm:col-span-2">
+                        <div className="p-4 rounded-lg bg-purple-50 border border-purple-200 col-span-1 sm:col-span-2">
                             <h4 className="text-sm font-semibold text-purple-700">Transformation Readiness</h4>
                             <p className="text-2xl font-bold text-purple-900">{strategic_insights.transformation_readiness.readiness_level} ({strategic_insights.transformation_readiness.score} / 5)</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center"><TrendingUp className="w-5 h-5 mr-2 text-green-500"/>Key Enabling Factors</h3>
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center"><TrendingUp className="w-5 h-5 mr-2 text-green-500" />Key Enabling Factors</h3>
                             <ul className="space-y-2 text-sm text-gray-600">
                                 {strategic_insights.transformation_readiness.enabling_factors.map(factor => (
                                     <li key={factor} className="flex items-start"><CheckCircle className="w-4 h-4 mr-2 mt-0.5 text-green-500 flex-shrink-0" />{factor}</li>
                                 ))}
                             </ul>
                         </div>
-                         <div>
-                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center"><TrendingDown className="w-5 h-5 mr-2 text-red-500"/>Key Blocking Factors</h3>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center"><TrendingDown className="w-5 h-5 mr-2 text-red-500" />Key Blocking Factors</h3>
                             <ul className="space-y-2 text-sm text-gray-600">
                                 {strategic_insights.transformation_readiness.blocking_factors.map(factor => (
                                     <li key={factor} className="flex items-start"><XCircle className="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0" />{factor}</li>
@@ -191,8 +192,8 @@ const ExecutiveSummary = ({ data }) => {
                     <ResponsiveContainer width="100%" height={400}>
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                             <PolarGrid />
-                            <PolarAngleAxis dataKey="subject" tick={{fontSize: 12}} />
-                            <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{fontSize: 10}}/>
+                            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                            <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fontSize: 10 }} />
                             <Tooltip />
                             <Legend />
                             <Radar name="Current" dataKey="Current" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
@@ -217,7 +218,7 @@ const DimensionBreakdown = ({ data }) => {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="flex items-center mb-2">
-                                        <DimensionIcon dimension={dim.dimension} className="w-8 h-8"/>
+                                        <DimensionIcon dimension={dim.dimension} className="w-8 h-8" />
                                         <h3 className="text-xl font-bold text-gray-800 ml-3">{dim.dimension}</h3>
                                     </div>
                                     <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusStyles.bg} ${statusStyles.text}`}>{dim.status}</span>
@@ -231,13 +232,13 @@ const DimensionBreakdown = ({ data }) => {
                                 <div>
                                     <h4 className="font-semibold text-green-700 mb-2">Key Strengths</h4>
                                     <ul className="space-y-1 text-gray-600">
-                                        {dim.key_strengths.map(s => <li key={s} className="flex"><CheckCircle className="w-4 h-4 mr-2 mt-0.5 text-green-500 flex-shrink-0"/>{s}</li>)}
+                                        {dim.key_strengths.map(s => <li key={s} className="flex"><CheckCircle className="w-4 h-4 mr-2 mt-0.5 text-green-500 flex-shrink-0" />{s}</li>)}
                                     </ul>
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-red-700 mb-2">Critical Gaps</h4>
                                     <ul className="space-y-1 text-gray-600">
-                                        {dim.critical_gaps.map(g => <li key={g} className="flex"><XCircle className="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0"/>{g}</li>)}
+                                        {dim.critical_gaps.map(g => <li key={g} className="flex"><XCircle className="w-4 h-4 mr-2 mt-0.5 text-red-500 flex-shrink-0" />{g}</li>)}
                                     </ul>
                                 </div>
                             </div>
@@ -273,13 +274,13 @@ const DetailedRecommendations = ({ data }) => {
         <Section title="Detailed Recommendations" subtitle="Actionable steps to accelerate your digital transformation.">
             <div className="space-y-8">
                 <div>
-                    <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center"><Clock className="w-6 h-6 mr-3 text-red-600"/>Immediate Actions ({immediate_actions.timeline})</h3>
+                    <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center"><Clock className="w-6 h-6 mr-3 text-red-600" />Immediate Actions ({immediate_actions.timeline})</h3>
                     <div className="grid grid-cols-1 gap-6">
                         {immediate_actions.actions.map(action => <ActionCard key={action.action} action={action} />)}
                     </div>
                 </div>
                 <div>
-                    <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center"><Clock className="w-6 h-6 mr-3 text-blue-600"/>Short-Term Initiatives ({short_term_initiatives.timeline})</h3>
+                    <h3 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center"><Clock className="w-6 h-6 mr-3 text-blue-600" />Short-Term Initiatives ({short_term_initiatives.timeline})</h3>
                     <div className="grid grid-cols-1 gap-6">
                         {short_term_initiatives.actions.map(action => <ActionCard key={action.action} action={action} />)}
                     </div>
@@ -314,7 +315,7 @@ const IndustryBenchmarking = ({ data }) => {
                         <tbody className="text-gray-700">
                             {capability_rankings.map(rank => (
                                 <tr key={rank.dimension} className="border-b border-gray-200">
-                                    <td className="py-3 px-4 flex items-center"><DimensionIcon dimension={rank.dimension} className="w-5 h-5 mr-3"/>{rank.dimension}</td>
+                                    <td className="py-3 px-4 flex items-center"><DimensionIcon dimension={rank.dimension} className="w-5 h-5 mr-3" />{rank.dimension}</td>
                                     <td className="py-3 px-4 text-center">{rank.industry_rank}</td>
                                     <td className="py-3 px-4 text-center">{rank.score_gap_to_leaders.toFixed(1)}</td>
                                     <td className={`py-3 px-4 text-center ${getUrgencyStyles(rank.improvement_urgency)}`}>{rank.improvement_urgency}</td>
@@ -335,7 +336,7 @@ const RiskAssessment = ({ data }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {transformation_risks.map(risk => (
                     <div key={risk.risk_category} className="bg-white p-6 rounded-lg shadow-md">
-                        <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center"><AlertTriangle className="w-5 h-5 mr-2 text-red-500"/>{risk.risk_category} Risk</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center"><AlertTriangle className="w-5 h-5 mr-2 text-red-500" />{risk.risk_category} Risk</h3>
                         <div className="flex space-x-4 text-sm text-gray-500 mb-3">
                             <span className={`font-medium ${getUrgencyStyles(risk.impact)}`}>Impact: {risk.impact}</span>
                             <span className={`font-medium ${getUrgencyStyles(risk.probability)}`}>Probability: {risk.probability}</span>
@@ -368,12 +369,12 @@ const SuccessMetrics = ({ data }) => {
                             </ul>
                         </div>
                         <div className="mb-4">
-                             <h4 className="font-semibold text-gray-700 mb-1">Target Improvement</h4>
-                             <p className="text-sm text-gray-600 flex items-center"><Target className="w-4 h-4 mr-2 text-green-600"/>{kpi.target_improvement}</p>
+                            <h4 className="font-semibold text-gray-700 mb-1">Target Improvement</h4>
+                            <p className="text-sm text-gray-600 flex items-center"><Target className="w-4 h-4 mr-2 text-green-600" />{kpi.target_improvement}</p>
                         </div>
                         <div>
-                             <h4 className="font-semibold text-gray-700 mb-1">Frequency</h4>
-                             <p className="text-sm text-gray-600 flex items-center"><Clock className="w-4 h-4 mr-2 text-blue-600"/>{kpi.measurement_frequency}</p>
+                            <h4 className="font-semibold text-gray-700 mb-1">Frequency</h4>
+                            <p className="text-sm text-gray-600 flex items-center"><Clock className="w-4 h-4 mr-2 text-blue-600" />{kpi.measurement_frequency}</p>
                         </div>
                     </div>
                 ))}
@@ -385,15 +386,15 @@ const SuccessMetrics = ({ data }) => {
 // --- Main App Component ---
 
 export default function App() {
-  return (
-    <main className="font-sans bg-white">
-      <CoverPage data={reportData} />
-      <ExecutiveSummary data={reportData} />
-      <DimensionBreakdown data={reportData} />
-      <DetailedRecommendations data={reportData} />
-      <IndustryBenchmarking data={reportData} />
-      <RiskAssessment data={reportData} />
-      <SuccessMetrics data={reportData} />
-    </main>
-  );
+    return (
+        <main className="font-sans bg-white">
+            <CoverPage data={reportData} />
+            <ExecutiveSummary data={reportData} />
+            <DimensionBreakdown data={reportData} />
+            <DetailedRecommendations data={reportData} />
+            <IndustryBenchmarking data={reportData} />
+            <RiskAssessment data={reportData} />
+            <SuccessMetrics data={reportData} />
+        </main>
+    );
 }

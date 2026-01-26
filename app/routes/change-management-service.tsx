@@ -1,11 +1,21 @@
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
-import { Link } from "@remix-run/react";
+import { Link, useRouteLoaderData } from "@remix-run/react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-import TimeSelector from "~/components/HomePageComponents/TimeSelector";
 import React, { useState } from "react";
+import BookingModal from "~/components/HomePageComponents/BookingModal";
+import { MetaFunction } from "@remix-run/node";
+import { generateMeta, generateBreadcrumbSchema, generateServiceSchema } from "~/utils/seo";
+
+export const meta: MetaFunction = () => {
+  return generateMeta({
+    title: "Intelligent Change Management - HR Digital Transformation",
+    description: "Manage the people-side of HR transformation with our Intelligent Change Management Diagnostic. Assess readiness, identify fatigue, and ensure high user adoption.",
+    keywords: "change management, HR transition, digital transformation change, workforce readiness, change fatigue assessment, HR tech adoption",
+    url: "https://hrteksystem.com/change-management-service",
+    image: "https://hrteksystem.com/og-change-management.jpg",
+  });
+};
 
 const challenges = [
   "Low user adoption after HR tech go-live",
@@ -23,12 +33,34 @@ const solutions = [
 
 export default function ChangeManagementDiagnosticPage() {
   const [showPopup, setShowPopup] = useState(false);
-  const [selected, setSelected] = useState<Date | undefined>(undefined);
+  const rootData = useRouteLoaderData("root") as { user: any };
+  const user = rootData?.user;
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Change Management", url: "/change-management-service" }
+  ]);
+
+  const serviceSchema = generateServiceSchema({
+    name: "Intelligent Change Management",
+    description: "Diagnostic capability for managing the human aspect of HR digital transformation",
+    provider: "HRTek System",
+    areaServed: "Global",
+    url: "https://hrteksystem.com/change-management-service"
+  });
 
   return (
     <>
+      <link rel="canonical" href="https://hrteksystem.com/change-management-service" />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
       <div className="bg-white text-gray-800">
-        {/* Hero Section - Modern Professional Design */}
         <Navbar />
         <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
           {/* Background Pattern */}
@@ -73,15 +105,15 @@ export default function ChangeManagementDiagnosticPage() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button
-                    onClick={() => { const isLoggedIn = document.cookie.includes('user_session'); if (isLoggedIn) { window.location.href = '/assessment?engine=Intelligent%20Change%20Management'; } else { window.location.href = '/auth'; } }}
+                  <Link
+                    to="/engine/change-management"
                     className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
                   >
                     Start Assessment
                     <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-4 4m4-4H3" />
                     </svg>
-                  </button>
+                  </Link>
                   <button
                     onClick={() => setShowPopup(true)}
                     className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
@@ -284,91 +316,21 @@ export default function ChangeManagementDiagnosticPage() {
               >
                 Talk to a Consultant
               </button>
-              <button onClick={() => { const isLoggedIn = document.cookie.includes('user_session'); if (isLoggedIn) { window.location.href = '/assessment?engine=Intelligent%20Change%20Management'; } else { window.location.href = '/auth'; } }} className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300">Take the Assessment</button>
+              <Link to="/engine/change-management" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300 text-center">Take the Assessment</Link>
             </div>
           </div>
-
-          {showPopup && (
-            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center px-4 animate-fadeIn">
-              <div className="relative w-full max-w-5xl bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-blue-100 overflow-auto max-h-[90vh] no-scrollbar transform scale-95 animate-scaleIn">
-                {/* Close Button */}
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 hover:scale-110 transition-all"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-
-                {/* Modal Content */}
-                <div>
-                  <h2 className="text-blue-600 text-3xl font-extrabold mb-4">
-                    Ready to Transform Your HR Strategy?
-                  </h2>
-                  <p className="text-gray-700 leading-relaxed mb-8">
-                    If you're interested in learning more about how our solutions can help your
-                    organization—or if you'd like expert guidance tailored to your HR goals—
-                    <br />
-                    <span className="font-semibold text-black">
-                      Select a convenient date and time
-                    </span>{" "}
-                    below, and take the next step toward building a future-ready HR Architecture.
-                  </p>
-
-                  {/* Calendar and Time Slots */}
-                  <div className="flex flex-col lg:flex-row gap-8 mb-8">
-                    {/* Calendar */}
-                    <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-                      <DayPicker
-                        mode="single"
-                        selected={selected}
-                        onSelect={setSelected}
-                        fromDate={new Date()}
-                        disabled={{ before: new Date() }}
-                        modifiersClassNames={{
-                          selected: "bg-blue-600 text-white rounded-full",
-                          today: "text-blue-700 font-bold",
-                        }}
-                        className="text-center text-black"
-                      />
-                    </div>
-
-                    {/* Time Slots */}
-                    <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-                      <TimeSelector />
-                    </div>
-
-                    {/* Image */}
-                    <div className="hidden lg:block flex-1">
-                      <img
-                        src="/assets/homepageAssets/bookAppointment.png"
-                        alt="Client booking appointment illustration"
-                        className="w-full h-auto rounded-xl shadow-lg"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex justify-end gap-4">
-                    <button
-                      onClick={() => setShowPopup(false)}
-                      className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition-all">
-                      Book Appointment
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
+
+        {/* Booking Modal */}
+        <BookingModal
+          isOpen={showPopup}
+          onClose={() => setShowPopup(false)}
+          engineName="Intelligent Change Management"
+          user={user}
+        />
 
         <style>
           {`
-  /* Hide scrollbar */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -377,7 +339,6 @@ export default function ChangeManagementDiagnosticPage() {
     scrollbar-width: none;
   }
 
-  /* Smooth animations */
   @keyframes fadeIn {
     from { opacity: 0 }
     to { opacity: 1 }
@@ -391,10 +352,8 @@ export default function ChangeManagementDiagnosticPage() {
 `}
         </style>
 
-
         <Footer />
       </div>
     </>
   );
 }
-

@@ -1104,28 +1104,49 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-4 overflow-y-auto custom-scrollbar-light pr-2">
-              {[
-                { action: "Maturity Report Generated", time: "2m ago", type: "success" },
-                { action: "New Engine Verified", time: "1h ago", type: "info" },
-                { action: "Data Matrix Updated", time: "5h ago", type: "update" },
-                { action: "New Security Protocol", time: "1d ago", type: "alert" },
-              ].map((activity, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-default"
-                >
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
-                    activity.type === 'info' ? 'bg-blue-500' :
-                      activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
-                    } group-hover:scale-150 transition-transform`}></div>
-                  <div className="flex-1">
-                    <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
-                      {activity.action}
+              {(() => {
+                const activities = [
+                  ...(data.htiReports || []).map((r: any) => ({
+                    id: r.reportId,
+                    action: `HTI Report: ${r.status.toUpperCase()}`,
+                    time: new Date(r.generatedAt).toLocaleDateString(),
+                    type: r.status === 'approved' ? 'success' : 'info',
+                    href: `/hti`
+                  })),
+                  ...(data.verifiedPayments || []).map((p: any) => ({
+                    id: p.paymentId,
+                    action: `Payment Verified: ${p.amount}`,
+                    time: new Date(p.verifiedAt).toLocaleDateString(),
+                    type: 'success',
+                    href: `/roadmapDashboard`
+                  }))
+                ].sort((a, b) => 0.5 - Math.random()); // Randomize for now or use timestamp if available
+
+                if (activities.length === 0) {
+                  return (
+                    <p className="text-gray-400 text-xs text-center py-4 italic">No recent activity yet</p>
+                  );
+                }
+
+                return activities.slice(0, 6).map((activity, idx) => (
+                  <Link
+                    key={idx}
+                    to={activity.href}
+                    className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-pointer"
+                  >
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
+                      activity.type === 'info' ? 'bg-blue-500' :
+                        activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
+                      } group-hover:scale-150 transition-transform`}></div>
+                    <div className="flex-1">
+                      <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
+                        {activity.action}
+                      </div>
+                      <div className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{activity.time}</div>
                     </div>
-                    <div className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{activity.time}</div>
-                  </div>
-                </div>
-              ))}
+                  </Link>
+                ));
+              })()}
             </div>
 
             <Link to="/admin/activity-logs" className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full block">
