@@ -2,9 +2,9 @@ import { json, LoaderFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ChartBarIcon, 
-  DocumentTextIcon, 
+import {
+  ChartBarIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ArrowTrendingUpIcon,
@@ -14,12 +14,12 @@ import {
 } from "@heroicons/react/24/outline";
 import Chart from 'chart.js/auto';
 import { requireUserSession } from "~/lib/session.server";
-import { getLatestAnalysis } from "~/utils/analysis";
+import { getLatestAnalysis } from "~/utils/analysis.server";
 
 export const loader: LoaderFunction = async ({ request }: { request: Request }) => {
-  const user = await requireUserSession(request); 
+  const user = await requireUserSession(request);
   const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, "Profiling Assessment");
-  
+
   if (!data) {
     throw new Response("Not Found", { status: 404 });
   }
@@ -75,11 +75,10 @@ export default function AssessmentReport() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                  activeTab === tab.id
+                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <tab.icon className="h-5 w-5" />
                 <span>{tab.label}</span>
@@ -103,8 +102,8 @@ export default function AssessmentReport() {
               <OverviewTab data={processedData} />
             )}
             {activeTab === "detailed" && (
-              <DetailedTab 
-                data={processedData} 
+              <DetailedTab
+                data={processedData}
                 onSectionSelect={setSelectedSection}
                 selectedSection={selectedSection}
               />
@@ -157,7 +156,7 @@ function processAssessmentData(digitalMaturityAnalysis: any[]) {
 function calculateSectionScore(section: any): number {
   const strengthCount = section.strengths?.length || 0;
   const weaknessCount = section.weaknesses?.length || 0;
-  
+
   if (weaknessCount > strengthCount * 2) return 1;
   if (weaknessCount > strengthCount) return 2;
   if (strengthCount === weaknessCount) return 3;
@@ -169,7 +168,7 @@ function calculateOverallMaturity(sections: any[]): string {
   if (sections.length === 0) return "Unknown";
   const avgScore = sections.reduce((sum, s) => sum + s.score, 0) / sections.length;
   if (avgScore <= 1.5) return "Nascent";
-  if (avgScore <= 2.5) return "Emerging";  
+  if (avgScore <= 2.5) return "Emerging";
   if (avgScore <= 3.5) return "Developing";
   if (avgScore <= 4.5) return "Advanced";
   return "Transformative";
@@ -200,7 +199,7 @@ function extractKeyInsights(sections: any[]) {
   const topStrengths = sections
     .flatMap(s => s.strengths.map((strength: string) => ({ section: s.title, text: strength })))
     .slice(0, 5);
-    
+
   const criticalWeaknesses = sections
     .flatMap(s => s.weaknesses.map((weakness: string) => ({ section: s.title, text: weakness })))
     .slice(0, 5);
@@ -238,8 +237,8 @@ interface OverviewTabProps {
 }
 
 function OverviewTab({ data }: OverviewTabProps) {
-  const avgScore = data.sections.length > 0 
-    ? data.sections.reduce((sum, s) => sum + s.score, 0) / data.sections.length 
+  const avgScore = data.sections.length > 0
+    ? data.sections.reduce((sum, s) => sum + s.score, 0) / data.sections.length
     : 0;
 
   return (
@@ -396,10 +395,10 @@ function DetailedTab({ data, onSectionSelect, selectedSection }: DetailedTabProp
   );
 }
 
-function SectionAnalysisCard({ 
-  section, 
-  isExpanded, 
-  onToggle 
+function SectionAnalysisCard({
+  section,
+  isExpanded,
+  onToggle
 }: {
   section: any;
   isExpanded: boolean;
@@ -429,10 +428,9 @@ function SectionAnalysisCard({
               </p>
             </div>
           </div>
-          <ChevronRightIcon 
-            className={`h-5 w-5 text-gray-400 transition-transform ${
-              isExpanded ? 'rotate-90' : ''
-            }`}
+          <ChevronRightIcon
+            className={`h-5 w-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''
+              }`}
           />
         </div>
       </div>
@@ -603,7 +601,7 @@ interface ScoreBadgeProps {
 
 function ScoreBadge({ score }: ScoreBadgeProps) {
   const color = score <= 2 ? 'bg-red-500' : score <= 3 ? 'bg-yellow-500' : 'bg-green-500';
-  
+
   return (
     <div className={`${color} text-white rounded-lg w-12 h-12 flex items-center justify-center`}>
       <span className="text-lg font-bold">{score}</span>
@@ -704,8 +702,8 @@ function MetricsGrid({ sections }: { sections: any[] }) {
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">{section.score}/5</span>
             <div className="w-16 bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full" 
+              <div
+                className="bg-blue-600 h-2 rounded-full"
                 style={{ width: `${(section.score / 5) * 100}%` }}
               />
             </div>

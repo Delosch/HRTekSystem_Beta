@@ -6,7 +6,7 @@ import { Link } from "@remix-run/react";
 import { ArrowUpRightIcon } from '@heroicons/react/24/solid';
 
 export const meta: MetaFunction = () => {
-  return [{ title: "Terms and Conditions | HRTek Systems" }];
+  return [{ title: "Terms and Conditions | HRTek System" }];
 };
 
 // --- Data for the Terms and Conditions Page ---
@@ -68,8 +68,8 @@ export default function TermsAndConditionsPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-2">
-            <svg className="w-8 h-8 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18z" /><path d="M12 3v2" /><path d="M3 12h2" /><path d="M12 19v2" /><path d="M21 12h-2" /></svg>
-            <span className="font-semibold text-lg text-gray-800">HRTek Systems</span>
+            <img src="/logo_icon_final.png" alt="HRTek System" className="w-8 h-8 object-contain" />
+            <span className="font-semibold text-lg text-gray-800">HRTek System</span>
           </Link>
           <Link to="/auth" className="text-sm font-medium text-green-600 hover:text-green-800 flex items-center gap-1">
             Go to App <ArrowUpRightIcon className="w-4 h-4" />
@@ -80,7 +80,7 @@ export default function TermsAndConditionsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Terms and Conditions</h1>
-          <p className="mt-2 text-lg text-gray-600">HR-Tek System Delosch Technologies Pvt. Ltd.</p>
+          <p className="mt-2 text-lg text-gray-600">HR-Tek System</p>
           <p className="mt-1 text-sm text-gray-500 font-medium uppercase tracking-wider">Last Updated: November 2025</p>
         </div>
 
@@ -106,7 +106,7 @@ export default function TermsAndConditionsPage() {
           {/* Main Content */}
           <div className="md:col-span-3 space-y-12">
             <section className="prose prose-lg max-w-none text-gray-700">
-              <p>These Terms and Conditions (“Terms”) govern your use of the HR-Tek System platform, website, AI-driven HR advisory tools, and all services offered by Delosch Technologies Pvt. Ltd. (“Company”, “we”, “our”, “us”).</p>
+              <p>These Terms and Conditions (“Terms”) govern your use of the HR-Tek System platform, website, AI-driven HR advisory tools, and all services offered (“Company”, “we”, “our”, “us”).</p>
               <p>By accessing or using our services, you agree to be bound by these Terms. If you do not agree, you may not access or use the platform.</p>
             </section>
 
@@ -170,7 +170,7 @@ export default function TermsAndConditionsPage() {
 
             <TermsSection id="intellectual-property" title="6. Intellectual Property Rights">
               <ul className="list-disc pl-5 space-y-4">
-                <li>All content, frameworks, algorithms, designs, assessments, AI models, and trademarks belong exclusively to Delosch Technologies Pvt. Ltd.</li>
+                <li>All content, frameworks, algorithms, designs, assessments, AI models, and trademarks belong exclusively to HR-Tek System.</li>
                 <li>Users receive a limited, non-transferable, non-exclusive license to access and use the platform for internal business purposes.</li>
                 <li>Users may not copy, reproduce, or distribute any part of the platform without written approval.</li>
               </ul>
@@ -212,11 +212,11 @@ export default function TermsAndConditionsPage() {
 
             <TermsSection id="reports" title="9. Reports, Insights & Advisory Outputs">
               <p>The platform provides:</p>
-              <ul className="list-disc pl-5 mt-4 space-y-2 flex flex-wrap gap-x-12">
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">Automated HR insights</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">Digital maturity scores</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">AI-driven recommendations</li>
-                <li className="w-full sm:w-[calc(50%-1.5rem)]">HR strategic roadmaps</li>
+              <ul className="list-disc pl-5 mt-4 space-y-2">
+                <li>Automated HR insights</li>
+                <li>Digital maturity scores</li>
+                <li>AI-driven recommendations</li>
+                <li>HR strategic roadmaps</li>
               </ul>
               <p className="mt-6 text-gray-700">While results aim to be accurate, they are dependent on the data provided by users.</p>
               <p className="mt-2 font-bold text-gray-900">The Company is not liable for any organizational decisions made solely based on system-generated outputs.</p>
@@ -304,7 +304,7 @@ export default function TermsAndConditionsPage() {
             <TermsSection id="contact" title="18. Contact Information">
               <p>For queries related to these Terms, contact:</p>
               <address className="mt-6 not-italic bg-gray-100 p-6 rounded-2xl border border-gray-200">
-                <strong className="text-gray-900 block mb-2 font-display text-lg">Delosch Technologies Pvt. Ltd. – HR-Tek System</strong>
+                <strong className="text-gray-900 block mb-2 font-display text-lg">HR-Tek System</strong>
                 <div className="space-y-1 text-gray-600">
                   <p className="flex items-center gap-2">
                     <span className="font-semibold w-16">Email:</span>

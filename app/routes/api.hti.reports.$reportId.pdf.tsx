@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs } from "@remix-run/node";
 import { renderToStream } from "@react-pdf/renderer";
 import { requireUserSession } from "~/lib/session.server";
-import { getAdvisoryReport } from "~/models/hti.model";
+import { getAdvisoryReport } from "~/models/hti.model.server";
 import { HTIReportPDF } from "~/components/HTIReportPDF";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {

@@ -22,7 +22,9 @@ const getDimensionColor = (dimension: string): string => {
 };
 
 // Get priority color
-const getPriorityColor = (priority: string): { bg: string; border: string; text: string } => {
+const getPriorityColor = (priority: string | undefined): { bg: string; border: string; text: string } => {
+    if (!priority) return { bg: 'bg-slate-500', border: 'border-slate-500', text: 'text-slate-400' };
+
     switch (priority.toLowerCase()) {
         case 'critical': return { bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-400' };
         case 'high': return { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-400' };

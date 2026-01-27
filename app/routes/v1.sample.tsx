@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { json, LoaderFunction } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import clsx from 'clsx';
-import { 
-  Chart as ChartJS, 
-  RadialLinearScale, 
-  PointElement, 
-  LineElement, 
-  Filler, 
-  Tooltip, 
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
   Legend,
   CategoryScale,
   LinearScale,
@@ -18,7 +18,7 @@ import {
 } from 'chart.js';
 import { Radar, Bar, Doughnut } from 'react-chartjs-2';
 import { requireUserSession } from "~/lib/session.server";
-import { getLatestAnalysis } from "~/utils/analysis";
+import { getLatestAnalysis } from "~/utils/analysis.server";
 
 // Register Chart.js components
 ChartJS.register(
@@ -154,7 +154,7 @@ interface AssessmentReport {
 }
 
 // Animation Variants
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -165,7 +165,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
@@ -178,7 +178,7 @@ const itemVariants = {
   }
 };
 
-const chartVariants = {
+const chartVariants: Variants = {
   hidden: { scale: 0.8, opacity: 0 },
   visible: {
     scale: 1,
@@ -318,7 +318,7 @@ const InteractiveRadarChart: React.FC<{ data: RadarChartData }> = ({ data }) => 
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
       variants={chartVariants}
       initial="hidden"
@@ -338,7 +338,7 @@ const InteractiveRadarChart: React.FC<{ data: RadarChartData }> = ({ data }) => 
     </motion.div>
   );
 };
-const LegendSquare: React.FC<{label: string; color: string}> = ({label, color}) => (
+const LegendSquare: React.FC<{ label: string; color: string }> = ({ label, color }) => (
   <div className="flex items-center space-x-2">
     <div className="w-5 h-5 rounded" style={{ backgroundColor: color }}></div>
     <span className="text-sm text-gray-600">{label}</span>
@@ -389,7 +389,7 @@ export const InteractiveHeatmap: React.FC<{ data: HeatMapData }> = ({ data }) =>
   return (
     <motion.div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 relative"
       variants={chartVariants} initial="hidden" animate="visible" whileHover={{ scale: 1.02 }}>
-      
+
       {/* Tooltip */}
       <AnimatePresence>
         {tooltip.visible && (
@@ -461,13 +461,13 @@ export const InteractiveHeatmap: React.FC<{ data: HeatMapData }> = ({ data }) =>
 };
 
 // Interactive Bar Chart Component
-const InteractiveBarChart: React.FC<{ 
+const InteractiveBarChart: React.FC<{
   dimensionalScores: Array<{
     dimension?: string;
     raw_score?: number;
     industry_benchmark?: number;
     questions_analyzed?: number;
-  }> 
+  }>
 }> = ({ dimensionalScores }) => {
   const [activeBar, setActiveBar] = useState<number | null>(null);
 
@@ -483,7 +483,7 @@ const InteractiveBarChart: React.FC<{
         {
           label: 'Your Score',
           data: scores,
-          backgroundColor: dimensions.map((_, index) => 
+          backgroundColor: dimensions.map((_, index) =>
             activeBar === index ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.6)'
           ),
           borderColor: 'rgba(59, 130, 246, 1)',
@@ -494,7 +494,7 @@ const InteractiveBarChart: React.FC<{
         {
           label: 'Industry Benchmark',
           data: benchmarks,
-          backgroundColor: dimensions.map((_, index) => 
+          backgroundColor: dimensions.map((_, index) =>
             activeBar === index ? 'rgba(239, 68, 68, 0.8)' : 'rgba(239, 68, 68, 0.6)'
           ),
           borderColor: 'rgba(239, 68, 68, 1)',
@@ -505,7 +505,7 @@ const InteractiveBarChart: React.FC<{
         {
           label: 'Questions Analyzed',
           data: questions,
-          backgroundColor: dimensions.map((_, index) => 
+          backgroundColor: dimensions.map((_, index) =>
             activeBar === index ? 'rgba(16, 185, 129, 0.8)' : 'rgba(16, 185, 129, 0.6)'
           ),
           borderColor: 'rgba(16, 185, 129, 1)',
@@ -613,7 +613,7 @@ const InteractiveBarChart: React.FC<{
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
       variants={chartVariants}
       initial="hidden"
@@ -654,7 +654,7 @@ const InteractiveBubbleChart: React.FC<{ bubbles?: BubbleData[] }> = ({ bubbles 
   const maxImportance = Math.max(...bubbles.map(b => b.importance || 0)) || 1;
 
   return (
-    <motion.div 
+    <motion.div
       className="bg-white p-6 rounded-xl shadow-lg border border-gray-200"
       variants={chartVariants}
       initial="hidden"
@@ -669,13 +669,13 @@ const InteractiveBubbleChart: React.FC<{ bubbles?: BubbleData[] }> = ({ bubbles 
           {/* Grid */}
           <defs>
             <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="1"/>
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e5e7eb" strokeWidth="1" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
           {/* Axes */}
-          <line x1={50} y1={350} x2={550} y2={350} stroke="#374151" strokeWidth={2}/>
-          <line x1={50} y1={50} x2={50} y2={350} stroke="#374151" strokeWidth={2}/>
+          <line x1={50} y1={350} x2={550} y2={350} stroke="#374151" strokeWidth={2} />
+          <line x1={50} y1={50} x2={50} y2={350} stroke="#374151" strokeWidth={2} />
           {/* Labels */}
           <text x={300} y={390} textAnchor="middle" fontSize={14} fill="#374151">
             Strategic Importance -&gt;
@@ -692,7 +692,7 @@ const InteractiveBubbleChart: React.FC<{ bubbles?: BubbleData[] }> = ({ bubbles 
             const isHovered = hovered === bubble.dimension;
 
             return (
-              <motion.g 
+              <motion.g
                 key={i}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -774,7 +774,7 @@ const AnimatedProgressRing: React.FC<{
   const radius = 35;
   const circumference = 2 * Math.PI * radius;
   const strokeDasharray = `${(animatedPercentage / 100) * circumference} ${circumference}`;
-  
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'excellent': return '#10b981';
@@ -786,7 +786,7 @@ const AnimatedProgressRing: React.FC<{
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-col items-center p-4 bg-white rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
@@ -822,7 +822,7 @@ const AnimatedProgressRing: React.FC<{
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.span 
+          <motion.span
             className="text-lg font-bold text-gray-900"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -832,12 +832,12 @@ const AnimatedProgressRing: React.FC<{
           </motion.span>
         </div>
       </div>
-      
+
       <h4 className="text-sm font-semibold text-center text-gray-700 mb-2 min-h-[2.5rem] flex items-center">
         {dimension}
       </h4>
-      
-      <motion.span 
+
+      <motion.span
         className="text-xs px-3 py-1 rounded-full text-white font-medium"
         style={{ backgroundColor: getStatusColor(status) }}
         initial={{ scale: 0 }}
@@ -879,7 +879,7 @@ export default function ReportPage() {
 
   if (!data || !report) {
     return (
-      <motion.div 
+      <motion.div
         className="min-h-screen bg-gray-50 flex items-center justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -903,10 +903,10 @@ export default function ReportPage() {
   const dimensionalScores = maturityAnalysis.dimensional_scores || [];
   const progressBars = visualizationData.progress_bars || [];
   const heatmap = visualizationData.heat_map || {}
-  const bubbleGap = visualizationData.gap_bubbles || {}
+  const bubbleGap = visualizationData.gap_bubbles || [];
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50"
       initial="hidden"
       animate="visible"
@@ -914,16 +914,16 @@ export default function ReportPage() {
     >
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Animated Header */}
-        <motion.div 
+        <motion.div
           className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 mb-8 relative overflow-hidden"
           variants={itemVariants}
         >
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5"></div>
-          
+
           <div className="relative flex items-center justify-between">
             <div>
-              <motion.h1 
+              <motion.h1
                 className="text-4xl font-bold text-gray-900 mb-3"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -931,7 +931,7 @@ export default function ReportPage() {
               >
                 Digital Maturity Assessment Report
               </motion.h1>
-              <motion.div 
+              <motion.div
                 className="text-sm text-gray-500 space-y-1"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -939,12 +939,12 @@ export default function ReportPage() {
               >
                 <p><span className="font-medium">Assessment ID:</span> {assessmentMetadata.assessment_id || 'N/A'}</p>
                 <p><span className="font-medium">Section:</span> {data.section}</p>
-                <p><span className="font-medium">Completed:</span> {assessmentMetadata.completion_date ? 
+                <p><span className="font-medium">Completed:</span> {assessmentMetadata.completion_date ?
                   new Date(assessmentMetadata.completion_date).toLocaleDateString() : 'N/A'}</p>
               </motion.div>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="text-right"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -971,7 +971,7 @@ export default function ReportPage() {
         </motion.div>
 
         {/* Executive Dashboard */}
-        <motion.div 
+        <motion.div
           className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
           variants={itemVariants}
         >
@@ -1005,14 +1005,14 @@ export default function ReportPage() {
 
         {/* Visualizations Section */}
         <motion.div className="mb-8" variants={itemVariants}>
-          <motion.h2 
+          <motion.h2
             className="text-3xl font-bold text-gray-900 mb-8 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             📊 Interactive Analytics Dashboard
           </motion.h2>
-          
+
           {/* Main Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <InteractiveRadarChart data={visualizationData.radar_chart || {}} />
@@ -1027,7 +1027,7 @@ export default function ReportPage() {
 
           {/* Progress Rings */}
           {progressBars.length > 0 && (
-            <motion.div 
+            <motion.div
               className="bg-white p-8 rounded-2xl shadow-xl border border-gray-200"
               variants={itemVariants}
             >
@@ -1050,7 +1050,7 @@ export default function ReportPage() {
         </motion.div>
 
         {/* Organization Profile */}
-        <motion.div 
+        <motion.div
           className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 mb-8"
           variants={itemVariants}
         >
@@ -1077,7 +1077,7 @@ export default function ReportPage() {
         </motion.div>
 
         {/* Strategic Insights */}
-        <motion.div 
+        <motion.div
           className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 mb-8"
           variants={itemVariants}
         >
@@ -1105,7 +1105,7 @@ export default function ReportPage() {
 
           {/* Transformation Readiness */}
           {strategicInsights.transformation_readiness && (
-            <motion.div 
+            <motion.div
               className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border border-blue-200"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -1122,7 +1122,7 @@ export default function ReportPage() {
                   </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h4 className="text-lg font-semibold text-green-700 mb-4 flex items-center">
@@ -1130,8 +1130,8 @@ export default function ReportPage() {
                   </h4>
                   <ul className="space-y-3">
                     {(strategicInsights.transformation_readiness.enabling_factors || []).map((factor, index) => (
-                      <motion.li 
-                        key={index} 
+                      <motion.li
+                        key={index}
                         className="flex items-start text-gray-700 bg-white p-3 rounded-lg shadow-sm"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1149,8 +1149,8 @@ export default function ReportPage() {
                   </h4>
                   <ul className="space-y-3">
                     {(strategicInsights.transformation_readiness.blocking_factors || []).map((factor, index) => (
-                      <motion.li 
-                        key={index} 
+                      <motion.li
+                        key={index}
                         className="flex items-start text-gray-700 bg-white p-3 rounded-lg shadow-sm"
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1168,7 +1168,7 @@ export default function ReportPage() {
         </motion.div>
 
         {/* Footer */}
-        <motion.div 
+        <motion.div
           className="text-center text-sm text-gray-500 py-8"
           variants={itemVariants}
         >

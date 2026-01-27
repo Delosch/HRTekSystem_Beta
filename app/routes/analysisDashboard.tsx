@@ -3,13 +3,14 @@ import { motion } from "framer-motion";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import EngineStatusActions from "../components/DashboardComponents/EngineStatusActions";
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
-import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model";
+import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
 import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import { getLatestAnalysis } from "~/utils/question.utils";
 
 const ENGINE = "HR Technology Maturity Analysis";
 
@@ -50,8 +51,19 @@ export const loader: LoaderFunction = async ({ request }) => {
     throw redirect('/onboarding');
   }
 
+  const { getCompanyPayments } = await import("~/models/payment.model.server");
+
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
+  const latestAnalysis = await getLatestAnalysis(user.organisationId as string, ENGINE);
+
+  // Check payment status
+  const payments = await getCompanyPayments(user.organisationId);
+  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
+
+  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
+  const isPending = paymentRecord?.status === "payment_submitted";
+  const hasReport = !!latestAnalysis;
 
   let recommendations = null;
   try {
@@ -65,16 +77,20 @@ export const loader: LoaderFunction = async ({ request }) => {
       name: ENGINE,
       status: currentEngineData?.usage_status || "Draft",
       progress: currentEngineData?.progress || 0,
-      data: currentEngineData
+      data: currentEngineData,
+      analysis: latestAnalysis?.result
     },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user
+    user,
+    isPaid,
+    isPending,
+    hasReport
   });
 };
 
 export default function AnalysisDashboard() {
-  const { currentEngine, completedEngines, recommendations, user } = useLoaderData<typeof loader>();
+  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -92,8 +108,9 @@ export default function AnalysisDashboard() {
   }, []);
 
   useEffect(() => {
-    if (fetcher.data?.success && fetcher.data?.message) {
-      setToastMessage(fetcher.data.message);
+    const data = fetcher.data as any;
+    if (data?.success && data?.message) {
+      setToastMessage(data.message);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }
@@ -104,6 +121,22 @@ export default function AnalysisDashboard() {
   const recommendedEngines = recommendations
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
     .slice(0, 3);
+
+  const handleReportAction = () => {
+    if (hasReport) {
+      if (isPaid || isPending) {
+        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate('/payment/checkout');
+      }
+    } else {
+      if (currentEngine.progress === 100) {
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+      } else {
+        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
@@ -220,30 +253,45 @@ export default function AnalysisDashboard() {
               </h2>
 
               <div className="space-y-4">
-                {[
-                  { name: "Digital Infrastructure", score: 85, color: "blue" },
-                  { name: "Process Automation", score: 72, color: "green" },
-                  { name: "Data Analytics", score: 68, color: "purple" },
-                  { name: "Employee Experience", score: 91, color: "amber" },
-                  { name: "Integration Capability", score: 55, color: "indigo" },
-                ].map((section, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {section.name}
-                      </span>
-                      <span className="text-sm font-bold text-gray-900">
-                        {section.score}%
-                      </span>
+                {(currentEngine.analysis?.maturity_analysis?.dimensional_scores || [
+                  { dimension: "Digital Infrastructure", percentage: 85, color: "blue" },
+                  { dimension: "Process Automation", percentage: 72, color: "green" },
+                  { dimension: "Data Analytics", percentage: 68, color: "purple" },
+                  { dimension: "Employee Experience", percentage: 91, color: "amber" },
+                  { dimension: "Integration Capability", percentage: 55, color: "indigo" },
+                ]).map((section: any, index: number) => {
+                  const colors: Record<string, string> = {
+                    "Digital Infrastructure": "blue",
+                    "Process Automation": "green",
+                    "Data Analytics": "purple",
+                    "Employee Experience": "amber",
+                    "Integration Capability": "indigo"
+                  };
+                  const color = section.color || colors[section.dimension] || "blue";
+                  const score = section.percentage ?? section.score;
+                  const name = section.dimension ?? section.name;
+
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          {name}
+                        </span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {score}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${score}%` }}
+                          transition={{ duration: 1, delay: index * 0.1 }}
+                          className={`h-2.5 rounded-full bg-gradient-to-r from-${color}-500 to-${color}-600`}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className={`h-2.5 rounded-full bg-gradient-to-r from-${section.color}-500 to-${section.color}-600 transition-all duration-1000`}
-                        style={{ width: `${section.score}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
@@ -252,10 +300,15 @@ export default function AnalysisDashboard() {
                   param={ENGINE}
                 />
                 <button
-                  onClick={() => navigate('/engine/dashboard/hr-tech-maturity')}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                  onClick={handleReportAction}
+                  className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl text-white ${isPaid && hasReport
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    : isPending && hasReport
+                      ? 'bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    }`}
                 >
-                  View Detailed Report
+                  {isPaid && hasReport ? "View Detailed Report" : isPending && hasReport ? "Verification Pending" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : "Continue"}
                 </button>
               </div>
             </div>

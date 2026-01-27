@@ -328,7 +328,7 @@ export default function QuestionnaireEngine({
   title = "Assessment Form",
   initialFormData = {},
   initialStep = 0,
-  autoSaveKey = "questionnaireDraft",
+  autoSaveKey,
   autoSaveDebounce = 3000,
   onStepSave,
   onComplete,
@@ -353,8 +353,9 @@ export default function QuestionnaireEngine({
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   // Auto-save form hook
-  const { formData, setFormData, saveToServer, isSaving } = useAutoSaveForm<any>(
-    autoSaveKey,
+  const effectiveKey = autoSaveKey || `draft_${assessmentId}`;
+  const { formData, setFormData, saveToServer, isSaving, clearData } = useAutoSaveForm<any>(
+    effectiveKey,
     initialFormData,
     {
       debounce: autoSaveDebounce,
@@ -459,8 +460,9 @@ export default function QuestionnaireEngine({
         }
       }
       if (saveToServer) {
-        await saveToServer();
+        await saveToServer(formData);
       }
+      clearData();
     }
   };
 

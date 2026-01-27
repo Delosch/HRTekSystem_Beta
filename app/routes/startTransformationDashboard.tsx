@@ -12,9 +12,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { json, LoaderFunction, ActionFunction, redirect } from "@remix-run/node";
 import { getEnhancedUser } from "~/utils/user.server";
-import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model";
+import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model.server";
 import { getEnginePriceByName } from "~/lib/pricing";
-import { addOrUpdateCartItem } from "~/models/cart.model";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 
 const engineDetails: Record<string, { name: string; description: string; icon: string; route: string }> = {
   "Intelligent Change Management": {
@@ -57,7 +57,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   }
 
   // Check transformation eligibility (requires 3+ verified paid engines)
-  const { isEligibleForTransformation } = await import("~/models/payment.model");
+  const { isEligibleForTransformation } = await import("~/models/payment.model.server");
   const eligibility = await isEligibleForTransformation(user.organisationId as string);
 
   const completedEngines = await completedEngine(user.organisationId as string);
@@ -118,10 +118,13 @@ export const action: ActionFunction = async ({ request }) => {
   return json({ error: "Invalid intent" }, { status: 400 });
 };
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function StartTransformationDashboard() {
   const { completedEngines, recommendations, user, transformationEligibility, enginePrices } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<{ success?: boolean; message?: string; error?: string }>(); // Typed fetcher
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -134,10 +137,10 @@ export default function StartTransformationDashboard() {
   }, []);
 
   useEffect(() => {
-    if (fetcher.data?.success && fetcher.data?.message) {
-      setToastMessage(fetcher.data.message);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+    if (fetcher.data?.success) {
+      toast.success(fetcher.data.message);
+    } else if (fetcher.data?.error) {
+      toast.error(fetcher.data.error);
     }
   }, [fetcher.data]);
 
@@ -499,14 +502,8 @@ export default function StartTransformationDashboard() {
             ))}
           </div>
         </section >
-      </main >
-
-      {showToast && (
-        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
-          <CheckCircleIcon className="w-6 h-6" />
-          <span className="font-semibold">{toastMessage}</span>
-        </div>
-      )}
-    </div >
+      </main>
+      <ToastContainer />
+    </div>
   );
 }

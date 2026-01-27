@@ -9,6 +9,7 @@ import {
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 import "./tailwind.css";
 import "./styles/dashboard-premium.css";
 import CookieConsent from "./components/ui/CookieConsent";
@@ -16,8 +17,13 @@ import CookieConsent from "./components/ui/CookieConsent";
 /* ============================
    ✅ LOADER
    ============================ */
+import { getUserSession } from "~/lib/session.server";
+
 export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getUserSession(request).catch(() => null);
+
   return {
+    user,
     ENV: {
       VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
     },
@@ -55,6 +61,83 @@ export default function App() {
         <Meta />
         <Links />
 
+        {/* Google Analytics (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZSWQ6ZNXVQ"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-ZSWQ6ZNXVQ');
+            `,
+          }}
+        />
+
+        {/* JSON-LD Schema Markup for Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "HRTek System",
+              "alternateName": "HR-Tek System",
+              "url": "https://hrteksystem.com",
+              "logo": "https://hrteksystem.com/logo_icon_final.png",
+              "description": "AI-powered HR transformation platform offering digital maturity assessment, HCM vendor selection, roadmap generation, and change management solutions.",
+              "foundingDate": "2025",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Lucknow",
+                "addressRegion": "Uttar Pradesh",
+                "addressCountry": "IN"
+              },
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "telephone": "+91-9335870619",
+                "contactType": "Customer Service",
+                "email": "support@hrteksystem.com",
+                "availableLanguage": ["English", "Hindi"]
+              },
+              "sameAs": [
+                "https://in.linkedin.com/company/hr-tek-system",
+                "https://twitter.com/hrtek_system",
+                "https://facebook.com/hrteksystem"
+              ],
+              "brand": {
+                "@type": "Brand",
+                "name": "Delosch Technologies Pvt Ltd"
+              }
+            }),
+          }}
+        />
+
+        {/* JSON-LD Schema for SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "HRTek System",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "INR"
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.8",
+                "ratingCount": "127"
+              },
+              "description": "Comprehensive HR transformation platform with AI-powered assessments, vendor matching, and strategic roadmap generation."
+            }),
+          }}
+        />
+
         {/* ✅ EXPOSE ENV TO CLIENT (CRITICAL) */}
         <script
           dangerouslySetInnerHTML={{
@@ -89,6 +172,7 @@ export default function App() {
       <body suppressHydrationWarning>
         <Outlet />
         <CookieConsent />
+        <ToastContainer position="bottom-right" theme="colored" />
 
         <ScrollRestoration />
         <Scripts />

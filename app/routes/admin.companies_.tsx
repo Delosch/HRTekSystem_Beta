@@ -7,7 +7,7 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { getAllCompanyProfiles } from "~/models/company.model";
+import { getAllCompanyProfiles } from "~/models/company.model.server";
 
 // Types
 type CompanyStatus = "Active" | "Pending Verification";

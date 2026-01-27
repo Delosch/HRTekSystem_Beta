@@ -8,15 +8,28 @@ export default function Footer() {
         {/* Company Info */}
         <div className="flex flex-col items-start gap-4">
           <Link to="/" className="flex items-center gap-3 group">
-            <img src="/hrtek_logo.png" alt="HRTEK Logo" className="h-12 w-auto object-contain bg-white/10 rounded-lg p-1" />
-            <h2 className="text-2xl font-black tracking-tighter">HRTEK <span className="text-blue-400">SYSTEM</span></h2>
+            <div className="w-16 h-16 overflow-hidden flex items-center justify-center">
+              <img
+                src="/logo_icon_final.png"
+                alt="HR-Tek"
+                className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
+              />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-black tracking-tighter leading-none">
+                <span className="text-white">HR-TEK</span>{" "}
+                <span className="text-[#00B5E2]">SYSTEM</span>
+              </h1>
+
+            </div>
           </Link>
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
-            A brand of Delosch Technologies Pvt. Ltd.
-            <br />
             Empowering HR transformation through intelligent software solutions
             tailored for growth.
           </p>
+          <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
+            A Brand of Delosch Technologies Pvt Ltd
+          </span>
         </div>
 
         {/* Navigation Links */}
@@ -29,17 +42,17 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/aboutUsPage" className="hover:text-white">
+              <Link to="/about-us" className="hover:text-white">
                 About Us
               </Link>
             </li>
             <li>
-              <Link to="/careersPage" className="hover:text-white">
+              <Link to="/careers" className="hover:text-white">
                 Careers
               </Link>
             </li>
             <li>
-              <Link to="/blogPage" className="hover:text-white">
+              <Link to="/blog" className="hover:text-white">
                 Blogs
               </Link>
             </li>
@@ -49,9 +62,39 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/legal/terms" className="hover:text-white">
-                Legal
+              <Link to="/testimonials" className="hover:text-white">
+                Testimonials
               </Link>
+            </li>
+            <li>
+              <Link to="/video-tutorials" className="hover:text-white">
+                Video Tutorials
+              </Link>
+            </li>
+            <li>
+              <Link to="/recommendation" className="hover:text-white">
+                Recommendations
+              </Link>
+            </li>
+            <li>
+              <a href="/legal/term" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Terms & Conditions
+              </a>
+            </li>
+            <li>
+              <a href="/legal/privacy" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Privacy Policy
+              </a>
+            </li>
+            <li>
+              <a href="/legal/cookie" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                Cookie Policy
+              </a>
+            </li>
+            <li>
+              <a href="/legal/gdpr" className="hover:text-white" target="_blank" rel="noopener noreferrer">
+                GDPR Compliance
+              </a>
             </li>
           </ul>
         </div>
@@ -61,28 +104,33 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Services</h3>
           <ul className="space-y-2 text-sm text-gray-300">
             <li>
-              <Link to="/" className="hover:text-white">
+              <Link to="/roadmap-service" className="hover:text-white">
                 HR Transformation Roadmap Generator
               </Link>
             </li>
             <li>
-              <Link to="/aboutUsPage" className="hover:text-white">
+              <Link to="/hcm-service" className="hover:text-white">
                 HCM Vendor Fit Engine
               </Link>
             </li>
             <li>
-              <Link to="/careersPage" className="hover:text-white">
+              <Link to="/shared-service" className="hover:text-white">
                 Shared Service Designer
               </Link>
             </li>
             <li>
-              <Link to="/blogPage" className="hover:text-white">
+              <Link to="/maturity-analysis-service" className="hover:text-white">
                 Advanced HR Maturity Analysis
               </Link>
             </li>
             <li>
-              <Link to="/blogPage" className="hover:text-white">
+              <Link to="/change-management-service" className="hover:text-white">
                 Emotionally Intelligent Change Management
+              </Link>
+            </li>
+            <li>
+              <Link to="/hrtech-advisory-service" className="hover:text-white">
+                HR Tech Advisory layer
               </Link>
             </li>
           </ul>
@@ -98,6 +146,50 @@ export default function Footer() {
           </ul>
         </div>
 
+        {/* Accreditations */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Accreditations</h3>
+          <div className="space-y-4">
+            {/* Startup India */}
+            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
+              <div className="w-12 h-12 bg-white rounded flex items-center justify-center p-1">
+                <img
+                  src="/assets/certificates/startup_india_logo.png"
+                  alt="Startup India Recognized"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Startup India</p>
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-gray-500 uppercase">Certificate No.</span>
+                  <span className="text-[10px] text-gray-300 font-mono font-medium">DIPP202318</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Start In UP */}
+            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
+              <div className="w-12 h-12 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100">
+                <img
+                  src="/assets/certificates/start_in_up_cert.jpg"
+                  alt="Start In UP Registered"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Start In UP</p>
+                <div className="flex flex-col">
+                  <span className="text-[9px] text-gray-500 uppercase">Registration No.</span>
+                  <span className="text-[10px] text-gray-300 font-mono font-medium leading-tight max-w-[120px] break-all">
+                    R/STARTUP/UP/LKO/ 2025/000038500
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="justify-self-end">
           {/* <-- only change: justify-self-end so this column sits at the right */}
           <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
@@ -110,7 +202,32 @@ export default function Footer() {
             >
               <img
                 src="/assets/homepageAssets/linkInSite.png"
-                alt="LinkedIn link"
+                alt="LinkedIn"
+                className="w-5 h-5 object-contain"
+              />
+            </a>
+            <a
+              href="https://twitter.com/hrtek_system"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+            >
+              <img
+                src="/assets/homepageAssets/xSite.png"
+                alt="X (Twitter)"
+                className="w-5 h-5 object-contain"
+              />
+            </a>
+            <a
+              href="https://facebook.com/hrteksystem"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+            >
+              <img
+                src="/assets/homepageAssets/fbSite.png"
+                alt="Facebook"
+                className="w-5 h-5 object-contain"
               />
             </a>
           </div>
@@ -124,6 +241,6 @@ export default function Footer() {
           <span className="text-right mr-6">CIN - U62010UP2025PTC219986</span>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 }

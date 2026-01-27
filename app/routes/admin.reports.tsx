@@ -1,7 +1,21 @@
 import { json } from "@remix-run/node";
 import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { Link, useLoaderData, Form, useNavigation } from "@remix-run/react";
-import { ArrowLeftIcon, CheckCircleIcon, XCircleIcon, EyeIcon, ClockIcon } from "@heroicons/react/24/outline";
+import {
+    ArrowLeftIcon,
+    CheckCircleIcon,
+    XCircleIcon,
+    EyeIcon,
+    ClockIcon,
+    SparklesIcon,
+    BeakerIcon,
+    CpuChipIcon,
+    ChartBarIcon,
+    ArrowTopRightOnSquareIcon,
+    FunnelIcon,
+    MagnifyingGlassIcon
+} from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Report {
     reportId: string;
@@ -13,12 +27,11 @@ interface Report {
 }
 
 export const loader: LoaderFunction = async () => {
-    const { getAllAnalysisReports } = await import("~/utils/analysis");
-    const { getCompanyProfile } = await import("~/models/company.model");
+    const { getAllAnalysisReports } = await import("~/utils/analysis.server");
+    const { getCompanyProfile } = await import("~/models/company.model.server");
 
     const allReports = await getAllAnalysisReports();
 
-    // Map DB items to Report interface
     const reports: Report[] = await Promise.all(allReports.map(async (item: any) => {
         const companyId = item.pk.replace("COMPANY#", "");
         let companyName = "Unknown Company";
@@ -32,7 +45,7 @@ export const loader: LoaderFunction = async () => {
         }
 
         return {
-            reportId: item.sk, // Use SK as report ID (ANALYSIS#TIMESTAMP)
+            reportId: item.sk,
             companyId: companyId,
             companyName: companyName,
             engineName: item.section || "Unknown Engine",
@@ -41,7 +54,6 @@ export const loader: LoaderFunction = async () => {
         };
     }));
 
-    // Sort by most recent first
     reports.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
     return json({ reports });
@@ -49,7 +61,7 @@ export const loader: LoaderFunction = async () => {
 
 export const action: ActionFunction = async ({ request }) => {
     const formData = await request.formData();
-    const reportId = formData.get("reportId") as string; // sk
+    const reportId = formData.get("reportId") as string;
     const action = formData.get("action") as string;
     const companyId = formData.get("companyId") as string;
 
@@ -57,7 +69,7 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
-    const { updateAnalysisStatus } = await import("~/utils/analysis");
+    const { updateAnalysisStatus } = await import("~/utils/analysis.server");
 
     const status = action === "approve" ? "approved" : "rejected";
     const pk = `COMPANY#${companyId}`;
@@ -66,7 +78,7 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (success && action === "approve") {
         try {
-            const { autoGenerateProposal } = await import("~/services/proposal.service");
+            const { autoGenerateProposal } = await import("~/services/proposal.service.server");
             const proposalResult = await autoGenerateProposal(companyId);
             if (proposalResult.success) {
                 console.log("Proposal auto-generated:", proposalResult.message);
@@ -84,163 +96,154 @@ export default function AdminReports() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
 
-    const getStatusBadge = (status: string) => {
-        const badges = {
-            pending: { color: "bg-yellow-100 text-yellow-800", icon: ClockIcon, text: "Pending Review" },
-            approved: { color: "bg-green-100 text-green-800", icon: CheckCircleIcon, text: "Auto-Approved" },
-            rejected: { color: "bg-red-100 text-red-800", icon: XCircleIcon, text: "Rejected" },
+    const getStatusStyles = (status: string) => {
+        const styles = {
+            pending: { color: "text-amber-600 bg-amber-50 border-amber-100", icon: ClockIcon, text: "Vetting Required" },
+            approved: { color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: CheckCircleIcon, text: "Authorized" },
+            rejected: { color: "text-rose-600 bg-rose-50 border-rose-100", icon: XCircleIcon, text: "Discarded" },
         };
-
-        const badge = badges[status as keyof typeof badges] || badges.approved;
-        const Icon = badge.icon;
-
-        return (
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
-                <Icon className="w-4 h-4" />
-                {badge.text}
-            </span>
-        );
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return styles[status as keyof typeof styles] || styles.approved;
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-                <Link
-                    to="/admin"
-                    className="inline-flex items-center text-indigo-600 hover:text-indigo-800 mb-4"
-                >
-                    <ArrowLeftIcon className="w-5 h-5 mr-2" />
-                    Back to Dashboard
-                </Link>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">AI Generated Reports</h1>
-                        <p className="text-gray-600 mt-1">Monitor all auto-approved AI-generated assessment reports</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm text-gray-600">Total Reports</p>
-                        <p className="text-3xl font-bold text-indigo-600">{reports.length}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-200">
-                <div className="flex gap-4 items-center">
-                    <label className="text-sm font-medium text-gray-700">Filter by:</label>
-                    <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        <option value="all">All Reports</option>
-                        <option value="pending">Pending Only</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        <option value="">All Engines</option>
-                        <option value="roadmap">HR Transformation Roadmap</option>
-                        <option value="vendor">HCM Vendor Fit</option>
-                        <option value="shared">Shared Service Designer</option>
-                        <option value="change">Change Management</option>
-                        <option value="maturity">HR Tech Maturity</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* Reports List */}
-            <div className="space-y-4">
-                {reports.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow-md p-12 border border-gray-200 text-center">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircleIcon className="w-8 h-8 text-gray-400" />
+        <div className="max-w-7xl mx-auto space-y-10 p-4 animate-in fade-in duration-700">
+            {/* Intel Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="p-1 px-3 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-indigo-100 flex items-center gap-2">
+                            <CpuChipIcon className="h-3.5 w-3.5" />
+                            Engine Output Pipeline
                         </div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">No Reports to Review</h3>
-                        <p className="text-gray-600">All AI-generated reports have been reviewed.</p>
                     </div>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">AI Analysis <span className="text-indigo-600">Hub</span></h1>
+                    <p className="text-gray-500 font-medium mt-1">Audit and validate synthesized intelligence across all product engines.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div className="text-right">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Volumes</p>
+                            <p className="text-xl font-black text-indigo-600">{reports.length}</p>
+                        </div>
+                        <div className="h-8 w-px bg-gray-100" />
+                        <ChartBarIcon className="h-8 w-8 text-indigo-200" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Selection Filters */}
+            <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 flex flex-wrap items-center gap-4">
+                <div className="flex-1 relative">
+                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search synthetic entities..."
+                        className="w-full pl-12 pr-6 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <select className="px-6 py-3 bg-gray-50 border-none rounded-2xl text-xs font-black uppercase tracking-widest appearance-none outline-none focus:ring-4 focus:ring-indigo-100 transition-all cursor-pointer">
+                        <option value="all">All States</option>
+                        <option value="pending">Vetting</option>
+                        <option value="approved">Authorized</option>
+                    </select>
+                    <button className="p-3 bg-white border border-gray-100 text-gray-400 rounded-2xl hover:text-indigo-600 transition-colors shadow-sm">
+                        <FunnelIcon className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Reports Field */}
+            <div className="grid grid-cols-1 gap-6">
+                {reports.length === 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="bg-white border-2 border-dashed border-gray-100 rounded-[3rem] p-32 text-center"
+                    >
+                        <BeakerIcon className="h-16 w-16 text-gray-100 mx-auto mb-6" />
+                        <h3 className="text-xl font-black text-gray-900 uppercase tracking-tighter">No Synthetic Outputs</h3>
+                        <p className="text-gray-400 font-medium">All generated intelligence reports have been processed.</p>
+                    </motion.div>
                 ) : (
-                    reports.map((report) => (
-                        <div key={report.reportId} className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-xl font-semibold text-gray-900">{report.companyName}</h3>
-                                        {getStatusBadge(report.status)}
+                    reports.map((report, idx) => {
+                        const status = getStatusStyles(report.status);
+                        return (
+                            <motion.div
+                                key={report.reportId}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="group bg-white rounded-[2.5rem] border border-gray-100 p-8 hover:shadow-xl transition-all duration-500 overflow-hidden relative"
+                            >
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
+                                    <div className="flex items-center gap-6">
+                                        <div className="h-16 w-16 bg-slate-50 text-indigo-600 rounded-[1.5rem] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
+                                            <SparklesIcon className="h-8 w-8" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h3 className="text-xl font-black text-gray-900 tracking-tight">{report.companyName}</h3>
+                                                <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${status.color}`}>
+                                                    {status.text}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-500 flex items-center gap-2">
+                                                <BeakerIcon className="h-4 w-4 text-indigo-300" />
+                                                Engine Output: {report.engineName}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p className="text-gray-600 mb-1">
-                                        <span className="font-medium">Engine:</span> {report.engineName}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                        <span className="font-medium">Report ID:</span> {report.reportId}
-                                    </p>
-                                    <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                                        <span className="flex items-center gap-1">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Created: {formatDate(report.submittedAt)}
-                                        </span>
-                                        <span className="flex items-center gap-1 text-green-600 font-medium">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Updated: {formatDate(new Date().toISOString())}
-                                        </span>
+
+                                    <div className="flex items-center gap-12">
+                                        <div className="hidden sm:block">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Generated</p>
+                                            <p className="text-xs font-bold text-gray-700">{new Date(report.submittedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <a
+                                                href={`/admin/reports/${encodeURIComponent(report.reportId)}`}
+                                                className="h-12 px-6 bg-white border border-gray-100 text-gray-900 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-widest transition-all hover:border-indigo-600 hover:text-indigo-600 shadow-sm"
+                                            >
+                                                Inspect
+                                                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                                            </a>
+
+                                            {report.status === "pending" && (
+                                                <div className="flex items-center gap-2">
+                                                    <Form method="post">
+                                                        <input type="hidden" name="reportId" value={report.reportId} />
+                                                        <input type="hidden" name="companyId" value={report.companyId} />
+                                                        <input type="hidden" name="action" value="approve" />
+                                                        <button
+                                                            disabled={isSubmitting}
+                                                            className="h-12 px-6 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all"
+                                                        >
+                                                            Authorize
+                                                        </button>
+                                                    </Form>
+                                                    <Form method="post">
+                                                        <input type="hidden" name="reportId" value={report.reportId} />
+                                                        <input type="hidden" name="companyId" value={report.companyId} />
+                                                        <input type="hidden" name="action" value="reject" />
+                                                        <button
+                                                            disabled={isSubmitting}
+                                                            className="h-12 w-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-100"
+                                                        >
+                                                            <XCircleIcon className="h-6 w-6" />
+                                                        </button>
+                                                    </Form>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="flex gap-3 pt-4 border-t border-gray-200">
-                                <a
-                                    href={`/admin/reports/${encodeURIComponent(report.reportId)}`}
-                                    className="relative z-10 flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
-                                >
-                                    <EyeIcon className="w-5 h-5" />
-                                    View Report
-                                </a>
-
-                                {report.status === "pending" && (
-                                    <>
-                                        <Form method="post" className="flex-1">
-                                            <input type="hidden" name="reportId" value={report.reportId} />
-                                            <input type="hidden" name="companyId" value={report.companyId} />
-                                            <input type="hidden" name="action" value="approve" />
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors"
-                                            >
-                                                <CheckCircleIcon className="w-5 h-5" />
-                                                Approve
-                                            </button>
-                                        </Form>
-
-                                        <Form method="post" className="flex-1">
-                                            <input type="hidden" name="reportId" value={report.reportId} />
-                                            <input type="hidden" name="companyId" value={report.companyId} />
-                                            <input type="hidden" name="action" value="reject" />
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors"
-                                            >
-                                                <XCircleIcon className="w-5 h-5" />
-                                                Reject
-                                            </button>
-                                        </Form>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    ))
+                                {/* Background Accents */}
+                                <div className="absolute -bottom-6 -right-6 h-24 w-24 bg-gray-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </motion.div>
+                        );
+                    })
                 )}
             </div>
         </div>

@@ -7,10 +7,10 @@ interface DecentroResponse {
 }
 
 const DECENTRO_CONFIG = {
-    baseUrl: "https://in.staging.decentro.tech",
-    clientId: "DeloschTechnologies_9_sop",
-    clientSecret: "27e67337a05e4cef931fbd788996f3ba",
-    moduleSecret: "370b6a1f132e4c0bb2b1808299445d04"
+    baseUrl: process.env.DECENTRO_BASE_URL || "https://in.staging.decentro.tech",
+    clientId: process.env.DECENTRO_CLIENT_ID || "DeloschTechnologies_9_sop",
+    clientSecret: process.env.DECENTRO_CLIENT_SECRET || "27e67337a05e4cef931fbd788996f3ba",
+    moduleSecret: process.env.DECENTRO_MODULE_SECRET || "370b6a1f132e4c0bb2b1808299445d04"
 };
 
 const HEADERS = {

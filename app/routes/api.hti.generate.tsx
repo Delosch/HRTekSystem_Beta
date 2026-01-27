@@ -1,6 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
-import { generateAdvisoryReport } from "~/services/hti.service";
+import { generateAdvisoryReport } from "~/services/hti.service.server";
 
 /**
  * API Route: Generate HTI Advisory

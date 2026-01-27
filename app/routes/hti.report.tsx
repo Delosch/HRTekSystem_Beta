@@ -1,10 +1,10 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
-import { getCompanyProfile } from "~/models/company.model";
-import { getCompanyAdvisories } from "~/models/hti.model";
-import { getUserProfile } from "~/models/user.model";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
+import { getUserProfile } from "~/models/user.model.server";
 import {
     Download,
     ArrowLeft,
@@ -20,7 +20,6 @@ import {
     FileText,
     ChevronRight
 } from "lucide-react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
 import HTIReportPDF from "../components/reports/HTIReportPDF";
 import {
     Radar,
@@ -40,6 +39,9 @@ import {
 } from 'recharts';
 import { motion } from "framer-motion";
 
+import { getEnginePriceByName } from "~/lib/pricing";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
+
 /**
  * HTI Report View Page
  * Route: /hti/report
@@ -58,12 +60,27 @@ export async function loader({ request }: LoaderFunctionArgs) {
         throw new Response("Company profile not found", { status: 404 });
     }
 
+    const engineName = "HR Technology Maturity Analysis";
+
     // Check payment status
-    const payments = await getVerifiedPaymentsByCompany(company?.pk?.replace("COMPANY#", "") || "");
-    const hasPaid = payments && payments.length > 0;
+    const payments = await getVerifiedPaymentsByCompany(user.organisationId);
+    const hasPaid = payments.some(p => p.items?.some((i: any) => i.engineName === engineName));
+    const isAdmin = (user as any).role === "ADMIN";
+
+    if (!hasPaid && !isAdmin) {
+        // Redirect to payment: Add to cart first then checkout
+        const price = getEnginePriceByName(engineName);
+        await addOrUpdateCartItem({
+            companyId: user.organisationId,
+            productName: engineName,
+            price: price,
+            userId: session.userId,
+        });
+        return redirect('/payment/checkout');
+    }
 
     // Get the latest report
-    const companyId = company.pk.replace("COMPANY#", "");
+    const companyId = user.organisationId;
     const reports = await getCompanyAdvisories(companyId);
 
     const report = reports && reports.length > 0
@@ -119,13 +136,9 @@ export default function HTIReportView() {
                     <p className="text-slate-500 mb-8 leading-relaxed">
                         {(data as any).error}
                     </p>
-                    <Link
-                        to="/onboarding/profilingAssessment"
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold transition-all transform hover:-translate-y-1"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        Go to Assessment
-                    </Link>
+                    <div className="flex items-center gap-4">
+
+                    </div>
                 </motion.div>
             </div>
         );
@@ -134,7 +147,7 @@ export default function HTIReportView() {
     const { report } = data as any;
     // In a real scenario, map 'report' data to these visualize structures
     const companyName = (data as any).companyName || "Organization";
-    const assessmentId = `REF-${report.pk?.slice(-6) || '0001'}`;
+    const assessmentId = `REF - ${report.pk?.slice(-6) || '0001'} `;
 
     // Mock Data for Visualization (Replace/Map with real report data if structure known)
     const radarData = [
@@ -158,15 +171,15 @@ export default function HTIReportView() {
     return (
         <div className="min-h-screen bg-[#F8F9FC] font-sans text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
             <style>{`
-                .backface-hidden { backface-visibility: hidden; }
+    .backface - hidden { backface - visibility: hidden; }
                 .perspective { perspective: 1000px; }
-                .rotate-y-180 { transform: rotateY(180deg); }
-                .preserve-3d { transform-style: preserve-3d; }
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-                .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); }
-            `}</style>
+                .rotate - y - 180 { transform: rotateY(180deg); }
+                .preserve - 3d { transform - style: preserve - 3d; }
+                .custom - scrollbar:: -webkit - scrollbar { width: 6px; }
+                .custom - scrollbar:: -webkit - scrollbar - track { background: transparent; }
+                .custom - scrollbar:: -webkit - scrollbar - thumb { background - color: #cbd5e1; border - radius: 20px; }
+                .glass - card { background: rgba(255, 255, 255, 0.9); backdrop - filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); }
+`}</style>
 
             {/* Sticky Blurry Header */}
             <motion.header
@@ -175,12 +188,12 @@ export default function HTIReportView() {
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link to="/" className="flex items-center gap-2 group">
-                            <img src="/hrtek_logo.png" alt="HRTEK Logo" className="w-10 h-10 object-contain rounded-xl shadow-lg shadow-indigo-500/10 group-hover:scale-105 transition-transform" />
-                            <div className="hidden md:block">
-                                <span className="block text-slate-900 font-extrabold text-sm tracking-tighter">HRTEK SYSTEM</span>
-                                <span className="block text-[8px] text-slate-500 uppercase tracking-widest leading-none font-bold">A brand of Delosch</span>
-                            </div>
+                        <Link to="/" className="flex items-center group">
+                            <img
+                                src="/logo_icon_final.png"
+                                alt="HR-TEK SYSTEM"
+                                className="h-12 w-auto object-contain transform group-hover:scale-105 transition-transform"
+                            />
                         </Link>
                         <div className="h-8 w-px bg-slate-200 mx-2" />
                         <div>
@@ -193,19 +206,7 @@ export default function HTIReportView() {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        {/* Download PDF Button */}
-                        <PDFDownloadLink
-                            document={<HTIReportPDF report={report} />}
-                            fileName={`HTI_Advisory_${companyName}.pdf`}
-                            className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow"
-                        >
-                            {({ loading }) => (
-                                <>
-                                    <Download className="w-4 h-4" />
-                                    <span>{loading ? 'Generating...' : 'Download PDF'}</span>
-                                </>
-                            )}
-                        </PDFDownloadLink>
+
                         <Link to="/dashboard" className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors" title="Exit Report">
                             <ArrowLeft className="w-5 h-5" />
                         </Link>
@@ -245,9 +246,9 @@ export default function HTIReportView() {
                                     { label: "Market Position", value: "Lagging", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
                                     { label: "Readiness", value: "Low", color: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" }
                                 ].map((stat, i) => (
-                                    <div key={i} className={`p-4 rounded-2xl ${stat.bg} border ${stat.border}`}>
+                                    <div key={i} className={`p - 4 rounded - 2xl ${stat.bg} border ${stat.border} `}>
                                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                                        <p className={`text-xl font-black ${stat.color}`}>{stat.value}</p>
+                                        <p className={`text - xl font - black ${stat.color} `}>{stat.value}</p>
                                     </div>
                                 ))}
                             </div>
@@ -308,12 +309,12 @@ export default function HTIReportView() {
                                         {/* FRONT FACE */}
                                         <div className="absolute w-full h-full backface-hidden bg-white rounded-3xl p-6 shadow-lg shadow-slate-200/50 border border-slate-100 flex flex-col justify-between overflow-hidden">
                                             {/* Top Decor */}
-                                            <div className={`absolute top-0 right-0 p-4 opacity-10 text-${color}-500`}>
+                                            <div className={`absolute top - 0 right - 0 p - 4 opacity - 10 text - ${color} -500`}>
                                                 <Icon className="w-24 h-24 transform translate-x-4 -translate-y-4" />
                                             </div>
 
                                             <div>
-                                                <div className={`w-12 h-12 rounded-2xl bg-${color}-50 flex items-center justify-center text-${color}-500 mb-6`}>
+                                                <div className={`w - 12 h - 12 rounded - 2xl bg - ${color} -50 flex items - center justify - center text - ${color} -500 mb - 6`}>
                                                     <Icon className="w-6 h-6" />
                                                 </div>
                                                 <h4 className="text-lg font-bold text-slate-800 mb-1">{dim.name}</h4>
@@ -322,19 +323,19 @@ export default function HTIReportView() {
 
                                             <div className="space-y-4 relative z-10">
                                                 <div className="flex items-end gap-2">
-                                                    <span className={`text-5xl font-black text-slate-800`}>{dim.score}</span>
+                                                    <span className={`text - 5xl font - black text - slate - 800`}>{dim.score}</span>
                                                     <span className="text-sm font-semibold text-slate-400 mb-2">/100</span>
                                                 </div>
                                                 <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                                                     <motion.div
                                                         initial={{ width: 0 }}
-                                                        whileInView={{ width: `${dim.score}%` }}
+                                                        whileInView={{ width: `${dim.score}% ` }}
                                                         transition={{ duration: 1, delay: 0.5 }}
-                                                        className={`h-full rounded-full bg-gradient-to-r from-${color}-500 to-${color}-400 shadow-[0_0_10px_rgba(244,63,94,0.4)]`}
+                                                        className={`h - full rounded - full bg - gradient - to - r from - ${color} -500 to - ${color} -400 shadow - [0_0_10px_rgba(244, 63, 94, 0.4)]`}
                                                     ></motion.div>
                                                 </div>
                                                 <div className="flex justify-center mt-2">
-                                                    <span className={`text-xs font-bold text-${color}-600 bg-${color}-50 px-3 py-1 rounded-full border border-${color}-100 flex items-center gap-1`}>
+                                                    <span className={`text - xs font - bold text - ${color} -600 bg - ${color} -50 px - 3 py - 1 rounded - full border border - ${color} -100 flex items - center gap - 1`}>
                                                         Tap for Insights <ChevronRight className="w-3 h-3" />
                                                     </span>
                                                 </div>

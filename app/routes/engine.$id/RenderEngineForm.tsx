@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { QuestionSchema } from "./questionSchema";
-import { useLocation, useNavigate } from "@remix-run/react";
+import { useLocation, useNavigate, useFetcher } from "@remix-run/react";
 import { useAutoSaveForm } from "~/hooks/useAutoSaveForm";
 import { AnimatePresence, motion, Reorder } from "framer-motion";
 
@@ -94,29 +94,47 @@ export default function EngineFormRender({
     )
   }
 
-  const handleStepSave = async (stepData: any) => {
-    const response = await fetch(path.pathname, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        assessment_id: data.pk,
-        progress: stepData.progress,
-        section: stepData.stepName,
-        answers: stepData.answers,
-        currentStepIndex: stepData.stepIndex,
-        params: engineName
-      })
-    });
+  const fetcher = useFetcher();
 
-    if (!response.ok) {
-      throw new Error('Failed to save step');
+  // Handle completion redirect or state updates
+  useEffect(() => {
+    if (fetcher.data && (fetcher.data as any).redirect) {
+      window.location.href = (fetcher.data as any).redirect;
     }
+  }, [fetcher.data]);
+
+  const handleStepSave = async (stepData: any) => {
+    const payload = {
+      assessment_id: data.pk,
+      progress: stepData.progress,
+      section: stepData.stepName,
+      answers: stepData.answers,
+      currentStepIndex: stepData.stepIndex,
+      params: engineName
+    };
+
+    fetcher.submit(payload, {
+      method: 'POST',
+      encType: 'application/json',
+      action: path.pathname
+    });
   };
 
   const handleComplete = async (allData: any) => {
-    // Handle final completion
-    console.log('Assessment completed:', allData);
-    navigate('/recommendation');
+    // Final progress save with 100%
+    const payload = {
+      assessment_id: data.pk,
+      progress: 100,
+      section: "Completion",
+      answers: allData,
+      params: engineName
+    };
+
+    fetcher.submit(payload, {
+      method: "POST",
+      encType: "application/json",
+      action: path.pathname
+    });
   };
 
   if (!started) {
@@ -143,11 +161,14 @@ export default function EngineFormRender({
   return <FormSheet
     steps={data.parts}
     assessmentId={data.pk}
-    title="Diagnostic Form"
+    title={`${engineName} Assessment`}
     initialFormData={existingResponses || {}}
+    autoSaveKey={`assessment_${engineName}`}
+    autoSaveDebounce={5000}
     onStepSave={handleStepSave}
     onComplete={handleComplete}
     onNavigateBack={() => { navigate(-1) }}
+    onAutoSaveToServer={handleStepSave}
     onError={
       (error: Error, context: string) => {
         console.error(`Error in ${context}: `, error)
@@ -168,6 +189,7 @@ const FormSheet = ({
   onComplete,
   onNavigateBack,
   onError,
+  onAutoSaveToServer,
   className = "",
   showProgressBar = true,
   showAutoSaveIndicator = true
@@ -185,6 +207,16 @@ const FormSheet = ({
     initialFormData,
     {
       debounce: autoSaveDebounce,
+      onSaveToServer: async (data: any) => {
+        if (onAutoSaveToServer) {
+          await onAutoSaveToServer({
+            stepIndex: currentStep,
+            stepName: steps[currentStep].part,
+            answers: data,
+            progress: ((currentStep + 1) / steps.length) * 100
+          });
+        }
+      },
       onSave: () => {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 1500);
@@ -280,7 +312,7 @@ const FormSheet = ({
         }
       }
       if (saveToServer) {
-        await saveToServer();
+        await saveToServer(formData);
       }
     }
   };
@@ -429,6 +461,7 @@ interface QuestionnaireEngineProps {
   onComplete?: (allData: Record<string, any>) => Promise<void>;
   onNavigateBack?: () => void;
   onError?: (error: Error, context: string) => void;
+  onAutoSaveToServer?: (stepData: any) => Promise<void>;
   className?: string;
   showProgressBar?: boolean;
   showAutoSaveIndicator?: boolean;
@@ -516,7 +549,7 @@ function QuestionRenderer({
 }: {
   question: Question;
   value: any;
-  otherValue?: string;
+  otherValue?: any;
   onChange: (questionId: string, value: any) => void;
   error?: string;
   otherError?: string;
@@ -524,29 +557,27 @@ function QuestionRenderer({
 
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
+  const otherInputValue = otherValue;
+
   const getMaxSelections = (q: any) => {
-  // 1️⃣ Explicit backend config always wins
-  if (q.maxSelections) return q.maxSelections;
+    // 1️⃣ Explicit backend config always wins
+    if (q.maxSelections) return q.maxSelections;
 
-  const text = `${q.title} ${q.question}`.toLowerCase();
+    const text = `${q.title} ${q.question}`.toLowerCase();
 
-  // 2️⃣ Match ALL known patterns:
-  // - Select 3
-  // - Select up to 3
-  // - Select top 3
-  // - Select max 3
-  const match = text.match(
-    /select\s+(?:up\s+to\s+|top\s+|max\s+)?(\d+)/i
-  );
+    // 2️⃣ Match ALL known patterns:
+    // - Select 3
+    // - Select up to 3
+    // - Select top 3
+    // - Select max 3
+    const match = text.match(
+      /select\s+(?:up\s+to\s+|top\s+|max\s+)?(\d+)/i
+    );
 
-  return match ? Number(match[1]) : undefined;
-};
-
-
-
+    return match ? Number(match[1]) : undefined;
+  };
 
   const maxSelections = getMaxSelections(question);
-
 
   return (
     <div className="question-item bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
@@ -679,13 +710,9 @@ function QuestionRenderer({
             (question.type === "radio" && value === "Other") ||
             (question.type === "dropdown" && value === "Other") ||
             (question.type === "scale" && value === "Other")) && (
-            <motion.input
-              key={`other-input-${question.id}`}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+            <input
               type="text"
+              name={`${qId}_other`}
               placeholder="Please specify..."
               className="w-full px-3 py-1.5 mt-2 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
               value={otherValue || ""}

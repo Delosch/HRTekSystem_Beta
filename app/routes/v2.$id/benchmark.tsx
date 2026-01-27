@@ -203,9 +203,9 @@ const ComparisonTable: FC<{ dimensionalScores: MaturityAnalysis['dimensional_sco
                                     className="hover:bg-white/5 transition-colors"
                                 >
                                     <td className="px-6 py-4 font-bold text-white">{dimension.dimension}</td>
-                                    <td className="px-6 py-4 text-center font-black text-cyan-400 text-lg">{dimension.raw_score.toFixed(1)}</td>
-                                    <td className="px-6 py-4 text-center text-slate-400 font-medium">{dimension.industry_benchmark.toFixed(1)}</td>
-                                    <td className="px-6 py-4 text-center text-slate-400 font-medium">{topPerformer.toFixed(1)}</td>
+                                    <td className="px-6 py-4 text-center font-black text-cyan-400 text-lg">{(dimension.raw_score ?? 0).toFixed(1)}</td>
+                                    <td className="px-6 py-4 text-center text-slate-400 font-medium">{(dimension.industry_benchmark ?? 0).toFixed(1)}</td>
+                                    <td className="px-6 py-4 text-center text-slate-400 font-medium">{(topPerformer ?? 0).toFixed(1)}</td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${tier.bg} ${tier.color} ${tier.border} border`}>
                                             {tier.label}
@@ -213,7 +213,7 @@ const ComparisonTable: FC<{ dimensionalScores: MaturityAnalysis['dimensional_sco
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`font-mono font-bold ${gap > 1 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                            {gap > 0 ? '-' : '+'}{Math.abs(gap).toFixed(1)}
+                                            {gap > 0 ? '-' : '+'}{(Math.abs(gap ?? 0)).toFixed(1)}
                                         </span>
                                     </td>
                                 </motion.tr>

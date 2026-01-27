@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import Sidebar from "../components/DashboardComponents/Sidebar";
-import { getCartItems, deleteCartItem } from "~/models/cart.model"; // Assuming deleteCartItem exists
+import { getCartItems, deleteCartItem } from "~/models/cart.model.server"; // Assuming deleteCartItem exists
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
 
@@ -87,6 +87,23 @@ const OrderSummary = ({ subtotal, gst, total }: { subtotal: number; gst: number;
   </div>
 );
 
+const getEngineIcon = (productName: string) => {
+  const icons: Record<string, string> = {
+    "Intelligent Change Management": "🔄",
+    "HR Transformation Roadmap": "🗺️",
+    "HR Transformation Roadmap Generator": "🗺️",
+    "Shared Service Designer": "🏢",
+    "Shared Services Designer": "🏢",
+    "SSC/COE Shared Service Planner": "🏢",
+    "HR Technology Maturity Analysis": "📊",
+    "HR Technology Maturity Assessment": "📊",
+    "HCM Vendor Fit Engine": "🎯",
+    "Digital Maturity Assessment": "📈",
+    "HR Digital Transformation": "🚀"
+  };
+  return icons[productName] || "📦";
+};
+
 const CartItemRow = ({ item }: { item: CartItem }) => {
   const fetcher = useFetcher();
   const isDeleting = fetcher.state === 'submitting';
@@ -94,7 +111,9 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
   return (
     <div className={`flex items-center justify-between gap-4 border-b pb-4 transition-opacity ${isDeleting ? 'opacity-50' : 'opacity-100'}`}>
       <div className="flex items-center gap-4 flex-grow">
-        <div className="w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0"></div>
+        <div className="w-16 h-16 bg-gray-50 rounded-xl flex-shrink-0 flex items-center justify-center text-3xl shadow-sm border border-gray-100">
+          {getEngineIcon(item.productName)}
+        </div>
         <div className="flex-grow">
           <h3 className="text-lg font-semibold text-gray-800">{item.productName}</h3>
           <p className="text-sm text-gray-500">Added on: {new Date(item.addedAt).toLocaleDateString()}</p>

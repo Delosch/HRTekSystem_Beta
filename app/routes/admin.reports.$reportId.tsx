@@ -28,7 +28,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     // Import necessary functions
     const { getDynamoDBDocumentClient } = await import("~/lib/dynamodb.server");
     const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
-    const { getCompanyProfile } = await import("~/models/company.model");
+    const { getCompanyProfile } = await import("~/models/company.model.server");
 
     const ddbDocClient = getDynamoDBDocumentClient();
     const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";

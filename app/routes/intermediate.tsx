@@ -5,7 +5,7 @@ import { ClockIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/ou
 import { setAIStatus, hasAIStatus, getAIStatus } from "~/services/ai-status.server";
 import { requireUserSession } from "~/lib/session.server";
 import { generate } from "~/lib/digitalMaturity.genAi";
-import { engineRecommendationList } from "~/models/engine.model";
+import { engineRecommendationList } from "~/models/engine.model.server";
 
 // Types
 interface Question {
@@ -200,26 +200,52 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!user) throw redirect('/auth');
   const companyId = user.organisationId || "";
 
+  const url = new URL(request.url);
+  const promptId = url.searchParams.get("promptId") || "digital_maturity";
+  const engine = url.searchParams.get("engine") || "Profiling Assessment";
+
   const currentStatus = getAIStatus(companyId);
 
-  console.log(`[Loader] Company: ${companyId} Status: ${currentStatus}`);
+  console.log(`[Intermediate Loader] Company: ${companyId}`);
+  console.log(`[Intermediate Loader] Engine: ${engine}`);
+  console.log(`[Intermediate Loader] Prompt: ${promptId}`);
+  console.log(`[Intermediate Loader] Current AI Status: ${currentStatus}`);
 
-  // ✅ FIX: Allow retry if status is 'error' or missing
-  if (!currentStatus || currentStatus === "error") {
-    // Only start generation if no status exists or it failed previously
+  // Check if report already exists in DB
+  const { getLatestAnalysis } = await import("~/utils/analysis.server");
+  const existingReport = await getLatestAnalysis(companyId, engine);
+
+  console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}`);
+
+  // Trigger generation if:
+  // 1. No status OR status is 'error' OR
+  // 2. Status is 'ready' but no report exists (edge case fix)
+  const shouldGenerate = !currentStatus ||
+    currentStatus === "error" ||
+    (currentStatus === "ready" && !existingReport);
+
+  if (shouldGenerate) {
+    const { generate } = await import("~/lib/processor.genAi");
     setAIStatus(companyId, "pending");
-    generate("digital_maturity", "Profiling Assessment", companyId).catch((err) => {
-      console.error("[Loader] AI generation failed:", err);
+
+    console.log(`[Intermediate Loader] 🚀 Triggering AI generation for ${engine}`);
+
+    // Fire and forget - generation happens in background
+    generate(promptId, engine, companyId).catch((err) => {
+      console.error("[Intermediate Loader] ❌ AI generation failed:", err);
       setAIStatus(companyId, "error");
     });
-    console.log(`[Loader] Starting AI generation as status was missing`);
   } else {
-    console.log(`[Loader] AI generation status: ${currentStatus}`);
+    console.log(`[Intermediate Loader] ⏭️ Skipping generation (Status: ${currentStatus}, Report exists: ${!!existingReport})`);
   }
 
   return json({
     companyId,
-    questions: recommendationQuestions
+    questions: recommendationQuestions,
+    engine,
+    promptId,
+    initialStatus: currentStatus,
+    hasExistingReport: !!existingReport
   });
 }
 
@@ -274,7 +300,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Main Component
 export default function Intermediate() {
-  const { companyId, questions } = useLoaderData<typeof loader>();
+  const { companyId, questions, engine } = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const navigate = useNavigate();
@@ -301,12 +327,26 @@ export default function Intermediate() {
     }
   }, [actionData]);
 
+  const reportRouteMap: Record<string, string> = {
+    "HCM Vendor Fit Engine": `/fit/report/${encodeURIComponent("HCM Vendor Fit Engine")}`,
+    "Digital Maturity Assessment": `/consulting-report/${encodeURIComponent("Digital Maturity Assessment")}`,
+    "Profiling Assessment": `/consulting-report/${encodeURIComponent("Profiling Assessment")}`,
+    "HR Transformation Roadmap Generator": `/consulting-report/${encodeURIComponent("HR Transformation Roadmap Generator")}`,
+    "Shared Service Designer": `/consulting-report/${encodeURIComponent("Shared Service Designer")}`,
+    "Intelligent Change Management": `/consulting-report/${encodeURIComponent("Intelligent Change Management")}`,
+    "Change Management Readiness": `/consulting-report/${encodeURIComponent("Change Management Readiness")}`,
+    "HR Technology Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Technology Maturity Analysis")}`,
+    "HR Tech Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Tech Maturity Analysis")}`
+  };
+
+  const reportUrl = reportRouteMap[engine] || `/consulting-report/${encodeURIComponent(engine)}`;
+
   useEffect(() => {
     if (submitted && aiReady) {
-      console.log("starting to navigate")
-      navigate("/dashboard", { replace: true });
+      console.log("starting to navigate to report:", reportUrl);
+      navigate(reportUrl, { replace: true });
     }
-  }, [submitted, aiReady, navigate]);
+  }, [submitted, aiReady, navigate, reportUrl]);
 
   useEffect(() => {
     if (submitted && !aiReady) {
@@ -318,26 +358,54 @@ export default function Intermediate() {
 
       const poll = async () => {
         try {
-          // ✅ Calculate elapsed time directly to avoid closure issues
           const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
 
-          const response = await fetch(`/api/ai-status?companyId=${companyId}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'ready') {
-              setAiReady(true);
+          // Check AI status
+          const statusResponse = await fetch(`/api/ai-status?companyId=${companyId}`);
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+
+            console.log(`[Polling ${currentElapsed}s] AI Status: ${statusData.status}`);
+
+            // If status is 'ready', verify the report actually exists in DB
+            if (statusData.status === 'ready') {
+              console.log(`[Polling ${currentElapsed}s] Status is 'ready', verifying report in DB...`);
+
+              try {
+                // Try to fetch the actual report to confirm it exists
+                const reportCheckUrl = reportUrl.includes('?')
+                  ? `${reportUrl}&verify=true`
+                  : `${reportUrl}?verify=true`;
+
+                const reportResponse = await fetch(reportCheckUrl, {
+                  method: 'HEAD' // Just check if it exists, don't load full content
+                });
+
+                if (reportResponse.ok || reportResponse.status === 200) {
+                  console.log(`[Polling ${currentElapsed}s] ✅ Report confirmed in database!`);
+                  setAiReady(true);
+                  if (pollRef.current) clearInterval(pollRef.current);
+                  if (timerRef.current) clearInterval(timerRef.current);
+                } else {
+                  console.log(`[Polling ${currentElapsed}s] ⚠️ Status 'ready' but report not found (${reportResponse.status}), continuing to poll...`);
+                }
+              } catch (reportErr) {
+                console.log(`[Polling ${currentElapsed}s] ⚠️ Error checking report, will retry:`, reportErr);
+              }
+            }
+            // Auto-redirect after 25 seconds even if still pending
+            else if (statusData.status === 'pending' && currentElapsed > 25) {
+              console.log(`⚠️ Generation slow (elapsed: ${currentElapsed}s), auto-redirecting to report`);
+              navigate(reportUrl, { replace: true });
               if (pollRef.current) clearInterval(pollRef.current);
               if (timerRef.current) clearInterval(timerRef.current);
-            } else if (data.status === 'pending' && currentElapsed > 18) {
-              console.log(`⚠️ Generation slow (elapsed: ${currentElapsed}s), auto-redirecting to dashboard`);
-              navigate("/dashboard", { replace: true });
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (timerRef.current) clearInterval(timerRef.current);
-            } else if (
-              data.status === 'timeout' ||
-              (data.status === 'error' && currentElapsed > 10)
+            }
+            // Show error after 10 seconds if status is error or timeout
+            else if (
+              statusData.status === 'timeout' ||
+              (statusData.status === 'error' && currentElapsed > 10)
             ) {
-              console.log(`⚠️ Generation failed (status: ${data.status}, elapsed: ${currentElapsed}s), showing error UI`);
+              console.log(`⚠️ Generation failed (status: ${statusData.status}, elapsed: ${currentElapsed}s), showing error UI`);
               setError('AI generation encountered an issue. You can proceed to dashboard.');
               if (pollRef.current) clearInterval(pollRef.current);
               if (timerRef.current) clearInterval(timerRef.current);
@@ -357,7 +425,7 @@ export default function Intermediate() {
       if (pollRef.current) clearInterval(pollRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [submitted, aiReady, companyId]);
+  }, [submitted, aiReady, companyId, reportUrl, navigate]);
 
   const handleAnswer = (questionId: string, value: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
@@ -375,16 +443,16 @@ export default function Intermediate() {
               <>
                 <CheckCircleIcon className="h-16 w-16 text-green-600 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Your Dashboard is Ready!
+                  Your Detailed Report is Ready!
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Thank you for completing the recommendation assessment.
+                  Thank you for completing the assessment. Your personalized analysis has been generated.
                 </p>
                 <a
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  href={reportUrl}
+                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  Access Your Personalized Dashboard
+                  View Your Detailed Analysis Report
                 </a>
               </>
             ) : error ? (
@@ -404,10 +472,10 @@ export default function Intermediate() {
 
                 <div className="space-y-3">
                   <a
-                    href="/dashboard"
+                    href={reportUrl}
                     className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
-                    Proceed to Dashboard Anyway
+                    Proceed to Report Anyway
                   </a>
                   <button
                     onClick={() => {
@@ -428,13 +496,51 @@ export default function Intermediate() {
               <>
                 <ClockIcon className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Processing Your Assessment
+                  Generating Your AI-Powered Report
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  We are personalizing your dashboard based on your responses.
+                  Our AI is analyzing your responses to create personalized insights.
                   <br />
-                  This typically takes around 17 seconds.
+                  This typically takes 15-30 seconds.
                 </p>
+
+                {/* Progress Stages */}
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs text-gray-500 mb-2">
+                    <span className={elapsed < 5 ? "text-blue-600 font-semibold" : ""}>
+                      {elapsed < 5 ? "🔄 Initializing..." : "✓ Initialized"}
+                    </span>
+                    <span className={elapsed >= 5 && elapsed < 12 ? "text-blue-600 font-semibold" : elapsed >= 12 ? "text-gray-700" : ""}>
+                      {elapsed < 5 ? "⏳ Analyzing" : elapsed < 12 ? "🔄 Analyzing..." : "✓ Analyzed"}
+                    </span>
+                    <span className={elapsed >= 12 && elapsed < 20 ? "text-blue-600 font-semibold" : elapsed >= 20 ? "text-gray-700" : ""}>
+                      {elapsed < 12 ? "⏳ Generating" : elapsed < 20 ? "🔄 Generating..." : "✓ Generated"}
+                    </span>
+                    <span className={elapsed >= 20 ? "text-blue-600 font-semibold" : ""}>
+                      {elapsed < 20 ? "⏳ Finalizing" : "🔄 Finalizing..."}
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${Math.min((elapsed / 25) * 100, 95)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Current Activity */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-blue-900">
+                    <span className="font-semibold">
+                      {elapsed < 5 && "🔍 Loading your assessment data..."}
+                      {elapsed >= 5 && elapsed < 12 && "🧠 AI is analyzing your responses..."}
+                      {elapsed >= 12 && elapsed < 20 && "📊 Generating personalized insights..."}
+                      {elapsed >= 20 && "✨ Finalizing your report..."}
+                    </span>
+                  </p>
+                </div>
 
                 {/* Loading Spinner */}
                 <div className="flex justify-center mb-6">
@@ -444,16 +550,16 @@ export default function Intermediate() {
                 {/* Elapsed Time */}
                 <div className="text-sm text-gray-500 mb-4">
                   <div className="font-medium text-blue-600">
-                    Elapsed Time: {elapsed}s
+                    Elapsed Time: {elapsed}s {elapsed > 15 && `• Est. ${Math.max(0, 25 - elapsed)}s remaining`}
                   </div>
                 </div>
 
                 {/* Safe to refresh message */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
-                    <span className="font-semibold">Safe to refresh:</span> Your progress is saved.
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm text-green-800">
+                    <span className="font-semibold">💡 Tip:</span> Your progress is automatically saved.
                     <br />
-                    Feel free to close this tab and return later.
+                    Feel free to close this tab and check back later.
                   </p>
                 </div>
               </>

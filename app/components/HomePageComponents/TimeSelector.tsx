@@ -5,19 +5,29 @@ const timeSlots = {
   Afternoon: ["12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM"],
 };
 
-export default function TimePicker() {
+interface TimePickerProps {
+  onSelect?: (time: string, session: string) => void;
+}
+
+export default function TimePicker({ onSelect }: TimePickerProps) {
   const [showOptions, setShowOptions] = useState(false);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
+    if (onSelect && selectedSession) {
+      onSelect(time, selectedSession);
+    }
   };
 
   const reset = () => {
     setSelectedSession(null);
     setSelectedTime(null);
     setShowOptions(true);
+    if (onSelect) {
+      onSelect("", "");
+    }
   };
 
   return (
@@ -57,7 +67,7 @@ export default function TimePicker() {
       {/* Show time options once session is selected and time not yet picked */}
       {showOptions && selectedSession && !selectedTime && (
         <div className="grid grid-cols-2 gap-2">
-          {timeSlots[selectedSession].map((time) => (
+          {timeSlots[selectedSession as keyof typeof timeSlots].map((time) => (
             <button
               key={time}
               onClick={() => handleTimeSelect(time)}

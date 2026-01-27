@@ -1,7 +1,18 @@
 import { json } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { ArrowLeftIcon, ClockIcon, UserIcon, ActivityIcon } from "lucide-react";
+import {
+    ChevronLeftIcon,
+    ClockIcon,
+    UserIcon,
+    SignalIcon,
+    ArrowPathIcon,
+    ShieldCheckIcon,
+    ExclamationTriangleIcon,
+    InformationCircleIcon,
+    CheckCircleIcon
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
 
 interface ActivityLog {
     id: string;
@@ -13,8 +24,6 @@ interface ActivityLog {
 }
 
 export const loader: LoaderFunction = async () => {
-    // TODO: Fetch actual activity logs from database
-    // For now, returning mock data
     const activityLogs: ActivityLog[] = [
         {
             id: '1',
@@ -88,12 +97,21 @@ export const loader: LoaderFunction = async () => {
 export default function AdminActivityLogs() {
     const { activityLogs } = useLoaderData<typeof loader>();
 
-    const getTypeColor = (type: string) => {
+    const getIcon = (type: string) => {
         switch (type) {
-            case 'success': return 'bg-green-100 text-green-800 border-green-200';
-            case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'error': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'success': return CheckCircleIcon;
+            case 'warning': return ExclamationTriangleIcon;
+            case 'error': return ExclamationTriangleIcon;
+            default: return InformationCircleIcon;
+        }
+    };
+
+    const getTypeStyles = (type: string) => {
+        switch (type) {
+            case 'success': return 'text-emerald-500 bg-emerald-50 border-emerald-100';
+            case 'warning': return 'text-amber-500 bg-amber-50 border-amber-100';
+            case 'error': return 'text-rose-500 bg-rose-50 border-rose-100';
+            default: return 'text-indigo-500 bg-indigo-50 border-indigo-100';
         }
     };
 
@@ -103,105 +121,107 @@ export default function AdminActivityLogs() {
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
 
         if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return date.toLocaleDateString();
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
+        <div className="max-w-7xl mx-auto space-y-8 p-4 animate-in fade-in duration-700">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
                     <Link
                         to="/admin"
-                        className="inline-flex items-center text-indigo-600 hover:text-indigo-700 mb-4"
+                        className="inline-flex items-center text-sm font-bold text-indigo-600 hover:text-indigo-700 mb-4 group"
                     >
-                        <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                        Back to Dashboard
+                        <ChevronLeftIcon className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+                        Dashboard Overview
                     </Link>
-                    <h1 className="text-3xl font-bold text-gray-900">Activity Logs</h1>
-                    <p className="text-gray-600 mt-2">Complete history of system activities and admin actions</p>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">System Intelligence</h1>
+                    <p className="text-gray-500 font-medium">Real-time stream of administrative and automated activities.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button className="p-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-gray-400 hover:text-indigo-600 transition-colors">
+                        <ArrowPathIcon className="h-5 w-5" />
+                    </button>
+                    <button className="px-5 py-2.5 bg-gray-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-gray-900/10 hover:bg-gray-800 transition-all">
+                        Export Report
+                    </button>
+                </div>
+            </div>
+
+            {/* Content Table / Timeline */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
+                            <SignalIcon className="h-5 w-5" />
+                        </div>
+                        <h2 className="text-lg font-bold text-gray-900">Event Timeline</h2>
+                    </div>
                 </div>
 
-                {/* Activity Timeline */}
-                <div className="bg-white rounded-lg shadow-md border border-gray-200">
-                    <div className="p-6 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <ActivityIcon className="w-6 h-6 text-indigo-600" />
-                                Recent Activity
-                            </h2>
-                            <span className="text-sm text-gray-500">
-                                {activityLogs.length} total activities
-                            </span>
-                        </div>
-                    </div>
+                <div className="divide-y divide-gray-50">
+                    {activityLogs.map((log: any, idx: number) => {
+                        const Icon = getIcon(log.type);
+                        const styles = getTypeStyles(log.type);
 
-                    <div className="divide-y divide-gray-200">
-                        {activityLogs.map((log) => (
-                            <div
+                        return (
+                            <motion.div
                                 key={log.id}
-                                className="p-6 hover:bg-gray-50 transition-colors"
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.04 }}
+                                className="p-6 hover:bg-gray-50/50 transition-colors group"
                             >
-                                <div className="flex items-start gap-4">
-                                    {/* Icon */}
-                                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getTypeColor(log.type)}`}>
-                                        <ActivityIcon className="w-5 h-5" />
+                                <div className="flex items-start gap-6">
+                                    <div className={`shrink-0 p-3 rounded-2xl shadow-sm border ${styles} transition-transform group-hover:scale-110`}>
+                                        <Icon className="h-6 w-6" />
                                     </div>
 
-                                    {/* Content */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1">
-                                                <h3 className="text-base font-semibold text-gray-900">
-                                                    {log.action}
-                                                </h3>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    {log.details}
-                                                </p>
-                                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                                                    <span className="flex items-center gap-1">
-                                                        <UserIcon className="w-3 h-3" />
-                                                        {log.user}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <ClockIcon className="w-3 h-3" />
-                                                        {formatTimestamp(log.timestamp)}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* Type Badge */}
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(log.type)}`}>
-                                                {log.type}
+                                        <div className="flex items-center justify-between gap-4 mb-2">
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                                {log.action}
+                                            </h3>
+                                            <span className="text-xs font-bold text-gray-400 flex items-center gap-1 group-hover:text-gray-900 transition-colors">
+                                                <ClockIcon className="h-3.5 w-3.5" />
+                                                {formatTimestamp(log.timestamp)}
                                             </span>
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
+                                            {log.details}
+                                        </p>
+
+                                        <div className="mt-4 flex items-center gap-4">
+                                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+                                                <div className="h-5 w-5 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                                    <UserIcon className="h-3.5 w-3.5" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-gray-600 truncate">{log.user}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+                                                <ShieldCheckIcon className="h-4 w-4 text-gray-400" />
+                                                <span className="text-[11px] font-bold text-gray-400">Authenticated</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {activityLogs.length === 0 && (
-                        <div className="p-12 text-center">
-                            <ActivityIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Activity Yet</h3>
-                            <p className="text-gray-600">Activity logs will appear here as actions are performed</p>
-                        </div>
-                    )}
+                            </motion.div>
+                        );
+                    })}
                 </div>
+
+                {activityLogs.length === 0 && (
+                    <div className="p-20 text-center">
+                        <SignalIcon className="h-16 w-16 text-gray-100 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Signal Lost</h3>
+                        <p className="text-gray-500 font-medium">No system events have been recorded in the current session.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

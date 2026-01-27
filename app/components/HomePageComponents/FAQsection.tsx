@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "@remix-run/react";
+import { ArrowRight } from "lucide-react";
 
 export default function FAQSection() {
   const faqs = [
@@ -48,19 +50,30 @@ export default function FAQSection() {
   return (
     <section className="bg-[#03045e] text-white py-20 px-6 md:px-12">
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12">
-        {/* Left: Heading */}
-        <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-          Frequently Asked <br /> Questions
-        </h2>
+        {/* Left: Heading & Content */}
+        <div className="flex flex-col items-start lg:sticky lg:top-24 h-fit">
+          <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-6">
+            Frequently Asked <br /> Questions
+          </h2>
+          <p className="text-lg text-blue-100 max-w-md mb-8 leading-relaxed font-light">
+            Can't find the answer you're looking for? Our dedicated team is ready to assist you with any inquiries about our HR transformation solutions.
+          </p>
+          <Link
+            to="/contact"
+            className="group inline-flex items-center gap-3 bg-white text-[#03045e] px-8 py-4 rounded-2xl font-bold hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+          >
+            Contact Support
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
 
         {/* Right: Accordion */}
         <div className="space-y-4">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className={`rounded-md bg-[#023e8a] transition-all duration-300 ${
-                activeIndex === index ? "pb-6" : ""
-              }`}
+              className={`rounded-md bg-[#023e8a] transition-all duration-300 ${activeIndex === index ? "pb-6" : ""
+                }`}
             >
               <button
                 onClick={() => toggle(index)}

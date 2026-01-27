@@ -26,141 +26,205 @@ export default function Carousel() {
           className="flex transition-transform duration-700 ease-in-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {/* Slide 1 */}
+          {/* Slide 1 - Modern Professional Design */}
           <div className="w-full flex-shrink-0">
-            <div className="w-full flex items-center justify-center px-4 py-12 sm:py-12">
-              <div className="bg-[#023e8a] text-white py-2 px-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-                  {/* Left Side: Text and CTA */}
+            <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+
+              <div className="relative max-w-7xl mx-auto px-6 py-12 lg:py-16 z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                  {/* Left Side: Content */}
                   <div className="space-y-8">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                        <span className="text-white">
-                          HR Digital Transformation-Now Autonomous with Agentic AI
-                        </span>
-                        <br />
-                        <span className="font-light text-[#D4E1F4]">
-                          Everything you need is one powerful platform.
-                        </span>
-                      </h2>
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span className="text-white/90 text-sm font-medium">Agentic AI-Powered Platform</span>
                     </div>
-                    <p className="text-lg italic text-[#C5D5EC] max-w-xl text-justify">
-                      Our software is built to be your comprehensive partner in
-                      transformation. Whether you're redefining HR functions,
-                      designing shared service models, managing organizational
-                      change, or building detailed transformation roadmaps, we
-                      bring it all together in one seamless, intelligent
-                      platform. No more fragmented tools or scattered efforts
-                      just one solution to drive meaningful change.
-                    </p>
+
+                    {/* Main Heading */}
+                    <div className="space-y-4">
+                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                        Turning HR Digital Complexity into
+                        <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                          Cognitive Clarity
+                        </span>
+                      </h1>
+                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                        Leverage smart software to upgrade your HR ecosystem
+                      </p>
+                    </div>
+
+                    {/* Description - REMOVED */}
+
+
+
+                    {/* CTA Button */}
                     <Link
-                      to="/sales"
-                      className="inline-block bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-semibold px-6 py-3 rounded-full transition shadow-md"
+                      to="/auth"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-bold text-lg rounded-xl shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
                     >
                       Join Us Today!
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
                     </Link>
                   </div>
 
-                  {/* Right Side: Static UI Image */}
-                  <div className="flex justify-center">
-                    <img
-                      src="/assets/homepageAssets/scroll0/images/heroImg3.png"
-                      alt="Multi-armed robot efficiently managing various HR tasks, conveying automation and all-in-one platform"
-                      className="max-w-full h-auto"
-                    />
+                  {/* Right Side: Image */}
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
+                    {/* Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
+
+                    {/* Image Container */}
+                    <div className="relative z-10 w-full h-full flex items-center justify-center">
+                      <img
+                        src="/assets/homepageAssets/scroll0/images/heroImg3.png"
+                        alt="Multi-armed robot efficiently managing various HR tasks"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Slide 2 */}
+          {/* Slide 2 - Modern Professional Design */}
           <div className="w-full flex-shrink-0">
-            <div className="w-full flex items-center justify-center px-4 py-12 sm:py-12">
-              <div className="bg-[#023e8a] text-white py-2 px-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-                  {/* Left Side: Text and CTA */}
+            <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+
+              <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                  {/* Left Side: Content */}
                   <div className="space-y-8">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                        <span className="text-white">
-                          Build a Future-Ready Workforce with Real-Time AI Execution
-                        </span>
-                        <br />
-                        <span className="font-light text-[#D4E1F4]">
-                          Automate Workflows, Empower Teams, and Drive Growth
-                        </span>
-                      </h2>
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span className="text-white/90 text-sm font-medium">Real-Time AI Execution</span>
                     </div>
-                    <p className="text-lg italic text-[#C5D5EC] max-w-xl text-justify">
-                      Elevate your HR operations with our intuitive software
-                      solution, designed to seamlessly guide your organization
-                      through digital transformation. Powered by advanced
-                      artificial intelligence and large language models (LLMs),
-                      our platform simplifies complex HR processes, enabling
-                      smarter, faster, and more efficient decision-making.
-                    </p>
+
+                    {/* Main Heading */}
+                    <div className="space-y-4">
+                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                        HR-Tek Helps to Design
+                        <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                          Better HR System
+                        </span>
+                      </h1>
+                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                        Automate Workflows, Empower Teams, and Drive Growth
+                      </p>
+                    </div>
+
+                    {/* Description - REMOVED */}
+
+
+                    {/* CTA Button */}
                     <Link
-                      to="/sales"
-                      className="inline-block bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-semibold px-6 py-3 rounded-full transition shadow-md"
+                      to="/auth"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-bold text-lg rounded-xl shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
                     >
                       Join Us Today!
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
                     </Link>
                   </div>
 
-                  {/* Right Side: Static UI Image */}
-                  <div className="flex justify-center">
-                    <img
-                      src="/assets/homepageAssets/scroll0/images/heroImg.png"
-                      alt="Product interface highlighting key HR features like HCM selection, Roadmap generation"
-                      className="max-w-full h-auto"
-                    />
+                  {/* Right Side: Image */}
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
+                    {/* Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
+
+                    {/* Image Container */}
+                    <div className="relative z-10 w-full h-full flex items-center justify-center">
+                      <img
+                        src="/assets/homepageAssets/scroll0/images/heroImg.png"
+                        alt="Product interface highlighting key HR features"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Slide 3 */}
+          {/* Slide 3 - Modern Professional Design */}
           <div className="w-full flex-shrink-0">
-            <div className="w-full flex items-center justify-center px-4 py-12 sm:py-16">
-              <div className="bg-[#023e8a] text-white py-2 px-6">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-                  {/* Left Side: Text and CTA */}
+            <div className="relative bg-gradient-to-br from-[#001845] via-[#023e8a] to-[#0077b6] overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                  backgroundSize: '40px 40px'
+                }}></div>
+              </div>
+
+              <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                  {/* Left Side: Content */}
                   <div className="space-y-8">
-                    <div>
-                      <h2 className="text-4xl md:text-5xl font-bold leading-tight text-white mt-20">
-                        <span className="text-white">
-                          Empower Your Workforce with Intelligent, Self-Optimizing HR Systems
-                        </span>
-                        <br />
-                        <span className="font-light text-[#D4E1F4]">
-                          Leverage smart software to upgrade your HR
-                        </span>
-                      </h2>
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      <span className="text-white/90 text-sm font-medium">Enterprise-Friendly</span>
                     </div>
-                    <p className="text-lg italic text-[#C5D5EC] max-w-xl text-justify">
-                      Instead of expanding your HR Transformation workforce, our
-                      platform enables your current employees to take on new
-                      responsibilities with ease. By streamlining tasks and
-                      simplifying workflows, the software bridges skill gaps and
-                      unlocks hidden potential within your team.
-                    </p>
+
+                    {/* Main Heading */}
+                    <div className="space-y-4">
+                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                        Transform Your
+                        <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                          HR Ecosystem
+                        </span>
+                      </h1>
+                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                        Leverage smart software to upgrade your HR ecosystem
+                      </p>
+                    </div>
+
+                    {/* Description - REMOVED */}
+
+
+                    {/* CTA Button */}
                     <Link
-                      to="/sales"
-                      className="inline-block bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-semibold px-6 py-3 rounded-full transition shadow-md"
+                      to="/auth"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-bold text-lg rounded-xl shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
                     >
                       Join Us Today!
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
                     </Link>
                   </div>
 
-                  {/* Right Side: Static UI Image */}
-                  <div className="flex justify-center">
-                    <img
-                      src="/assets/homepageAssets/scroll0/images/heroImg2.png"
-                      alt="Why hire more staff when HR software can streamline tasks and cut HR Transformation costs"
-                      className="max-w-full h-auto"
-                    />
+                  {/* Right Side: Image */}
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
+                    {/* Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
+
+                    {/* Image Container */}
+                    <div className="relative z-10 w-full h-full flex items-center justify-center">
+                      <img
+                        src="/assets/homepageAssets/scroll0/images/heroImg2.png"
+                        alt="Streamline HR tasks and reduce costs"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -193,9 +257,8 @@ export default function Carousel() {
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
-            className={`w-3 h-3 rounded-full border border-white ${
-              currentIndex === idx ? "bg-white" : "bg-transparent"
-            }`}
+            className={`w-3 h-3 rounded-full border border-white ${currentIndex === idx ? "bg-white" : "bg-transparent"
+              }`}
             aria-label={`Go to slide ${idx + 1}`}
           />
         ))}

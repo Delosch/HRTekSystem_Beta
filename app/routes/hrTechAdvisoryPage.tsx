@@ -1,11 +1,9 @@
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
-import { Link } from "@remix-run/react";
+import { Link, useRouteLoaderData } from "@remix-run/react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
-import TimeSelector from "~/components/HomePageComponents/TimeSelector";
 import React, { useState } from "react";
+import BookingModal from "~/components/HomePageComponents/BookingModal";
 
 const challenges = [
     "Overwhelming technology options",
@@ -23,7 +21,8 @@ const solutions = [
 
 export default function HRTechAdvisoryPage() {
     const [showPopup, setShowPopup] = useState(false);
-    const [selected, setSelected] = useState<Date | undefined>(undefined);
+    const rootData = useRouteLoaderData("root") as { user: any };
+    const user = rootData?.user;
 
     return (
         <>
@@ -141,52 +140,25 @@ export default function HRTechAdvisoryPage() {
                             </p>
                         </div>
 
-                        {/* Two Column Layout */}
-                        <div className="grid lg:grid-cols-2 gap-10">
-
-                            {/* Benefits */}
-                            <div className="bg-white p-10 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-                                <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-700">
-                                    How Our Advisory Services Help
-                                </h3>
-                                <ul className="space-y-6">
-                                    {[
-                                        { title: "Strategic Clarity", text: "Align HR technology with business objectives and priorities." },
-                                        { title: "Cost Optimization", text: "Maximize ROI and avoid costly implementation mistakes." },
-                                        { title: "Vendor Selection", text: "Navigate the market with confidence and choose the right partners." },
-                                        { title: "Change Management", text: "Ensure smooth adoption and user engagement." },
-                                        { title: "Future-Proofing", text: "Build scalable solutions that grow with your organization." }
-                                    ].map((item, idx) => (
-                                        <li key={idx}>
-                                            <span className="block font-semibold text-gray-900">{item.title}</span>
-                                            <span className="text-gray-600">{item.text}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {/* How It Works */}
-                            <div className="bg-blue-50 p-10 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow duration-300">
-                                <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-800">
-                                    💡 Our Advisory Process
-                                </h3>
-                                <ol className="space-y-6 text-gray-800">
-                                    {[
-                                        "Discovery: Understand your business needs and current state",
-                                        "Strategy: Develop a tailored HR technology roadmap",
-                                        "Selection: Evaluate and recommend optimal solutions",
-                                        "Implementation: Guide execution and change management",
-                                        "Optimization: Continuous improvement and support"
-                                    ].map((step, idx) => (
-                                        <li key={idx} className="relative pl-10">
-                                            <span className="absolute left-0 top-0 flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold">
-                                                {idx + 1}
-                                            </span>
-                                            {step}
-                                        </li>
-                                    ))}
-                                </ol>
-                            </div>
+                        {/* Benefits - Single Column */}
+                        <div className="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                            <h3 className="text-2xl font-semibold flex items-center gap-2 mb-8 text-blue-700">
+                                How Our Advisory Services Help
+                            </h3>
+                            <ul className="space-y-6">
+                                {[
+                                    { title: "Strategic Clarity", text: "Align HR technology with business objectives and priorities." },
+                                    { title: "Cost Optimization", text: "Maximize ROI and avoid costly implementation mistakes." },
+                                    { title: "Vendor Selection", text: "Navigate the market with confidence and choose the right partners." },
+                                    { title: "Change Management", text: "Ensure smooth adoption and user engagement." },
+                                    { title: "Future-Proofing", text: "Build scalable solutions that grow with your organization." }
+                                ].map((item, idx) => (
+                                    <li key={idx}>
+                                        <span className="block font-semibold text-gray-900">{item.title}</span>
+                                        <span className="text-gray-600">{item.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
 
                         {/* Who Should Use It */}
@@ -249,84 +221,15 @@ export default function HRTechAdvisoryPage() {
                             </Link>
                         </div>
                     </div>
-
-                    {showPopup && (
-                        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center px-4 animate-fadeIn">
-                            <div className="relative w-full max-w-5xl bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-blue-100 overflow-auto max-h-[90vh] no-scrollbar transform scale-95 animate-scaleIn">
-                                {/* Close Button */}
-                                <button
-                                    onClick={() => setShowPopup(false)}
-                                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 hover:scale-110 transition-all"
-                                    aria-label="Close"
-                                >
-                                    ✕
-                                </button>
-
-                                {/* Modal Content */}
-                                <div>
-                                    <h2 className="text-blue-600 text-3xl font-extrabold mb-4">
-                                        Ready to Transform Your HR Strategy?
-                                    </h2>
-                                    <p className="text-gray-700 leading-relaxed mb-8">
-                                        If you're interested in learning more about how our solutions can help your
-                                        organization—or if you'd like expert guidance tailored to your HR goals—
-                                        <br />
-                                        <span className="font-semibold text-black">
-                                            Select a convenient date and time
-                                        </span>{" "}
-                                        below, and take the next step toward building a future-ready HR Architecture.
-                                    </p>
-
-                                    {/* Calendar and Time Slots */}
-                                    <div className="flex flex-col lg:flex-row gap-8 mb-8">
-                                        {/* Calendar */}
-                                        <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-                                            <DayPicker
-                                                mode="single"
-                                                selected={selected}
-                                                onSelect={setSelected}
-                                                fromDate={new Date()}
-                                                disabled={{ before: new Date() }}
-                                                modifiersClassNames={{
-                                                    selected: "bg-blue-600 text-white rounded-full",
-                                                    today: "text-blue-700 font-bold",
-                                                }}
-                                                className="text-center text-black"
-                                            />
-                                        </div>
-
-                                        {/* Time Slots */}
-                                        <div className="flex-1 bg-white rounded-xl shadow-md p-4">
-                                            <TimeSelector />
-                                        </div>
-
-                                        {/* Image */}
-                                        <div className="hidden lg:block flex-1">
-                                            <img
-                                                src="/assets/homepageAssets/bookAppointment.png"
-                                                alt="Client booking appointment illustration"
-                                                className="w-full h-auto rounded-xl shadow-lg"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex justify-end gap-4">
-                                        <button
-                                            onClick={() => setShowPopup(false)}
-                                            className="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition-all">
-                                            Book Appointment
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </section>
+
+                {/* Booking Modal */}
+                <BookingModal
+                    isOpen={showPopup}
+                    onClose={() => setShowPopup(false)}
+                    engineName="HR Tech Advisory Services"
+                    user={user}
+                />
 
                 <style>{`
           .no-scrollbar::-webkit-scrollbar {

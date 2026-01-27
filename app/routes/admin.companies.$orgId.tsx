@@ -8,7 +8,7 @@ import {
   CubeTransparentIcon,
   ReceiptPercentIcon,
 } from "@heroicons/react/24/outline";
-import { getCompanyProfile } from "~/models/company.model"; // Import your actual function
+import { getCompanyProfile } from "~/models/company.model.server"; // Import your actual function
 
 interface CompanyDetail {
   id: string;

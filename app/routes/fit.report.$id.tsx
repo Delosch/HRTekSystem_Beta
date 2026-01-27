@@ -1,6 +1,8 @@
 //fit/report/HCM Vendor Fit Engine
 import type { LoaderFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
+import { getEnginePriceByName } from "~/lib/pricing";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 import { useLoaderData } from "@remix-run/react";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer,
@@ -9,11 +11,12 @@ import {
 } from "recharts";
 import { useMemo } from "react";
 import { requireUserSession } from "~/lib/session.server";
-import { getLatestAnalysis } from "~/utils/analysis";
-import { getCompanyProfile } from "~/models/company.model";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model";
+import { getLatestAnalysis } from "~/utils/analysis.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model.server";
+import { Clock, AlertTriangle, CheckCircle, ArrowLeft } from "lucide-react";
 
-// --- Data Types (Unaltered) ---
+// --- Data Types ---
 type HcmAnalysis = {
   profile: {
     organizationName: string | null;
@@ -96,35 +99,44 @@ type HcmAnalysis = {
   };
 };
 
-
-// --- Remix Loader Function (Unaltered Logic) ---
+// --- Remix Loader Function ---
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
     const user = await requireUserSession(request);
     if (!user || !user.organisationId) {
-      // In a real app, you might redirect to login
-      throw new Response("Unauthorized", { status: 401 });
+      return redirect('/auth');
     }
 
-    if (!params.id) {
+    const engineId = params.id;
+    if (!engineId) {
       throw new Response("Assessment ID is missing.", { status: 404 });
     }
 
-    // Check for verified payment or Admin role
-    const payments = await getVerifiedPaymentsByCompany(user.organisationId);
-    const isPaid = payments.some(p => p.items?.some((i: any) => i.engineName === params.id));
-    // Note: user object from session might not have role fully typed in all contexts, ensure it exists
+    // Check payment status
+    const allPayments = await getCompanyPayments(user.organisationId);
+    const payment = allPayments.find(p => p.items?.some((i: any) => i.engineName === engineId));
+
+    const isPaid = payment?.status === "payment_verified";
+    const isPending = payment?.status === "payment_submitted";
     const isAdmin = (user as any).role === "ADMIN";
 
     if (!isPaid && !isAdmin) {
-      // throw new Response("Payment Verification Required. Please complete payment to view this report.", { status: 402 });
-      // Better UX: Return a specific error json or redirect
-      // For now, allow viewing if it's just a demo/test, but strict per user request:
-      throw new Response("Payment Verification Required. This report will be available after admin verification.", { status: 403, statusText: "Payment Required" });
+      if (isPending) {
+        return json({ paymentStatus: "pending" });
+      }
+
+      const price = getEnginePriceByName(engineId);
+      await addOrUpdateCartItem({
+        companyId: user.organisationId,
+        productName: engineId,
+        price: price,
+        userId: user.userId,
+      });
+      return redirect('/payment/checkout');
     }
 
-    if (params.id === "HCM Vendor Fit Engine") {
-      const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, params.id);
+    if (engineId.toLowerCase() === "hcm vendor fit engine") {
+      const data = await getLatestAnalysis(user.organisationId, engineId);
       if (!data || !data.result) {
         console.log("no report")
         throw new Response("No assessment data found for this organization.", { status: 404 });
@@ -133,8 +145,37 @@ export const loader: LoaderFunction = async ({ request, params }) => {
       const companyInfo = await getCompanyProfile(user.organisationId);
       const brandName = companyInfo?.brand_name || companyInfo?.company_name || "Your Company";
 
-      // We can augment the analysis object here if needed, e.g., adding brandName
-      const analysis = { ...data.result, profile: { ...data.result.profile, organizationName: brandName } };
+      // Safety normalization to prevent UI crashes if AI data is sparse
+      const rawResult = data.result || {};
+      const analysis: HcmAnalysis = {
+        ...rawResult,
+        profile: {
+          organizationName: brandName,
+          industry: rawResult.profile?.industry || "Not Specified",
+          employeeBand: rawResult.profile?.employeeBand || "Not Specified",
+          geoPresence: rawResult.profile?.geoPresence || []
+        },
+        scores: rawResult.scores || {
+          satisfaction: 0, painIndex: 0, integrationComplexity: 0,
+          decisionAgility: 0, changeReadiness: 0, fitScore: 0,
+          fitBand: "Moderate – some alignment gaps"
+        },
+        viz: {
+
+
+          executiveRadar: rawResult.viz?.executiveRadar || { Satisfaction: 0, BusinessPriority: 0, IntegrationNeeds: 0, BudgetReadiness: 0, FitScore: 0 },
+          demographics: rawResult.viz?.demographics || { industry: null, employeeBand: null, geoPresence: [] },
+          landscape: rawResult.viz?.landscape || { modulesCount: 0, satisfaction: 0, challengesCount: 0, urgencyScore: 0 },
+          priorityFit: rawResult.viz?.priorityFit || { goalsWeighted: {}, deployment: null, budgetBand: null },
+          integrationScalability: rawResult.viz?.integrationScalability || { integrationsCount: 0, growthPercent: 0, integrationComplexity: 0 },
+          decisionAgility: rawResult.viz?.decisionAgility || { teamSizeLabel: null, vendorSelectionLabel: null, implementationStartLabel: null, decisionAgility: 0 },
+          tags: rawResult.viz?.tags || [],
+          recommendationsTable: rawResult.viz?.recommendationsTable || []
+        },
+        fitVector: rawResult.fitVector || { modules: [], goalsWeighted: {}, deployment: null, budgetBand: null, globalization: null },
+        diagnostics: rawResult.diagnostics || { missingOrInvalid: [], riskLevel: "medium", riskReasons: [], recommendations: [] },
+        answers: rawResult.answers || { completeness: { percent: 0 } }
+      };
 
       return json({ analysis });
     }
@@ -151,7 +192,32 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
 // --- Main Report Component ---
 export default function VendorFitReport() {
-  const { analysis } = useLoaderData<{ analysis: HcmAnalysis }>();
+  const loaderData = useLoaderData<{ analysis?: HcmAnalysis; paymentStatus?: string }>();
+
+  if (loaderData.paymentStatus === 'pending') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+        <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-lg text-center border border-gray-100">
+          <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-10 h-10 text-yellow-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Verification Pending</h1>
+          <p className="text-gray-500 mb-8 text-lg leading-relaxed">
+            Your payment has been submitted and is currently being verified by our administrators.
+            This usually takes less than 24 hours. You will be notified once the report is unlocked.
+          </p>
+          <a href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            Return to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const analysis = loaderData.analysis;
+  if (!analysis) return null;
+
 
   // Memoized data transformations for charts
   const radarData = useMemo(() => [

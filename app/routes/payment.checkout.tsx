@@ -13,9 +13,10 @@ import {
 } from "lucide-react";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { requireUserSession } from "~/lib/session.server";
-import { getCartItems, clearCart } from "~/models/cart.model";
-import { generateInvoice, submitPaymentProof, getPaymentRecord, PaymentMethod } from "~/models/payment.model";
-import { getCompanyProfile } from "~/models/company.model";
+import { getEnhancedUser } from "~/utils/user.server";
+import { getCartItems, clearCart } from "~/models/cart.model.server";
+import { generateInvoice, submitPaymentProof, getPaymentRecord, PaymentMethod } from "~/models/payment.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { uploadToS3 } from "~/lib/s3.server";
 import BillingDetailsForm, { BillingContact } from "~/components/BillingDetailsForm";
 
@@ -36,10 +37,11 @@ interface LoaderData {
         upiId: string;
         qrCodeUrl: string;
     };
+    user: any;
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-    const user = await requireUserSession(request);
+    const user = await getEnhancedUser(request);
     if (!user) return redirect('/auth');
 
     const cartItems = await getCartItems(user.organisationId || "");
@@ -56,7 +58,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     // Your company's payment details (store in env variables in production)
     // Your company's payment details
     const bankDetails = {
-        accountName: "Delosch Technologies (P) Ltd.",
+        accountName: "HR-Tek System",
         accountNumber: "00000020532076408",
         ifscCode: "SBIN0010175",
         bankName: "State Bank of India",
@@ -64,7 +66,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     };
 
     const upiDetails = {
-        upiId: process.env.UPI_ID || "deloschtechnologiesprivatelimited@sbi",
+        upiId: process.env.UPI_ID || "hrteksystems@sbi",
         qrCodeUrl: "/assets/payment/upi-qr-code.jpg"
     };
 
@@ -75,7 +77,8 @@ export const loader: LoaderFunction = async ({ request }) => {
         total,
         companyDetails,
         bankDetails,
-        upiDetails
+        upiDetails,
+        user
     });
 };
 
@@ -135,6 +138,9 @@ export const action: ActionFunction = async ({ request }) => {
                 paymentNotes
             });
 
+            // Also clear the cart here to be absolutely sure
+            await clearCart(user.organisationId || "");
+
             return json({ success: true, message: "Payment proof submitted successfully" });
         } catch (error) {
             console.error("Error submitting payment proof:", error);
@@ -177,7 +183,7 @@ export default function PaymentCheckout() {
 
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-            {!isSidebarCollapsed && <Sidebar />}
+            {!isSidebarCollapsed && <Sidebar user={data.user} />}
 
             <main className="flex-1 md:ml-64 p-6 sm:p-10">
                 <div className="max-w-6xl mx-auto">

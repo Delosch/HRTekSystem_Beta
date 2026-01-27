@@ -2,32 +2,33 @@ import { useLoaderData, useFetcher, Link } from "@remix-run/react";
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { useState } from "react";
 import {
-    CheckCircle,
-    XCircle,
-    Eye,
-    Clock,
-    Download,
-    Search,
-    Filter,
-    ChevronDown,
-    ChevronUp,
-    ExternalLink,
-    FileText,
-    CreditCard,
-    Calendar,
-    Hash,
-    Package,
-    DollarSign,
-    TrendingUp
-} from "lucide-react";
+    CheckCircleIcon,
+    XCircleIcon,
+    EyeIcon,
+    ClockIcon,
+    ArrowDownTrayIcon,
+    MagnifyingGlassIcon,
+    FunnelIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
+    ArrowTopRightOnSquareIcon,
+    DocumentTextIcon,
+    CreditCardIcon,
+    CalendarDaysIcon,
+    HashtagIcon,
+    InboxStackIcon,
+    BanknotesIcon,
+    ArrowTrendingUpIcon,
+    XMarkIcon
+} from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     getPendingPaymentVerifications,
     verifyPayment,
     rejectPayment,
-    getPaymentRecord,
-    PaymentRecord
-} from "~/models/payment.model";
+} from "~/models/payment.model.server";
 import { getPresignedGetUrl } from "~/lib/s3.server";
+import { requireAdminSession } from "~/lib/session.server";
 
 // Type for action responses
 interface ActionData {
@@ -36,14 +37,8 @@ interface ActionData {
     error?: string;
 }
 
-// Helper for class names
-function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(" ");
-}
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-    // TODO: Add admin authentication check
-    // const admin = await requireAdminSession(request);
+    await requireAdminSession(request);
 
     try {
         const pendingPayments = await getPendingPaymentVerifications();
@@ -87,14 +82,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-    // TODO: Add admin authentication check
-    // const admin = await requireAdminSession(request);
-
+    const admin = await requireAdminSession(request);
     const formData = await request.formData();
     const intent = formData.get("intent") as string;
     const invoiceId = formData.get("invoiceId") as string;
     const orgId = formData.get("orgId") as string;
-    const adminId = "admin-user-id"; // TODO: Get from session
+    const adminId = admin.userId;
 
     try {
         if (intent === "verify") {
@@ -129,7 +122,6 @@ export default function AdminPaymentVerification() {
     const [showProofModal, setShowProofModal] = useState(false);
     const [proofImageUrl, setProofImageUrl] = useState("");
 
-    // Advanced Filters
     const [showFilters, setShowFilters] = useState(false);
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
     const [customDateRange, setCustomDateRange] = useState({ start: '', end: '' });
@@ -139,14 +131,11 @@ export default function AdminPaymentVerification() {
 
     const fetcher = useFetcher<ActionData>();
 
-    // Get unique engines from all payments
     const uniqueEngines = Array.from(new Set(
         payments.flatMap((p: any) => p.items?.map((item: any) => item.engineName) || [])
     )).sort();
 
-    // Apply all filters
     const filteredPayments = payments.filter((payment: any) => {
-        // Search filter
         const matchesSearch =
             payment.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
             payment.companyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -154,7 +143,6 @@ export default function AdminPaymentVerification() {
 
         if (!matchesSearch) return false;
 
-        // Date filter
         const paymentDate = new Date(payment.paymentDate || payment.updatedAt);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -181,18 +169,15 @@ export default function AdminPaymentVerification() {
 
         if (!matchesDate) return false;
 
-        // Payment method filter
         if (paymentMethodFilter !== 'all' && payment.paymentMethod !== paymentMethodFilter) {
             return false;
         }
 
-        // Engine filter
         if (engineFilter !== 'all') {
             const hasEngine = payment.items?.some((item: any) => item.engineName === engineFilter);
             if (!hasEngine) return false;
         }
 
-        // Amount filter
         if (amountFilter.min && payment.totalAmount < parseFloat(amountFilter.min)) {
             return false;
         }
@@ -203,13 +188,6 @@ export default function AdminPaymentVerification() {
         return true;
     });
 
-    // Calculate filtered stats
-    const filteredStats = {
-        count: filteredPayments.length,
-        totalAmount: filteredPayments.reduce((sum: number, p: any) => sum + p.totalAmount, 0)
-    };
-
-    // Check if any filters are active
     const hasActiveFilters =
         dateFilter !== 'all' ||
         paymentMethodFilter !== 'all' ||
@@ -217,7 +195,6 @@ export default function AdminPaymentVerification() {
         amountFilter.min !== '' ||
         amountFilter.max !== '';
 
-    // Clear all filters
     const clearAllFilters = () => {
         setDateFilter('all');
         setCustomDateRange({ start: '', end: '' });
@@ -282,514 +259,423 @@ export default function AdminPaymentVerification() {
         setShowProofModal(true);
     };
 
-    const getPaymentMethodBadge = (method: string) => {
-        const badges = {
-            bank_transfer: { color: "bg-blue-100 text-blue-800 border-blue-200", icon: CreditCard, text: "Bank Transfer" },
-            upi: { color: "bg-purple-100 text-purple-800 border-purple-200", icon: CreditCard, text: "UPI" },
-            qr_code: { color: "bg-green-100 text-green-800 border-green-200", icon: CreditCard, text: "QR Code" }
+    const getPaymentMethodStyles = (method: string) => {
+        const styles = {
+            bank_transfer: { color: "text-blue-600 bg-blue-50 border-blue-100", text: "Bank Transfer" },
+            upi: { color: "text-purple-600 bg-purple-50 border-purple-100", text: "UPI" },
+            qr_code: { color: "text-emerald-600 bg-emerald-50 border-emerald-100", text: "QR Code" }
         };
-        const badge = badges[method as keyof typeof badges] || badges.bank_transfer;
-        const Icon = badge.icon;
-        return (
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.color}`}>
-                <Icon className="w-3.5 h-3.5" />
-                {badge.text}
-            </span>
-        );
+        return styles[method as keyof typeof styles] || styles.bank_transfer;
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Payment Verification</h1>
-                    <p className="text-gray-600 mt-2">Review and verify pending payment submissions</p>
+        <div className="max-w-7xl mx-auto space-y-8 p-4 animate-in fade-in duration-700">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">FinOps Verification</h1>
+                    <p className="text-gray-500 font-medium">Audit and approve high-value transactions across the platform.</p>
                 </div>
-
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-blue-100 text-sm font-medium">Pending Payments</p>
-                                <p className="text-3xl font-bold mt-2">{stats.totalPending}</p>
-                            </div>
-                            <Clock className="w-12 h-12 text-blue-200" />
-                        </div>
+                <div className="flex items-center gap-3">
+                    <div className="relative max-w-xs">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search transactions..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium shadow-sm outline-none"
+                        />
                     </div>
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`p-2.5 rounded-xl border transition-all ${showFilters ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}`}
+                    >
+                        <FunnelIcon className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
 
-                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-green-100 text-sm font-medium">Total Amount</p>
-                                <p className="text-3xl font-bold mt-2">₹{stats.totalAmount.toLocaleString()}</p>
-                            </div>
-                            <DollarSign className="w-12 h-12 text-green-200" />
-                        </div>
+            {/* Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
+                        <InboxStackIcon className="h-8 w-8" />
                     </div>
-
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-purple-100 text-sm font-medium">Today's Submissions</p>
-                                <p className="text-3xl font-bold mt-2">{stats.todaySubmissions}</p>
-                            </div>
-                            <TrendingUp className="w-12 h-12 text-purple-200" />
-                        </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Awaiting Verification</p>
+                        <p className="text-3xl font-black text-gray-900">{stats.totalPending}</p>
                     </div>
                 </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
+                        <BanknotesIcon className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Pending Volume</p>
+                        <p className="text-3xl font-black text-gray-900">₹{stats.totalAmount.toLocaleString()}</p>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-5">
+                    <div className="p-4 bg-rose-50 text-rose-600 rounded-2xl">
+                        <ArrowTrendingUpIcon className="h-8 w-8" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Velocity (24h)</p>
+                        <p className="text-3xl font-black text-gray-900">{stats.todaySubmissions}</p>
+                    </div>
+                </div>
+            </div>
 
-                {/* Success/Error Messages */}
+            {/* Action Notifications */}
+            <AnimatePresence>
                 {fetcher.data?.success && (
-                    <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-green-800">{fetcher.data.message}</p>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3"
+                    >
+                        <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+                        <p className="text-sm font-bold text-emerald-800">{fetcher.data.message}</p>
+                    </motion.div>
                 )}
-
                 {fetcher.data?.error && (
-                    <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                        <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-800">{fetcher.data.error}</p>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-3"
+                    >
+                        <XCircleIcon className="h-5 w-5 text-rose-600" />
+                        <p className="text-sm font-bold text-rose-800">{fetcher.data.error}</p>
+                    </motion.div>
                 )}
+            </AnimatePresence>
 
-                {/* Search and Filter */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-                    <div className="flex gap-4 mb-4">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search by invoice number, company ID, or transaction ID..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`flex items-center gap-2 px-4 py-2 border rounded-lg font-medium transition-colors ${showFilters || hasActiveFilters
-                                    ? 'bg-blue-50 border-blue-500 text-blue-700'
-                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                                }`}
-                        >
-                            <Filter className="w-5 h-5" />
-                            Filters
-                            {hasActiveFilters && (
-                                <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                    {[dateFilter !== 'all', paymentMethodFilter !== 'all', engineFilter !== 'all', amountFilter.min || amountFilter.max].filter(Boolean).length}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Filter Panel */}
-                    {showFilters && (
-                        <div className="border-t border-gray-200 pt-4 mt-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Date Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                                    <select
-                                        value={dateFilter}
-                                        onChange={(e) => setDateFilter(e.target.value as any)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="all">All Time</option>
-                                        <option value="today">Today</option>
-                                        <option value="week">Last 7 Days</option>
-                                        <option value="month">Last 30 Days</option>
-                                        <option value="custom">Custom Range</option>
-                                    </select>
-                                </div>
-
-                                {/* Payment Method Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                                    <select
-                                        value={paymentMethodFilter}
-                                        onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="all">All Methods</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="upi">UPI</option>
-                                        <option value="qr_code">QR Code</option>
-                                    </select>
-                                </div>
-
-                                {/* Engine Filter */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Engine</label>
-                                    <select
-                                        value={engineFilter}
-                                        onChange={(e) => setEngineFilter(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="all">All Engines</option>
-                                        {uniqueEngines.map((engine) => (
-                                            <option key={engine} value={engine}>{engine}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Amount Range */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Amount Range</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="number"
-                                            placeholder="Min"
-                                            value={amountFilter.min}
-                                            onChange={(e) => setAmountFilter({ ...amountFilter, min: e.target.value })}
-                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                        <input
-                                            type="number"
-                                            placeholder="Max"
-                                            value={amountFilter.max}
-                                            onChange={(e) => setAmountFilter({ ...amountFilter, max: e.target.value })}
-                                            className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
+            {/* Filters Panel */}
+            <AnimatePresence>
+                {showFilters && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Temporal Filter</label>
+                                <select
+                                    value={dateFilter}
+                                    onChange={(e) => setDateFilter(e.target.value as any)}
+                                    className="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-indigo-100 transition-all cursor-pointer"
+                                >
+                                    <option value="all">Fecundity (All Time)</option>
+                                    <option value="today">Synchronized Today</option>
+                                    <option value="week">Past 168 Hours</option>
+                                    <option value="month">Last 30 Cycles</option>
+                                    <option value="custom">Manual Spectrum</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Modality</label>
+                                <select
+                                    value={paymentMethodFilter}
+                                    onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                                    className="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-indigo-100 transition-all cursor-pointer"
+                                >
+                                    <option value="all">All Channels</option>
+                                    <option value="bank_transfer">Bank Wire</option>
+                                    <option value="upi">Unified (UPI)</option>
+                                    <option value="qr_code">Static QR</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Product Engine</label>
+                                <select
+                                    value={engineFilter}
+                                    onChange={(e) => setEngineFilter(e.target.value)}
+                                    className="w-full bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700 outline-none ring-2 ring-transparent focus:ring-indigo-100 transition-all cursor-pointer"
+                                >
+                                    <option value="all">All Engines</option>
+                                    {uniqueEngines.map((engine) => (
+                                        <option key={engine} value={engine}>{engine}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Value Range</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={amountFilter.min}
+                                        onChange={(e) => setAmountFilter({ ...amountFilter, min: e.target.value })}
+                                        className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none ring-2 ring-transparent focus:ring-indigo-100 transition-all"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={amountFilter.max}
+                                        onChange={(e) => setAmountFilter({ ...amountFilter, max: e.target.value })}
+                                        className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none ring-2 ring-transparent focus:ring-indigo-100 transition-all"
+                                    />
                                 </div>
                             </div>
-
-                            {/* Custom Date Range */}
-                            {dateFilter === 'custom' && (
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                                        <input
-                                            type="date"
-                                            value={customDateRange.start}
-                                            onChange={(e) => setCustomDateRange({ ...customDateRange, start: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                                        <input
-                                            type="date"
-                                            value={customDateRange.end}
-                                            onChange={(e) => setCustomDateRange({ ...customDateRange, end: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Active Filters & Clear Button */}
                             {hasActiveFilters && (
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                                    <div className="flex flex-wrap gap-2">
-                                        {dateFilter !== 'all' && (
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                📅 {dateFilter === 'today' ? 'Today' : dateFilter === 'week' ? 'Last 7 Days' : dateFilter === 'month' ? 'Last 30 Days' : 'Custom Range'}
-                                                <button onClick={() => setDateFilter('all')} className="hover:text-blue-900">×</button>
-                                            </span>
-                                        )}
-                                        {paymentMethodFilter !== 'all' && (
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                                                💳 {paymentMethodFilter.replace('_', ' ').toUpperCase()}
-                                                <button onClick={() => setPaymentMethodFilter('all')} className="hover:text-purple-900">×</button>
-                                            </span>
-                                        )}
-                                        {engineFilter !== 'all' && (
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                🔧 {engineFilter}
-                                                <button onClick={() => setEngineFilter('all')} className="hover:text-green-900">×</button>
-                                            </span>
-                                        )}
-                                        {(amountFilter.min || amountFilter.max) && (
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                                                💰 ₹{amountFilter.min || '0'} - ₹{amountFilter.max || '∞'}
-                                                <button onClick={() => setAmountFilter({ min: '', max: '' })} className="hover:text-orange-900">×</button>
-                                            </span>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={clearAllFilters}
-                                        className="text-sm text-red-600 hover:text-red-800 font-medium"
-                                    >
-                                        Clear All Filters
-                                    </button>
+                                <div className="lg:col-span-4 pt-4 border-t border-gray-50 flex items-center justify-between">
+                                    <p className="text-xs font-bold text-indigo-600">Filtering active: {filteredPayments.length} results</p>
+                                    <button onClick={clearAllFilters} className="text-xs font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors">Clear Global Filters</button>
                                 </div>
                             )}
                         </div>
-                    )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                    {/* Filtered Results Summary */}
-                    {hasActiveFilters && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm text-blue-800">
-                                Showing <span className="font-bold">{filteredStats.count}</span> payment{filteredStats.count !== 1 ? 's' : ''}
-                                {' '}totaling <span className="font-bold">₹{filteredStats.totalAmount.toLocaleString()}</span>
-                                {' '}(filtered from {stats.totalPending} total)
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                {/* Payments Table */}
-                <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                    {filteredPayments.length === 0 ? (
-                        <div className="text-center py-12">
-                            <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pending Payments</h3>
-                            <p className="text-gray-600">
-                                {searchTerm ? "No payments match your search" : "All payments have been processed"}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Invoice
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Company
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Amount
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Payment Method
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Transaction ID
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Submitted
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                        <th className="px-6 py-3"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredPayments.map((payment: any) => (
-                                        <>
-                                            <tr key={payment.invoiceId} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+            {/* Table */}
+            <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-50/50">
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instrument</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Counterparty</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Value (INR)</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Protocol</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Chronology</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Audit Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {filteredPayments.map((payment: any, idx: number) => {
+                                const methodStyles = getPaymentMethodStyles(payment.paymentMethod);
+                                return (
+                                    <Fragment key={payment.invoiceId}>
+                                        <motion.tr
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="group hover:bg-gray-50/50 transition-colors"
+                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-xl shadow-sm border border-indigo-100">
+                                                        <DocumentTextIcon className="h-5 w-5" />
+                                                    </div>
                                                     <div>
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {payment.invoiceNumber}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500">
-                                                            {new Date(payment.invoiceDate).toLocaleDateString()}
-                                                        </div>
+                                                        <p className="text-sm font-bold text-gray-900">{payment.invoiceNumber}</p>
+                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">ID: #{payment.invoiceId.slice(0, 8)}</p>
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
-                                                        {payment.companyId}
-                                                    </div>
-                                                    <a
-                                                        href={`/admin/companies/${payment.companyId}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 mt-1"
-                                                    >
-                                                        <ExternalLink className="w-3 h-3" />
-                                                        View Dashboard
-                                                    </a>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-semibold text-gray-900">
-                                                        ₹{payment.totalAmount.toLocaleString()}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        GST: ₹{payment.gstAmount.toLocaleString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {getPaymentMethodBadge(payment.paymentMethod || 'bank_transfer')}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {payment.transactionId ? (
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Hash className="w-3.5 h-3.5 text-gray-400" />
-                                                            <span className="text-sm font-mono text-gray-900">
-                                                                {payment.transactionId}
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-sm text-gray-400">N/A</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-700 truncate max-w-[140px]">{payment.companyId}</p>
+                                                    <Link to={`/admin/companies/${payment.companyId}`} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group/link mt-0.5">
+                                                        Deep Audit <ArrowTopRightOnSquareIcon className="h-2.5 w-2.5 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
+                                                    </Link>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <p className="text-sm font-black text-gray-900">₹{payment.totalAmount.toLocaleString()}</p>
+                                                <p className="text-[10px] font-bold text-emerald-600 uppercase">Input Inclusive</p>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex justify-center">
+                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${methodStyles.color}`}>
+                                                        {methodStyles.text}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <p className="text-xs font-bold text-gray-600">
+                                                    {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-gray-400 mt-0.5 italic">Synchronized</p>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {payment.signedProofUrl && (
+                                                        <button
+                                                            onClick={() => viewProof(payment.signedProofUrl)}
+                                                            className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
+                                                            title="Inspect Artifact"
+                                                        >
+                                                            <EyeIcon className="h-4 w-4" />
+                                                        </button>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                                                        <Calendar className="w-3.5 h-3.5" />
-                                                        {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <div className="flex items-center gap-2">
-                                                        {payment.signedProofUrl && (
-                                                            <button
-                                                                onClick={() => viewProof(payment.signedProofUrl)}
-                                                                className="text-indigo-600 hover:text-indigo-900 p-1.5 rounded-md hover:bg-indigo-50 transition-colors"
-                                                                title="View Payment Proof"
-                                                            >
-                                                                <Eye className="h-5 w-5" />
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => handleVerify(payment)}
-                                                            disabled={fetcher.state === "submitting"}
-                                                            className="text-green-600 hover:text-green-900 p-1.5 rounded-md hover:bg-green-50 disabled:opacity-50 transition-colors"
-                                                            title="Verify Payment"
-                                                        >
-                                                            <CheckCircle className="h-5 w-5" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleReject(payment)}
-                                                            disabled={fetcher.state === "submitting"}
-                                                            className="text-red-600 hover:text-red-900 p-1.5 rounded-md hover:bg-red-50 disabled:opacity-50 transition-colors"
-                                                            title="Reject Payment"
-                                                        >
-                                                            <XCircle className="h-5 w-5" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <button
+                                                        onClick={() => handleVerify(payment)}
+                                                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                                                        title="Finalize Verification"
+                                                    >
+                                                        <CheckCircleIcon className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleReject(payment)}
+                                                        className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-100"
+                                                        title="Revoke Transaction"
+                                                    >
+                                                        <XCircleIcon className="h-4 w-4" />
+                                                    </button>
                                                     <button
                                                         onClick={() => toggleRow(payment.invoiceId)}
-                                                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                                                        className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-100 transition-all border border-gray-100"
                                                     >
-                                                        {expandedRows.has(payment.invoiceId) ? (
-                                                            <ChevronUp className="w-5 h-5" />
-                                                        ) : (
-                                                            <ChevronDown className="w-5 h-5" />
-                                                        )}
+                                                        {expandedRows.has(payment.invoiceId) ? <ChevronUpIcon className="h-4 w-4 text-indigo-600" /> : <ChevronDownIcon className="h-4 w-4" />}
                                                     </button>
-                                                </td>
-                                            </tr>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                        <AnimatePresence>
                                             {expandedRows.has(payment.invoiceId) && (
-                                                <tr>
-                                                    <td colSpan={8} className="px-6 py-4 bg-gray-50">
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                            {/* Invoice Items */}
-                                                            <div>
-                                                                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                                                    <Package className="w-4 h-4" />
-                                                                    Invoice Items
+                                                <motion.tr
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="bg-slate-50/50"
+                                                >
+                                                    <td colSpan={6} className="px-8 py-6">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                                    <InboxStackIcon className="h-3 w-3" /> Artifact Line Items
                                                                 </h4>
                                                                 <div className="space-y-2">
-                                                                    {payment.items.map((item: any, idx: number) => (
-                                                                        <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200">
-                                                                            <div className="flex justify-between items-start">
-                                                                                <div>
-                                                                                    <p className="text-sm font-medium text-gray-900">{item.engineName}</p>
-                                                                                    <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                                                                                </div>
-                                                                                <p className="text-sm font-semibold text-gray-900">₹{item.price.toLocaleString()}</p>
+                                                                    {payment.items.map((item: any, i: number) => (
+                                                                        <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                                                                            <div>
+                                                                                <p className="text-sm font-bold text-gray-900">{item.engineName}</p>
+                                                                                <p className="text-[10px] font-bold text-gray-400 mt-0.5">Deployment Ready</p>
                                                                             </div>
+                                                                            <p className="text-sm font-black text-gray-900">₹{item.price.toLocaleString()}</p>
                                                                         </div>
                                                                     ))}
                                                                 </div>
                                                             </div>
-
-                                                            {/* Payment Notes */}
-                                                            <div>
-                                                                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                                                    <FileText className="w-4 h-4" />
-                                                                    Payment Notes
+                                                            <div className="space-y-4">
+                                                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                                    <HashtagIcon className="h-3 w-3" /> Transaction Metadata
                                                                 </h4>
-                                                                {payment.paymentNotes ? (
-                                                                    <div className="bg-white rounded-lg p-3 border border-gray-200">
-                                                                        <p className="text-sm text-gray-700">{payment.paymentNotes}</p>
+                                                                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+                                                                    <div className="flex justify-between border-b border-gray-50 pb-2">
+                                                                        <span className="text-xs font-bold text-gray-400">System Trace ID</span>
+                                                                        <span className="text-xs font-bold text-gray-900 font-mono">{payment.transactionId || 'NOT_LOGGED'}</span>
                                                                     </div>
-                                                                ) : (
-                                                                    <p className="text-sm text-gray-400 italic">No notes provided</p>
-                                                                )}
+                                                                    <div className="pt-2">
+                                                                        <span className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Synchronizer Notes</span>
+                                                                        <p className="text-sm font-medium text-gray-600 italic">
+                                                                            {payment.paymentNotes || "No evidentiary notes recorded by counterparty during ingress."}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                </tr>
+                                                </motion.tr>
                                             )}
-                                        </>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                        </AnimatePresence>
+                                    </Fragment>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
 
-                {/* Rejection Modal */}
+                {filteredPayments.length === 0 && (
+                    <div className="p-24 text-center">
+                        <InboxStackIcon className="h-20 w-20 text-gray-100 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Spectrum Clear</h3>
+                        <p className="text-gray-500 font-medium">No pending transactions currently requiring administrative audit.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Rejection Modal */}
+            <AnimatePresence>
                 {showRejectModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg max-w-md w-full p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Payment</h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Invoice: {selectedPayment?.invoiceNumber}
+                    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-[2.5rem] max-w-lg w-full p-10 shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 right-0 p-6">
+                                <button onClick={() => setShowRejectModal(false)} className="text-gray-400 hover:text-gray-900 transition-colors">
+                                    <XMarkIcon className="h-6 w-6" />
+                                </button>
+                            </div>
+                            <div className="h-16 w-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mb-8">
+                                <XCircleIcon className="h-10 w-10" />
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-900 mb-2">Revoke Transaction</h3>
+                            <p className="text-gray-500 font-medium mb-8">
+                                You are about to reject payment for <span className="text-gray-900 font-bold underline">#{selectedPayment?.invoiceNumber}</span>. Please specify the audit discrepancy.
                             </p>
                             <textarea
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
-                                placeholder="Enter reason for rejection..."
+                                placeholder="e.g., Evidence mismatch, insufficient artifacts provided..."
                                 rows={4}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+                                className="w-full bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-medium focus:ring-4 focus:ring-rose-500/5 outline-none transition-all mb-8"
                             />
-                            <div className="flex gap-3">
+                            <div className="flex gap-4">
                                 <button
-                                    onClick={() => {
-                                        setShowRejectModal(false);
-                                        setRejectionReason("");
-                                        setSelectedPayment(null);
-                                    }}
-                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                    onClick={() => setShowRejectModal(false)}
+                                    className="flex-1 px-6 py-4 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={submitRejection}
-                                    disabled={fetcher.state === "submitting"}
-                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg"
+                                    className="flex-1 px-6 py-4 bg-gray-900 text-white rounded-2xl text-sm font-bold shadow-xl shadow-gray-900/20 hover:bg-gray-800 transition-all"
                                 >
-                                    {fetcher.state === "submitting" ? "Rejecting..." : "Reject Payment"}
+                                    Confirm Revocation
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Proof View Modal */}
+            <AnimatePresence>
+                {showProofModal && (
+                    <div className="fixed inset-0 bg-gray-950/95 z-[200] flex flex-col p-8" onClick={() => setShowProofModal(false)}>
+                        <div className="flex items-center justify-between mb-8" onClick={e => e.stopPropagation()}>
+                            <div>
+                                <h3 className="text-2xl font-black text-white tracking-tight">FinOps Evidence</h3>
+                                <p className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Artifact Validation Mode</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <a
+                                    href={proofImageUrl}
+                                    download
+                                    className="p-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all border border-white/10 flex items-center gap-3 font-bold text-sm"
+                                >
+                                    <ArrowDownTrayIcon className="h-5 w-5 text-indigo-400" />
+                                    Download Original
+                                </a>
+                                <button
+                                    onClick={() => setShowProofModal(false)}
+                                    className="p-3 bg-white text-gray-900 rounded-2xl font-bold flex items-center justify-center shadow-2xl"
+                                >
+                                    <XMarkIcon className="h-6 w-6" />
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {/* Payment Proof Modal */}
-                {showProofModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" onClick={() => setShowProofModal(false)}>
-                        <div className="max-w-4xl w-full bg-white rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Payment Proof</h3>
-                                <div className="flex gap-2">
-                                    <a
-                                        href={proofImageUrl}
-                                        download
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                        Download
-                                    </a>
-                                    <button
-                                        onClick={() => setShowProofModal(false)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="max-h-[70vh] overflow-auto">
-                                <img src={proofImageUrl} alt="Payment Proof" className="w-full h-auto rounded-lg" />
-                            </div>
+                        <div className="flex-1 flex items-center justify-center overflow-auto rounded-[3rem] bg-black/40 border border-white/5" onClick={e => e.stopPropagation()}>
+                            <img src={proofImageUrl} alt="Evidence Artifact" className="max-w-full max-h-full object-contain shadow-2xl rounded-2xl" />
                         </div>
                     </div>
                 )}
-            </div>
+            </AnimatePresence>
         </div>
     );
+}
+
+function Fragment({ children }: { children: React.ReactNode }) {
+    return <>{children}</>;
 }

@@ -1,6 +1,6 @@
 import { requireUserSession } from "~/lib/session.server";
-import { getUserProfile } from "~/models/user.model";
-import { getCompanyProfile } from "~/models/company.model";
+import { getUserProfile } from "~/models/user.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { redirect } from "@remix-run/node";
 
 /**

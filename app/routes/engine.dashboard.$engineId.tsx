@@ -1,13 +1,14 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { findEngineData } from "~/models/engine.model";
+import { findEngineData } from "~/models/engine.model.server";
 import DashboardHeader from "~/components/DashboardHeader";
 import TechMaturityDashboard from "~/components/dashboards/TechMaturityDashboard";
 import RoadmapDashboard from "~/components/dashboards/RoadmapDashboard";
 import VendorFitDashboard from "~/components/dashboards/VendorFitDashboard";
 import SharedServicesDashboard from "~/components/dashboards/SharedServicesDashboard";
 import ChangeManagementDashboard from "~/components/dashboards/ChangeManagementDashboard";
+import { getLatestAnalysis } from "~/utils/question.utils";
 
 // Engine configuration mapping - Updated names from image
 const ENGINE_CONFIG: Record<string, { name: string; description: string; icon: string; id: string }> = {
@@ -88,32 +89,31 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     };
 
     // Generate contextual insights
-    const insights = [
+    const latestAnalysis = await getLatestAnalysis(user.organisationId || "", engineFullName);
+    const analysisResult = latestAnalysis?.result;
+
+    // Generate contextual insights from real analysis
+    let insights = [
         {
             id: "1",
-            title: "Strong Digital Infrastructure",
-            description: "Your organization shows excellent foundation in digital infrastructure with 85% maturity.",
-            priority: "high" as const,
-            category: "strength" as const,
-            actionable: false,
-        },
-        {
-            id: "2",
-            title: "Integration Capability Gap",
-            description: "Integration capabilities need improvement. Consider investing in API management and middleware solutions.",
-            priority: "high" as const,
-            category: "improvement" as const,
-            actionable: true,
-        },
-        {
-            id: "3",
-            title: "Recommended: Employee Experience Platform",
-            description: "Based on your high employee experience score, consider implementing a unified EX platform.",
+            title: "Assessment Not Started",
+            description: "Complete the diagnostic assessment to generate AI-powered insights and maturity scores.",
             priority: "medium" as const,
             category: "recommendation" as const,
             actionable: true,
-        },
+        }
     ];
+
+    if (analysisResult?.maturity_analysis?.dimensional_scores) {
+        insights = analysisResult.maturity_analysis.dimensional_scores.map((score: any, idx: number) => ({
+            id: String(idx + 1),
+            title: `${score.dimension}: ${score.maturity_level}`,
+            description: `Maturity level is ${score.maturity_level} with a score of ${score.percentage}%.`,
+            priority: score.percentage < 40 ? "high" : score.percentage < 70 ? "medium" : "low",
+            category: score.percentage < 50 ? "improvement" : "strength",
+            actionable: score.percentage < 70
+        }));
+    }
 
     // Historical data (mock for now)
     const historicalData = progress > 0 ? {
@@ -123,10 +123,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
     return json({
         engineConfig,
-        metrics,
+        metrics: {
+            ...metrics,
+            averageScore: analysisResult?.maturity_analysis?.overall_score?.percentage || metrics.averageScore
+        },
         assessmentData,
         insights,
         historicalData,
+        analysisResult,
         user: {
             name: user.first_name,
             email: user.email,
@@ -135,32 +139,32 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function EngineDashboardRoute() {
-    const { engineConfig, metrics, assessmentData, insights, historicalData, user } =
+    const { engineConfig, metrics, assessmentData, insights, historicalData, analysisResult, user } =
         useLoaderData<typeof loader>();
     const navigate = useNavigate();
 
     // Render engine-specific dashboard based on engineId
     const renderDashboard = () => {
         const commonProps = {
-            engineData: engineConfig,
-            metrics,
-            assessmentData,
-            insights,
-            historicalData,
+            engineData: engineConfig as any,
+            metrics: metrics as any,
+            assessmentData: assessmentData as any,
+            insights: insights as any,
+            historicalData: historicalData as any,
         };
 
         switch (engineConfig.id) {
             case "hr-tech-maturity":
-                return <TechMaturityDashboard {...commonProps} />;
+                return <TechMaturityDashboard {...commonProps} analysisResult={analysisResult} />;
 
             case "digital-roadmap":
                 return <RoadmapDashboard {...commonProps} />;
 
             case "hcm-vendor-fit":
                 return <VendorFitDashboard
-                    engineData={engineConfig}
-                    assessmentData={assessmentData}
-                    insights={insights}
+                    engineData={engineConfig as any}
+                    assessmentData={assessmentData as any}
+                    insights={insights as any}
                 />;
 
             case "shared-services":

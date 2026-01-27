@@ -30,6 +30,7 @@ export const authSessionSchema = z.object({
     country_iso: z.string().min(2).max(2),
     photoUrl: z.string().optional(),
     username: z.string().optional(),
+    isAdmin: z.boolean().optional(),
 })
 
 /**
@@ -52,6 +53,7 @@ export const sessionDataSchema = z.object({
     country_iso: z.string().min(2).max(2),
     photoUrl: z.string().optional(),
     username: z.string().optional(),
+    isAdmin: z.boolean().optional(),
 });
 
 /**

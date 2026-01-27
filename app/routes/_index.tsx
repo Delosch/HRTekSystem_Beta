@@ -9,40 +9,61 @@ import Navbar from "~/components/HomePageComponents/Navbar";
 import ServicesTabs from "~/components/HomePageComponents/ServicesTabs";
 import TestimonialsSection from "~/components/HomePageComponents/TestimonialsSection";
 import { MetaFunction } from "@remix-run/node";
+import { generateMeta, generateFAQSchema } from "~/utils/seo";
 
 export const meta: MetaFunction = () => {
-  const title = "HRTek System – Transforming HR";
-  const description =
-    "Revolutionize your HR. Our AI-driven software provides diagnostics and a strategic roadmap, empowering your team to transform operations and save you money.";
-  const image = "/landingPage-Preview.jpg"; // replace with actual image URL
-  const url = ""; // replace with actual domain
-
-  return [
-    // Standard meta
-    { title },
-    { name: "description", content: description },
-
-    // Open Graph (Facebook, LinkedIn, etc.)
-    { property: "og:type", content: "website" },
-    { property: "og:url", content: url },
-    { property: "og:title", content: title },
-    { property: "og:description", content: description },
-    { property: "og:image", content: image },
-    { property: "og:site_name", content: "HRTek System" },
-
-    // Twitter Card
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:url", content: url },
-    { name: "twitter:title", content: title },
-    { name: "twitter:description", content: description },
-    { name: "twitter:image", content: image },
-  ];
+  return generateMeta({
+    title: "AI-Powered HR Transformation Platform",
+    description: "Transform your HR operations with HRTek System's AI-driven diagnostics, strategic roadmaps, and intelligent change management solutions. Trusted by leading organizations worldwide.",
+    keywords: "HR transformation, AI HR platform, digital maturity assessment, HCM vendor selection, HR roadmap generator, change management, HR technology",
+    url: "https://hrteksystem.com",
+    image: "https://hrteksystem.com/og-home.jpg",
+  });
 };
 
 export default function Index() {
+  // FAQ Schema for SEO
+  const faqSchema = generateFAQSchema([
+    {
+      question: "What does your software help HR teams achieve?",
+      answer: "Our platform empowers HR teams to navigate transformation with confidence—whether it's building a strategic HR roadmap, optimizing technology choices, or redesigning service delivery models."
+    },
+    {
+      question: "How is this solution relevant to my company's size and maturity?",
+      answer: "Our solution dynamically adapts to your organization's scale—whether you're a small business needing foundational guidance or an enterprise seeking digital maturity and change governance."
+    },
+    {
+      question: "How does the HR Transformation Roadmap work?",
+      answer: "It analyzes your current HR capabilities and generates a tailored, actionable transformation path aligned with business goals and organizational readiness."
+    },
+    {
+      question: "What is HCM Vendor Fit Analysis?",
+      answer: "This feature evaluates your HR needs and matches them with the most suitable HCM vendors, ensuring strategic alignment, scalability, and ROI."
+    },
+    {
+      question: "How do you handle change management within the platform?",
+      answer: "Our Intelligent Change Management module identifies potential adoption challenges, recommends engagement strategies, and supports smooth transitions across organizational layers."
+    },
+    {
+      question: "Can this help in setting up or optimizing HR shared services?",
+      answer: "Yes. Our Shared Service Designing module provides architectural and operational models that improve efficiency, user experience, and service scalability."
+    },
+    {
+      question: "Is there support for assessing our current HR technology maturity?",
+      answer: "Absolutely. Our HR Technology Maturity Analysis benchmarks your current systems, identifies gaps, and provides clear next steps for digital evolution."
+    }
+  ]);
+
   return (
     <>
-      <link rel="canonical" href="/" />
+      <link rel="canonical" href="https://hrteksystem.com/" />
+
+      {/* FAQ Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+
       <div className="bg-white">
         {/* Hero Section*/}
         <Navbar />
@@ -60,10 +81,10 @@ export default function Index() {
               <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">
                 Powered by Cognitive AI
               </span>
-              <h2 className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-6 leading-tight">
-                Reinvent Your HR Ecosystem with Cognitive AI Intelligence
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 leading-tight px-4">
+                Reinvent Your HR Ecosystem with Cognitive AI
               </h2>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed px-4">
                 Drive transformation across your organization with intelligent solutions tailored to your business size
               </p>
             </div>
@@ -135,8 +156,10 @@ export default function Index() {
                   <div className="relative">
                     <img
                       src="/assets/homepageAssets/scroll0/images/howItWork1.png"
-                      alt="Person interacting with a diagnostics questionnaire, symbolizing self-assessment or screening process"
+                      alt="AI-powered HR diagnostic assessment questionnaire for digital maturity analysis"
                       className="w-full h-auto object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
@@ -164,8 +187,10 @@ export default function Index() {
                   <div className="relative">
                     <img
                       src="/assets/homepageAssets/scroll0/images/howItWork2.png"
-                      alt="Client receiving support from team members to refine diagnostics and personalize solutions"
+                      alt="Cognitive AI analysis engine processing HR transformation data and patterns"
                       className="w-full h-auto object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
@@ -193,8 +218,10 @@ export default function Index() {
                   <div className="relative">
                     <img
                       src="/assets/homepageAssets/scroll0/images/howItWork3.png"
-                      alt="Experts providing personalized recommendations to a client based on past diagnostics"
+                      alt="Personalized HR transformation roadmap and strategic insights dashboard"
                       className="w-full h-auto object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-purple-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
@@ -224,8 +251,10 @@ export default function Index() {
                   <div className="relative">
                     <img
                       src="/assets/homepageAssets/scroll0/images/howItWork4.png"
-                      alt="Client receiving hands-on support from experts to implement diagnostics-based action plan"
+                      alt="Expert HR transformation implementation support and change management execution"
                       className="w-full h-auto object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-pink-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
@@ -285,8 +314,10 @@ export default function Index() {
             <div>
               <img
                 src="/assets/homepageAssets/readBlog.png"
-                alt="Read our latest blogs"
+                alt="HR technology insights and transformation strategies blog"
                 className="w-full rounded-lg shadow"
+                loading="lazy"
+                decoding="async"
               />
             </div>
 
@@ -296,12 +327,12 @@ export default function Index() {
                 {
                   title: "HR Trends for 2025",
                   img: "/assets/homepageAssets/blogThumb.png",
-                  link: "/blogPage",
+                  link: "/blog",
                 },
                 {
                   title: "HCM Solutions: The Choice for a Future-Ready HR",
                   img: "/assets/homepageAssets/blogThumb.png",
-                  link: "/blogPage",
+                  link: "/blog",
                 },
               ].map((item, index) => (
                 <div
@@ -333,10 +364,10 @@ export default function Index() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
           </div>
 
-          <div className="relative max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
-            <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-              Join the organizations that are already optimizing their workforce with HRTek System.
+          <div className="relative max-w-7xl mx-auto px-4 text-center">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
+            <p className="text-lg md:text-xl text-blue-100 mb-10 max-w-5xl mx-auto">
+              Join the organizations that are already optimizing their workforce with HR-Tek System.
             </p>
             <Link
               to="/contact"
@@ -377,7 +408,7 @@ function BusinessCard({
       <div className="relative px-6 py-8 space-y-4 text-center">
         <div className="relative mb-6">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-          <img src={imageSrc} alt={title} className="mx-auto h-48 relative z-10 transform group-hover:scale-110 transition-transform duration-500" />
+          <img src={imageSrc} alt={`${title} HR transformation solutions`} className="mx-auto h-48 relative z-10 transform group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
         </div>
 
         <div className="space-y-3">

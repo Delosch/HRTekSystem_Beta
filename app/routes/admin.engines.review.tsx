@@ -4,9 +4,9 @@ import { useState } from "react";
 import { requireUserSession } from "~/lib/session.server";
 import { redirect } from "@remix-run/node";
 import { CheckCircle, XCircle, Clock, FileText, Send } from "lucide-react";
-import { completedEngine } from "~/models/engine.model";
-import { approveEngine, rejectEngine, bulkApproveEngines } from "~/services/engine.approval.service";
-import { generateAndDispatchReport } from "~/services/report.dispatch.service";
+import { completedEngine } from "~/models/engine.model.server";
+import { approveEngine, rejectEngine, bulkApproveEngines } from "~/services/engine.approval.service.server";
+import { generateAndDispatchReport } from "~/services/report.dispatch.service.server";
 
 interface EngineReview {
     companyId: string;

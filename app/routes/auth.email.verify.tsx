@@ -19,8 +19,8 @@ import { HoverInput } from "~/components/AuthCards";
 
 import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { getSession, commitSession, requireUserSession } from "~/lib/session.server";
-import { saveEmailOTP, verifyEmailOTP, updateUser } from "~/models/user.model";
-import { sendOTPEmail, createOTP } from "~/lib/email.otp";
+import { saveEmailOTP, verifyEmailOTP, updateUser } from "~/models/user.model.server";
+import { sendOTPEmail, createOTP } from "~/lib/email.otp.server";
 
 export const action: ActionFunction = async ({ request }) => {
   const user = await requireUserSession(request);

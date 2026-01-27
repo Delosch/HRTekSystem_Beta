@@ -55,8 +55,21 @@ export async function action({ request }: ActionFunctionArgs) {
     const amount = formData.get("amount");
     const paymentProof = formData.get("paymentProof");
 
-    // TODO: Save payment submission to DynamoDB for admin verification
-    // This would create a payment record with status "pending_verification"
+    // Notify Admin
+    try {
+        const { notifyAdmin } = await import("~/services/admin.notifier.server");
+        await notifyAdmin(
+            "Manual Payment Submitted",
+            `A user has submitted payment proof for verification:\n
+            User: ${user.first_name} ${user.last_name} (${user.email})\n
+            Method: ${paymentMethod}\n
+            Transaction ID: ${transactionId}\n
+            Amount: ${amount}\n
+            Link to verify: https://hrteksystem.com/admin/payments/verification`
+        );
+    } catch (notifierError) {
+        console.warn("Failed to notify admin about payment:", notifierError);
+    }
 
     return json({
         success: true,
@@ -77,7 +90,7 @@ export default function ManualPayment() {
             name: "Bank Transfer / NEFT",
             icon: Building2,
             details: {
-                accountName: "Delosch Technologies (P) Ltd.",
+                accountName: "HR-Tek System",
                 accountNumber: "00000020532076408",
                 ifscCode: "SBIN0010175",
                 bankName: "State Bank of India",
@@ -197,7 +210,7 @@ export default function ManualPayment() {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Name:</span>
-                                            <span className="font-semibold text-gray-900">Delosch Technologies (P) Ltd.</span>
+                                            <span className="font-semibold text-gray-900">HR-Tek System</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Number:</span>

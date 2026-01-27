@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import ChatWidget from "~/components/chatbot/ChatWidget";
-import { redirect, useLoaderData, useRevalidator } from "@remix-run/react";
+import { redirect, useLoaderData, useRevalidator, Link, useNavigate } from "@remix-run/react";
 import Sidebar from "../../components/DashboardComponents/Sidebar";
-import { useNavigate } from "@remix-run/react";
+import { getEnhancedUser } from "~/utils/user.server";
+
 import {
   Radar,
   RadarChart,
@@ -22,37 +23,21 @@ import {
 } from "recharts";
 import { CheckCircle, LayoutDashboard, TrendingUp, Cpu, Clock, Award, Zap, FileText } from "lucide-react";
 import { requireUserSession } from "~/lib/session.server";
-import { getUserProfile } from "~/models/user.model";
-import { getCompanyProfile } from "~/models/company.model";
+import { getUserProfile } from "~/models/user.model.server";
+import { getCompanyProfile } from "~/models/company.model.server";
 import { LoaderFunction } from "@remix-run/node";
 import { motion, Variants } from "framer-motion";
 import { getHeatmapMatrix, Heatmap, HeatmapDataConfig } from "../v2.$id/heat_map";
-import { getLatestAnalysis } from "~/utils/analysis";
+import { getLatestAnalysis, getAllAnalysesForCompany } from "~/utils/analysis.server";
 import EligibilityWidget from "~/components/EligibilityWidget";
 import { VisualizationData, DimensionalScore, ReadinessMetric } from "../v2.$id/schemas";
+import { getAIStatus, setAIStatus } from "~/services/ai-status.server";
+import { generate } from "~/lib/digitalMaturity.genAi";
+import { getEligibilityProgress } from "~/services/eligibility.service.server";
+import { getCompanyAdvisories } from "~/models/hti.model.server";
+import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
 
-const dashboardCache = new Map<string, { data: DashboardData; timestamp: number }>();
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hr in milliseconds
 
-const getCachedData = (key: string): DashboardData | null => {
-  const cached = dashboardCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    console.log("🎯 Cache hit for:", key);
-    return cached.data;
-  }
-
-  if (cached) {
-    dashboardCache.delete(key); // Remove expired cache
-    console.log("🕐 Cache expired for:", key);
-  }
-
-  return null;
-};
-
-const setCachedData = (key: string, data: DashboardData): void => {
-  dashboardCache.set(key, { data, timestamp: Date.now() });
-  console.log("💾 Data cached for:", key);
-};
 
 const createFallbackData = (): DashboardData => ({
   isEmpty: true,
@@ -137,10 +122,7 @@ interface DashboardData {
   heat_map: {
     dimensions: Array<{
       name: string;
-      capabilities: Array<{
-        score: number;
-        [key: string]: unknown;
-      }>;
+      capabilities: Array<any>;
     }>;
     colors: {
       min: string;
@@ -303,7 +285,7 @@ const LoadingFallback = ({ message, hasError = false }: { message: string, hasEr
   </div>
 );
 
-import { getEnhancedUser } from "~/utils/user.server";
+
 
 export const loader: LoaderFunction = async ({ request }: { request: Request }) => {
   try {
@@ -320,39 +302,48 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
       throw redirect('/auth');
     }
 
-    const cacheKey = `dashboard_v2_${user.organisationId}_Profiling Assessment`;
+    const orgId = user.organisationId;
 
-    const cachedData = getCachedData(cacheKey);
-    if (cachedData) {
-      return { ...cachedData, user };
-    }
 
-    console.log("🔍 Fetching fresh data from DynamoDB");
-    const data = await getLatestAnalysis(`COMPANY#${user.organisationId}`, "Profiling Assessment");
+    console.log("🔍 Fetching fresh data from DynamoDB (Parallel)");
+
+    // FETCH EVERYTHING CONCURRENTLY
+    const [data, eligibilityData, htiReports, verifiedPayments, status, allAnalyses] = await Promise.all([
+      getLatestAnalysis(`COMPANY#${orgId}`, "Profiling Assessment"),
+      getEligibilityProgress(orgId).catch(err => {
+        console.log("⚠️ Eligibility data fetch failed:", err);
+        return null;
+      }),
+      getCompanyAdvisories(orgId).catch(err => {
+        console.log("⚠️ HTI reports fetch failed:", err);
+        return [];
+      }),
+      getVerifiedPaymentsByCompany(orgId).catch(err => {
+        console.log("⚠️ Verified payments fetch failed:", err);
+        return [];
+      }),
+      Promise.resolve(getAIStatus(orgId)),
+      getAllAnalysesForCompany(orgId).catch(err => {
+        console.log("⚠️ All analyses fetch failed:", err);
+        return [];
+      })
+    ]);
 
     if (!data || !data.result || !data.result.visualization_data) {
       console.log("❌ No data found, returning fallback");
 
       if (user.onboardingStatus === "Completed") {
-        try {
-          const { getAIStatus, setAIStatus } = await import("~/services/ai-status.server");
-          const status = getAIStatus(user.organisationId);
-          console.log(`[Dashboard] Current AI Status: ${status}`);
+        console.log(`[Dashboard] Current AI Status: ${status}`);
 
-          if (!status || status === 'error') {
-            console.log("⚠️ Analysis missing for completed user. Triggering regeneration...");
-            setAIStatus(user.organisationId, 'pending');
+        if (!status || status === 'error' || status === 'ready') {
+          console.log("⚠️ Analysis missing for completed user (Status: " + status + "). Triggering regeneration...");
+          setAIStatus(orgId, 'pending');
 
-            // Fire and forget generation
-            import("~/lib/digitalMaturity.genAi").then(({ generate }) => {
-              generate("digital_maturity", "Profiling Assessment", user.organisationId).catch(e => {
-                console.error("🚨 Dashboard generation trigger failed:", e);
-                setAIStatus(user.organisationId, 'error');
-              });
-            });
-          }
-        } catch (err) {
-          console.error("Error checking/triggering AI status in dashboard:", err);
+          // Fire and forget generation
+          generate("digital_maturity", "Profiling Assessment", orgId).catch(e => {
+            console.error("🚨 Dashboard generation trigger failed:", e);
+            setAIStatus(orgId, 'error');
+          });
         }
       }
 
@@ -362,40 +353,25 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 
     console.log("✅ Data found and processed");
 
-    // Fetch eligibility progress
-    const { getEligibilityProgress } = await import("~/services/eligibility.service");
-    let eligibilityData = null;
-    try {
-      eligibilityData = await getEligibilityProgress(user.organisationId);
-    } catch (error) {
-      console.log("⚠️ Eligibility data not available:", error);
-    }
+    // CALCULATE REAL METRICS WITH CLEAR DISTINCTION
+    const totalEnginesAvailable = 5;
 
-    // Fetch HTI advisory reports
-    const { getCompanyAdvisories } = await import("~/models/hti.model");
-    let htiReports: any[] = [];
-    try {
-      htiReports = await getCompanyAdvisories(user.organisationId);
-      console.log(`📊 Found ${htiReports.length} HTI reports`);
-    } catch (error) {
-      console.log("⚠️ HTI reports not available:", error);
-    }
+    // Completed Engines = Assessments user has finished (progress = 100)
+    const completedEngines = eligibilityData?.completedCount || 0;
 
-    // Fetch verified payments
-    const { getVerifiedPaymentsByCompany } = await import("~/models/payment.model");
-    let verifiedPayments: any[] = [];
-    try {
-      verifiedPayments = await getVerifiedPaymentsByCompany(user.organisationId);
-      console.log(`💰 Found ${verifiedPayments.length} verified payments`);
-    } catch (error) {
-      console.log("⚠️ Verified payments not available:", error);
-    }
+    // AI Reports = Actual analysis records stored in DB
+    const uniqueAnalyses = new Set(allAnalyses.map((a: any) => a.section));
+    const aiInsightCount = uniqueAnalyses.size || 0;
 
-    // CALCULATE REAL METRICS
-    const totalEngines = 5;
-    const completedEngines = eligibilityData?.completedEnginesList?.length || (htiReports.length > totalEngines ? totalEngines : htiReports.length) || 0;
-    const progress = eligibilityData?.percentage || Math.round((completedEngines / totalEngines) * 100);
-    const totalReports = htiReports.length || 0;
+    // Transformation Progress = Based on PAID engines (for eligibility)
+    const transformationProgress = eligibilityData?.percentage || 0;
+
+    console.log(`📊 Metrics Calculated:`, {
+      completedEngines,
+      aiInsightCount,
+      transformationProgress,
+      totalEnginesAvailable
+    });
 
     // Calculate maturity from AI analytics if available, otherwise fallback to simple average
     const aiMaturity = data.result.maturity_analysis?.overall_score?.weighted_score || data.result.maturity_analysis?.overall_score?.raw_score;
@@ -411,10 +387,10 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
     }
 
     const metrics = {
-      totalEngines: 5,
+      totalEngines: totalEnginesAvailable,
       completedEngines,
-      progress: progress,
-      insights: totalReports,
+      progress: transformationProgress,
+      insights: aiInsightCount,
       avgTime: "45m",
       maturity: `${finalMaturity}/5`
     };
@@ -488,14 +464,17 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
       htiReports: htiReports,
       verifiedPayments: verifiedPayments,
       metrics: metrics,
-      ...data.result.visualization_data,
+      ...vizData,
+      bar_chart: {
+        ...vizData.bar_chart,
+        totalQuestions: Array.isArray(vizData.bar_chart.totalQuestions)
+          ? vizData.bar_chart.totalQuestions
+          : vizData.bar_chart.dimensions.map(() => vizData.bar_chart.totalQuestions as unknown as number)
+      },
       readiness_metrics: readiness_metrics
     };
 
-    setCachedData(cacheKey, responseData);
-
     return responseData;
-
   } catch (error) {
     console.error("🚨 Loader error:", error);
 
@@ -522,7 +501,7 @@ export default function Dashboard() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimationProgress(1);
-    }, 500);
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 
@@ -955,7 +934,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
           className="relative w-full rounded-3xl mb-8 p-8 overflow-hidden bg-white border border-slate-100 shadow-xl"
         >
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600"></div>
@@ -1017,7 +996,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.2 }}
           className="mb-8"
         >
           <h3 className="text-xl font-black text-slate-900 tracking-tighter mb-6 flex items-center gap-3">
@@ -1040,7 +1019,7 @@ export default function Dashboard() {
                 href={action.href}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + idx * 0.05 }}
+                transition={{ delay: 0.2 + idx * 0.03 }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="group bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-center justify-center text-center transition-all duration-300 shadow-xl shadow-slate-100 hover:shadow-2xl hover:shadow-slate-200 cursor-pointer overflow-hidden relative"
@@ -1127,37 +1106,54 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-4 overflow-y-auto custom-scrollbar-light pr-2">
-              {[
-                { action: "Maturity Report Generated", time: "2m ago", type: "success" },
-                { action: "New Engine Verified", time: "1h ago", type: "info" },
-                { action: "Data Matrix Updated", time: "5h ago", type: "update" },
-                { action: "New Security Protocol", time: "1d ago", type: "alert" },
-              ].map((activity, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-default"
-                >
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
-                    activity.type === 'info' ? 'bg-blue-500' :
-                      activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
-                    } group-hover:scale-150 transition-transform`}></div>
-                  <div className="flex-1">
-                    <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
-                      {activity.action}
+              {(() => {
+                const activities = [
+                  ...(data.htiReports || []).map((r: any) => ({
+                    id: r.reportId,
+                    action: `HTI Report: ${r.status.toUpperCase()}`,
+                    time: new Date(r.generatedAt).toLocaleDateString(),
+                    type: r.status === 'approved' ? 'success' : 'info',
+                    href: `/hti`
+                  })),
+                  ...(data.verifiedPayments || []).map((p: any) => ({
+                    id: p.paymentId,
+                    action: `Payment Verified: ${p.amount}`,
+                    time: new Date(p.verifiedAt).toLocaleDateString(),
+                    type: 'success',
+                    href: `/roadmapDashboard`
+                  }))
+                ].sort((a, b) => 0.5 - Math.random()); // Randomize for now or use timestamp if available
+
+                if (activities.length === 0) {
+                  return (
+                    <p className="text-gray-400 text-xs text-center py-4 italic">No recent activity yet</p>
+                  );
+                }
+
+                return activities.slice(0, 6).map((activity, idx) => (
+                  <Link
+                    key={idx}
+                    to={activity.href}
+                    className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-md transition-all group cursor-pointer"
+                  >
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${activity.type === 'success' ? 'bg-emerald-500' :
+                      activity.type === 'info' ? 'bg-blue-500' :
+                        activity.type === 'alert' ? 'bg-rose-500' : 'bg-amber-500'
+                      } group-hover:scale-150 transition-transform`}></div>
+                    <div className="flex-1">
+                      <div className="text-slate-900 text-[13px] font-black tracking-tight group-hover:text-blue-600 transition-colors">
+                        {activity.action}
+                      </div>
+                      <div className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{activity.time}</div>
                     </div>
-                    <div className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">{activity.time}</div>
-                  </div>
-                </div>
-              ))}
+                  </Link>
+                ));
+              })()}
             </div>
 
-            <button
-              type="button"
-              onClick={() => navigate("/admin/activity-logs")}
-              className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full"
-            >
+            <Link to="/admin/activity-logs" className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full block">
               View Activity Audit
-            </button>
+            </Link>
           </div>
         </div>
 
