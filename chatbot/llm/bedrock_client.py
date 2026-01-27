@@ -31,11 +31,12 @@ class BedrockConfig:
     connect_timeout: int
     read_timeout: int
     retries: int
+    request_style: str
 
 
 def load_bedrock_config() -> BedrockConfig:
     region = os.getenv("AWS_REGION", "us-west-2")
-    model_id = os.getenv("BEDROCK_MODEL_ID", "us.deepseek.r1-v1:0")
+    model_id = os.getenv("BEDROCK_MODEL_ID", "deepseek.r1-v1:0")
 
     max_tokens = int(os.getenv("BEDROCK_MAX_TOKENS", "1024"))
     temperature = float(os.getenv("BEDROCK_TEMPERATURE", "0.1"))
@@ -44,6 +45,8 @@ def load_bedrock_config() -> BedrockConfig:
     connect_timeout = int(os.getenv("BEDROCK_CONNECT_TIMEOUT", "30"))
     read_timeout = int(os.getenv("BEDROCK_READ_TIMEOUT", "300"))
     retries = int(os.getenv("BEDROCK_RETRIES", "3"))
+
+    request_style = os.getenv("BEDROCK_REQUEST_STYLE", "auto").strip().lower()
 
     return BedrockConfig(
         region=region,
@@ -54,6 +57,7 @@ def load_bedrock_config() -> BedrockConfig:
         connect_timeout=connect_timeout,
         read_timeout=read_timeout,
         retries=retries,
+        request_style=request_style,
     )
 
 
@@ -94,9 +98,60 @@ def _clean_model_text(text: str) -> str:
     return text
 
 
+def _infer_style(model_id: str) -> str:
+    mid = (model_id or "").lower()
+    # R1 uses prompt format in this repo; V3 uses messages (like TS side)
+    if "r1" in mid:
+        return "prompt"
+    return "messages"
+
+
+def _extract_text(payload: dict) -> str:
+    """
+    Match the TS-side robustness:
+    - payload.choices[0].message.content
+    - payload.output.message.content
+    - payload.choices[0].text  (older / prompt-style)
+    - payload.results[0].outputText, payload.generation (fallbacks)
+    """
+    raw = None
+
+    # openai-like
+    if payload.get("choices") and payload["choices"][0].get("message", {}).get("content") is not None:
+        content = payload["choices"][0]["message"]["content"]
+        if isinstance(content, list):
+            raw = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
+        else:
+            raw = content
+
+    # bedrock "output.message.content"
+    elif payload.get("output", {}).get("message", {}).get("content") is not None:
+        content = payload["output"]["message"]["content"]
+        if isinstance(content, list):
+            raw = "".join([c.get("text", "") if isinstance(c, dict) else str(c) for c in content])
+        else:
+            raw = content
+
+    # prompt-style deepseek
+    elif payload.get("choices") and payload["choices"][0].get("text") is not None:
+        raw = payload["choices"][0]["text"]
+
+    elif payload.get("results") and payload["results"][0].get("outputText") is not None:
+        raw = payload["results"][0]["outputText"]
+
+    elif payload.get("generation") is not None:
+        raw = payload["generation"]
+
+    return (raw or "").strip()
+
+
+
 class BedrockDeepSeekClient(LLMClient):
     def __init__(self, cfg: Optional[BedrockConfig] = None):
         self.cfg = cfg or load_bedrock_config()
+
+        print("[BEDROCK] region =", self.cfg.region)
+        print("[BEDROCK] model_id =", self.cfg.model_id)
 
         # Boto3 retries + timeouts:
         # - botocore Config supports retries and timeouts.
@@ -110,36 +165,47 @@ class BedrockDeepSeekClient(LLMClient):
         self.client = boto3.client("bedrock-runtime",  region_name=self.cfg.region, config=client_config)
 
     def generate(self, prompt: str) -> str:
-        formatted_prompt = _format_deepseek_prompt(prompt)
+        style = self.cfg.request_style
+        if style == "auto":
+            style = _infer_style(self.cfg.model_id)
 
-        body = json.dumps(
-            {
+        if style == "prompt":
+            formatted_prompt = _format_deepseek_prompt(prompt)
+            body_dict = {
                 "prompt": formatted_prompt,
                 "max_tokens": self.cfg.max_tokens,
                 "temperature": self.cfg.temperature,
                 "top_p": self.cfg.top_p,
-                # stop optional; omit for now for MVP
             }
-        )
+        elif style == "messages":
+            body_dict = {
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": self.cfg.max_tokens,
+                "temperature": self.cfg.temperature,
+                "top_p": self.cfg.top_p,
+            }
+        else:
+            raise ValueError(f"Unknown BEDROCK_REQUEST_STYLE: {style}")
+
+        body = json.dumps(body_dict)
 
         try:
             resp = self.client.invoke_model(
                 modelId=self.cfg.model_id,
                 body=body,
+                accept="application/json",
+                contentType="application/json",
             )
             payload = json.loads(resp["body"].read())
+            text = _extract_text(payload)
 
-            # DeepSeek Invoke response: {"choices":[{"text": "...", "stop_reason": "..."}]}
-            choices = payload.get("choices", [])
-            if not choices:
+            if not text:
                 return ""
 
-            text = choices[0].get("text", "")
-            return _clean_model_text(text.strip())
-
+            # Keep your cleaning, but only apply the <think> scrub (safe for both)
+            return _clean_model_text(text)
 
         except ClientError as e:
-            # Keep errors clean (don’t dump giant traces in UI)
             msg = e.response.get("Error", {}).get("Message", str(e))
             raise RuntimeError(f"Bedrock invoke_model failed: {msg}") from e
         except Exception as e:

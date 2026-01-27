@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
+from pathlib import Path
+import json
 from core.prompt_loader import load_prompt
 from core.router import (
     route,
@@ -53,8 +54,8 @@ def _clear_active_module(sid: str) -> None:
 def _main_menu_text() -> str:
     return (
         "What would you like to do?\n"
-        "1) Explain my **Roadmap**\n"
-        "2) Explain my **Assessment/Maturity** results\n"
+        "1) Explain my Roadmap\n"
+        "2) Explain my Assessment/Maturity results\n"
         "3) FAQ (Pricing, billing, refunds, modules)"
     )
 
@@ -93,6 +94,25 @@ def _format_kb_chunks_for_prompt(chunks: list, max_chars_per_chunk: int = 900) -
             f"source: {source}"
         )
     return "\n\n".join(lines)
+
+def _load_sample_report(mode: str):
+    """
+    mode: 'roadmap' | 'assessment'
+    """
+    base = Path(__file__).resolve().parents[1] / "samples"
+
+    if mode == "roadmap":
+        path = base / "mock_roadmap_output_v1.json"
+    elif mode == "assessment":
+        path = base / "mock_assessment_output_v1.json"
+    else:
+        return None
+
+    if not path.exists():
+        return None
+
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 
 # -------------------------
@@ -227,6 +247,13 @@ def generate(
     if decision.module in (RouteModule.ROADMAP, RouteModule.ASSESSMENT):
         prompt_name = "roadmap_explainer" if decision.module == RouteModule.ROADMAP else "assessment_explainer"
         prompt_template = load_prompt(prompt_name, version=prompt_version, prompts_dir=PROMPTS_DIR)
+
+            # Auto-load sample report JSON when report_json is not provided (demo/dev)
+        if report_json is None:
+            if decision.module == RouteModule.ROADMAP:
+                report_json = _load_sample_report("roadmap")
+            elif decision.module == RouteModule.ASSESSMENT:
+                report_json = _load_sample_report("assessment")
 
         guard_resp = grounding_guard(
         decision.module,

@@ -1,22 +1,6 @@
 # core/router.py
-# -----------------------------------------------------------------------------
-# Phase 1 MVP Router (rule-based hybrid)
-#
-# Goal:
-#   Deterministically select the correct bot "mode" BEFORE calling the LLM.
-#
-# Modes:
-#   ROADMAP, ASSESSMENT, FAQ, LEAD_CAPTURE, SAFE_FALLBACK
-#
-# Key rules:
-#   1) Prefer page_context/report_type if provided (strongest signal)
-#   2) Otherwise use minimal keyword + phrase triggers (deterministic)
-#   3) If confidence is low/ambiguous -> do NOT guess:
-#        - Ask 1 clarifying question OR present 2 options
-#
-# Performance:
-#   O(n) in message length with small constant factors -> extremely fast.
-# -----------------------------------------------------------------------------
+# Goal:Deterministically select the correct bot "mode" BEFORE calling the LLM.
+# Modes:ROADMAP, ASSESSMENT, FAQ, LEAD_CAPTURE, SAFE_FALLBACK
 
 from __future__ import annotations
 
