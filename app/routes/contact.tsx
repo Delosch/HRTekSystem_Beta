@@ -35,10 +35,10 @@ export const meta: MetaFunction = () => {
 
 // Priority Logic Map
 const QUERY_TYPES = {
-    sales: { label: "Sales Inquiry", priority: "High", responseTime: "Within 4 Hours" },
+    sales: { label: "Sales Inquiry", priority: "High", responseTime: "Within 24 Hours" },
     marketing: { label: "Marketing & PR", priority: "Medium", responseTime: "Within 24 Hours" },
-    support: { label: "Customer Support", priority: "High", responseTime: "Within 2 Hours" },
-    partnership: { label: "Partnership Opportunities", priority: "Medium", responseTime: "Within 48 Hours" },
+    support: { label: "Customer Support", priority: "High", responseTime: "Within 24 Hours" },
+    partnership: { label: "Partnership Opportunities", priority: "Medium", responseTime: "Within 24 Hours" },
     general: { label: "General Inquiry", priority: "Low", responseTime: "Within 24 Hours" }
 };
 
@@ -106,11 +106,11 @@ export const action: ActionFunction = async ({ request }) => {
         });
 
         // Determine specific success message
-        let successMsg = "Message sent! We'll allow you to get back strictly within 24 hours.";
-        if (queryTypeKey === 'sales') successMsg = "Thanks for your sales inquiry! Our team will contact you within 4 hours.";
-        else if (queryTypeKey === 'support') successMsg = "Support ticket created (High Priority). Expect a response within 2 hours.";
+        let successMsg = "Message sent! We'll get back to you strictly within 24 hours.";
+        if (queryTypeKey === 'sales') successMsg = "Thanks for your sales inquiry! Our team will contact you within 24 hours.";
+        else if (queryTypeKey === 'support') successMsg = "Support ticket created (High Priority). Expect a response within 24 hours.";
         else if (queryTypeKey === 'marketing') successMsg = "Marketing query received. We'll reach out within 24 hours.";
-        else if (queryTypeKey === 'partnership') successMsg = "Partnership proposal received. We'll review and reply within 48 hours.";
+        else if (queryTypeKey === 'partnership') successMsg = "Partnership proposal received. We'll review and reply within 24 hours.";
 
         return json({ success: true, message: successMsg });
     } catch (error) {

@@ -37,7 +37,7 @@ export default function Carousel() {
                 }}></div>
               </div>
 
-              <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+              <div className="relative max-w-7xl mx-auto px-6 py-12 lg:py-16 z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                   {/* Left Side: Content */}
                   <div className="space-y-8">
@@ -60,13 +60,9 @@ export default function Carousel() {
                       </p>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-lg text-white/80 leading-relaxed max-w-xl">
-                      Our software is built to be your comprehensive partner in transformation. Whether you're
-                      redefining HR functions, designing shared service models, managing organizational change,
-                      or building detailed transformation roadmaps, we bring it all together in one seamless,
-                      intelligent platform.
-                    </p>
+                    {/* Description - REMOVED */}
+
+
 
                     {/* CTA Button */}
                     <Link
@@ -81,7 +77,7 @@ export default function Carousel() {
                   </div>
 
                   {/* Right Side: Image */}
-                  <div className="relative lg:h-[650px] flex items-center justify-center">
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
                     {/* Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
 
@@ -90,7 +86,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg3.png"
                         alt="Multi-armed robot efficiently managing various HR tasks"
-                        className="w-full h-auto max-h-[600px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>
@@ -133,13 +129,8 @@ export default function Carousel() {
                       </p>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-lg text-white/80 leading-relaxed max-w-xl">
-                      Elevate your HR operations with our intuitive software solution, designed to seamlessly
-                      guide your organization through digital transformation. Powered by advanced artificial
-                      intelligence and large language models (LLMs), our platform simplifies complex HR processes,
-                      enabling smarter, faster, and more efficient decision-making.
-                    </p>
+                    {/* Description - REMOVED */}
+
 
                     {/* CTA Button */}
                     <Link
@@ -154,7 +145,7 @@ export default function Carousel() {
                   </div>
 
                   {/* Right Side: Image */}
-                  <div className="relative lg:h-[650px] flex items-center justify-center">
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
                     {/* Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
 
@@ -163,7 +154,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg.png"
                         alt="Product interface highlighting key HR features"
-                        className="w-full h-auto max-h-[600px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>
@@ -206,12 +197,8 @@ export default function Carousel() {
                       </p>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-lg text-white/80 leading-relaxed max-w-xl">
-                      Instead of expanding your HR Transformation workforce, our platform enables your current
-                      employees to take on new responsibilities with ease. By streamlining tasks and simplifying
-                      workflows, the software bridges skill gaps and unlocks hidden potential within your team.
-                    </p>
+                    {/* Description - REMOVED */}
+
 
                     {/* CTA Button */}
                     <Link
@@ -226,7 +213,7 @@ export default function Carousel() {
                   </div>
 
                   {/* Right Side: Image */}
-                  <div className="relative lg:h-[650px] flex items-center justify-center">
+                  <div className="relative lg:h-[750px] flex items-center justify-center">
                     {/* Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 blur-3xl rounded-full"></div>
 
@@ -235,7 +222,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg2.png"
                         alt="Streamline HR tasks and reduce costs"
-                        className="w-full h-auto max-h-[600px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>

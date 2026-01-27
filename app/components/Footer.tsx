@@ -20,16 +20,16 @@ export default function Footer() {
                 <span className="text-white">HR-TEK</span>{" "}
                 <span className="text-[#00B5E2]">SYSTEM</span>
               </h1>
-              <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
-                A Brand of Delosch Technologies Pvt Ltd
-              </span>
+
             </div>
           </Link>
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
-
             Empowering HR transformation through intelligent software solutions
             tailored for growth.
           </p>
+          <span className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
+            A Brand of Delosch Technologies Pvt Ltd
+          </span>
         </div>
 
         {/* Navigation Links */}
@@ -241,6 +241,6 @@ export default function Footer() {
           <span className="text-right mr-6">CIN - U62010UP2025PTC219986</span>
         </div>
       </div>
-    </footer>
+    </footer >
   );
 }
