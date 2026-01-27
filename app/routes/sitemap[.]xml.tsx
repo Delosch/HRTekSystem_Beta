@@ -12,7 +12,6 @@ export const loader: LoaderFunction = () => {
         { url: "/contact", priority: "0.9", changefreq: "monthly" },
         { url: "/testimonials", priority: "0.8", changefreq: "monthly" },
         { url: "/video-tutorials", priority: "0.8", changefreq: "weekly" },
-        { url: "/recommendation", priority: "0.7", changefreq: "monthly" },
 
         // Service Pages
         { url: "/roadmap-service", priority: "0.9", changefreq: "monthly" },

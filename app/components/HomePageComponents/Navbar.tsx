@@ -78,15 +78,16 @@ export default function Navbar() {
   ];
 
   return (
-    <div className="relative z-[9999]">
+    <div className="fixed top-0 left-0 right-0 z-[9999]">
       <nav className="relative bg-[#000033] px-8 py-4 flex items-center justify-between border-b border-white/5 shadow-2xl backdrop-blur-md">
         {/* Left: Branding */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-14 h-14 overflow-hidden flex items-center justify-center">
+          <div className="w-14 h-14 flex items-center justify-center">
             <img
               src="/logo_icon_final.png"
               alt="HR-Tek"
-              className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
+              className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform drop-shadow-lg"
+              style={{ mixBlendMode: 'normal' }}
             />
           </div>
           <div className="flex flex-col">
@@ -130,7 +131,7 @@ export default function Navbar() {
               className={`${(servicePaths.includes(pathname) || hash === "#services") ? activeStyle : inactiveStyle
                 } flex items-center gap-1`}
             >
-              Services
+              Engines
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
             </button>
             {/* Dropdown content */}

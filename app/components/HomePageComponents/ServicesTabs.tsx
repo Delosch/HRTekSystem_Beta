@@ -122,7 +122,7 @@ export default function ServicesTabs() {
       {/* Section Heading */}
       <div className="text-center mb-16 max-w-7xl mx-auto px-4">
         <h3 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
-          HR Cognitive Autopilot Systems – Decision Making Engines that Diagnose, Predict, Execute
+          HR Cognitive Autopilot Engines that Diagnose, Predict, Execute
         </h3>
       </div>
 

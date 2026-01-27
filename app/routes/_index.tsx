@@ -82,7 +82,7 @@ export default function Index() {
                 Powered by Cognitive AI
               </span>
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 leading-tight px-4">
-                Reinvent Your HR Ecosystem with Cognitive AI Intelligence
+                Reinvent Your HR Ecosystem with Cognitive AI
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed px-4">
                 Drive transformation across your organization with intelligent solutions tailored to your business size
