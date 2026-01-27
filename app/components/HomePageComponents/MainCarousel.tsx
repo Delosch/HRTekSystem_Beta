@@ -50,13 +50,13 @@ export default function Carousel() {
                     {/* Main Heading */}
                     <div className="space-y-4">
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-                        HR-Tek Digital
+                        Turning HR Digital Complexity into
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                          Transformation
+                          Cognitive Clarity
                         </span>
                       </h1>
                       <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
-                        Now Autonomous with Agentic AI
+                        Leverage smart software to upgrade your HR ecosystem
                       </p>
                     </div>
 
@@ -119,9 +119,9 @@ export default function Carousel() {
                     {/* Main Heading */}
                     <div className="space-y-4">
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-                        Build a Future-Ready
+                        HR-Tek Helps to Design
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                          Workforce
+                          Better HR System
                         </span>
                       </h1>
                       <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
@@ -181,19 +181,19 @@ export default function Carousel() {
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span className="text-white/90 text-sm font-medium">Self-Optimizing HR Systems</span>
+                      <span className="text-white/90 text-sm font-medium">Enterprise-Friendly</span>
                     </div>
 
                     {/* Main Heading */}
                     <div className="space-y-4">
                       <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
-                        Empower Your
+                        Transform Your
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                          Workforce
+                          HR Ecosystem
                         </span>
                       </h1>
                       <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
-                        Leverage smart software to upgrade your HR Ecosystem
+                        Leverage smart software to upgrade your HR ecosystem
                       </p>
                     </div>
 
