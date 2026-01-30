@@ -219,9 +219,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Trigger generation if:
   // 1. No status OR status is 'error' OR
-  // 2. Status is 'ready' but no report exists (edge case fix)
+  // 2. Status is 'ready' but no report exists (edge case fix) OR
+  // 3. Forced regeneration requested
   const shouldGenerate = !currentStatus ||
     currentStatus === "error" ||
+    url.searchParams.get("force") === "true" ||
     (currentStatus === "ready" && !existingReport);
 
   if (shouldGenerate) {

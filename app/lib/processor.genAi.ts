@@ -87,6 +87,18 @@ export async function generate(
         const finalPrompt = `
 ${base_prompt}
 
+🚨 ASSESSMENT INPUT DATA:
+Below is the user's assessment data. Use this to perform your analysis.
+Note: Data is provided in a structured format compatible with both "submission.answers" and "responses_json" requirements.
+
+{
+  "submission": {
+    "answers": ${JSON.stringify(answer, null, 2)}
+  },
+  "responses_json": ${JSON.stringify(answer, null, 2)},
+  "organization_context": ${JSON.stringify(answer, null, 2)}
+}
+
 🚨 STRICT JSON RULES (MANDATORY):
 - Return ONLY valid JSON
 - No markdown, no comments
@@ -94,9 +106,6 @@ ${base_prompt}
 - Start with { and end with }
 - Use double quotes only
 - No trailing commas
-
-ASSESSMENT ANSWERS:
-${JSON.stringify(answer, null, 2)}
         `.trim();
 
         /**

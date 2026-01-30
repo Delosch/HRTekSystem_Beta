@@ -138,30 +138,29 @@ export default function RoadmapReport({ data, brandName }: RoadmapReportProps) {
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">H</span>
-                                </div>
-                                <span className="font-bold text-gray-900 uppercase tracking-wider">HRTEK SYSTEM</span>
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-1">
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
                             </div>
-                            <nav className="hidden md:flex items-center gap-6 ml-8 text-sm">
-                                <Link to="/dashboard" className="text-gray-600 hover:text-gray-900">Overview</Link>
-                                <span className="text-gray-400">/</span>
-                                <span className="text-gray-600">Assessment Dashboard</span>
-                                <span className="text-gray-400">/</span>
-                                <span className="text-gray-900 font-semibold border-b-2 border-blue-600 pb-1">Auto-generated HR Digital Roadmap & ROI</span>
-                            </nav>
+                            <div>
+                                <h1 className="text-lg font-bold text-gray-900">{brandName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className="font-bold text-blue-600 uppercase tracking-wide">Digital Transformation Roadmap</span>
+                                    <span className="text-gray-400">•</span>
+                                    <nav className="flex items-center gap-2">
+                                        <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link>
+                                        <span>/</span>
+                                        <span className="font-semibold text-gray-900">Roadmap & ROI</span>
+                                    </nav>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => window.print()}
-                                className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2 border border-gray-200"
+                                className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2 border border-gray-200 shadow-sm"
                             >
                                 <Download className="w-4 h-4" />
-                                Export Report
-                            </button>
-                            <button className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                                + New Comparison
+                                Export PDF
                             </button>
                             <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg ml-2">
                                 <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -172,7 +171,39 @@ export default function RoadmapReport({ data, brandName }: RoadmapReportProps) {
             </header>
 
             <main className="max-w-7xl mx-auto px-6 py-8">
-                <div className="mb-8 flex items-start gap-6">
+                {/* Print-Only Cover Page */}
+                <div className="hidden print:block print:break-after-always mb-12">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center border-4 border-double border-blue-600 p-12">
+                        <div className="w-64 h-32 mb-12">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-6xl font-black text-gray-900 mb-6 tracking-tight">HR Digital Transformation Roadmap</h1>
+                        <div className="h-2 w-48 bg-blue-600 rounded-full mb-12"></div>
+                        <h2 className="text-4xl font-bold text-gray-700 mb-16">{brandName}</h2>
+
+                        <div className="space-y-6 text-left max-w-xl w-full text-lg">
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Assessment Type</span>
+                                <span className="font-bold text-gray-900 font-sans">Digital Roadmap & ROI</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Generated Date</span>
+                                <span className="font-bold text-gray-900 font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Status</span>
+                                <span className="font-bold text-blue-600 font-sans uppercase">Confidential Analysis</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-24 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                            <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                            <p>Proprietary & Confidential Strategic Advisory</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-8 flex items-start gap-6 print:mt-12">
                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center flex-shrink-0 border border-blue-100 shadow-sm">
                         <Map className="w-8 h-8 text-blue-600" />
                     </div>
@@ -239,7 +270,7 @@ export default function RoadmapReport({ data, brandName }: RoadmapReportProps) {
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm font-bold text-gray-500">{phase.milestones}</span>
                                     <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest ${phase.status === "Completed" ? "bg-green-100 text-green-700" :
-                                            phase.status === "In Progress" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                                        phase.status === "In Progress" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
                                         }`}>
                                         {phase.status}
                                     </span>
@@ -292,7 +323,7 @@ export default function RoadmapReport({ data, brandName }: RoadmapReportProps) {
                             { title: "Recommend Employee Experience Platform", priority: "MEDIUM", text: "Based on your high employee experience score, consider implementing a unified EX platform.", type: "yellow" }
                         ].map((rec, i) => (
                             <div key={i} className={`rounded-2xl border p-6 flex items-start justify-between cursor-pointer transition-all hover:bg-gray-50 ${rec.type === 'green' ? 'bg-green-50 border-green-100' :
-                                    rec.type === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-yellow-50 border-yellow-100'
+                                rec.type === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-yellow-50 border-yellow-100'
                                 }`}>
                                 <div className="flex gap-4">
                                     <div className={`mt-1 p-2 rounded-xl bg-white shadow-sm`}>

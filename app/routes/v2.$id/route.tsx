@@ -25,7 +25,7 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         // Check URL for report type (detailed vs standard)
         const url = new URL(request.url);
-        const reportType = url.searchParams.get('type') as 'detailed' | 'standard' || 'detailed';
+        const reportType = url.searchParams.get('type') as 'detailed' | 'standard' || 'standard';
 
         return {
             data,
@@ -55,7 +55,7 @@ export default function Report() {
             data={loaderData.data}
             brandName={loaderData.brand_name}
             assessmentId={loaderData.assessmentId}
-            reportType={loaderData.reportType}
+            reportType="standard"
         />
     );
 }

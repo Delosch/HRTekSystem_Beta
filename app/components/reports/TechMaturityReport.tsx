@@ -45,32 +45,76 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12">
-            <header className="max-w-7xl mx-auto flex items-center justify-between mb-16 print:hidden">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white italic">H</div>
-                    <span className="font-black text-slate-800 uppercase tracking-tighter text-2xl">HRTEK SYSTEM</span>
-                    <div className="h-6 w-[2px] bg-slate-200 mx-2" />
-                    <nav className="flex gap-6 text-xs font-bold text-slate-400">
-                        <span>Overview</span>
-                        <span>Assessment Dashboard</span>
-                        <span className="text-blue-600 border-b-2 border-blue-600 pb-1">AI-driven HR Tech Diagnostics</span>
-                    </nav>
-                </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={() => window.print()} className="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 flex items-center gap-2 hover:bg-slate-50 shadow-sm transition-all">
-                        <Download className="w-4 h-4" /> Export Report
-                    </button>
-                    <button className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
-                        + New Comparison
-                    </button>
-                    <Link to="/dashboard" className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 border border-slate-200 ml-2">
-                        <ArrowLeft className="w-5 h-5" />
-                    </Link>
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 print:hidden mb-16">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-1">
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-slate-800">{brandName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <span className="font-bold text-blue-600 uppercase tracking-wide">AI-driven HR Tech Diagnostics</span>
+                                    <span className="text-slate-400">•</span>
+                                    <nav className="flex items-center gap-2">
+                                        <Link to="/dashboard" className="hover:text-slate-900">Dashboard</Link>
+                                        <span>/</span>
+                                        <span className="font-semibold text-slate-900">Tech Diagnostics</span>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => window.print()}
+                                className="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2 shadow-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Export PDF
+                            </button>
+                            <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg ml-2">
+                                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </header>
 
             <div className="max-w-7xl mx-auto space-y-12">
-                <div className="flex items-start gap-8">
+                {/* Print-Only Cover Page */}
+                <div className="hidden print:block print:break-after-always mb-12">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center border-4 border-double border-blue-600 p-12">
+                        <div className="w-64 h-32 mb-12">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-6xl font-black text-slate-800 mb-6 tracking-tight">AI-Driven HR Tech Diagnostics</h1>
+                        <div className="h-2 w-48 bg-blue-600 rounded-full mb-12"></div>
+                        <h2 className="text-4xl font-bold text-gray-700 mb-16">{brandName}</h2>
+
+                        <div className="space-y-6 text-left max-w-xl w-full text-lg">
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Assessment Type</span>
+                                <span className="font-bold text-slate-800 font-sans">HR Technology Maturity Diagnostic</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Generated Date</span>
+                                <span className="font-bold text-slate-800 font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Status</span>
+                                <span className="font-bold text-blue-600 font-sans uppercase">Confidential Analysis</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-24 text-sm font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                            <p>Proprietary & Confidential Strategic Advisory</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-start gap-8 print:mt-12">
                     <div className="w-20 h-20 bg-white shadow-xl rounded-[2rem] flex items-center justify-center border border-slate-100 p-4">
                         <BarChart3Icon className="w-full h-full text-blue-500" />
                     </div>
@@ -87,8 +131,8 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             <div className="flex justify-between items-start mb-8">
                                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{kpi.title}</span>
                                 <div className={`p-4 rounded-2xl ${kpi.color === 'blue' ? 'bg-blue-600' :
-                                        kpi.color === 'green' ? 'bg-green-500' :
-                                            kpi.color === 'purple' ? 'bg-purple-600' : 'bg-orange-500'
+                                    kpi.color === 'green' ? 'bg-green-500' :
+                                        kpi.color === 'purple' ? 'bg-purple-600' : 'bg-orange-500'
                                     } text-white shadow-lg group-hover:scale-110 transition-transform`}>
                                     <kpi.icon className="w-6 h-6" />
                                 </div>
@@ -205,7 +249,7 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             { title: "Recommended: Employee Experience Platform", priority: "MEDIUM", text: "Based on your high employee experience score, consider implementing a unified EX platform.", color: "yellow" }
                         ].map((insight, i) => (
                             <div key={i} className={`rounded-[2.5rem] border p-8 transition-all hover:-translate-x-2 ${insight.color === 'green' ? 'bg-green-50/50 border-green-100' :
-                                    insight.color === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/30 border-yellow-100'
+                                insight.color === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/30 border-yellow-100'
                                 }`}>
                                 <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedInsight(expandedInsight === i ? null : i)}>
                                     <div className="flex gap-6">

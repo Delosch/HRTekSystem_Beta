@@ -880,13 +880,6 @@ export default function Dashboard() {
                     <Zap className="w-5 h-5 text-blue-400 fill-blue-400/20" />
                     View Detailed Analysis Report
                   </a>
-                  <a
-                    href="/v2/Profiling Assessment"
-                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-slate-900 font-black rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all shadow-sm hover:shadow-md hover:-translate-y-1 active:translate-y-0"
-                  >
-                    <FileText className="w-5 h-5 text-slate-400" />
-                    Standard Report
-                  </a>
                 </div>
               </div>
             </div>

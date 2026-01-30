@@ -57,10 +57,19 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   // Check payment status
   const payments = await getCompanyPayments(user.organisationId);
-  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
+  const isAdmin = (user as any).role === "ADMIN";
 
-  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
-  const isPending = paymentRecord?.status === "payment_submitted";
+  // Check if any payment record for this engine is verified
+  const isPaid = isAdmin || payments.some((p: any) =>
+    (p.status === "payment_verified" || p.status === "completed") &&
+    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
+  );
+
+  // Check if any payment record for this engine is pending
+  const isPending = !isPaid && payments.some((p: any) =>
+    p.status === "payment_submitted" &&
+    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
+  );
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
