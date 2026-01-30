@@ -14,7 +14,7 @@ import { requireUserSession } from "~/lib/session.server";
 import { getLatestAnalysis } from "~/utils/analysis.server";
 import { getCompanyProfile } from "~/models/company.model.server";
 import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model.server";
-import { Clock, AlertTriangle, CheckCircle, ArrowLeft } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
 
 // --- Data Types ---
 type HcmAnalysis = {
@@ -114,11 +114,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     // Check payment status
     const allPayments = await getCompanyPayments(user.organisationId);
-    const payment = allPayments.find(p => p.items?.some((i: any) => i.engineName === engineId));
-
-    const isPaid = payment?.status === "payment_verified";
-    const isPending = payment?.status === "payment_submitted";
     const isAdmin = (user as any).role === "ADMIN";
+
+    // Check if any payment record for this engine is verified
+    const isPaid = isAdmin || allPayments.some((p: any) =>
+      p.status === "payment_verified" &&
+      p.items?.some((i: any) => i.engineName.trim() === engineId.trim())
+    );
+
+    // Check if any payment record for this engine is pending (submitted but not verified)
+    const isPending = !isPaid && allPayments.some((p: any) =>
+      p.status === "payment_submitted" &&
+      p.items?.some((i: any) => i.engineName.trim() === engineId.trim())
+    );
 
     if (!isPaid && !isAdmin) {
       if (isPending) {
@@ -416,6 +424,17 @@ function HeaderSection({ analysis }: { analysis: HcmAnalysis }) {
           <span className="font-semibold">Fit Score:</span>
           <span className="font-bold text-gray-800">{analysis.scores.fitScore.toFixed(1)}/100</span>
           <span className={getStatusChipClass('fit')}>{analysis.scores.fitBand}</span>
+
+          {analysis.scores.fitScore === 0 && (
+            <a
+              href={`/intermediate?promptId=vendor_fit&engine=${encodeURIComponent("HCM Vendor Fit Engine")}&force=true`}
+              className="ml-2 inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm transition-all"
+              title="Click to re-run AI analysis if data looks missing"
+            >
+              <Sparkles className="w-3 h-3" />
+              Regenerate Analysis
+            </a>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="font-semibold">Risk Level:</span>

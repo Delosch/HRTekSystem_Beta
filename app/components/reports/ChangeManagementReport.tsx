@@ -231,28 +231,35 @@ export default function ChangeManagementReport({ data, brandName, assessmentId }
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 print:hidden">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-bold text-sm">H</span>
-                                </div>
-                                <span className="font-bold text-gray-900">HRTEK SYSTEMS</span>
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-1">
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
                             </div>
-                            <nav className="hidden md:flex items-center gap-6 ml-8 text-sm">
-                                <Link to="/dashboard" className="text-gray-600 hover:text-gray-900">Overview</Link>
-                                <span className="text-gray-900 font-semibold border-b-2 border-blue-600 pb-1">Assessment Dashboard</span>
-                                <span className="text-gray-600">{assessmentId}</span>
-                            </nav>
+                            <div>
+                                <h1 className="text-lg font-bold text-gray-900">{brandName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className="font-bold text-blue-600 uppercase tracking-wide">Change Readiness Assessment</span>
+                                    <span className="text-gray-400">•</span>
+                                    <nav className="flex items-center gap-2">
+                                        <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link>
+                                        <span>/</span>
+                                        <span className="font-semibold text-gray-900">Change Management</span>
+                                    </nav>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button onClick={handleExportReport} className="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                            <button
+                                onClick={() => window.print()}
+                                className="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2 shadow-sm"
+                            >
                                 <Download className="w-4 h-4" />
-                                Export Report
+                                Export PDF
                             </button>
-                            <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg">
+                            <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg ml-2">
                                 <ArrowLeft className="w-5 h-5 text-gray-600" />
                             </Link>
                         </div>
@@ -262,8 +269,40 @@ export default function ChangeManagementReport({ data, brandName, assessmentId }
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Print-Only Cover Page */}
+                <div className="hidden print:block print:break-after-always mb-12">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center border-4 border-double border-blue-600 p-12">
+                        <div className="w-64 h-32 mb-12">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-6xl font-black text-gray-900 mb-6 tracking-tight">Change Readiness Assessment</h1>
+                        <div className="h-2 w-48 bg-blue-600 rounded-full mb-12"></div>
+                        <h2 className="text-4xl font-bold text-gray-700 mb-16">{brandName}</h2>
+
+                        <div className="space-y-6 text-left max-w-xl w-full text-lg">
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Assessment Type</span>
+                                <span className="font-bold text-gray-900 font-sans">Change Management Strategy</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Generated Date</span>
+                                <span className="font-bold text-gray-900 font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Status</span>
+                                <span className="font-bold text-blue-600 font-sans uppercase">Confidential Analysis</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-24 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                            <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                            <p>Proprietary & Confidential Strategic Advisory</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Title Section */}
-                <div className="mb-8">
+                <div className="mb-8 print:mt-12">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Change Readiness Assessment</h1>
                     <p className="text-gray-600">
                         Comprehensive assessment of organizational change readiness and stakeholder engagement

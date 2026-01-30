@@ -119,6 +119,12 @@ Generate a comprehensive JSON response with this EXACT structure:
 5. **Generate Industry Benchmarks**: Use realistic values in industry_benchmark objects
 6. **Create Visualization Data**: Ensure all arrays have exactly 7 values matching the 7 dimensions
 7. **Generate Complete Recommendations**: Provide specific, actionable recommendations
+8. **Dashboard Graph Generation Rules**: 
+   - **Radar Chart**: Use 0-100 scale. Include all 7 dimensions. Provide realistic target scores (15-25% higher than current).
+   - **Heatmap**: Each dimension must have 4 specific sub-capabilities. Scores (0-100) must reflect answer depth.
+   - **Progress Bars**: Use semantic colors: Green (#10b981) for >75%, Amber (#f59e0b) for 45-75%, Red (#ef4444) for <45%.
+   - **Gap Bubbles**: Importance (0-1 scale) must align with stated business priorities. Investment and Timeline (months) must be realistic.
+   - **Data Integrity**: Ensure every numerical value in 'visualization_data' is derived from the actual scoring of responses.
 
 ## QUALITY REQUIREMENTS:
 - Follow the EXACT JSON structure provided - do not deviate from field names or nesting
@@ -126,6 +132,7 @@ Generate a comprehensive JSON response with this EXACT structure:
 - All arrays must contain exactly the specified number of elements
 - All dimensional references must use the exact dimension names provided
 - Ensure visualization_data arrays align perfectly with dimensional_scores array order
+- **NO PLACEHOLDERS**: All content must be generated based on the specific user answers.
 
 ${prompt_extra}
 
@@ -549,6 +556,12 @@ Return exactly:
 }
 }
 
+## DASHBOARD VISUALIZATION RULES:
+- **Executive Radar**: All 5 metrics must be accurately calculated. Satisfaction should be inverted if needed to match a "higher is better" scale in radar.
+- **Landscape View**: Urgency score must align with challenges count and low satisfaction.
+- **Integration & Scalability**: Integration complexity should be a realistic reflection of the number of tools selected.
+- **Recommendations Table**: Ensure fit scores are differentiated and reasons are specific to the organization's profile.
+
 ${prompt_extra}
 
 Now use the following inputs.`
@@ -771,6 +784,11 @@ Generation steps:
     Suggest tools/vendors with fit notes (2–4 per category).
 
     Define 3–6 scenario levers with clear expected effects.
+
+## DASHBOARD & ROADMAP VISUALIZATION RULES:
+- **Prioritization**: Readiness and Impact scores must be well-distributed (avoid all 5s).
+- **Roadmap Logic**: Foundations MUST come before Strategic/Innovative initiatives in the timeline.
+- **KPI Framework**: Every initiative must have at least 2 measurable, realistic KPIs.
 
 Return only the JSON output schema.
 
@@ -1243,15 +1261,11 @@ Identify improvements in:
 
 ${prompt_extra}
 
-## GENERATION RULES:
-1. Base all recommendations on actual assessment responses
-2. Ensure KPI targets are realistic and benchmarked
-3. Prioritize quick wins (high impact, low effort) in first 6 months
-4. Consider company size, industry, and maturity in recommendations
-5. Include specific vendor recommendations with fit rationale
-6. Provide ROI estimates for major initiatives
-7. Address change management and stakeholder concerns
-8. Return ONLY valid JSON matching the exact schema above
+## DASHBOARD & VISUALIZATION RULES:
+- **Service Distribution**: Ensure percentages sum to exactly 100 for both current and target states.
+- **Process Maturity**: Standardization and Automation scores must reflect the specific pain points mentioned.
+- **Volume Metrics**: Ensure monthly tickets and resolution times are realistic for the company size.
+- **KPI Comparisons**: Target and Benchmark values should provide a clear "gap to close" visualization.
 
 Analyze the provided assessment data and generate the complete shared service design.`
   },
@@ -1563,15 +1577,11 @@ Analyze change readiness and generate a comprehensive change management strategy
 
 ${prompt_extra}
 
-## GENERATION RULES:
-1. Score readiness dimensions based on assessment responses
-2. Identify specific stakeholder groups from company context
-3. Tailor communication and training to company culture
-4. Prioritize resistance management for high-risk groups
-5. Ensure metrics are measurable and actionable
-6. Provide specific, actionable tactics (not generic advice)
-7. Consider company size, industry, and change history
-8. Return ONLY valid JSON matching the exact schema above
+## DASHBOARD & VISUALIZATION RULES:
+- **Readiness Dimension Scores**: Scores (1-5) must be well-justified by the "evidence" and "gaps" fields.
+- **Stakeholder Matrix**: Categorize groups onto the Power-Interest matrix logically. Influence and Impact should guide the placement.
+- **Timeline Logic**: Activities in Prepare, Enable, Sustain phases must follow a logical sequence.
+- **Metric Distributions**: Leading and Lagging indicators must have clear targets and frequencies.
 
 Analyze the provided assessment data and generate the complete change management strategy.`
   },
@@ -1984,15 +1994,11 @@ Analyze HR technology landscape and generate comprehensive maturity assessment w
 
 ${prompt_extra}
 
-## GENERATION RULES:
-1. Score each dimension based on assessment evidence
-2. Calculate weighted scores accurately
-3. Provide specific vendor recommendations with rationale
-4. Estimate costs realistically based on company size
-5. Prioritize initiatives by impact and feasibility
-6. Include specific, measurable success metrics
-7. Address risks with concrete mitigation plans
-8. Return ONLY valid JSON matching the exact schema above
+## DASHBOARD & VISUALIZATION RULES:
+- **Maturity Index**: The overall score should be a weighted average of dimensional scores.
+- **Dimensional Deep-dives**: Each dimension must have a maturity level (1-5) and specific gaps/strengths.
+- **Investment Roadmap**: Ensure estimated costs and timelines are consistent with the roadmap sequence.
+- **Governance Matrix**: Decision rights must be explicitly stated for technology, budget, and priority.
 
 Analyze the provided assessment data and generate the complete technology maturity assessment.`
   }

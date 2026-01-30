@@ -48,31 +48,76 @@ export default function VendorFitReportDashboard({ data, brandName }: VendorFitR
 
     return (
         <div className="min-h-screen bg-[#f1f5f9] p-4 lg:p-10">
-            <header className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 print:hidden">
-                <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-[#0047cc] rounded-xl flex items-center justify-center p-2">
-                        <BarChart3 className="text-white w-full h-full" />
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 print:hidden mb-10">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-1">
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-[#1e293b]">{brandName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-slate-500">
+                                    <span className="font-bold text-blue-600 uppercase tracking-wide">Cognitive HCM Vendor Fit Engine</span>
+                                    <span className="text-slate-400">•</span>
+                                    <nav className="flex items-center gap-2">
+                                        <Link to="/dashboard" className="hover:text-slate-900">Dashboard</Link>
+                                        <span>/</span>
+                                        <span className="font-semibold text-slate-900">Vendor Selection</span>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => window.print()}
+                                className="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2 shadow-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Export PDF
+                            </button>
+                            <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg ml-2">
+                                <ArrowLeft className="w-6 h-6 text-slate-400" />
+                            </Link>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-[#1e293b] tracking-tight">Cognitive HCM Vendor Fit Engine</h1>
-                        <p className="text-gray-500 font-bold">Intelligent vendor selection and HCM system recommendations</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <button onClick={() => window.print()} className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-all">
-                        <Download className="w-4 h-4" /> Export Report
-                    </button>
-                    <button className="px-6 py-3 bg-[#0047cc] rounded-2xl text-sm font-black text-white shadow-xl flex items-center gap-2 hover:bg-[#0037a3] transform hover:-translate-y-1 transition-all">
-                        + New Comparison
-                    </button>
-                    <Link to="/dashboard" className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-200 shadow-sm">
-                        <ArrowLeft className="w-6 h-6" />
-                    </Link>
                 </div>
             </header>
 
             <div className="max-w-7xl mx-auto space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* Print-Only Cover Page */}
+                <div className="hidden print:block print:break-after-always mb-12">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center border-4 border-double border-blue-600 p-12">
+                        <div className="w-64 h-32 mb-12">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-6xl font-black text-[#1e293b] mb-6 tracking-tight">Cognitive HCM Vendor Fit Analysis</h1>
+                        <div className="h-2 w-48 bg-blue-600 rounded-full mb-12"></div>
+                        <h2 className="text-4xl font-bold text-gray-700 mb-16">{brandName}</h2>
+
+                        <div className="space-y-6 text-left max-w-xl w-full text-lg">
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Assessment Type</span>
+                                <span className="font-bold text-[#1e293b] font-sans">HCM Vendor Selection Diagnostic</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Generated Date</span>
+                                <span className="font-bold text-[#1e293b] font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-slate-100 pb-4">
+                                <span className="font-bold text-slate-400 uppercase tracking-widest text-sm">Status</span>
+                                <span className="font-bold text-blue-600 font-sans uppercase">Confidential Analysis</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-24 text-sm font-bold text-slate-400 uppercase tracking-widest">
+                            <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                            <p>Proprietary & Confidential Strategic Advisory</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 print:mt-12">
                     {vendors.map((vendor, i) => (
                         <div key={i} className={`relative bg-white rounded-[2.5rem] p-10 border-2 transition-all hover:shadow-2xl hover:scale-[1.02] cursor-pointer ${vendor.name === selectedVendor ? 'border-[#0047cc]' : 'border-transparent'
                             }`} onClick={() => setSelectedVendor(vendor.name)}>
@@ -85,7 +130,7 @@ export default function VendorFitReportDashboard({ data, brandName }: VendorFitR
                                 <div>
                                     <h3 className="text-2xl font-black text-[#1e293b] mb-2">{vendor.name}</h3>
                                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase ${vendor.status === 'TOP CHOICE' ? 'bg-green-100 text-green-700' :
-                                            vendor.status === 'MODERATE' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
+                                        vendor.status === 'MODERATE' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'
                                         }`}>{vendor.status}</span>
                                 </div>
                                 <div>
@@ -226,7 +271,7 @@ export default function VendorFitReportDashboard({ data, brandName }: VendorFitR
                                         <td className="py-6 font-black text-slate-800">{row.c}</td>
                                         <td className="py-6">
                                             <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase ${row.impact === 'HIGH' ? 'bg-red-50 text-red-600' :
-                                                    row.impact === 'MED' ? 'bg-yellow-50 text-yellow-600' : 'bg-green-50 text-green-600'
+                                                row.impact === 'MED' ? 'bg-yellow-50 text-yellow-600' : 'bg-green-50 text-green-600'
                                                 }`}>{row.impact}</span>
                                         </td>
                                     </tr>
@@ -262,7 +307,7 @@ export default function VendorFitReportDashboard({ data, brandName }: VendorFitR
                             { title: "Recommended Employee Experience Platform", priority: "MEDIUM", text: "Based on your high employee experience score, consider implementing a unified EX platform.", color: "yellow" }
                         ].map((insight, i) => (
                             <div key={i} className={`rounded-[2rem] border p-8 flex items-start justify-between cursor-pointer group transition-all ${insight.color === 'green' ? 'bg-green-50/50 border-green-100' :
-                                    insight.color === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/50 border-yellow-100'
+                                insight.color === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/50 border-yellow-100'
                                 }`}>
                                 <div className="flex gap-6">
                                     <div className="p-3 bg-white rounded-2xl shadow-sm h-fit">

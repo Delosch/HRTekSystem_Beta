@@ -2,7 +2,7 @@ import { json, LoaderFunction, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
 import { getAllAnalysesForCompany } from "~/utils/analysis.server";
-import { getVerifiedPaymentsByCompany } from "~/models/payment.model.server";
+import { getCompanyPayments } from "~/models/payment.model.server";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { getEnhancedUser } from "~/utils/user.server";
 import { FileText, Lock, CheckCircle, Clock, AlertCircle } from "lucide-react";
@@ -14,13 +14,14 @@ interface ReportItem {
     createdAt: string;
     status: string;
     isPaid: boolean;
+    isVerified: boolean;
+    paymentStatus?: string;
     reportUrl: string;
 }
 
 interface LoaderData {
     user: any;
     reports: ReportItem[];
-    paidEngines: string[];
     totalReports: number;
     unlockedReports: number;
 }
@@ -35,17 +36,23 @@ export const loader: LoaderFunction = async ({ request }) => {
     // Fetch all AI-generated reports for this company
     const allAnalyses = await getAllAnalysesForCompany(user.organisationId);
 
-    // Fetch verified payments to determine which reports are unlocked
-    const verifiedPayments = await getVerifiedPaymentsByCompany(user.organisationId);
+    // Fetch all payments for this company to determine status
+    const allPayments = await getCompanyPayments(user.organisationId);
 
-    // Extract list of paid engine names
-    const paidEngines = verifiedPayments.flatMap(payment =>
-        payment.items?.map((item: any) => item.engineName) || []
-    );
+    // Verified engines (payment_verified)
+    const verifiedEngines = allPayments
+        .filter(p => p.status === "payment_verified")
+        .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || []);
+
+    // Paid engines (payment_submitted or payment_verified)
+    const paidEngines = allPayments
+        .filter(p => p.status === "payment_submitted" || p.status === "payment_verified")
+        .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || []);
 
     console.log(`[Reports Page] User: ${user.organisationId}`);
-    console.log(`[Reports Page] Total Analyses: ${allAnalyses.length}`);
+    console.log(`[Reports Page] Total Analyses Found: ${allAnalyses.length}`);
     console.log(`[Reports Page] Paid Engines:`, paidEngines);
+    console.log(`[Reports Page] Verified Engines:`, verifiedEngines);
 
     // Map to report route URLs
     const reportRouteMap: Record<string, string> = {
@@ -60,31 +67,35 @@ export const loader: LoaderFunction = async ({ request }) => {
         "HR Tech Maturity Analysis": `/consulting-report/HR%20Tech%20Maturity%20Analysis`
     };
 
-    // Process reports
-    const reports: ReportItem[] = allAnalyses.map((analysis: any) => {
-        const engineName = analysis.section;
-        const isPaid = paidEngines.includes(engineName) || (user as any).role === "ADMIN";
-        const reportUrl = reportRouteMap[engineName] || `/consulting-report/${encodeURIComponent(engineName)}`;
+    // Process reports - ONLY include reports that are paid for or user is admin
+    const isAdmin = (user as any).role === "ADMIN";
 
-        return {
-            id: analysis.sk,
-            section: engineName,
-            createdAt: analysis.createdAt,
-            status: analysis.status || 'approved',
-            isPaid,
-            reportUrl
-        };
-    });
+    const reports: ReportItem[] = allAnalyses
+        .map((analysis: any) => {
+            const engineName = analysis.section.trim();
+            const isVerified = verifiedEngines.includes(engineName) || isAdmin;
+            const isPaid = paidEngines.includes(engineName) || isAdmin;
+            const reportUrl = reportRouteMap[engineName] || `/consulting-report/${encodeURIComponent(engineName)}`;
+
+            return {
+                id: analysis.sk,
+                section: engineName,
+                createdAt: analysis.createdAt,
+                status: analysis.status || 'approved',
+                isPaid,
+                isVerified,
+                reportUrl
+            };
+        });
 
     // Sort by creation date (newest first)
     reports.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    const unlockedReports = reports.filter(r => r.isPaid).length;
+    const unlockedReports = reports.filter(r => r.isVerified).length;
 
     return json<LoaderData>({
         user,
         reports,
-        paidEngines,
         totalReports: reports.length,
         unlockedReports
     });
@@ -177,16 +188,25 @@ export default function ReportsPage() {
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                             <FileText className="w-10 h-10 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">No Reports Yet</h3>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">No Reports Available</h3>
                         <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                            Complete an assessment to generate your first AI-powered report
+                            Reports will appear here after you complete an assessment and your payment is verified by our admin team.
                         </p>
-                        <Link
-                            to="/startTransformationDashboard"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
-                        >
-                            Get Started
-                        </Link>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Link
+                                to="/startTransformationDashboard"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl"
+                            >
+                                Start Assessment
+                            </Link>
+                            <Link
+                                to="/payment/checkout"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-all"
+                            >
+                                <Lock className="w-4 h-4" />
+                                View Payment Status
+                            </Link>
+                        </div>
                     </motion.div>
                 ) : (
                     <div className="space-y-4">
@@ -196,7 +216,7 @@ export default function ReportsPage() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className={`bg-white rounded-xl shadow-lg border-2 overflow-hidden transition-all hover:shadow-xl ${report.isPaid ? 'border-green-200 hover:border-green-300' : 'border-amber-200 hover:border-amber-300'
+                                className={`bg-white rounded-xl shadow-lg border-2 overflow-hidden transition-all hover:shadow-xl ${report.isVerified ? 'border-green-200 hover:border-green-300' : 'border-amber-200 hover:border-amber-300'
                                     }`}
                             >
                                 <div className="p-6">
@@ -206,17 +226,31 @@ export default function ReportsPage() {
                                                 <h3 className="text-xl font-bold text-slate-900">
                                                     {report.section}
                                                 </h3>
-                                                {report.isPaid ? (
-                                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                                                        <CheckCircle className="w-3 h-3" />
-                                                        Unlocked
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
-                                                        <Lock className="w-3 h-3" />
-                                                        Locked
-                                                    </span>
-                                                )}
+                                                <div className="flex flex-wrap gap-2">
+                                                    {report.isPaid ? (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                                            <CheckCircle className="w-3 h-3" />
+                                                            Paid
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                                                            <Clock className="w-3 h-3" />
+                                                            Not Paid
+                                                        </span>
+                                                    )}
+
+                                                    {report.isVerified ? (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                                                            <CheckCircle className="w-3 h-3" />
+                                                            Verified
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
+                                                            <Clock className="w-3 h-3" />
+                                                            Not Verified
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="flex items-center gap-4 text-sm text-slate-600">
@@ -234,17 +268,17 @@ export default function ReportsPage() {
                                                 </span>
                                             </div>
 
-                                            {!report.isPaid && (
+                                            {!report.isVerified && (
                                                 <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                                     <p className="text-sm text-amber-800">
-                                                        <span className="font-semibold">🔒 Payment Required:</span> Complete payment verification to unlock this report
+                                                        <span className="font-semibold">🔒 Verification Required:</span> {report.isPaid ? 'Payment received! Waiting for admin verification.' : 'Complete payment verification to unlock this report'}
                                                     </p>
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="ml-4">
-                                            {report.isPaid ? (
+                                            {report.isVerified ? (
                                                 <Link
                                                     to={report.reportUrl}
                                                     className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg"
@@ -257,8 +291,8 @@ export default function ReportsPage() {
                                                     to="/payment/checkout"
                                                     className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-all shadow-md hover:shadow-lg"
                                                 >
-                                                    <Lock className="w-4 h-4" />
-                                                    Unlock Report
+                                                    {report.isPaid ? <Clock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                                    {report.isPaid ? 'Awaiting Verification' : 'Unlock Report'}
                                                 </Link>
                                             )}
                                         </div>

@@ -43,28 +43,31 @@ export default function SharedServicesReport({ data, brandName }: SharedServices
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-[#0052cc] rounded-lg" />
-                                <span className="font-bold text-[#091e42] uppercase tracking-tighter text-xl">HRTEK SYSTEM</span>
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-md p-1">
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
                             </div>
-                            <nav className="hidden md:flex items-center gap-6 ml-8 text-sm font-medium text-gray-500">
-                                <span>Overview</span>
-                                <span>Assessment Dashboard</span>
-                                <span className="text-[#0052cc] border-b-2 border-[#0052cc] pb-1">Shared Services Operating Model Planner</span>
-                            </nav>
+                            <div>
+                                <h1 className="text-lg font-bold text-[#091e42]">{brandName}</h1>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className="font-bold text-[#0052cc] uppercase tracking-wide">Shared Services Operating Model</span>
+                                    <span className="text-gray-400">•</span>
+                                    <nav className="flex items-center gap-2">
+                                        <Link to="/dashboard" className="hover:text-gray-900">Dashboard</Link>
+                                        <span>/</span>
+                                        <span className="font-semibold text-[#091e42]">Operating Model Planner</span>
+                                    </nav>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => window.print()}
-                                className="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2"
+                                className="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2 shadow-sm"
                             >
                                 <Download className="w-4 h-4" />
-                                Export Report
+                                Export PDF
                             </button>
-                            <button className="px-5 py-2.5 text-sm font-black bg-[#0052cc] text-white rounded-xl hover:bg-[#0747a6]">
-                                + New Comparison
-                            </button>
-                            <Link to="/dashboard" className="p-2 ml-2">
+                            <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-lg ml-2">
                                 <ArrowLeft className="w-6 h-6 text-gray-400" />
                             </Link>
                         </div>
@@ -73,7 +76,39 @@ export default function SharedServicesReport({ data, brandName }: SharedServices
             </header>
 
             <main className="max-w-7xl mx-auto px-6 py-10">
-                <div className="mb-12 flex gap-8 items-start">
+                {/* Print-Only Cover Page */}
+                <div className="hidden print:block print:break-after-always mb-12">
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] text-center border-4 border-double border-[#0052cc] p-12">
+                        <div className="w-64 h-32 mb-12">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
+                        </div>
+                        <h1 className="text-6xl font-black text-[#091e42] mb-6 tracking-tight">Shared Services Operating Model Planner</h1>
+                        <div className="h-2 w-48 bg-[#0052cc] rounded-full mb-12"></div>
+                        <h2 className="text-4xl font-bold text-gray-700 mb-16">{brandName}</h2>
+
+                        <div className="space-y-6 text-left max-w-xl w-full text-lg">
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Assessment Type</span>
+                                <span className="font-bold text-[#091e42] font-sans">Shared Services Operating Model</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Generated Date</span>
+                                <span className="font-bold text-[#091e42] font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            </div>
+                            <div className="flex justify-between border-b-2 border-gray-100 pb-4">
+                                <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Status</span>
+                                <span className="font-bold text-[#0052cc] font-sans uppercase">Confidential Analysis</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-24 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                            <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                            <p>Proprietary & Confidential Strategic Advisory</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-12 flex gap-8 items-start print:mt-12">
                     <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center p-4 shadow-sm border border-gray-100">
                         <Building2 className="w-full h-full text-gray-400" />
                     </div>
@@ -90,8 +125,8 @@ export default function SharedServicesReport({ data, brandName }: SharedServices
                             <div className="flex justify-between items-start mb-6">
                                 <span className="text-sm font-bold text-gray-400">{kpi.title}</span>
                                 <div className={`p-3 rounded-2xl ${kpi.color === 'blue' ? 'bg-blue-600' :
-                                        kpi.color === 'green' ? 'bg-green-500' :
-                                            kpi.color === 'purple' ? 'bg-purple-600' : 'bg-orange-500'
+                                    kpi.color === 'green' ? 'bg-green-500' :
+                                        kpi.color === 'purple' ? 'bg-purple-600' : 'bg-orange-500'
                                     } text-white shadow-lg`}>
                                     <kpi.icon className="w-6 h-6" />
                                 </div>
@@ -166,7 +201,7 @@ export default function SharedServicesReport({ data, brandName }: SharedServices
                                                 <td className="py-5 text-[#091e42]">{row.service}</td>
                                                 <td className="py-5">
                                                     <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest ${row.type === 'Transactional' ? 'bg-blue-100 text-blue-700' :
-                                                            row.type === 'COE' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
+                                                        row.type === 'COE' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
                                                         }`}>
                                                         {row.type}
                                                     </span>
@@ -195,7 +230,7 @@ export default function SharedServicesReport({ data, brandName }: SharedServices
                             { title: "Recommended Employee Experience Platform", priority: "MEDIUM", text: "Based on your high employee experience score, consider implementing a unified EX platform.", type: "yellow" }
                         ].map((rec, i) => (
                             <div key={i} className={`rounded-[1.5rem] border p-8 flex items-start justify-between ${rec.type === 'green' ? 'bg-green-50/50 border-green-100' :
-                                    rec.type === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/50 border-yellow-100'
+                                rec.type === 'blue' ? 'bg-blue-50/50 border-blue-100' : 'bg-yellow-50/50 border-yellow-100'
                                 }`}>
                                 <div className="flex gap-6">
                                     <div className="p-3 bg-white rounded-2xl shadow-sm h-fit">

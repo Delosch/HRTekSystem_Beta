@@ -9,7 +9,9 @@ import {
   Lightbulb,
   ChevronDown,
   User,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from "lucide-react";
 
 export default function Navbar() {
@@ -20,6 +22,7 @@ export default function Navbar() {
   const { pathname, hash } = location;
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -48,12 +51,18 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Close mobile menu on path change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleServicesClick = () => {
     if (pathname === "/") {
       navigate("#services");
     } else {
       navigate("/#services");
     }
+    setIsMobileMenuOpen(false);
   };
 
   const toggleServicesDropdown = (e: React.MouseEvent) => {
@@ -68,6 +77,9 @@ export default function Navbar() {
   const inactiveStyle =
     "px-6 py-2 text-white/90 hover:text-[#000033] hover:bg-white rounded-lg transition-all duration-300 font-semibold tracking-wide transform hover:scale-105";
 
+  const mobileActiveStyle = "w-full text-left px-4 py-3 text-white font-bold bg-white/10 rounded-xl";
+  const mobileInactiveStyle = "w-full text-left px-4 py-3 text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all";
+
   const servicePaths = [
     "/roadmap-service",
     "/hcm-service",
@@ -77,12 +89,21 @@ export default function Navbar() {
     "/hrtech-advisory-service",
   ];
 
+  const serviceItems = [
+    { to: "/roadmap-service", icon: Map, label: "HR Digital Roadmap", color: "blue" },
+    { to: "/hcm-service", icon: Puzzle, label: "HCM Vendor Fit", color: "purple" },
+    { to: "/maturity-analysis-service", icon: FileBarChart2, label: "HR Tech Diagnostics", color: "green" },
+    { to: "/shared-service", icon: DraftingCompass, label: "Shared Services", color: "amber" },
+    { to: "/change-management-service", icon: Shapes, label: "Change Management", color: "rose" },
+    { to: "/hrtech-advisory-service", icon: Lightbulb, label: "HR Tech Advisory", color: "yellow" },
+  ];
+
   return (
     <div className="fixed top-0 left-0 right-0 z-[9999]">
-      <nav className="relative bg-[#000033] px-8 py-4 flex items-center justify-between border-b border-white/5 shadow-2xl backdrop-blur-md">
+      <nav className="relative bg-[#000033] px-6 md:px-8 py-4 flex items-center justify-between border-b border-white/5 shadow-2xl backdrop-blur-md">
         {/* Left: Branding */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-14 h-14 flex items-center justify-center">
+          <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center">
             <img
               src="/logo_icon_final.png"
               alt="HR-Tek"
@@ -91,241 +112,181 @@ export default function Navbar() {
             />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black tracking-tighter leading-none">
+            <h1 className="text-xl md:text-2xl font-black tracking-tighter leading-none">
               <span className="text-white">HR-TEK</span>{" "}
               <span className="text-[#00B5E2]">SYSTEM</span>
             </h1>
-
           </div>
         </Link>
 
-        {/* Center: Navigation Links */}
+        {/* Center: Navigation Links (Desktop) */}
         <div className="hidden lg:flex items-center space-x-2 ml-10">
           <Link to="/">
-            <button
-              className={
-                pathname === "/" && !hash
-                  ? activeStyle
-                  : inactiveStyle
-              }
-            >
-              Home
-            </button>
+            <button className={pathname === "/" && !hash ? activeStyle : inactiveStyle}>Home</button>
           </Link>
-
           <Link to="/about-us">
-            <button
-              className={
-                pathname === "/about-us"
-                  ? activeStyle
-                  : inactiveStyle
-              }
-            >
-              About Us
-            </button>
+            <button className={pathname === "/about-us" ? activeStyle : inactiveStyle}>About Us</button>
           </Link>
 
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={toggleServicesDropdown}
-              className={`${(servicePaths.includes(pathname) || hash === "#services") ? activeStyle : inactiveStyle
-                } flex items-center gap-1`}
+              className={`${(servicePaths.includes(pathname) || hash === "#services") ? activeStyle : inactiveStyle} flex items-center gap-1`}
             >
               Engines
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
             </button>
-            {/* Dropdown content */}
             <div
               className={`absolute left-0 mt-3 w-80 bg-white text-[#03045e] rounded-2xl shadow-2xl ring-1 ring-black/5
               origin-top transition-all duration-300 ease-out z-[999999]
-              ${isServicesOpen
-                  ? 'opacity-100 translate-y-0 pointer-events-auto'
-                  : 'opacity-0 translate-y-2 pointer-events-none'
-                }`}
+              ${isServicesOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}`}
             >
               <ul className="py-3">
-                <li>
-                  <Link
-                    to="/roadmap-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-blue-100 p-2 rounded-lg">
-                      <Map className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">HR Digital Roadmap</p>
-                      <p className="text-[10px] text-gray-500">Auto-generated & ROI-focused</p>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/hcm-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-purple-100 p-2 rounded-lg">
-                      <Puzzle className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">HCM Vendor Fit</p>
-                      <p className="text-[10px] text-gray-500">Cognitive Selection Engine</p>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/maturity-analysis-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-green-100 p-2 rounded-lg">
-                      <FileBarChart2 className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">HR Tech Diagnostics</p>
-                      <p className="text-[10px] text-gray-500">AI-driven Maturity Assessment</p>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/shared-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-amber-100 p-2 rounded-lg">
-                      <DraftingCompass className="w-6 h-6 text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Shared Services</p>
-                      <p className="text-[10px] text-gray-500">Operating Model Planner</p>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/change-management-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-rose-100 p-2 rounded-lg">
-                      <Shapes className="w-6 h-6 text-rose-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Change Management</p>
-                      <p className="text-[10px] text-gray-500">Intelligent Execution Systems</p>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/hrtech-advisory-service"
-                    className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
-                    onClick={() => setIsServicesOpen(false)}
-                  >
-                    <div className="bg-yellow-100 p-2 rounded-lg">
-                      <Lightbulb className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">HR Tech Advisory</p>
-                      <p className="text-[10px] text-gray-500">Expert Strategic Guidance</p>
-                    </div>
-                  </Link>
-                </li>
+                {serviceItems.map((item, idx) => (
+                  <li key={idx}>
+                    <Link
+                      to={item.to}
+                      className="flex items-center gap-x-4 px-6 py-4 hover:bg-blue-50 transition-colors"
+                      onClick={() => setIsServicesOpen(false)}
+                    >
+                      <div className={`bg-${item.color}-100 p-2 rounded-lg`}>
+                        <item.icon className={`w-6 h-6 text-${item.color}-600`} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{item.label}</p>
+                        <p className="text-[10px] text-gray-500">
+                          {idx === 0 ? "Auto-generated & ROI-focused" :
+                            idx === 1 ? "Cognitive Selection Engine" :
+                              idx === 2 ? "AI-driven Maturity Assessment" :
+                                idx === 3 ? "Operating Model Planner" :
+                                  idx === 4 ? "Intelligent Execution Systems" : "Expert Strategic Guidance"}
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
           <Link to="/pricing">
-            <button
-              className={
-                pathname === "/pricing" ? activeStyle : inactiveStyle
-              }
-            >
-              Pricing
-            </button>
+            <button className={pathname === "/pricing" ? activeStyle : inactiveStyle}>Pricing</button>
           </Link>
-
           <Link to="/contact">
-            <button
-              className={
-                pathname === "/contact" ? activeStyle : inactiveStyle
-              }
-            >
-              Contact Us
-            </button>
+            <button className={pathname === "/contact" ? activeStyle : inactiveStyle}>Contact Us</button>
           </Link>
         </div>
 
-        {/* Right: Action Button */}
+        {/* Right: Action Button & Mobile Toggle */}
         <div className="flex items-center gap-4">
-          {user ? (
-            <div className="relative" ref={userDropdownRef}>
-              <button
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-4 hover:bg-white/5 p-1 px-2 rounded-xl transition-all duration-300"
-              >
-                <div className="flex flex-col items-end hidden sm:flex">
-                  <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
-                  <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:scale-105 transition-transform">
-                  <User className="w-6 h-6 text-white" />
-                </div>
-              </button>
-
-              {/* User Dropdown */}
-              <div
-                className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl py-2 z-[99999] 
-                origin-top-right transition-all duration-300 flex flex-col items-stretch ring-1 ring-black/5
-                ${isUserDropdownOpen
-                    ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
-                    : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
-                  }`}
-              >
-                <div className="px-4 py-2 border-b border-gray-100 sm:hidden">
-                  <p className="text-gray-900 font-bold text-sm truncate">{user.first_name} {user.last_name}</p>
-                  <p className="text-blue-500 text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
-                </div>
-
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsUserDropdownOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors font-bold text-sm"
+          <div className="hidden lg:flex items-center gap-4">
+            {user ? (
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="flex items-center gap-4 hover:bg-white/5 p-1 px-2 rounded-xl transition-all duration-300"
                 >
-                  <div className="bg-blue-100 p-1.5 rounded-lg">
-                    <User className="w-4 h-4 text-blue-600" />
+                  <div className="flex flex-col items-end hidden sm:flex">
+                    <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
+                    <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
                   </div>
-                  Dashboard
-                </Link>
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:scale-105 transition-transform">
+                    <User className="w-6 h-6 text-white" />
+                  </div>
+                </button>
 
-                <div className="h-px bg-gray-100 my-1"></div>
-
-                <Link
-                  to="/logout"
-                  onClick={() => setIsUserDropdownOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold text-sm"
+                <div
+                  className={`absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl py-2 z-[99999] 
+                  origin-top-right transition-all duration-300 flex flex-col items-stretch ring-1 ring-black/5
+                  ${isUserDropdownOpen ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'}`}
                 >
-                  <div className="bg-red-100 p-1.5 rounded-lg">
-                    <LogOut className="w-4 h-4 text-red-600" />
-                  </div>
-                  Logout
-                </Link>
+                  <Link to="/dashboard" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors font-bold text-sm">
+                    <div className="bg-blue-100 p-1.5 rounded-lg"><User className="w-4 h-4 text-blue-600" /></div>
+                    Dashboard
+                  </Link>
+                  <div className="h-px bg-gray-100 my-1"></div>
+                  <Link to="/logout" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-bold text-sm">
+                    <div className="bg-red-100 p-1.5 rounded-lg"><LogOut className="w-4 h-4 text-red-600" /></div>
+                    Logout
+                  </Link>
+                </div>
               </div>
+            ) : (
+              <Link to="/auth">
+                <button className="px-8 py-2.5 rounded-full bg-white text-[#000033] font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white">
+                  Login | SignUp
+                </button>
+              </Link>
+            )}
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all"
+          >
+            {isMobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+          </button>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        <div
+          className={`lg:hidden fixed inset-0 top-[73px] bg-[#000033]/98 backdrop-blur-xl z-[9999] transition-all duration-300 ease-in-out
+          ${isMobileMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'}`}
+        >
+          <div className="flex flex-col p-6 h-full overflow-y-auto">
+            <div className="space-y-4 mb-8">
+              <Link to="/" className={pathname === "/" && !hash ? mobileActiveStyle : mobileInactiveStyle}>Home</Link>
+              <Link to="/about-us" className={pathname === "/about-us" ? mobileActiveStyle : mobileInactiveStyle}>About Us</Link>
+
+              <div className="space-y-2">
+                <p className="px-4 text-[10px] font-bold text-white/40 uppercase tracking-widest mt-4">Transformation Engines</p>
+                {serviceItems.map((item, idx) => (
+                  <Link
+                    key={idx}
+                    to={item.to}
+                    className={pathname === item.to ? mobileActiveStyle : mobileInactiveStyle}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              <Link to="/pricing" className={pathname === "/pricing" ? mobileActiveStyle : mobileInactiveStyle}>Pricing</Link>
+              <Link to="/contact" className={pathname === "/contact" ? mobileActiveStyle : mobileInactiveStyle}>Contact Us</Link>
             </div>
-          ) : (
-            <Link to="/auth">
-              <button
-                className="px-8 py-2.5 rounded-full bg-white text-[#000033] 
-                  font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 
-                  transform hover:scale-105 active:scale-95 border border-white"
-              >
-                Login | SignUp
-              </button>
-            </Link>
-          )}
+
+            <div className="mt-auto pt-6 border-t border-white/10">
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 px-4 py-2">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold">{user.first_name} {user.last_name}</p>
+                      <p className="text-[#00B5E2] text-xs font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link to="/dashboard" className="flex items-center justify-center gap-2 py-3 bg-white/10 rounded-xl text-white font-bold">
+                      <User className="w-4 h-4" /> Dashboard
+                    </Link>
+                    <Link to="/logout" className="flex items-center justify-center gap-2 py-3 bg-red-500/20 rounded-xl text-red-500 font-bold border border-red-500/20">
+                      <LogOut className="w-4 h-4" /> Logout
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <Link to="/auth" className="block w-full text-center py-4 bg-white text-[#000033] font-black rounded-2xl shadow-xl">
+                  Login | SignUp
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </nav>
     </div>

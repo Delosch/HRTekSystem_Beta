@@ -554,8 +554,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                     <div className="flex items-center justify-between">
                         {/* Left: Company Branding */}
                         <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 bg-gradient-to-br ${reportTheme.color} rounded-xl flex items-center justify-center text-white shadow-lg`}>
-                                <Brain className="w-7 h-7" />
+                            <div className={`w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg p-1`}>
+                                <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-lg font-bold text-slate-900">{brandName}</h1>
@@ -564,13 +564,21 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                     <span className="text-slate-400">•</span>
                                     <span className="text-slate-500">{assessmentId}</span>
                                     {!isDetailed ? (
-                                        <span className={`ml-2 px-2 py-0.5 ${reportTheme.badge} text-[10px] font-bold rounded-full border border-emerald-200`}>
-                                            SUMMARY
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-black rounded-lg shadow-lg">
+                                                EXECUTIVE SUMMARY MODE
+                                            </span>
+                                            <span className="text-slate-400">•</span>
+                                            <span className="text-slate-500 font-bold">{assessmentId}</span>
+                                        </div>
                                     ) : (
-                                        <span className={`ml-2 px-2 py-0.5 ${reportTheme.badge} text-[10px] font-bold rounded-full border border-blue-200`}>
-                                            DETAILED
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-3 py-1 bg-blue-600 text-white text-xs font-black rounded-lg shadow-lg animate-pulse">
+                                                ANALYSIS MODE (DETAILED)
+                                            </span>
+                                            <span className="text-slate-400">•</span>
+                                            <span className="text-slate-500 font-bold">{assessmentId}</span>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -608,8 +616,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                 {/* Print-Only Cover Page */}
                 <div className="hidden print:block print:break-after-always">
                     <div className="flex flex-col items-center justify-center min-h-[90vh] text-center">
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center text-white shadow-2xl mb-8">
-                            <Brain className="w-16 h-16" />
+                        <div className="w-48 h-24 mb-8">
+                            <img src="/logo_report_final.png" alt="HRTek System" className="w-full h-full object-contain" />
                         </div>
                         <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tight">{reportTitle}</h1>
                         <div className={`h-2 w-32 bg-gradient-to-r ${reportTheme.color} rounded-full mb-8`}></div>
@@ -645,308 +653,269 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                 {/* 01 Executive Summary */}
                 <motion.section variants={itemVariants} className="space-y-8 print:break-inside-avoid">
-                    <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-blue-500 to-purple-500 pb-4">
-                        <span className="text-6xl font-black bg-gradient-to-br from-blue-200 to-purple-200 bg-clip-text text-transparent">01</span>
+                    <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
+                        <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">01</span>
                         <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Executive Summary</h2>
                     </div>
 
-                    {/* Explanatory Text */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-l-4 border-blue-500 shadow-md">
-                        <p className="text-sm text-slate-700 leading-relaxed mb-3">
-                            <strong className="text-blue-700">Overview:</strong> This section provides a high-level assessment of your organization's digital maturity across key HR dimensions. The overall maturity index represents a weighted average of performance across all evaluated capabilities, benchmarked against industry standards and best practices.
-                        </p>
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                            <strong className="text-blue-700">Key Insight:</strong> The maturity score indicates your current position on the digital transformation journey. Organizations at the "{report.executive_summary.maturity_category}" stage typically exhibit foundational capabilities but require strategic investment to achieve operational excellence and competitive advantage.
-                        </p>
-                    </div>
+                    {isDetailed ? (
+                        /* DETAILED VIEW: High-density score visualization */
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div className="lg:col-span-12 bg-white rounded-[2rem] p-8 relative overflow-hidden shadow-2xl border-2 border-blue-100 flex flex-col lg:flex-row items-center gap-12">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 opacity-60"></div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        <div className="lg:col-span-5 bg-white rounded-[2rem] p-8 flex flex-col items-center justify-center relative overflow-hidden group min-h-[450px] shadow-2xl border-2 border-blue-100">
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 opacity-60"></div>
-
-                            {/* Decorative Elements */}
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-400 to-purple-400 opacity-10 rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 opacity-10 rounded-full blur-3xl"></div>
-
-                            <div className="relative z-10 flex flex-col items-center text-center">
-                                {/* Improved Score Circle */}
-                                <div className="relative w-64 h-64 mb-8">
-                                    {/* Outer Glow Ring */}
+                                {/* Large Score Visualization */}
+                                <div className="relative w-72 h-72 shrink-0">
                                     <motion.div
-                                        animate={{
-                                            scale: [1, 1.05, 1],
-                                            opacity: [0.5, 0.8, 0.5]
-                                        }}
-                                        transition={{ duration: 3, repeat: Infinity }}
-                                        className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-xl opacity-50"
+                                        animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
+                                        transition={{ duration: 4, repeat: Infinity }}
+                                        className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-2xl opacity-40"
                                     ></motion.div>
-
-                                    {/* Main Circle Container */}
-                                    <div className="relative w-full h-full rounded-full bg-white shadow-2xl flex items-center justify-center border-8 border-slate-100">
-                                        {/* Animated Progress Ring */}
+                                    <div className="relative w-full h-full rounded-full bg-white shadow-2xl flex items-center justify-center border-8 border-slate-50">
                                         <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                            {/* Background Circle */}
-                                            <circle
-                                                cx="128"
-                                                cy="128"
-                                                r="110"
-                                                fill="none"
-                                                stroke="#e2e8f0"
-                                                strokeWidth="16"
-                                            />
-                                            {/* Progress Circle with Gradient */}
+                                            <circle cx="144" cy="144" r="125" fill="none" stroke="#f1f5f9" strokeWidth="18" />
                                             <motion.circle
-                                                cx="128"
-                                                cy="128"
-                                                r="110"
-                                                fill="none"
-                                                stroke="url(#scoreGradient)"
-                                                strokeWidth="16"
-                                                strokeLinecap="round"
-                                                strokeDasharray={`${2 * Math.PI * 110}`}
-                                                initial={{ strokeDashoffset: 2 * Math.PI * 110 }}
-                                                animate={{
-                                                    strokeDashoffset: 2 * Math.PI * 110 * (1 - report.executive_summary.overall_maturity_index / 100)
-                                                }}
-                                                transition={{ duration: 2, ease: "easeOut" }}
+                                                cx="144" cy="144" r="125" fill="none" stroke="url(#detailedGrad)" strokeWidth="18" strokeLinecap="round"
+                                                strokeDasharray={`${2 * Math.PI * 125}`}
+                                                initial={{ strokeDashoffset: 2 * Math.PI * 125 }}
+                                                animate={{ strokeDashoffset: 2 * Math.PI * 125 * (1 - report.executive_summary.overall_maturity_index / 100) }}
+                                                transition={{ duration: 2.5, ease: "easeOut" }}
                                             />
                                             <defs>
-                                                <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                    <stop offset="0%" stopColor="#3b82f6" />
-                                                    <stop offset="50%" stopColor="#8b5cf6" />
-                                                    <stop offset="100%" stopColor="#ec4899" />
+                                                <linearGradient id="detailedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#2563eb" />
+                                                    <stop offset="100%" stopColor="#9333ea" />
                                                 </linearGradient>
                                             </defs>
                                         </svg>
-
-                                        {/* Score Display */}
                                         <div className="flex flex-col items-center">
-                                            <motion.div
-                                                initial={{ scale: 0 }}
-                                                animate={{ scale: 1 }}
-                                                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                                                className="text-7xl font-black bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-                                            >
+                                            <span className="text-8xl font-black bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                                 <AnimatedCounter value={report.executive_summary.overall_maturity_index} />
-                                            </motion.div>
-                                            <div className="mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                                Maturity Score
-                                            </div>
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Analytical Index</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Category Badge */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 1 }}
-                                    className="mb-4"
-                                >
-                                    <div className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full shadow-lg">
-                                        <h3 className="text-xl font-bold">{report.executive_summary.maturity_category}</h3>
+                                {/* Detailed Text context */}
+                                <div className="flex-1 space-y-6 relative z-10">
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold border border-blue-200">
+                                        <Activity className="w-4 h-4" /> Comprehensive Maturity Status
                                     </div>
-                                </motion.div>
-
-                                {/* Progress Bar */}
-                                <div className="w-full max-w-xs mb-4">
-                                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${report.executive_summary.overall_maturity_index}%` }}
-                                            transition={{ duration: 2, delay: 0.5 }}
-                                            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                <p className="text-sm text-slate-600 max-w-sm leading-relaxed">
-                                    {report.executive_summary.what_this_means[0]}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="lg:col-span-7 flex flex-col gap-6">
-                            <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-6 border-l-4 border-cyan-500 relative overflow-hidden min-h-[160px] shadow-lg">
-                                <div className="absolute right-0 top-0 w-32 h-32 bg-cyan-400 opacity-10 rounded-full blur-2xl"></div>
-                                <h4 className="text-xs font-bold text-cyan-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4" /> Strategic Directive
-                                </h4>
-                                <div className="text-xl font-medium text-slate-800 italic leading-relaxed">
-                                    "<TypewriterText text={report.executive_summary.executive_recommendation} delay={0.5} />"
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-2xl p-6 border-2 border-purple-100 shadow-lg">
-                                <h4 className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <FileText className="w-4 h-4" /> Executive Context
-                                </h4>
-                                <div className="space-y-4">
-                                    <p className="text-sm text-slate-700 leading-relaxed">
-                                        The organization is currently positioned at the <strong className="text-purple-600">{report.executive_summary.maturity_category}</strong> stage.
-                                        This indicates that {report.executive_summary.what_this_means?.[1] || report.executive_summary.what_this_means?.[0]?.toLowerCase() || "significant opportunities exist for improvement"}.
-                                        Critical attention is required in standardizing core processes to unlock the next level of operational efficiency.
+                                    <h3 className="text-4xl font-extrabold text-slate-900 leading-tight">
+                                        {report.executive_summary.maturity_category} Stage <span className="text-blue-600">Reached</span>
+                                    </h3>
+                                    <p className="text-lg text-slate-600 leading-relaxed italic border-l-4 border-blue-500 pl-6">
+                                        "{report.executive_summary.executive_recommendation}"
                                     </p>
-                                    <div className="grid sm:grid-cols-2 gap-3 mt-4">
-                                        {(report.executive_summary.key_observations || []).slice(0, 2).map((obs: string, i: number) => (
-                                            <div key={i} className="flex items-start gap-2 text-xs font-medium text-slate-600 bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
-                                                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" /> {obs}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {report.executive_summary.key_observations.slice(0, 4).map((obs: string, i: number) => (
+                                            <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                                    <ScanLine className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-700">{obs}</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </motion.section>
+                    ) : (
+                        /* STANDARD VIEW: Simplified Maturity Gauge */
+                        <div className="space-y-12">
+                            <div className="bg-white rounded-3xl p-10 shadow-xl border-2 border-emerald-100 flex flex-col md:flex-row items-center gap-12">
+                                <div className="w-full md:w-1/2 space-y-8">
+                                    <div>
+                                        <span className="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-2 block">Current Status</span>
+                                        <h3 className="text-5xl font-black text-slate-900">{report.executive_summary.maturity_category}</h3>
+                                    </div>
 
-                {/* 02 Comparative Gap Analysis */}
-                <motion.section variants={itemVariants} className="space-y-8">
-                    <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-purple-500 to-pink-500 pb-4">
-                        <span className="text-6xl font-black bg-gradient-to-br from-purple-200 to-pink-200 bg-clip-text text-transparent">02</span>
-                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Comparative Gap Analytics</h2>
-                    </div>
-
-                    {/* Explanatory Text */}
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-l-4 border-purple-500 shadow-md">
-                        <p className="text-sm text-slate-700 leading-relaxed mb-3">
-                            <strong className="text-purple-700">Analysis Method:</strong> This section visualizes performance gaps across multiple dimensions using radar and bar charts. The radar chart shows your organization's capability profile, while the bar chart highlights the delta between current performance and target benchmarks.
-                        </p>
-                        <p className="text-sm text-slate-700 leading-relaxed">
-                            <strong className="text-purple-700">Action Required:</strong> Focus on dimensions with the largest gaps (shown in red/orange). The diagnostic cards below identify specific weaknesses and provide targeted recommendations for immediate improvement.
-                        </p>
-                    </div>
-
-                    <div className="grid lg:grid-cols-2 gap-8">
-                        {/* Radar Chart */}
-                        <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-purple-100">
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-purple-400 to-pink-400 opacity-10 rounded-full blur-3xl"></div>
-                            <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-6">Maturity Spectrum</h4>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <RadarChart data={report.radar_data}>
-                                    <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
-                                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} />
-                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                    <Radar
-                                        name="Organization"
-                                        dataKey="A"
-                                        stroke="#8b5cf6"
-                                        fill="#8b5cf6"
-                                        fillOpacity={0.3}
-                                        strokeWidth={3}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: '#fff', border: '2px solid #8b5cf6', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                        itemStyle={{ color: '#1e293b', fontWeight: 600 }}
-                                    />
-                                </RadarChart>
-                            </ResponsiveContainer>
-                        </div>
-
-                        {/* Bar Chart */}
-                        <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-pink-100">
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-pink-400 to-rose-400 opacity-10 rounded-full blur-3xl"></div>
-                            <h4 className="text-sm font-bold text-pink-600 uppercase tracking-widest mb-6">Current vs Target Performance</h4>
-                            <ResponsiveContainer width="100%" height={350}>
-                                <BarChart data={comparativeData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                                    <XAxis type="number" domain={[0, 100]} hide />
-                                    <YAxis dataKey="name" type="category" width={75} tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} />
-                                    <Tooltip
-                                        cursor={{ fill: 'rgba(236,72,153,0.1)' }}
-                                        contentStyle={{ backgroundColor: '#fff', borderColor: '#ec4899', color: '#1e293b', borderRadius: '12px', border: '2px solid', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                    />
-                                    <Bar dataKey="Score" fill="url(#colorScore)" radius={[0, 8, 8, 0]} barSize={16} name="Current Score" />
-                                    <Bar dataKey="Target" fill="#f1f5f9" radius={[0, 8, 8, 0]} barSize={12} name="Target" stroke="#cbd5e1" strokeDasharray="3 3" />
-                                    <defs>
-                                        <linearGradient id="colorScore" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset="0%" stopColor="#ec4899" />
-                                            <stop offset="100%" stopColor="#f43f5e" />
-                                        </linearGradient>
-                                    </defs>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* Diagnostic Cards - Only in Detailed Report */}
-                    {isDetailed && (
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {report.dimension_deep_dives.slice(0, 3).map((dim: any, i: number) => {
-                                const cardColors = [
-                                    { bg: 'from-blue-50 to-cyan-50', border: 'border-blue-300', text: 'text-blue-700', accent: 'bg-blue-500' },
-                                    { bg: 'from-purple-50 to-pink-50', border: 'border-purple-300', text: 'text-purple-700', accent: 'bg-purple-500' },
-                                    { bg: 'from-orange-50 to-red-50', border: 'border-orange-300', text: 'text-orange-700', accent: 'bg-orange-500' }
-                                ];
-                                const color = cardColors[i];
-
-                                return (
-                                    <div key={i} className={`bg-gradient-to-br ${color.bg} rounded-2xl p-6 border-2 ${color.border} shadow-lg hover:shadow-xl transition-shadow`}>
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h5 className={`font-bold ${color.text} text-base`}>{dim.dimension}</h5>
-                                            <span className={`text-xs font-mono ${color.text} px-3 py-1 ${color.accent} bg-opacity-20 rounded-full`}>GAP: {100 - dim.score}%</span>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between text-sm font-bold">
+                                            <span className="text-slate-500 uppercase tracking-wider">Maturity Progress</span>
+                                            <span className="text-emerald-600">{report.executive_summary.overall_maturity_index}%</span>
                                         </div>
-                                        <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                                            Analysis reveals {dim.current_state?.[0]?.toLowerCase() || "areas requiring attention"}.
-                                        </p>
-                                        <div className={`text-xs font-medium ${color.text} bg-white p-3 rounded-lg border ${color.border}`}>
-                                            <strong>→ Action:</strong> {dim.recommendations[0]}
+                                        <div className="h-6 bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner border border-slate-200">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${report.executive_summary.overall_maturity_index}%` }}
+                                                transition={{ duration: 2 }}
+                                                className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full shadow-lg relative overflow-hidden"
+                                            >
+                                                <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)25%,transparent 25%,transparent 50%,rgba(255,255,255,0.2)50%,rgba(255,255,255,0.2)75%,transparent 75%,transparent)] bg-[length:40px_40px] animate-[slide_2s_linear_infinite]"></div>
+                                            </motion.div>
                                         </div>
                                     </div>
-                                );
-                            })}
+
+                                    <div className="bg-emerald-50 rounded-2xl p-6 border-2 border-emerald-100">
+                                        <p className="text-lg text-emerald-800 font-medium leading-relaxed">
+                                            {report.executive_summary.what_this_means[0]}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="w-full md:w-1/2 grid grid-cols-2 gap-4">
+                                    {[
+                                        { label: 'Top Strength', icon: TrendingUp, val: report.executive_summary.key_observations[0] },
+                                        { label: 'Priority Gap', icon: AlertTriangle, val: report.executive_summary.key_observations[2] },
+                                        { label: 'Assessment ID', icon: FileText, val: assessmentId },
+                                        { label: 'Generation Type', icon: Zap, val: 'Executive Brief' }
+                                    ].map((item, i) => (
+                                        <div key={i} className="p-6 rounded-[2rem] bg-slate-50 border border-slate-200 flex flex-col items-center text-center gap-4 hover:shadow-md transition-shadow">
+                                            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
+                                                <item.icon className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{item.label}</span>
+                                                <span className="text-xs font-bold text-slate-800 leading-tight">{item.val}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </motion.section>
 
+                {/* 02 Comparative Gap Analysis */}
+                <motion.section variants={itemVariants} className="space-y-8">
+                    <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
+                        <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">02</span>
+                        <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Comparative Gap Analytics</h2>
+                    </div>
+
+                    {isDetailed ? (
+                        /* DETAILED VIEW: Complex analytical charts */
+                        <>
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-l-4 border-purple-500 shadow-md">
+                                <p className="text-sm text-slate-700 leading-relaxed mb-3">
+                                    <strong className="text-purple-700">Analytical Deep-Dive:</strong> Technical visualization of performance deltas across all measured dimensions. The radar chart provides a multi-axial capability profile for strategic alignment assessment.
+                                </p>
+                            </div>
+
+                            <div className="grid lg:grid-cols-2 gap-8">
+                                <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-purple-100">
+                                    <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-6 text-center">Capability Footprint</h4>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <RadarChart data={report.radar_data}>
+                                            <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#475569', fontSize: 11, fontWeight: 600 }} />
+                                            <Radar name="Organization" dataKey="A" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} strokeWidth={3} />
+                                            <Tooltip />
+                                        </RadarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-pink-100">
+                                    <h4 className="text-sm font-bold text-pink-600 uppercase tracking-widest mb-6 text-center">Benchmark Variance</h4>
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <BarChart data={comparativeData} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                            <XAxis type="number" domain={[0, 100]} hide />
+                                            <YAxis dataKey="name" type="category" width={75} tick={{ fontSize: 10 }} />
+                                            <Bar dataKey="Score" fill="#ec4899" radius={[0, 8, 8, 0]} />
+                                            <Bar dataKey="Target" fill="#f1f5f9" radius={[0, 8, 8, 0]} stroke="#cbd5e1" strokeDasharray="3 3" />
+                                            <Tooltip />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        /* STANDARD VIEW: Simplified Performance Summary (No Charts) */
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="md:col-span-2 bg-white rounded-3xl p-8 shadow-xl border-2 border-slate-100">
+                                <h3 className="text-xl font-bold text-slate-900 mb-8 flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-emerald-600" /> Organizational Performance Index
+                                </h3>
+                                <div className="space-y-8">
+                                    {report.maturity_scorecard.slice(0, 5).map((item: any, i: number) => (
+                                        <div key={i} className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-bold text-slate-700">{item.dimension}</span>
+                                                <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${item.score < 50 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                    {item.score < 50 ? 'Critical' : 'Healthy'}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${item.score}%` }}
+                                                        className={`h-full bg-gradient-to-r ${item.score < 50 ? 'from-orange-400 to-red-500' : 'from-emerald-400 to-teal-500'}`}
+                                                    />
+                                                </div>
+                                                <span className="text-sm font-black text-slate-900 w-8">{item.score}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-emerald-900 text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-3xl"></div>
+                                <div>
+                                    <h3 className="text-2xl font-black mb-2">Industry <span className="text-emerald-400">Context</span></h3>
+                                    <p className="text-emerald-100 opacity-70 text-sm mb-8 italic">How you stack up against the market average.</p>
+
+                                    <div className="space-y-10">
+                                        <div className="relative pt-10 border-t border-white/20">
+                                            <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-emerald-500 rounded-full text-[10px] font-bold uppercase tracking-wider">Gap Analysis</div>
+                                            <div className="text-4xl font-black text-white">{100 - report.executive_summary.overall_maturity_index}%</div>
+                                            <div className="text-xs text-emerald-300 font-medium">Capture Opportunity</div>
+                                        </div>
+                                        <div className="relative pt-10 border-t border-white/20">
+                                            <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-blue-500 rounded-full text-[10px] font-bold uppercase tracking-wider">Benchmarking</div>
+                                            <div className="text-4xl font-black text-white">+12.4%</div>
+                                            <div className="text-xs text-blue-200 font-medium">Above Sector Average</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-white/10">
+                                    <button className="w-full py-4 bg-white text-emerald-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-50 transition-colors shadow-lg">
+                                        View Opportunities
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </motion.section>
+
+
+
                 {/* 03 Analysis Scorecard */}
                 {isDetailed && (
                     <motion.section variants={itemVariants} className="space-y-8">
-                        <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-green-500 to-emerald-500 pb-4">
-                            <span className="text-6xl font-black bg-gradient-to-br from-green-200 to-emerald-200 bg-clip-text text-transparent">03</span>
+                        <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
+                            <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">03</span>
                             <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Analysis Scorecard</h2>
                         </div>
 
                         {/* Explanatory Text */}
                         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-l-4 border-green-500 shadow-md">
-                            <p className="text-sm text-slate-700 leading-relaxed mb-3">
-                                <strong className="text-green-700">Detailed Breakdown:</strong> This comprehensive scorecard provides granular scores for each capability dimension, along with risk assessments. High-risk areas (red) require immediate attention, while medium-risk areas (amber) should be prioritized in your transformation roadmap.
-                            </p>
                             <p className="text-sm text-slate-700 leading-relaxed">
-                                <strong className="text-green-700">Scoring Methodology:</strong> Scores are calculated based on process maturity, technology adoption, data quality, and organizational readiness. The progress bars visualize achievement against best-practice benchmarks.
+                                <strong className="text-green-700">Detailed Breakdown:</strong> Granular assessment of organizational readiness and risk profiles across technical and process domains. High-risk areas are highlighted for prioritization in the strategic roadmap.
                             </p>
                         </div>
 
                         <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border-2 border-green-100">
                             <table className="w-full text-left border-collapse">
-                                <thead className="bg-gradient-to-r from-green-50 to-emerald-50">
+                                <thead className="bg-slate-50">
                                     <tr>
-                                        <th className="px-6 py-4 text-xs font-black text-green-700 uppercase tracking-wider">Dimension</th>
-                                        <th className="px-6 py-4 text-xs font-black text-green-700 uppercase tracking-wider">Score</th>
-                                        <th className="px-6 py-4 text-xs font-black text-green-700 uppercase tracking-wider text-right">Progress</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Dimension</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Analytical Score</th>
+                                        <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Risk Assessment</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200">
+                                <tbody className="divide-y divide-slate-100">
                                     {report.maturity_scorecard.map((item: any, i: number) => (
-                                        <tr key={i} className="group hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-colors">
-                                            <td className="px-6 py-5">
-                                                <span className="font-bold text-slate-800 block mb-1 group-hover:text-green-700 transition-colors">{item.dimension}</span>
-                                                <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-2 py-1 rounded-full ${item.risk_level.includes('High') ? 'bg-red-100 text-red-700' : item.risk_level.includes('Medium') ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                                        <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-6 py-4 font-bold text-slate-800">{item.dimension}</td>
+                                            <td className="px-6 py-4 text-2xl font-black text-center text-blue-600"><AnimatedCounter value={item.score} /></td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase ${item.risk_level.includes('High') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                                                     {item.risk_level}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <span className="text-3xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent"><AnimatedCounter value={item.score} duration={1} /></span>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <div className="w-full max-w-[200px] h-3 bg-slate-200 rounded-full ml-auto overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        whileInView={{ width: `${item.score}%` }}
-                                                        transition={{ duration: 1, delay: i * 0.1 }}
-                                                        className={`h-full rounded-full ${item.risk_level.includes('High') ? 'bg-gradient-to-r from-red-500 to-rose-500' : item.risk_level.includes('Medium') ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-green-500 to-emerald-500'} shadow-lg`}
-                                                    ></motion.div>
-                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -1725,6 +1694,6 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                 </div>
 
             </motion.main>
-        </div >
+        </div>
     );
 }

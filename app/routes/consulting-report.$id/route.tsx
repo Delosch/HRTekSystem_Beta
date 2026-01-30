@@ -27,11 +27,19 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
         console.log(`[Consulting Report Loader] User: ${user.organisationId}, Engine: ${params.id}`);
 
         const allPayments = await getCompanyPayments(user.organisationId);
-        const payment = allPayments.find(p => p.items?.some((i: any) => i.engineName === params.id));
-
-        const isPaid = payment?.status === "payment_verified";
-        const isPending = payment?.status === "payment_submitted";
         const isAdmin = (user as any).role === "ADMIN";
+
+        // Check if any payment record for this engine is verified
+        const isPaid = isAdmin || allPayments.some((p: any) =>
+            p.status === "payment_verified" &&
+            p.items?.some((i: any) => i.engineName.trim() === params.id?.trim())
+        );
+
+        // Check if any payment record for this engine is pending (submitted but not verified)
+        const isPending = !isPaid && allPayments.some((p: any) =>
+            p.status === "payment_submitted" &&
+            p.items?.some((i: any) => i.engineName.trim() === params.id?.trim())
+        );
 
         console.log(`[Consulting Report Loader] Payment Status - isPaid: ${isPaid}, isPending: ${isPending}, isAdmin: ${isAdmin}`);
 
@@ -155,5 +163,5 @@ export default function ConsultingReport() {
     }
 
     // Default to Digital Maturity Report (Figma Design)
-    return <DigitalMaturityReport data={data} brandName={brand_name || "Your Organization"} assessmentId={assessmentId} reportType={loaderData.reportType} />;
+    return <DigitalMaturityReport data={data} brandName={brand_name || "Your Organization"} assessmentId={assessmentId} reportType="detailed" />;
 }

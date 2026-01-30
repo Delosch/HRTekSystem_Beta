@@ -62,39 +62,10 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/testimonials" className="hover:text-white">
-                Testimonials
+              <Link to="/discover-more" className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 mt-2">
+                Discover More
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
               </Link>
-            </li>
-            <li>
-              <Link to="/video-tutorials" className="hover:text-white">
-                Video Tutorials
-              </Link>
-            </li>
-            <li>
-              <Link to="/recommendation" className="hover:text-white">
-                Recommendations
-              </Link>
-            </li>
-            <li>
-              <a href="/legal/term" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Terms & Conditions
-              </a>
-            </li>
-            <li>
-              <a href="/legal/privacy" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Privacy Policy
-              </a>
-            </li>
-            <li>
-              <a href="/legal/cookie" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Cookie Policy
-              </a>
-            </li>
-            <li>
-              <a href="/legal/gdpr" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                GDPR Compliance
-              </a>
             </li>
           </ul>
         </div>
