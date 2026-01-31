@@ -11,8 +11,8 @@ export const meta: MetaFunction = () => {
         title: "Pricing Plans - Affordable HR Transformation Solutions",
         description: "Explore HRTek System's flexible pricing plans for HR transformation. Choose from Starter, Professional, or Enterprise packages. Transparent pricing with no hidden fees.",
         keywords: "HR software pricing, HCM pricing, HR transformation cost, affordable HR solutions, enterprise HR pricing",
-        url: "https://hrteksystem.com/pricing",
-        image: "https://hrteksystem.com/og-pricing.jpg",
+        url: "https://www.hrteksystem.com/pricing",
+        image: "https://www.hrteksystem.com/og-pricing.jpg",
     });
 };
 
@@ -58,7 +58,7 @@ export default function PricingPage() {
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/pricing" />
+            <link rel="canonical" href="https://www.hrteksystem.com/pricing" />
 
             {/* Breadcrumb Schema */}
             <script

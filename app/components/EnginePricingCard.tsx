@@ -93,8 +93,8 @@ export default function EnginePricingCard({ engineId, productName, className = "
                             type="submit"
                             disabled={fetcher.state === 'submitting' || showSuccess}
                             className={`w-full py-2.5 px-6 rounded-xl font-bold shadow-lg transition-all active:scale-95 flex justify-center items-center gap-2 ${showSuccess
-                                    ? 'bg-emerald-600 text-white shadow-emerald-200'
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
+                                ? 'bg-emerald-600 text-white shadow-emerald-200'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-200'
                                 }`}
                         >
                             {fetcher.state === 'submitting' ? (
@@ -114,7 +114,7 @@ export default function EnginePricingCard({ engineId, productName, className = "
                     </fetcher.Form>
 
                     <Link
-                        to={`/payment/manual/invoice?engines=${engine.id}`}
+                        to={`/payment/manual?engines=${engine.id}`}
                         className="w-full bg-white border border-emerald-200 text-emerald-700 py-2.5 px-6 rounded-xl font-bold hover:bg-emerald-50 transition-colors text-center shadow-sm"
                     >
                         View Pricing Details
