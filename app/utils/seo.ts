@@ -17,8 +17,8 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
         title,
         description,
         keywords,
-        image = "https://hrteksystem.com/logo_icon_final.png",
-        url = "https://hrteksystem.com",
+        image = "https://www.hrteksystem.com/logo_icon_final.png",
+        url = "https://www.hrteksystem.com",
         type = "website",
         author = "HRTek System",
         publishedTime,
@@ -76,7 +76,7 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
             "@type": "ListItem",
             "position": index + 1,
             "name": item.name,
-            "item": `https://hrteksystem.com${item.url}`
+            "item": `https://www.hrteksystem.com${item.url}`
         }))
     };
 }
@@ -120,7 +120,7 @@ export function generateBlogPostSchema(post: {
             "name": "HRTek System",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://hrteksystem.com/logo_icon_final.png"
+                "url": "https://www.hrteksystem.com/logo_icon_final.png"
             }
         },
         "datePublished": post.datePublished,

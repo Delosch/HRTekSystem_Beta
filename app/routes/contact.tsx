@@ -22,13 +22,15 @@ import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { ToastContainer, toast } from "react-toastify";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
+import { verifyHCaptcha } from "~/utils/captcha.server";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 export const meta: MetaFunction = () => {
     return generateMeta({
         title: "Contact Us - Get Started with HR Transformation",
         description: "Ready to transform your HR operations? Contact HRTek System for a consultation. Email: support@hrteksystem.com | Phone: +91-9335870619. We're here to help you succeed.",
         keywords: "contact HRTek, HR consultation, get started, HR transformation inquiry, customer support, sales inquiry",
-        url: "https://hrteksystem.com/contact",
+        url: "https://www.hrteksystem.com/contact",
         image: "https://hrteksystem.com/og-contact.jpg",
     });
 };
@@ -58,6 +60,11 @@ export const action: ActionFunction = async ({ request }) => {
     // Honeypot Spam Check
     if (botCheck) {
         return json({ success: true, message: "Message sent successfully!" });
+    }
+
+    const hCaptchaToken = formData.get("h-captcha-response") as string;
+    if (!hCaptchaToken || !(await verifyHCaptcha(hCaptchaToken))) {
+        return json({ error: "Please complete the security verification." }, { status: 400 });
     }
 
     if (!firstName || !email || !message) {
@@ -124,6 +131,9 @@ export default function ContactUs() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const formRef = useRef<HTMLFormElement>(null);
+    const captchaRef = useRef<HCaptcha>(null);
+    const [siteKey, setSiteKey] = useState("");
+    const [captchaToken, setCaptchaToken] = useState("");
 
     const [selectedQuery, setSelectedQuery] = useState<keyof typeof QUERY_TYPES>("sales");
     const [responseTime, setResponseTime] = useState(QUERY_TYPES.sales.responseTime);
@@ -137,10 +147,25 @@ export default function ContactUs() {
         if (actionData?.success) {
             toast.success(actionData.message || "Message sent successfully!");
             formRef.current?.reset();
+            captchaRef.current?.resetCaptcha();
+            setCaptchaToken("");
         } else if (actionData?.error) {
             toast.error(actionData.error);
+            captchaRef.current?.resetCaptcha();
+            setCaptchaToken("");
         }
     }, [actionData]);
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const key = (window as any).ENV?.VITE_HCAPTCHA_SITE_KEY;
+            if (key) setSiteKey(key);
+        }
+    }, []);
+
+    const onCaptchaVerify = (token: string) => {
+        setCaptchaToken(token);
+    };
 
     const handleCopyPaste = (e: React.ClipboardEvent) => {
         e.preventDefault();
@@ -155,7 +180,7 @@ export default function ContactUs() {
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-outfit">
-            <link rel="canonical" href="https://hrteksystem.com/contact" />
+            <link rel="canonical" href="https://www.hrteksystem.com/contact" />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -610,6 +635,16 @@ export default function ContactUs() {
                                             className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all resize-none font-medium placeholder:text-slate-400"
                                             placeholder="Tell us about your current challenges, desired outcomes, or technology landscape..."
                                         />
+                                    </div>
+
+                                    <div className="flex justify-center mb-6">
+                                        {siteKey && (
+                                            <HCaptcha
+                                                sitekey={siteKey}
+                                                onVerify={onCaptchaVerify}
+                                                ref={captchaRef}
+                                            />
+                                        )}
                                     </div>
 
                                     <motion.button

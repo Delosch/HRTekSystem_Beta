@@ -83,8 +83,8 @@ export default function App() {
               "@type": "Organization",
               "name": "HRTek System",
               "alternateName": "HR-Tek System",
-              "url": "https://hrteksystem.com",
-              "logo": "https://hrteksystem.com/logo_icon_final.png",
+              "url": "https://www.hrteksystem.com",
+              "logo": "https://www.hrteksystem.com/logo_icon_final.png",
               "description": "AI-powered HR transformation platform offering digital maturity assessment, HCM vendor selection, roadmap generation, and change management solutions.",
               "foundingDate": "2025",
               "address": {
