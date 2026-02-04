@@ -20,7 +20,7 @@ import Footer from "~/components/Footer";
 import { sendSupportMessageEmail } from "~/lib/email.service.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
 import { verifyHCaptcha } from "~/utils/captcha.server";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
@@ -31,7 +31,7 @@ export const meta: MetaFunction = () => {
         description: "Ready to transform your HR operations? Contact HRTek System for a consultation. Email: support@hrteksystem.com | Phone: +91-9335870619. We're here to help you succeed.",
         keywords: "contact HRTek, HR consultation, get started, HR transformation inquiry, customer support, sales inquiry",
         url: "https://www.hrteksystem.com/contact",
-        image: "https://hrteksystem.com/og-contact.jpg",
+        image: "https://www.hrteksystem.com/logo_icon_final.png",
     });
 };
 
@@ -307,7 +307,7 @@ export default function ContactUs() {
                             transition={{ duration: 0.6, delay: 0.3 }}
                             className="lg:col-span-8"
                         >
-                            <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 p-10 md:p-14 border border-slate-100 relative">
+                            <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 p-6 md:p-14 border border-slate-100 relative">
                                 <div className="mb-12">
                                     <h2 className="text-3xl font-black text-[#000033] mb-4 tracking-tighter">Initiate Transformation</h2>
                                     <p className="text-slate-500 font-medium">Please fill out the form below. Our high-performance team will analyze your requirements and reach out with a strategic overview.</p>
@@ -343,7 +343,7 @@ export default function ContactUs() {
                                             <div className="flex gap-3">
                                                 <select
                                                     name="countryCode"
-                                                    className="w-24 px-3 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm"
+                                                    className="w-20 md:w-24 px-2 md:px-3 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium text-sm cursor-pointer"
                                                     defaultValue="+91"
                                                 >
                                                     <option value="+93">AF +93</option>
@@ -585,7 +585,7 @@ export default function ContactUs() {
                                                     type="tel"
                                                     name="phone"
                                                     placeholder="98765 43210"
-                                                    className="flex-1 px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium placeholder:text-slate-400"
+                                                    className="flex-1 min-w-0 px-4 md:px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium placeholder:text-slate-400"
                                                 />
                                             </div>
                                         </div>
@@ -688,7 +688,6 @@ export default function ContactUs() {
             </main>
 
             <Footer />
-            <ToastContainer position="bottom-right" theme="colored" />
         </div>
     );
 }
@@ -728,7 +727,7 @@ function InputField({ label, name, type = "text", placeholder, required = false 
                 name={name}
                 id={name}
                 required={required}
-                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium placeholder:text-slate-400"
+                className="w-full px-4 md:px-6 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-medium placeholder:text-slate-400"
                 placeholder={placeholder}
             />
         </div>

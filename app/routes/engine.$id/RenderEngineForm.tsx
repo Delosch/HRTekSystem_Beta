@@ -302,6 +302,7 @@ const FormSheet = ({
     if (currentStep < steps.length - 1) {
       setCurrentStep((p) => p + 1);
       setErrors({});
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       // Final completion
       if (onComplete) {
@@ -321,6 +322,7 @@ const FormSheet = ({
     if (currentStep > 0) {
       setCurrentStep((p) => p - 1);
       setErrors({});
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (onNavigateBack) {
       onNavigateBack();
     }
@@ -357,7 +359,7 @@ const FormSheet = ({
       </AnimatePresence>
 
       {/* Main Form Container */}
-      <div className="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-8 space-y-6 border border-gray-200">
+      <div className="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-4 sm:p-8 space-y-6 border border-gray-200">
         <h1 className="text-2xl font-extrabold text-gray-900 text-center mb-4">
           {title}
         </h1>

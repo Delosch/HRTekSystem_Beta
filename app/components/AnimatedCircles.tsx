@@ -75,15 +75,13 @@ export const AnimatedCircles = () => {
   // Base class for all circles
   const baseCircleClass = "rounded-full absolute bg-[radial-gradient(circle_at_center,#5A9553_0%,transparent_80%)] animate-[floatUpDown_ease-in-out_infinite]";
 
+  if (!isClient) return null;
+
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-      {isClient && (
-        <>
-          <style>{animationStyles}</style>
-          <style>{circleStyles}</style>
-        </>
-      )}
-      
+      <style>{animationStyles}</style>
+      <style>{circleStyles}</style>
+
       {Array.from({ length: NUM_CIRCLES }).map((_, index) => (
         <div key={index} className={`${baseCircleClass} circle-${index}`} />
       ))}

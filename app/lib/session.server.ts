@@ -32,14 +32,14 @@ try {
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
 const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
 const SESSIONS_TABLE = "sessions";
-const expiryTime = 60 * 60 * 60 * 24
+const expiryTime = 20 * 60 // 20 minutes in seconds
 
 // Create a cookie to store the session ID on the client.
 const session_cookie = createCookie("__session", {
     // These secrets are used to sign and encrypt the cookie's value, which is just the session ID.
     secrets: ["4d186321c1a7f0f354b297e8914ab240", "5d41402abc4b2a76b9719d911017c592", "16e2d966d4ab046e2442bc008b4da566", "608333adc72f545078ede3aad71bfe74", "c0e89a293bd36c7a768e4e9d2c5475a8"],
     httpOnly: true,
-    maxAge: expiryTime, // 1 hour
+    maxAge: expiryTime,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: '/',
@@ -58,7 +58,9 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         const sessionId = uuidv4();
         // DynamoDB uses epoch time for TTL.
         // It's important to have a TTL attribute enabled on the DynamoDB table for this to work.
-        const expiresAt = expires ? Math.floor(Date.now() / 1000) + expiryTime : undefined;
+        // If Remix provides an 'expires' date (from cookie maxAge), use it.
+        // Otherwise, default to Date.now() + expiryTime.
+        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : Math.floor(Date.now() / 1000) + expiryTime;
 
         // Use the PutCommand to store the session data.
         const command = new PutCommand({
@@ -96,7 +98,8 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
 
         const nowInSeconds = Math.floor(Date.now() / 1000);
         // Check if the session has expired based on the TTL.
-        if (Item.expires && Item.expires < nowInSeconds) {
+        // FIX: The database stores this as 'expiresAt', not 'expires'
+        if (Item.expiresAt && Item.expiresAt < nowInSeconds) {
             // If expired, delete the session and return null.
             const command = new DeleteCommand({
                 TableName: SESSIONS_TABLE,
@@ -120,7 +123,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         if (!sessionId) {
             return;
         }
-        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : undefined;
+        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : Math.floor(Date.now() / 1000) + expiryTime;
 
         const command = new PutCommand({
             TableName: SESSIONS_TABLE,

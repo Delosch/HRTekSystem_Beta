@@ -63,7 +63,7 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
 
         // Additional SEO
         { name: "theme-color", content: "#000033" },
-        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "mobile-web-app-capable", content: "yes" },
         { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ];
 }

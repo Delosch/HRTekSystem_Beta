@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => {
         description: "Explore HRTek System's flexible pricing plans for HR transformation. Choose from Starter, Professional, or Enterprise packages. Transparent pricing with no hidden fees.",
         keywords: "HR software pricing, HCM pricing, HR transformation cost, affordable HR solutions, enterprise HR pricing",
         url: "https://www.hrteksystem.com/pricing",
-        image: "https://www.hrteksystem.com/og-pricing.jpg",
+        image: "https://www.hrteksystem.com/logo_icon_final.png",
     });
 };
 
@@ -87,7 +87,7 @@ export default function PricingPage() {
                         </div>
 
                         {/* Main Heading */}
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8">
+                        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8">
                             The Intelligence Layer
                             <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                                 For HR Transformation
@@ -179,10 +179,10 @@ export default function PricingPage() {
                                     </div>
                                     <div className="text-center lg:text-right space-y-6">
                                         <div>
-                                            <div className="text-gray-400 line-through text-2xl font-bold">
+                                            <div className="text-gray-400 line-through text-xl sm:text-2xl font-bold">
                                                 {formatCurrency(bundle.regularPrice, "INR")}
                                             </div>
-                                            <div className="text-6xl font-bold text-green-600 tracking-tighter">
+                                            <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-green-600 tracking-tighter">
                                                 {formatCurrency(bundle.bundlePrice, "INR")}
                                             </div>
                                         </div>
@@ -220,8 +220,8 @@ export default function PricingPage() {
                             {tiers.map((tier) => (
                                 <div
                                     key={tier.id}
-                                    className={`relative rounded-[2.5rem] p-10 flex flex-col transition-all duration-500 group border-2 ${tier.id === "enterprise"
-                                        ? "bg-gradient-to-br from-blue-900 via-[#000814] to-indigo-950 border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.3)] scale-110 z-20"
+                                    className={`relative rounded-[2.5rem] p-8 sm:p-10 flex flex-col transition-all duration-500 group border-2 ${tier.id === "enterprise"
+                                        ? "bg-gradient-to-br from-blue-900 via-[#000814] to-indigo-950 border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.3)] lg:scale-110 z-20"
                                         : "bg-[#0b132b] border-[#1c2a4a] hover:border-blue-400/50 hover:bg-[#121f3d]"
                                         }`}
                                 >

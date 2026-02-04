@@ -31,7 +31,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     const { getCompanyProfile } = await import("~/models/company.model.server");
 
     const ddbDocClient = getDynamoDBDocumentClient();
-    const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+    const USERS_TABLE = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
     // Find the report by SK (reportId is the SK like ANALYSIS#timestamp)
     const scanCommand = new ScanCommand({

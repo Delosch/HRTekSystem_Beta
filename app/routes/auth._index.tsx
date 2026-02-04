@@ -5,6 +5,7 @@ import { signupUser, loginUser } from "~/models/user.model.server";
 import { createAuthSession } from "~/lib/session.server";
 import { validateSubmissionHash } from "~/lib/auth.server";
 import AuthForm from "~/components/AuthCards";
+import Navbar from "~/components/HomePageComponents/Navbar";
 import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
 import { z } from "zod";
@@ -284,12 +285,15 @@ export default function Auth() {
     }, [actionData]);
 
     return (
-        <section className="relative w-full h-screen bg-white flex items-center justify-center p-4">
-            <AnimatedCircles />
-            <div className="relative z-10">
-                <AuthForm />
-            </div>
-            <ToastContainer position="bottom-right" />
-        </section>
+        <div className="min-h-screen flex flex-col bg-white">
+            <Navbar />
+            <section className="relative flex-1 flex items-center justify-center p-4 pt-20">
+                <AnimatedCircles />
+                <div className="relative z-10">
+                    <AuthForm />
+                </div>
+                <ToastContainer position="bottom-right" />
+            </section>
+        </div>
     );
 }

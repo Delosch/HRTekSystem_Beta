@@ -5,6 +5,7 @@ import { Brain, CheckCircle, Clock, XCircle, AlertCircle, Sparkles, TrendingUp, 
 import { motion } from "framer-motion";
 import { getPricingForCompany, PRICING_TIERS } from "~/utils/pricing.server";
 import { getCompanyProfile } from "~/models/company.model.server";
+import Navbar from "~/components/HomePageComponents/Navbar";
 
 /**
  * HTI Dashboard - Ultra-Attractive Design with Pricing
@@ -159,6 +160,7 @@ export default function HTIDashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+            <Navbar />
             {/* Ultra-Attractive Header */}
             <div className="relative bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900 text-white py-16 overflow-hidden">
                 {/* Animated background */}

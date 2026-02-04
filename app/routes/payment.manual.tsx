@@ -2,7 +2,7 @@ import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-r
 import { useLoaderData, Form, useNavigation } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
 import { useState } from "react";
-import { CreditCard, Building2, Smartphone, QrCode, Upload, CheckCircle } from "lucide-react";
+import { CreditCard, Building2, Smartphone, QrCode, Upload, CheckCircle, X } from "lucide-react";
 import { ENGINE_PRICING, BUNDLE_PRICING } from "~/config/pricing.config";
 import { formatCurrency } from "~/services/pricing.calculator";
 
@@ -83,6 +83,40 @@ export default function ManualPayment() {
     const isSubmitting = navigation.state === "submitting";
 
     const [selectedMethod, setSelectedMethod] = useState<"bank" | "upi" | "qr">("bank");
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [fileName, setFileName] = useState<string | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setFileName(file.name);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    setFileName("pasted-image.png");
+                    const url = URL.createObjectURL(blob);
+                    setPreviewUrl(url);
+
+                    // Create a mockup file for the input
+                    const file = new File([blob], "pasted-image.png", { type: blob.type });
+                    const container = new DataTransfer();
+                    container.items.add(file);
+                    const input = document.getElementById("payment-proof") as HTMLInputElement;
+                    if (input) {
+                        input.files = container.files;
+                    }
+                }
+            }
+        }
+    };
 
     const paymentMethods = [
         {
@@ -117,7 +151,12 @@ export default function ManualPayment() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12">
+        <div
+            className="min-h-screen bg-gray-50 py-12 select-none"
+            onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+        >
             <div className="max-w-6xl mx-auto px-6">
                 <div className="bg-white rounded-2xl shadow-lg p-8">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">Complete Your Payment</h1>
@@ -286,23 +325,49 @@ export default function ManualPayment() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Upload Payment Proof (Screenshot) *
                                     </label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
-                                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                        <input
-                                            type="file"
-                                            name="paymentProof"
-                                            accept="image/*"
-                                            required
-                                            className="hidden"
-                                            id="payment-proof"
-                                        />
-                                        <label htmlFor="payment-proof" className="cursor-pointer">
-                                            <span className="text-blue-600 font-medium hover:text-blue-700">
-                                                Click to upload
-                                            </span>
-                                            <span className="text-gray-600"> or drag and drop</span>
-                                            <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-                                        </label>
+                                    <div
+                                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-all group relative bg-white overflow-hidden min-h-[200px] flex flex-col items-center justify-center"
+                                        onPaste={handlePaste}
+                                    >
+                                        {previewUrl ? (
+                                            <div className="relative w-full h-full flex flex-col items-center">
+                                                <img
+                                                    src={previewUrl}
+                                                    alt="Payment Proof Preview"
+                                                    className="max-h-64 object-contain rounded-lg shadow-md mb-4"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setPreviewUrl(null); setFileName(null); }}
+                                                    className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 shadow-lg"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                                <p className="text-sm font-medium text-green-600 flex items-center gap-1">
+                                                    <CheckCircle className="w-4 h-4" /> {fileName}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3 group-hover:text-blue-500 transition-colors" />
+                                                <input
+                                                    type="file"
+                                                    name="paymentProof"
+                                                    accept="image/*"
+                                                    required
+                                                    className="hidden"
+                                                    id="payment-proof"
+                                                    onChange={handleFileChange}
+                                                />
+                                                <label htmlFor="payment-proof" className="cursor-pointer">
+                                                    <span className="text-blue-600 font-bold hover:text-blue-700">
+                                                        Click/Paste to upload
+                                                    </span>
+                                                    <span className="text-gray-600"> or drag and drop</span>
+                                                    <p className="text-xs text-gray-500 mt-2">PNG, JPG up to 5MB</p>
+                                                </label>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
