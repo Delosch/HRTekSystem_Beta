@@ -26,26 +26,18 @@ export default function AdminLayout() {
   };
 
   if (isLoginPage) {
-    return (
-      <>
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-      </>
-    );
+    return <Outlet />;
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 font-inter">
+    <div className="flex h-screen bg-slate-50/50 font-inter text-slate-900">
       <Sidebar isExpanded={isSidebarExpanded} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header toggleSidebar={toggleSidebar} isSidebarExpanded={isSidebarExpanded} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto custom-scrollbar relative z-0">
           <Outlet /> {/* Renders child routes like admin._index.tsx */}
         </main>
       </div>
-      <ScrollRestoration />
-      <Scripts />
     </div>
   );
 }

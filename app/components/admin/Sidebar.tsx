@@ -1,20 +1,21 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation } from "@remix-run/react";
 import {
-  ChevronRightIcon,
-  HomeIcon,
-  BuildingOffice2Icon,
-  CreditCardIcon,
-  AcademicCapIcon,
-  GlobeAltIcon,
-  UserGroupIcon,
-  ShieldCheckIcon,
-  Cog6ToothIcon,
-  ChartPieIcon,
-  PresentationChartLineIcon,
-  ListBulletIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
+  LayoutDashboard,
+  Building2,
+  Users,
+  CheckSquare,
+  Sparkles,
+  CreditCard,
+  ShieldCheck,
+  ListTodo,
+  BarChart3,
+  Globe,
+  Settings2,
+  ChevronRight,
+  LogOut,
+  UserCircle
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
@@ -23,202 +24,117 @@ interface SidebarProps {
 
 interface SidebarItem {
   label: string;
-  href?: string;
-  icon: React.ElementType;
-  items?: SidebarItem[];
+  href: string;
+  icon: any;
 }
 
 const adminSidebarItems: SidebarItem[] = [
-  {
-    label: "Dashboard",
-    href: "/admin",
-    icon: HomeIcon,
-  },
-  {
-    label: "Companies",
-    href: "/admin/companies",
-    icon: BuildingOffice2Icon,
-  },
-  {
-    label: "Users",
-    href: "/admin/users",
-    icon: UserGroupIcon,
-  },
-  {
-    label: "Assessments",
-    href: "/admin/assessments",
-    icon: AcademicCapIcon,
-  },
-  {
-    label: "AI Analysis",
-    href: "/admin/reports",
-    icon: SparklesIcon,
-  },
-  {
-    label: "Payments",
-    href: "/admin/payments/verification",
-    icon: CreditCardIcon,
-  },
-  {
-    label: "HTI Approvals",
-    href: "/admin/hti",
-    icon: ShieldCheckIcon,
-  },
-  {
-    label: "System Logs",
-    href: "/admin/activity-logs",
-    icon: ListBulletIcon,
-  },
-  {
-    label: 'Website Analytics',
-    href: "/admin/website/analytics",
-    icon: PresentationChartLineIcon,
-  },
-  {
-    label: 'Website Content',
-    href: "/admin/website/home",
-    icon: GlobeAltIcon,
-  },
-  {
-    label: "Roles & Security",
-    href: "/admin/roles",
-    icon: ShieldCheckIcon,
-  },
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { label: "Companies", href: "/admin/companies", icon: Building2 },
+  { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Assessments", href: "/admin/assessments", icon: CheckSquare },
+  { label: "AI Analysis", href: "/admin/reports", icon: Sparkles },
+  { label: "Payments", href: "/admin/payments/verification", icon: CreditCard },
+  { label: "HTI Approvals", href: "/admin/hti", icon: ShieldCheck },
+  { label: "System Logs", href: "/admin/activity-logs", icon: ListTodo },
+  { label: "Website Analytics", href: "/admin/website/analytics", icon: BarChart3 },
+  { label: "Website Content", href: "/admin/website/home", icon: Globe },
+  { label: "Roles & Security", href: "/admin/roles", icon: ShieldCheck },
 ];
 
-function classNames(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function Sidebar({ isExpanded }: SidebarProps) {
-  const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const location = useLocation();
-
-  const toggleSubMenu = (name: string) => {
-    setOpenSubMenu(openSubMenu === name ? null : name);
-  };
 
   return (
     <motion.div
-      animate={{ width: isExpanded ? 260 : 88 }}
-      className="flex flex-col bg-slate-900 text-white shadow-2xl h-screen sticky top-0 transition-all duration-300 ease-in-out z-30 overflow-hidden"
+      animate={{ width: isExpanded ? 280 : 88 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="flex flex-col bg-[#000033] text-white shadow-2xl h-screen sticky top-0 z-30 overflow-hidden"
     >
       {/* Brand Logo */}
-      <div className="flex items-center h-20 px-6 border-b border-white/5 bg-slate-950/20">
-        <div className="h-10 w-10 flex-shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/40">
-          <ChartPieIcon className="h-6 w-6 text-white" />
-        </div>
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.span
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="ml-4 text-xl font-bold tracking-tight text-white"
-            >
-              HR<span className="text-indigo-400">Tek</span> Admin
-            </motion.span>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center h-24 px-6 mb-4">
+        <Link to="/admin" className="flex items-center gap-3">
+          <div className="h-10 w-10 flex-shrink-0 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/40 transform hover:rotate-12 transition-transform">
+            <LayoutDashboard className="h-6 w-6 text-white" />
+          </div>
+          <AnimatePresence mode="wait">
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="flex flex-col"
+              >
+                <span className="text-xl font-black tracking-tighter text-white">
+                  HR<span className="text-indigo-400">Tek</span> Admin
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-8 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-2">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-4">
         {adminSidebarItems.map((item) => (
-          <div key={item.label}>
-            {item.items ? (
-              <div className="space-y-1">
-                <button
-                  onClick={() => toggleSubMenu(item.label)}
-                  className={classNames(
-                    "flex items-center w-full px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none group",
-                    openSubMenu === item.label
-                      ? "bg-white/5 text-white"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
-                  )}
+          <NavLink
+            key={item.label}
+            to={item.href}
+            className={({ isActive }) =>
+              `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[13px] font-bold transition-all duration-200 group relative ${isActive
+                ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/30 active:scale-95"
+                : "text-slate-400 hover:bg-white/5 hover:text-white"
+              }`
+            }
+            end={item.href === "/admin"}
+          >
+            <item.icon className="h-5 w-5 shrink-0 transition-transform group-hover:scale-110" />
+            <AnimatePresence mode="wait">
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="whitespace-nowrap"
                 >
-                  <item.icon className={classNames(
-                    "h-6 w-6 shrink-0 transition-colors",
-                    openSubMenu === item.label ? "text-indigo-400" : "group-hover:text-indigo-400"
-                  )} />
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex flex-1 items-center ml-4"
-                      >
-                        <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
-                        <ChevronRightIcon
-                          className={classNames(
-                            "h-4 w-4 transition-transform duration-200 opacity-50",
-                            openSubMenu === item.label ? "rotate-90" : ""
-                          )}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </button>
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+            {!isExpanded && (
+              <div className="absolute left-full ml-6 px-3 py-2 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-2xl border border-white/5">
+                {item.label}
               </div>
-            ) : (
-              <NavLink
-                to={item.href || "#"}
-                className={({ isActive }) =>
-                  classNames(
-                    "flex items-center px-3 py-3 rounded-xl text-sm font-bold transition-all duration-200 group relative",
-                    isActive
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
-                  )
-                }
-                end
-              >
-                <item.icon className="h-6 w-6 shrink-0" />
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="ml-4 whitespace-nowrap"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-                {/* Tooltip for collapsed state */}
-                {!isExpanded && (
-                  <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-xl border border-white/10">
-                    {item.label}
-                  </div>
-                )}
-              </NavLink>
             )}
-          </div>
+          </NavLink>
         ))}
       </nav>
 
       {/* Footer / Profile Mini */}
-      <div className="p-4 border-t border-white/5 bg-slate-950/20">
-        <Link to="/admin/profile" className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group">
-          <div className="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center text-xs font-bold text-white shadow-md">
+      <div className="p-4 mt-auto">
+        <Link
+          to="/admin/profile"
+          className="flex items-center gap-3 p-3 rounded-[20px] bg-white/5 hover:bg-white/10 transition-all group border border-white/5"
+        >
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-xs font-black text-white shadow-lg overflow-hidden shrink-0">
             AD
           </div>
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {isExpanded && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex-1 overflow-hidden"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="flex-1 min-w-0"
               >
-                <p className="text-xs font-bold text-white truncate">Administrator</p>
-                <p className="text-[10px] font-medium text-slate-500 truncate italic">Manage Platform</p>
+                <p className="text-xs font-black text-white truncate uppercase tracking-tight leading-none mb-1">Administrator</p>
+                <p className="text-[10px] font-bold text-slate-500 truncate leading-none">Manage Platform</p>
               </motion.div>
             )}
           </AnimatePresence>
-          {isExpanded && <Cog6ToothIcon className="h-5 w-5 text-slate-600 group-hover:text-indigo-400 transition-colors" />}
+          {isExpanded && (
+            <Settings2 className="h-4 w-4 text-slate-500 group-hover:text-white transition-colors rotate-0 group-hover:rotate-90" />
+          )}
         </Link>
       </div>
     </motion.div>

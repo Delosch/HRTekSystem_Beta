@@ -81,7 +81,7 @@ export default function Index() {
               <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">
                 Powered by Cognitive AI
               </span>
-              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 leading-tight px-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 leading-tight px-4 sm:px-0">
                 Reinvent Your HR Ecosystem with Cognitive AI
               </h2>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed px-4">
@@ -140,7 +140,7 @@ export default function Index() {
               <span className="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-sm font-semibold mb-4">
                 How We Work
               </span>
-              <h3 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 mb-4">
+              <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 mb-4 px-2">
                 Cognitive AI Aligned Engagement Model
               </h3>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -364,9 +364,9 @@ export default function Index() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
           </div>
 
-          <div className="relative max-w-7xl mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
-            <p className="text-lg md:text-xl text-blue-100 mb-10 max-w-5xl mx-auto">
+          <div className="relative max-w-7xl mx-auto px-6 text-center">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">Ready to transform your HR operations?</h2>
+            <p className="text-base sm:text-lg md:text-xl text-blue-100 mb-10 max-w-5xl mx-auto">
               Join the organizations that are already optimizing their workforce with HR-Tek System.
             </p>
             <Link

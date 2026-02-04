@@ -11,8 +11,10 @@ import {
   User,
   LogOut,
   Menu,
-  X
+  X,
+  Sparkles
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Navbar() {
   const location = useLocation();
@@ -23,6 +25,7 @@ export default function Navbar() {
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileEnginesOpen, setIsMobileEnginesOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +38,13 @@ export default function Navbar() {
       }
     }
   }, [pathname, hash]);
+
+  // Reset mobile states when menu closes
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      setIsMobileEnginesOpen(false);
+    }
+  }, [isMobileMenuOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -112,20 +122,33 @@ export default function Navbar() {
             />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-xl md:text-2xl font-black tracking-tighter leading-none">
-              <span className="text-white">HR-TEK</span>{" "}
-              <span className="text-[#00B5E2]">SYSTEM</span>
-            </h1>
+            {pathname === "/" ? (
+              <div className="text-xl md:text-2xl font-black tracking-tighter leading-none">
+                <span className="text-white">HR-TEK</span>{" "}
+                <span className="text-[#00B5E2]">SYSTEM</span>
+              </div>
+            ) : (
+              <div className="text-xl md:text-2xl font-black tracking-tighter leading-none">
+                <span className="text-white">HR-TEK</span>{" "}
+                <span className="text-[#00B5E2]">SYSTEM</span>
+              </div>
+            )}
           </div>
         </Link>
 
         {/* Center: Navigation Links (Desktop) */}
         <div className="hidden lg:flex items-center space-x-2 ml-10">
-          <Link to="/">
-            <button className={pathname === "/" && !hash ? activeStyle : inactiveStyle}>Home</button>
+          <Link
+            to="/"
+            className={pathname === "/" && !hash ? activeStyle : inactiveStyle}
+          >
+            Home
           </Link>
-          <Link to="/about-us">
-            <button className={pathname === "/about-us" ? activeStyle : inactiveStyle}>About Us</button>
+          <Link
+            to="/about-us"
+            className={pathname === "/about-us" ? activeStyle : inactiveStyle}
+          >
+            About Us
           </Link>
 
           <div className="relative" ref={dropdownRef}>
@@ -169,11 +192,17 @@ export default function Navbar() {
             </div>
           </div>
 
-          <Link to="/pricing">
-            <button className={pathname === "/pricing" ? activeStyle : inactiveStyle}>Pricing</button>
+          <Link
+            to="/pricing"
+            className={pathname === "/pricing" ? activeStyle : inactiveStyle}
+          >
+            Pricing
           </Link>
-          <Link to="/contact">
-            <button className={pathname === "/contact" ? activeStyle : inactiveStyle}>Contact Us</button>
+          <Link
+            to="/contact"
+            className={pathname === "/contact" ? activeStyle : inactiveStyle}
+          >
+            Contact Us
           </Link>
         </div>
 
@@ -212,10 +241,11 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link to="/auth">
-                <button className="px-8 py-2.5 rounded-full bg-white text-[#000033] font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white">
-                  Login | SignUp
-                </button>
+              <Link
+                to="/auth"
+                className="px-8 py-2.5 rounded-full bg-white text-[#000033] font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white flex items-center justify-center"
+              >
+                Login | SignUp
               </Link>
             )}
           </div>
@@ -223,71 +253,154 @@ export default function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all"
+            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-xl transition-all relative z-[10001]"
+            aria-label="Toggle Menu"
           >
-            {isMobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+            {isMobileMenuOpen ? (
+              <X className="w-8 h-8 text-white transition-transform duration-300" />
+            ) : (
+              <Menu className="w-8 h-8 text-white transition-transform duration-300" />
+            )}
           </button>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        <div
-          className={`lg:hidden fixed inset-0 top-[73px] bg-[#000033]/98 backdrop-blur-xl z-[9999] transition-all duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'}`}
-        >
-          <div className="flex flex-col p-6 h-full overflow-y-auto">
-            <div className="space-y-4 mb-8">
-              <Link to="/" className={pathname === "/" && !hash ? mobileActiveStyle : mobileInactiveStyle}>Home</Link>
-              <Link to="/about-us" className={pathname === "/about-us" ? mobileActiveStyle : mobileInactiveStyle}>About Us</Link>
+        {/* Mobile Navigation Menu - Enhanced modern glassmorphism drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <div className="lg:hidden fixed inset-0 z-[10000]">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-[#000033]/60 backdrop-blur-sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+              ></motion.div>
 
-              <div className="space-y-2">
-                <p className="px-4 text-[10px] font-bold text-white/40 uppercase tracking-widest mt-4">Transformation Engines</p>
-                {serviceItems.map((item, idx) => (
+              {/* Drawer Content */}
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute top-0 right-0 w-[80%] max-w-sm h-screen bg-[#000033] shadow-2xl border-l border-white/10 flex flex-col p-8 pt-24"
+              >
+                <div className="flex flex-col space-y-2 overflow-y-auto pb-10">
                   <Link
-                    key={idx}
-                    to={item.to}
-                    className={pathname === item.to ? mobileActiveStyle : mobileInactiveStyle}
+                    to="/"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/" && !hash ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                    </div>
+                    Home
                   </Link>
-                ))}
-              </div>
+                  <Link
+                    to="/about-us"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    About Us
+                  </Link>
 
-              <Link to="/pricing" className={pathname === "/pricing" ? mobileActiveStyle : mobileInactiveStyle}>Pricing</Link>
-              <Link to="/contact" className={pathname === "/contact" ? mobileActiveStyle : mobileInactiveStyle}>Contact Us</Link>
-            </div>
+                  <div className="pt-4 border-t border-white/10 mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileEnginesOpen(!isMobileEnginesOpen)}
+                      className="w-full flex items-center justify-between py-3 text-xl font-bold text-white hover:text-[#00B5E2] transition-colors"
+                    >
+                      Engines
+                      <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isMobileEnginesOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-            <div className="mt-auto pt-6 border-t border-white/10">
-              {user ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 px-4 py-2">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20">
-                      <User className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-bold">{user.first_name} {user.last_name}</p>
-                      <p className="text-[#00B5E2] text-xs font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
-                    </div>
+                    <AnimatePresence>
+                      {isMobileEnginesOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="grid grid-cols-1 gap-4 py-4 pl-4 border-l border-white/10 mt-2">
+                            {serviceItems.map((item, idx) => (
+                              <Link
+                                key={idx}
+                                to={item.to}
+                                className={`flex items-center gap-4 py-2 transition-all ${pathname === item.to ? 'text-[#00B5E2] translate-x-1' : 'text-white/70 hover:text-white hover:translate-x-1'}`}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <div className={`p-2 rounded-lg bg-white/5`}>
+                                  <item.icon className="w-5 h-5" />
+                                </div>
+                                <span className="font-semibold text-sm">{item.label}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Link to="/dashboard" className="flex items-center justify-center gap-2 py-3 bg-white/10 rounded-xl text-white font-bold">
-                      <User className="w-4 h-4" /> Dashboard
+
+                  <div className="pt-4 border-t border-white/10 mt-2 flex flex-col space-y-2">
+                    <Link
+                      to="/pricing"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`text-xl font-bold py-3 transition-colors ${pathname === "/pricing" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                    >
+                      Pricing
                     </Link>
-                    <Link to="/logout" className="flex items-center justify-center gap-2 py-3 bg-red-500/20 rounded-xl text-red-500 font-bold border border-red-500/20">
-                      <LogOut className="w-4 h-4" /> Logout
+                    <Link
+                      to="/contact"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`text-xl font-bold py-3 transition-colors ${pathname === "/contact" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                    >
+                      Contact Us
                     </Link>
+                  </div>
+
+                  <div className="mt-8 pt-8 border-t border-white/10">
+                    {user ? (
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border border-white/20">
+                            <User className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-bold truncate">{user.first_name} {user.last_name}</p>
+                            <p className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-center gap-2 py-4 bg-white text-[#000033] rounded-xl font-bold shadow-lg"
+                          >
+                            <User className="w-4 h-4" /> Dashboard
+                          </Link>
+                          <Link
+                            to="/logout"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center justify-center gap-2 py-4 border border-red-500/30 text-red-500 rounded-xl font-bold"
+                          >
+                            <LogOut className="w-4 h-4" /> Logout
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        to="/auth"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-center py-4 bg-gradient-to-r from-[#00B5E2] to-[#0077b6] text-white font-black rounded-xl shadow-lg active:scale-95 transition-all text-sm tracking-widest"
+                      >
+                        LOGIN | SIGNUP
+                      </Link>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <Link to="/auth" className="block w-full text-center py-4 bg-white text-[#000033] font-black rounded-2xl shadow-xl">
-                  Login | SignUp
-                </Link>
-              )}
+              </motion.div>
             </div>
-          </div>
-        </div>
+          )}
+        </AnimatePresence>
       </nav>
     </div>
   );

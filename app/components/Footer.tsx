@@ -16,10 +16,10 @@ export default function Footer() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-black tracking-tighter leading-none">
+              <div className="text-2xl font-black tracking-tighter leading-none">
                 <span className="text-white">HR-TEK</span>{" "}
                 <span className="text-[#00B5E2]">SYSTEM</span>
-              </h1>
+              </div>
 
             </div>
           </Link>
@@ -52,8 +52,8 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/blog" className="hover:text-white">
-                Blogs
+              <Link to="/articles" className="hover:text-white">
+                Articles
               </Link>
             </li>
             <li>

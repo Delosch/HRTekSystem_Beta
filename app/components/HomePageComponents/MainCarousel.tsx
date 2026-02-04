@@ -40,22 +40,22 @@ export default function Carousel() {
               <div className="relative max-w-7xl mx-auto px-6 py-12 lg:py-16 z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                   {/* Left Side: Content */}
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span className="text-white/90 text-sm font-medium">Agentic AI-Powered Platform</span>
+                      <span className="text-white/90 text-xs sm:text-sm font-medium">Agentic AI-Powered Platform</span>
                     </div>
 
                     {/* Main Heading */}
-                    <div className="space-y-4">
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                    <div className="space-y-4 text-center lg:text-left">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
                         Turning HR Digital Complexity into
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                           Cognitive Clarity
                         </span>
                       </h1>
-                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                      <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         Leverage smart software to upgrade your HR ecosystem
                       </p>
                     </div>
@@ -65,15 +65,17 @@ export default function Carousel() {
 
 
                     {/* CTA Button */}
-                    <Link
-                      to="/auth"
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-bold text-lg rounded-xl shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
-                    >
-                      Join Us Today!
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </Link>
+                    <div className="flex justify-center lg:justify-start">
+                      <Link
+                        to="/auth"
+                        className="inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-yellow-400 hover:bg-yellow-300 text-[#0B2A57] font-bold text-base sm:text-lg rounded-xl shadow-2xl hover:shadow-yellow-400/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+                      >
+                        Join Us Today!
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                    </div>
                   </div>
 
                   {/* Right Side: Image */}
@@ -86,7 +88,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg3.png"
                         alt="Multi-armed robot efficiently managing various HR tasks"
-                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                        className="w-full h-auto max-h-[400px] lg:max-h-[700px] object-contain drop-shadow-2xl transform scale-100 lg:scale-110 hover:scale-105 lg:hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>
@@ -106,25 +108,25 @@ export default function Carousel() {
                 }}></div>
               </div>
 
-              <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+              <div className="relative max-w-7xl mx-auto px-6 py-10 lg:py-28 z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                   {/* Left Side: Content */}
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span className="text-white/90 text-sm font-medium">Real-Time AI Execution</span>
+                      <span className="text-white/90 text-xs sm:text-sm font-medium">Real-Time AI Execution</span>
                     </div>
 
                     {/* Main Heading */}
-                    <div className="space-y-4">
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                    <div className="space-y-4 text-center lg:text-left">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
                         HR-Tek Helps to Design
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                           Better HR System
                         </span>
                       </h1>
-                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                      <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         Automate Workflows, Empower Teams, and Drive Growth
                       </p>
                     </div>
@@ -154,7 +156,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg.png"
                         alt="Product interface highlighting key HR features"
-                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                        className="w-full h-auto max-h-[400px] lg:max-h-[700px] object-contain drop-shadow-2xl transform scale-100 lg:scale-110 hover:scale-105 lg:hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>
@@ -174,25 +176,25 @@ export default function Carousel() {
                 }}></div>
               </div>
 
-              <div className="relative max-w-7xl mx-auto px-6 py-20 lg:py-28 z-10">
+              <div className="relative max-w-7xl mx-auto px-6 py-10 lg:py-28 z-10">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                   {/* Left Side: Content */}
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      <span className="text-white/90 text-sm font-medium">Enterprise-Friendly</span>
+                      <span className="text-white/90 text-xs sm:text-sm font-medium">Enterprise-Friendly</span>
                     </div>
 
                     {/* Main Heading */}
-                    <div className="space-y-4">
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
+                    <div className="space-y-4 text-center lg:text-left">
+                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
                         Transform Your
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                           HR Ecosystem
                         </span>
                       </h1>
-                      <p className="text-xl md:text-2xl font-semibold text-white/90 leading-relaxed">
+                      <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         Leverage smart software to upgrade your HR ecosystem
                       </p>
                     </div>
@@ -222,7 +224,7 @@ export default function Carousel() {
                       <img
                         src="/assets/homepageAssets/scroll0/images/heroImg2.png"
                         alt="Streamline HR tasks and reduce costs"
-                        className="w-full h-auto max-h-[700px] object-contain drop-shadow-2xl transform scale-110 hover:scale-115 transition-transform duration-500"
+                        className="w-full h-auto max-h-[400px] lg:max-h-[700px] object-contain drop-shadow-2xl transform scale-100 lg:scale-110 hover:scale-105 lg:hover:scale-115 transition-transform duration-500"
                       />
                     </div>
                   </div>

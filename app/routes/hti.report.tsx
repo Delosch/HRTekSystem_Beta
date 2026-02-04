@@ -38,6 +38,7 @@ import {
     Cell
 } from 'recharts';
 import { motion } from "framer-motion";
+import Navbar from "~/components/HomePageComponents/Navbar";
 
 import { getEnginePriceByName } from "~/lib/pricing";
 import { addOrUpdateCartItem } from "~/models/cart.model.server";

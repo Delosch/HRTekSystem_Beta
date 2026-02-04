@@ -1,6 +1,6 @@
 import { useLocation, Link, useRouteLoaderData } from "@remix-run/react";
 import { sidebarSections } from "./sidebarConfig";
-import { Settings } from "lucide-react";
+import { Settings, Home } from "lucide-react";
 
 interface SidebarProps {
     user?: {
@@ -51,6 +51,19 @@ export default function Sidebar({ user: propUser }: SidebarProps = {}) {
                 <Link to="/userSettingsDashboard" className="flex items-center gap-1 text-xs underline mt-2">
                     <Settings className="w-3 h-3" />
                     <span>Settings</span>
+                </Link>
+            </div>
+
+            {/* Dashboard Navigation */}
+            <div>
+                <Link
+                    to="/"
+                    className="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-blue-50 transition-all duration-300 rounded-xl font-bold text-sm bg-white border border-slate-100 shadow-sm group mb-6"
+                >
+                    <div className="bg-blue-50 p-1.5 rounded-lg group-hover:bg-blue-600 transition-colors">
+                        <Home className="w-4 h-4 text-blue-600 group-hover:text-white" />
+                    </div>
+                    Back to Website
                 </Link>
             </div>
 

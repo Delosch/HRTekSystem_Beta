@@ -6,7 +6,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from "@remix-run/react";
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
+import { json, type LinksFunction, type LoaderFunctionArgs } from "@remix-run/node";
 
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
@@ -17,17 +17,26 @@ import CookieConsent from "./components/ui/CookieConsent";
 /* ============================
    ✅ LOADER
    ============================ */
-import { getUserSession } from "~/lib/session.server";
+import { getUserSession, getSession, commitSession } from "~/lib/session.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
   const user = await getUserSession(request).catch(() => null);
 
-  return {
-    user,
-    ENV: {
-      VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
+  return json(
+    {
+      user,
+      ENV: {
+        VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
+      },
     },
-  };
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 }
 
 /* ============================

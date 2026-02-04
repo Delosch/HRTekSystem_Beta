@@ -11,7 +11,7 @@ export const meta: MetaFunction = () => {
     title: "HR Insights & Innovation Blog",
     description: "Stay ahead with expert insights on HR technology, digital transformation, workforce management, and industry trends from HRTek System. Read the latest articles from HR experts.",
     keywords: "HR blog, HR technology trends, digital transformation, workforce management insights, HCM solutions, HR best practices",
-    url: "https://hrteksystem.com/blog",
+    url: "https://hrteksystem.com/articles",
     type: "blog",
     image: "https://hrteksystem.com/og-blog.jpg",
   });

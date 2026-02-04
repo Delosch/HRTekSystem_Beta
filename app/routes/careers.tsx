@@ -50,13 +50,13 @@ export default function CareerPage() {
                 {/* Left Side: Text and CTA */}
                 <div className="space-y-8">
                   <div>
-                    <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
+                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
                       <span className="text-6xl md:text-7xl lg:text-9xl text-white whitespace-nowrap">Careers</span>
                       <br />
                       <span className="font-light text-[#D4E1F4] text-xl md:text-3xl">
                         Find Your Place with HR-Tek
                       </span>
-                    </h2>
+                    </h1>
                   </div>
                   <p className="text-lg italic text-[#C5D5EC] max-w-xl">
                     At the heart of our success is our people. We believe in
