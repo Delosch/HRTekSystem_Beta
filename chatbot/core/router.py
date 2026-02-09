@@ -434,9 +434,9 @@ def _build_fallback_message(action: FallbackAction) -> str:
     Keep it short and actionable.
     """
     if action == FallbackAction.ASK_CLARIFYING_QUESTION:
-        return "Quick check — do you want help with your **Roadmap** or your **Assessment/Maturity** results?"
+        return "Quick check — do you want help with your Roadmap or your Assessment/Maturity results?"
     if action == FallbackAction.PRESENT_TWO_OPTIONS:
-        return "What would you like to do?\n1) Explain my **Roadmap**\n2) Explain my **Assessment/Maturity** results\n3) FAQ (Pricing, billing, refunds, modules)"
+        return "What would you like to do?\n1) Explain my Roadmap\n2) Explain my Assessment/Maturity results\n3) FAQ (Pricing, billing, refunds, modules)"
     return "Could you clarify what you want help with?"
 
 

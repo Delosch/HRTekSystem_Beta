@@ -274,6 +274,10 @@ def generate(
         )
 
         client = get_llm_client()
+        if client is None:
+            raise RuntimeError(
+                "LLM client is None. Bedrock env not loaded or LLM factory misconfigured."
+            )
         text = client.generate(prompt)
 
         return postprocess_response( {

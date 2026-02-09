@@ -5,13 +5,27 @@ import sys
 from pathlib import Path
 import uuid
 
-# Ensure project root (chatbot/) is on sys.path even if run from scripts/
+import os
+from dotenv import load_dotenv
+
+ENV_FILE = os.getenv(
+    "CHATBOT_ENV_FILE",
+    str(Path(__file__).resolve().parents[1] / ".env.test")
+)
+
+load_dotenv(ENV_FILE, override=True)
+
+import sys
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from core.answer_engine import generate  # noqa: E402
 
+print("ENV_FILE =", ENV_FILE)
+print("AWS_REGION =", os.getenv("AWS_REGION"))
+print("BEDROCK_REGION =", os.getenv("BEDROCK_REGION"))
+print("BEDROCK_MODEL_ID =", os.getenv("BEDROCK_MODEL_ID"))
 
 def main() -> None:
     print("HR-Tek Chatbot — Phase 1 Demo CLI")

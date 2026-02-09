@@ -150,8 +150,6 @@ class BedrockDeepSeekClient(LLMClient):
     def __init__(self, cfg: Optional[BedrockConfig] = None):
         self.cfg = cfg or load_bedrock_config()
 
-        print("[BEDROCK] region =", self.cfg.region)
-        print("[BEDROCK] model_id =", self.cfg.model_id)
 
         # Boto3 retries + timeouts:
         # - botocore Config supports retries and timeouts.
@@ -210,3 +208,4 @@ class BedrockDeepSeekClient(LLMClient):
             raise RuntimeError(f"Bedrock invoke_model failed: {msg}") from e
         except Exception as e:
             raise RuntimeError(f"Bedrock invoke_model failed: {e}") from e
+    
