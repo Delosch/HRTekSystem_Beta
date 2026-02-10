@@ -52,7 +52,7 @@ export const action: ActionFunction = async ({ request }) => {
 
       if (!smsResult.success) {
         console.error("[SMS Verify] SMS Send Error:", smsResult.error);
-        return json({ error: "Failed to send SMS. Please try again." }, { status: 500 });
+        return json({ error: smsResult.error || "Failed to send SMS. Please try again." }, { status: 500 });
       }
 
       console.log(`[SMS Verify] OTP sent successfully to ${cleanPhone}`);
@@ -114,7 +114,7 @@ export const action: ActionFunction = async ({ request }) => {
 
       if (!smsResult.success) {
         console.error("[SMS Verify] SMS Send Error (Update):", smsResult.error);
-        return json({ error: "Number updated, but failed to send OTP. Please click Resend." }, { status: 500 });
+        return json({ error: `Number updated, but: ${smsResult.error || "failed to send OTP"}. Please click Resend.` }, { status: 500 });
       }
 
       console.log(`[SMS Verify] Phone updated and OTP sent to new number`);

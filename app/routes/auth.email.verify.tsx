@@ -193,18 +193,20 @@ export default function EmailVerify() {
         }
         setIsResending(false);
       } else if (fetcher.data.success) {
-        if (lastSubmittedAction === "send_verification") {
-          setSuccessMessage(fetcher.data.message);
-          setStep("code"); // <--- This will now trigger correctly!
-          setCountdown(60);
-          setIsResending(false);
-        } else if (lastSubmittedAction === "verify_code") {
-          setStep("success");
-        } else if (lastSubmittedAction === "update_email") {
-          setSuccessMessage(fetcher.data.message);
+        // More robust step transition: if we get success from sending or updating, go to code step
+        const isSendSuccess = lastSubmittedAction === "send_verification" || fetcher.data.message?.includes("sent");
+        const isUpdateSuccess = lastSubmittedAction === "update_email";
+        const isVerifySuccess = lastSubmittedAction === "verify_code" || fetcher.data.verified;
+
+        if (isSendSuccess || isUpdateSuccess) {
+          setSuccessMessage(fetcher.data.message || "Verification code sent!");
           setStep("code");
           setCountdown(60);
+          setIsResending(false);
+        } else if (isVerifySuccess) {
+          setStep("success");
         }
+
         // Clear last action after successful completion
         setLastSubmittedAction(null);
       }

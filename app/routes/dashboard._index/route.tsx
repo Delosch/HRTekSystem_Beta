@@ -62,7 +62,10 @@ const createFallbackData = (): DashboardData => ({
     avgTime: "45m",
     maturity: "0.0/5"
   },
-  readiness_metrics: []
+  readiness_metrics: [],
+  strategic_insights: null,
+  detailed_recommendations: null,
+  consulting_report: null
 });
 
 // Type definitions
@@ -133,6 +136,9 @@ interface DashboardData {
     score: number;
     status: string;
   }>;
+  strategic_insights?: any;
+  detailed_recommendations?: any;
+  consulting_report?: any;
 }
 
 interface BubbleData {
@@ -354,17 +360,25 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
     // CALCULATE REAL METRICS WITH CLEAR DISTINCTION
     const totalEnginesAvailable = 5;
 
-    // Completed Engines = Assessments user has finished (progress = 100)
-    const completedEngines = eligibilityData?.completedCount || 0;
+    // Filter out "Profiling Assessment" from counts as it's the baseline, not one of the 5 main engines
+    const coreEnginesCompleted = (eligibilityData?.completedEnginesList || [])
+      .filter((name: string) => name !== "Profiling Assessment");
 
-    // AI Reports = Actual analysis records stored in DB
-    const uniqueAnalyses = new Set(allAnalyses.map((a: any) => a.section));
-    const aiInsightCount = uniqueAnalyses.size || 0;
+    // Completed Engines = Main transformation engines user has finished
+    const completedEngines = coreEnginesCompleted.length;
+
+    // AI Reports = Successful analysis records for main engines
+    const uniqueAnalyses = new Set(
+      allAnalyses
+        .filter((a: any) => a.section !== "Profiling Assessment")
+        .map((a: any) => a.section)
+    );
+    const aiInsightCount = uniqueAnalyses.size;
 
     // Transformation Progress = Based on PAID engines (for eligibility)
     const transformationProgress = eligibilityData?.percentage || 0;
 
-    console.log(`📊 Metrics Calculated:`, {
+    console.log(`📊 Metrics Calculated (Excluding Profiling):`, {
       completedEngines,
       aiInsightCount,
       transformationProgress,
@@ -469,11 +483,15 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
           ? vizData.bar_chart.totalQuestions
           : vizData.bar_chart.dimensions.map(() => vizData.bar_chart.totalQuestions as unknown as number)
       },
-      readiness_metrics: readiness_metrics
+      readiness_metrics: readiness_metrics,
+      strategic_insights: data.result.strategic_insights || data.result.visualization_data?.strategic_insights || null,
+      detailed_recommendations: data.result.detailed_recommendations || data.result.visualization_data?.detailed_recommendations || null,
+      consulting_report: data.result.consulting_report || data.result.visualization_data?.consulting_report || null
     };
 
     return responseData;
   } catch (error) {
+    if (error instanceof Response) throw error;
     console.error("🚨 Loader error:", error);
 
     const errorData: DashboardData = {
@@ -846,13 +864,25 @@ export default function Dashboard() {
                   Welcome back, <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{data.user?.first_name || 'User'}</span>
                 </h1>
 
-                <p className="text-slate-500 max-w-lg mb-8 text-lg font-medium leading-relaxed">
-                  Track your organizational transformation progress and view your latest assessment insights.
-                </p>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex flex-col">
+                    <div className="text-5xl font-black text-slate-900 tracking-tighter">
+                      {data.consulting_report?.executive_summary?.overall_maturity_index || data.metrics?.maturity.split('/')[0] || "1.0"}
+                      <span className="text-xl text-slate-400 font-bold">/5.0</span>
+                    </div>
+                    <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-2 py-0.5 bg-blue-50 rounded-md inline-block w-fit mt-1">
+                      {data.consulting_report?.executive_summary?.maturity_category || "Strategic Baseline"}
+                    </div>
+                  </div>
+                  <div className="h-10 w-[1px] bg-slate-200"></div>
+                  <p className="text-slate-500 max-w-sm text-sm font-medium leading-relaxed">
+                    {data.consulting_report?.executive_summary?.executive_recommendation || "Your organizational transformation is currently being analyzed based on your assessment inputs."}
+                  </p>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-lg">
+                    <div className="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-lg font-bold">
                       {data.user?.first_name?.[0] || 'U'}
                     </div>
                     <div>
@@ -1049,40 +1079,46 @@ export default function Dashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    title: "Cloud Potential",
-                    desc: "Your current infrastructure shows 85% readiness for further cloud scaling.",
-                    icon: <CheckCircle className="w-5 h-5" />,
-                    color: "emerald",
-                    gradient: "from-emerald-500 to-teal-600"
-                  },
-                  {
-                    title: "Team Alignment",
-                    desc: "Engagement metrics indicate 92% readiness for the upcoming digital shift.",
-                    icon: <TrendingUp className="w-5 h-5" />,
-                    color: "blue",
-                    gradient: "from-blue-500 to-indigo-600"
-                  },
-                  {
-                    title: "Efficiency Gains",
-                    desc: "Potential for 18% operational efficiency improvement through current roadmap.",
-                    icon: <Award className="w-5 h-5" />,
-                    color: "amber",
-                    gradient: "from-amber-500 to-orange-600"
-                  },
-                ].map((insight, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
-                  >
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${insight.gradient} text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                      {insight.icon}
+                {(data.strategic_insights?.transformation_readiness?.enabling_factors?.slice(0, 3).map((factor: string, idx: number) => ({
+                  title: "Enabling Factor",
+                  desc: factor,
+                  icon: <CheckCircle className="w-5 h-5" />,
+                  color: "emerald",
+                  gradient: "from-emerald-500 to-teal-600"
+                })) || [
+                    {
+                      title: "Cloud Potential",
+                      desc: "Your infrastructure is being assessed for cloud scalability readiness.",
+                      icon: <CheckCircle className="w-5 h-5" />,
+                      color: "emerald",
+                      gradient: "from-emerald-500 to-teal-600"
+                    },
+                    {
+                      title: "Team Alignment",
+                      desc: "We are analyzing your team's readiness for the upcoming digital shift.",
+                      icon: <TrendingUp className="w-5 h-5" />,
+                      color: "blue",
+                      gradient: "from-blue-500 to-indigo-600"
+                    },
+                    {
+                      title: "Efficiency Gains",
+                      desc: "Calculating potential operational efficiency improvements from your answers.",
+                      icon: <Award className="w-5 h-5" />,
+                      color: "amber",
+                      gradient: "from-amber-500 to-orange-600"
+                    },
+                  ]).map((insight: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+                    >
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${insight.gradient} text-white flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                        {insight.icon}
+                      </div>
+                      <h4 className="text-slate-900 font-black mb-2 tracking-tight">{insight.title}</h4>
+                      <p className="text-slate-500 text-xs font-medium leading-relaxed">{insight.desc}</p>
                     </div>
-                    <h4 className="text-slate-900 font-black mb-2 tracking-tight">{insight.title}</h4>
-                    <p className="text-slate-500 text-xs font-medium leading-relaxed">{insight.desc}</p>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </div>
@@ -1145,6 +1181,37 @@ export default function Dashboard() {
             <Link to="/admin/activity-logs" className="mt-8 text-xs font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors text-center w-full block">
               View Activity Audit
             </Link>
+          </div>
+        </div>
+
+        {/* ROI Projection Section - Real-time from AI */}
+        <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl mb-8 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-[100px] opacity-40"></div>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-50 rounded-xl">
+                <TrendingUp className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter">Transformation ROI Projections</h3>
+            </div>
+            <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full">
+              Projected Gains
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {(data.consulting_report?.investment_indication?.length > 0 ? data.consulting_report.investment_indication : [
+              { label: "Projected Spend", value: "Calculated", sub: "Annual" },
+              { label: "Net Present Value", value: "TBD", sub: "3-Year Horizon" },
+              { label: "ROI (Est.)", value: "Developing", sub: "Based on data" },
+              { label: "Payback Period", value: "Pending", sub: "Months" }
+            ]).map((item: any, idx: number) => (
+              <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-xl transition-all group">
+                <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{item.sub || item.label?.split(' ').slice(-1)[0] || "Metric"}</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter mb-2">{item.value || item.score || "—"}</div>
+                <div className="text-sm font-bold text-slate-600 tracking-tight">{item.label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -1473,12 +1540,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <h4 className="text-lg font-semibold text-green-600 mb-3">✓ Strengths to Leverage</h4>
-              {[
-                "Strong cloud-first infrastructure (50% adoption)",
-                "High leadership investment appetite (75%)",
-                "Innovation-focused culture (55%)",
-                "Well-defined digital strategy",
-              ].map((item, idx) => (
+              {(data.consulting_report?.executive_summary?.what_this_means?.slice(0, 4) || [
+                "Analyzed infrastructure adoption",
+                "Leadership investment appetite mapping",
+                "Innovation culture assessment",
+                "Digital strategy definition",
+              ]).map((item: string, idx: number) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, x: -10 }}
@@ -1493,12 +1560,12 @@ export default function Dashboard() {
             </div>
             <div className="space-y-3">
               <h4 className="text-lg font-semibold text-orange-600 mb-3">→ Priority Actions</h4>
-              {[
-                "Expand customer experience initiatives",
-                "Strengthen sustainability goals",
-                "Reduce legacy system dependency",
-                "Enhance continuous learning culture",
-              ].map((item, idx) => (
+              {(data.detailed_recommendations?.immediate_actions?.actions?.slice(0, 4).map((a: any) => a.action) || [
+                "Complete assessment for priority actions",
+                "Review strategic alignment",
+                "Analyze legacy dependencies",
+                "Evaluate learning frameworks",
+              ]).map((item: string, idx: number) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, x: 10 }}
