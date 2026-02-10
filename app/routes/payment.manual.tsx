@@ -124,7 +124,7 @@ export default function ManualPayment() {
             name: "Bank Transfer / NEFT",
             icon: Building2,
             details: {
-                accountName: "HR-Tek System",
+                accountName: "Delosch Technologies Private Limited",
                 accountNumber: "00000020532076408",
                 ifscCode: "SBIN0010175",
                 bankName: "State Bank of India",
@@ -136,8 +136,8 @@ export default function ManualPayment() {
             name: "UPI Payment",
             icon: Smartphone,
             details: {
-                upiId: "hrteksystems@paytm",
-                upiName: "HR Tek Systems"
+                upiId: "deloschtechnologiesprivatelimited@sbi",
+                upiName: "Delosch Technologies Private Limited"
             }
         },
         {
@@ -145,7 +145,7 @@ export default function ManualPayment() {
             name: "QR Code",
             icon: QrCode,
             details: {
-                qrImage: "/assets/payment/upi-qr.png"
+                qrImage: "/assets/payment/upi-qr-code.jpg"
             }
         }
     ];
@@ -249,7 +249,7 @@ export default function ManualPayment() {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Name:</span>
-                                            <span className="font-semibold text-gray-900">HR-Tek System</span>
+                                            <span className="font-semibold text-gray-900">Delosch Technologies Private Limited</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Account Number:</span>
@@ -274,11 +274,11 @@ export default function ManualPayment() {
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">UPI ID:</span>
-                                            <span className="font-mono font-semibold text-gray-900">hrteksystems@paytm</span>
+                                            <span className="font-mono font-semibold text-gray-900">deloschtechnologiesprivatelimited@sbi</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-700">Name:</span>
-                                            <span className="font-semibold text-gray-900">HR Tek Systems</span>
+                                            <span className="font-semibold text-gray-900">Delosch Technologies Private Limited</span>
                                         </div>
                                         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                             <p className="text-xs text-yellow-800">

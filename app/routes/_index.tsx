@@ -302,7 +302,7 @@ export default function Index() {
                 What’s Shaping the Future of HR?
               </h2>
               <p className="text-lg text-gray-600">
-                Our blog is where HR innovation meets practical execution. Read
+                Our Knowledge Hub is where HR innovation meets practical execution. Read
                 how organizations are building scalable processes, choosing the
                 right HCM tools, and managing change intelligently. Whether
                 you’re scaling up or optimizing, our insights are designed to
@@ -313,8 +313,8 @@ export default function Index() {
             {/* Center Image */}
             <div>
               <img
-                src="/assets/homepageAssets/readBlog.png"
-                alt="HR technology insights and transformation strategies blog"
+                src="/assets/homepageAssets/readArticles.png"
+                alt="HR technology insights and transformation strategies Knowledge Hub"
                 className="w-full rounded-lg shadow"
                 loading="lazy"
                 decoding="async"
@@ -325,14 +325,19 @@ export default function Index() {
             <div className="space-y-8">
               {[
                 {
-                  title: "HR Trends for 2025",
-                  img: "/assets/homepageAssets/blogThumb.png",
-                  link: "/blog",
+                  title: "Why Most HR Technology Investments Fail",
+                  img: "/assets/blogAssets/fail_invest.png",
+                  link: "/articles",
                 },
                 {
-                  title: "HCM Solutions: The Choice for a Future-Ready HR",
-                  img: "/assets/homepageAssets/blogThumb.png",
-                  link: "/blog",
+                  title: "From HR Automation to HR Intelligence",
+                  img: "/assets/blogAssets/hr_intelligence.png",
+                  link: "/articles",
+                },
+                {
+                  title: "Designing a Future-Ready HR Operating Model",
+                  img: "/assets/blogAssets/op_model.png",
+                  link: "/articles",
                 },
               ].map((item, index) => (
                 <div

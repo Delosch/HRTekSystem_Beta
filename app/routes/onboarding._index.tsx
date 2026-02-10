@@ -260,7 +260,7 @@ export default function OnboardingWelcome() {
 
                         {/* Main Logo Container */}
                         <motion.div
-                          className="relative bg-white rounded-xl p-2 sm:p-3 shadow-xl border border-gray-100 ring-2 ring-blue-100/50"
+                          className="relative bg-white rounded-2xl p-3 sm:p-4 shadow-xl border border-gray-100 ring-4 ring-blue-50/50 flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 mx-auto lg:mx-0"
                           initial={{ scale: 0, rotate: -10 }}
                           animate={{ scale: 1, rotate: 0 }}
                           transition={{
@@ -270,10 +270,9 @@ export default function OnboardingWelcome() {
                           }}
                         >
                           <img
-                            src="/logoNavbar.png"
+                            src="/logo_icon_final.png"
                             alt="HR-Tek System Logo"
-                            className="h-10 w-auto max-w-[120px] sm:h-12 lg:h-14 object-contain"
-                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                            className="h-full w-full object-contain"
                           />
                         </motion.div>
                       </motion.div>

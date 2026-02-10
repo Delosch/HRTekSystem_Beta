@@ -3,7 +3,7 @@ import { useActionData, useNavigation, Form } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { getSession, commitSession, createAuthSession } from "~/lib/session.server";
 import { createOTP, sendOTPEmail } from "~/lib/email.otp.server";
-import { ShieldCheck, Mail, Lock, Key, ArrowRight, Loader2 } from "lucide-react";
+import { ShieldCheck, Mail, Lock, Key, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 const ADMIN_EMAIL = "atul.dixit@hrteksystems.in";
 const ADMIN_PASS = "Hrteksystem@098";
@@ -89,6 +89,7 @@ export default function AdminLogin() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting" || navigation.state === "loading";
     const [step, setStep] = useState<"login" | "otp">("login");
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (actionData?.step) {
@@ -144,13 +145,24 @@ export default function AdminLogin() {
                                         <Lock className="h-5 w-5 text-blue-400 group-focus-within:text-blue-300 transition-colors" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         name="password"
                                         required
                                         readOnly={step === "otp"}
                                         placeholder="••••••••••••"
-                                        className="block w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                                        className="block w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         </div>

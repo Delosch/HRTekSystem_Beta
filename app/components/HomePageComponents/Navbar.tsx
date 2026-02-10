@@ -150,6 +150,12 @@ export default function Navbar() {
           >
             About Us
           </Link>
+          <Link
+            to="/articles"
+            className={pathname === "/articles" ? activeStyle : inactiveStyle}
+          >
+            Articles
+          </Link>
 
           <div className="relative" ref={dropdownRef}>
             <button
@@ -299,6 +305,13 @@ export default function Navbar() {
                     className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
                   >
                     About Us
+                  </Link>
+                  <Link
+                    to="/articles"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/articles" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    Articles
                   </Link>
 
                   <div className="pt-4 border-t border-white/10 mt-2">

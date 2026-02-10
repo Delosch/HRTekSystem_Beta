@@ -58,7 +58,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     // Your company's payment details (store in env variables in production)
     // Your company's payment details
     const bankDetails = {
-        accountName: "HR-Tek System",
+        accountName: "Delosch Technologies Private Limited",
         accountNumber: "00000020532076408",
         ifscCode: "SBIN0010175",
         bankName: "State Bank of India",
@@ -66,7 +66,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     };
 
     const upiDetails = {
-        upiId: process.env.UPI_ID || "hrteksystems@sbi",
+        upiId: process.env.UPI_ID || "deloschtechnologiesprivatelimited@sbi",
         qrCodeUrl: "/assets/payment/upi-qr-code.jpg"
     };
 

@@ -101,9 +101,9 @@ export const save_answers = async (
             const existingItem = Items[0];
             console.log(`Found existing assessment with status: ${existingItem.status}`);
 
-            // Only update if the status is "DRAFT"
-            if (existingItem.status === "DRAFT") {
-                console.log("Assessment is in DRAFT status. Appending/updating data.");
+            // Allow update if status is DRAFT or COMPLETED (re-running assessment)
+            if (existingItem.status === "DRAFT" || existingItem.status === "COMPLETED") {
+                console.log(`Assessment is in ${existingItem.status} status. Appending/updating data.`);
 
                 // Use UpdateCommand to append/update the 'answers' map
                 const updateCommand = new UpdateCommand({
@@ -121,14 +121,14 @@ export const save_answers = async (
                         ":newAnswers": answer.answers, // The new answers for this section
                         ":updatedAt": currentTime,
                         ":progress": answer.progress,
-                        ":status": answer.progress == 100.0 ? "COMPLETED" : "DRAFT",
+                        ":status": Number(answer.progress) === 100 ? "COMPLETED" : "DRAFT",
                     },
                     ReturnValues: "UPDATED_NEW" // Optionally return the updated attributes
                 });
                 await ddbDocClient.send(updateCommand);
                 console.log("Assessment data updated successfully.");
             } else {
-                console.log(`Assessment is not in DRAFT status (${existingItem.status}). No update performed.`);
+                console.log(`Assessment status is ${existingItem.status}. No update performed.`);
             }
         }
     } catch (error) {

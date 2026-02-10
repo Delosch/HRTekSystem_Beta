@@ -13,6 +13,12 @@ export function useAutoSaveForm<T extends object>(key: string, initialData: T,
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTime = options?.debounce ?? 2000;
   const isFirstRender = useRef(true);
+  const optionsRef = useRef(options);
+
+  // Update options ref whenever they change
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   // Load saved data on component mount from local storage
   useEffect(() => {
@@ -32,20 +38,20 @@ export function useAutoSaveForm<T extends object>(key: string, initialData: T,
   const saveToServer = useCallback(async (data: T) => {
     setIsSaving(true);
     try {
-      if (options?.onSaveToServer) {
-        await options.onSaveToServer(data);
+      if (optionsRef.current?.onSaveToServer) {
+        await optionsRef.current.onSaveToServer(data);
       } else {
         // Fallback for demo/dev
         await new Promise((res) => setTimeout(res, 500));
       }
-      options?.onSave?.(data);
+      optionsRef.current?.onSave?.(data);
     } catch (e) {
       console.error("Failed to save to server:", e);
-      options?.onSaveError?.(e instanceof Error ? e : new Error(String(e)));
+      optionsRef.current?.onSaveError?.(e instanceof Error ? e : new Error(String(e)));
     } finally {
       setIsSaving(false);
     }
-  }, [options]);
+  }, []);
 
   // Auto-save whenever data changes
   useEffect(() => {

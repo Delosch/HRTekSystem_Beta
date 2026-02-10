@@ -240,7 +240,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instant Settlement (UPI)</p>
                                 <p className="text-xs font-black text-slate-700 flex items-center gap-2">
                                     <span className="px-2 py-0.5 bg-slate-900 text-white rounded text-[8px] tracking-tighter">VPA</span>
-                                    hrteksystems@sbi
+                                    deloschtechnologiesprivatelimited@sbi
                                 </p>
                             </div>
                         </div>

@@ -32,12 +32,13 @@ try {
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
 const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
 const SESSIONS_TABLE = "sessions";
-const expiryTime = 20 * 60 // 20 minutes in seconds
+// Increase session duration to 7 days (was 20 minutes)
+const expiryTime = 60 * 60 * 24 * 7;
 
 // Create a cookie to store the session ID on the client.
 const session_cookie = createCookie("__session", {
-    // These secrets are used to sign and encrypt the cookie's value, which is just the session ID.
-    secrets: ["4d186321c1a7f0f354b297e8914ab240", "5d41402abc4b2a76b9719d911017c592", "16e2d966d4ab046e2442bc008b4da566", "608333adc72f545078ede3aad71bfe74", "c0e89a293bd36c7a768e4e9d2c5475a8"],
+    // Use environment secret if available, with fallbacks for local security
+    secrets: process.env.SESSION_SECRET ? [process.env.SESSION_SECRET] : ["4d186321c1a7f0f354b297e8914ab240", "5d41402abc4b2a76b9719d911017c592", "16e2d966d4ab046e2442bc008b4da566"],
     httpOnly: true,
     maxAge: expiryTime,
     sameSite: "lax",
