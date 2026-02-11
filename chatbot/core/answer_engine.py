@@ -249,7 +249,7 @@ def generate(
         prompt_template = load_prompt(prompt_name, version=prompt_version, prompts_dir=PROMPTS_DIR)
 
             # Auto-load sample report JSON when report_json is not provided (demo/dev)
-        if report_json is None:
+        if report_json is None or (isinstance(report_json, dict) and len(report_json) == 0):
             if decision.module == RouteModule.ROADMAP:
                 report_json = _load_sample_report("roadmap")
             elif decision.module == RouteModule.ASSESSMENT:

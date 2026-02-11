@@ -9,7 +9,7 @@ type Message = {
 
 export default function ChatWindow({ onClose }: { onClose: () => void }) {
   const [messages, setMessages] = useState<Message[]>([
-    { sender: "bot", content: "Hi 👋 I’m Aira, your HR cognitive expert. How can I help you?" },
+    { sender: "bot", content: "Hi 👋 I'm Aira, your HR cognitive expert. How can I help you?" },
   ]);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ export default function ChatWindow({ onClose }: { onClose: () => void }) {
       body: JSON.stringify({
         message: text,
         page_context: "dashboard",
-        report_json: {},
+        report_json: {},                    //{} is causing error as its basically an empty object which is wrong, it should either be null or some output
         session_id: "dashboard-session",
       }),
     });
