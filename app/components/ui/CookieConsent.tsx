@@ -28,10 +28,20 @@ export default function CookieConsent() {
     const [expandedCategory, setExpandedCategory] = useState<CookieCategory | null>(null);
 
     useEffect(() => {
+        // Handle trigger from Footer or other components
+        const handleExternalTrigger = () => {
+            setShowPreferences(true);
+            setShowBanner(false);
+        };
+        window.addEventListener("open-cookie-settings", handleExternalTrigger);
+
         const savedConsent = localStorage.getItem("cookie_consent");
         if (!savedConsent) {
             const timer = setTimeout(() => setShowBanner(true), 1000);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                window.removeEventListener("open-cookie-settings", handleExternalTrigger);
+            };
         } else {
             try {
                 const parsed = JSON.parse(savedConsent);
@@ -47,11 +57,14 @@ export default function CookieConsent() {
                     necessary: parsed.necessary ?? true,
                     functional: parsed.functional ?? false,
                     analytics: parsed.analytics ?? false,
-                    security: parsed.security ?? (parsed.necessary ?? true), // Default security to true if it was an old basic consent
+                    security: parsed.security ?? (parsed.necessary ?? true),
                     marketing: parsed.marketing ?? false,
                 };
 
                 setPreferences(mergedPreferences);
+
+                // Sync with Google Analytics
+                updateGAConsent(mergedPreferences);
 
                 // If schema was old, update localStorage to include the marketing key
                 if (!hasAllKeys) {
@@ -61,7 +74,22 @@ export default function CookieConsent() {
                 setPreferences(defaultPreferences);
             }
         }
+
+        return () => window.removeEventListener("open-cookie-settings", handleExternalTrigger);
     }, []);
+
+    const updateGAConsent = (prefs: CookiePreferences) => {
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+            (window as any).gtag('consent', 'update', {
+                'analytics_storage': prefs.analytics ? 'granted' : 'denied',
+                'functionality_storage': prefs.functional ? 'granted' : 'denied',
+                'ad_storage': prefs.marketing ? 'granted' : 'denied',
+                'ad_user_data': prefs.marketing ? 'granted' : 'denied',
+                'ad_personalization': prefs.marketing ? 'granted' : 'denied',
+                'security_storage': prefs.security ? 'granted' : 'denied',
+            });
+        }
+    };
 
     const handleAcceptAll = () => {
         const allAccepted: CookiePreferences = {
@@ -88,6 +116,7 @@ export default function CookieConsent() {
     const savePreferences = (prefs: CookiePreferences) => {
         localStorage.setItem("cookie_consent", JSON.stringify(prefs));
         setPreferences(prefs);
+        updateGAConsent(prefs);
         setShowBanner(false);
         setShowPreferences(false);
     };

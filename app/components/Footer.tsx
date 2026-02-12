@@ -161,6 +161,39 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Legal & Privacy */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Legal</h3>
+          <ul className="space-y-2 text-sm text-gray-300">
+            <li>
+              <Link to="/legal/privacy" className="hover:text-white flex items-center gap-2">
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/legal/cookie" className="hover:text-white flex items-center gap-2">
+                Cookie Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/legal/gdpr" className="hover:text-white flex items-center gap-2">
+                GDPR Compliance
+              </Link>
+            </li>
+            <li className="pt-2">
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+                }}
+                className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" /><path d="M8.5 8.5v.01" /><path d="M16 15.5v.01" /><path d="M12 12v.01" /><path d="M11 17v.01" /><path d="M7 14v.01" /></svg>
+                Cookie Settings
+              </button>
+            </li>
+          </ul>
+        </div>
+
         <div className="justify-self-end">
           {/* <-- only change: justify-self-end so this column sits at the right */}
           <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
