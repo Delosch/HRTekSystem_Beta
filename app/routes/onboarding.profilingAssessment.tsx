@@ -77,6 +77,10 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to notify admin about assessment:", notifierError);
       }
 
+      /**
+       * REMOVED: Automatic payment requirement for Profiling Assessment
+       * The user requested this assessment to be free.
+       * 
       // Add to cart logic
       try {
         const recommendation = await fetchEngineRecomendations(companyId);
@@ -97,6 +101,7 @@ export const action: ActionFunction = async ({ request }) => {
       } catch (cartError) {
         console.warn("Failed to add profiling assessment to cart:", cartError);
       }
+      */
 
       // Sync eligibility record
       try {

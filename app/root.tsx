@@ -70,18 +70,31 @@ export default function App() {
         <Meta />
         <Links />
 
-        {/* Google Analytics (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZSWQ6ZNXVQ"></script>
+        {/* Google Consent Mode v2 - Default Denied State */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
+              
+              // Initialize consent to 'denied' as per GDPR/DMA requirements
+              gtag('consent', 'default', {
+                'ad_storage': 'denied',
+                'ad_user_data': 'denied',
+                'ad_personalization': 'denied',
+                'analytics_storage': 'denied',
+                'functionality_storage': 'denied',
+                'security_storage': 'granted', // Essential for basic platform safety
+                'wait_for_update': 500
+              });
+
               gtag('js', new Date());
-              gtag('config', 'G-ZSWQ6ZNXVQ');
+              // Config with IP Anonymization enabled by default
+              gtag('config', 'G-ZSWQ6ZNXVQ', { 'anonymize_ip': true });
             `,
           }}
         />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZSWQ6ZNXVQ"></script>
 
         {/* JSON-LD Schema Markup for Organization */}
         <script
