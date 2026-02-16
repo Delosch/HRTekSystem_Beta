@@ -116,14 +116,21 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const allPayments = await getCompanyPayments(user.organisationId);
     const isAdmin = (user as any).role === "ADMIN";
 
+    // Check if this is a free assessment (onboarding)
+    const engineName = engineId.trim();
+    const isFreeEngine = engineName === "Profiling Assessment" ||
+      engineName === "Digital Maturity Assessment" ||
+      engineName === "HR Technology Maturity Analysis" ||
+      engineName === "HR Tech Maturity Analysis";
+
     // Check if any payment record for this engine is verified
-    const isPaid = isAdmin || allPayments.some((p: any) =>
+    const isPaid = isAdmin || isFreeEngine || allPayments.some((p: any) =>
       p.status === "payment_verified" &&
       p.items?.some((i: any) => i.engineName.trim() === engineId.trim())
     );
 
     // Check if any payment record for this engine is pending (submitted but not verified)
-    const isPending = !isPaid && allPayments.some((p: any) =>
+    const isPending = !isPaid && !isFreeEngine && allPayments.some((p: any) =>
       p.status === "payment_submitted" &&
       p.items?.some((i: any) => i.engineName.trim() === engineId.trim())
     );

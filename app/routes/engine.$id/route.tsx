@@ -101,8 +101,17 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 price,
                 userId: user.userId
             }
-            console.log("@@@@@@ Net Price is :", price)
-            await addOrUpdateCartItem(items)
+            const isFreeEngine = body.params === "Profiling Assessment" ||
+                body.params === "Digital Maturity Assessment" ||
+                body.params === "HR Technology Maturity Analysis" ||
+                body.params === "HR Tech Maturity Analysis";
+
+            if (!isFreeEngine) {
+                console.log("@@@@@@ Net Price is :", price)
+                await addOrUpdateCartItem(items)
+            } else {
+                console.log("✅ Skipping cart addition for free engine:", body.params);
+            }
 
             // Check transformation eligibility
             const { autoCheckEligibility } = await import("~/services/eligibility.service.server");
