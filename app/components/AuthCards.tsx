@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "@remix-run/react";
 import {
   motion,
   AnimatePresence,
@@ -18,7 +19,6 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
   XMarkIcon,
-  CpuChipIcon,
 } from "@heroicons/react/24/outline";
 import { getUserCountryFromIP } from "~/utils/ip.detector";
 
@@ -138,6 +138,10 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
   // FIXED: Add proper hydration control
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLogin, setIsLogin] = useState(initialIsLogin);
+  useEffect(() => {
+    setIsLogin(initialIsLogin);
+  }, [initialIsLogin]);
+
   const actionData = useActionData<{ error?: string; success?: string }>();
 
   // Country and phone control with enhanced mapping
@@ -553,9 +557,11 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
       return;
     }
   };
+  const navigate = useNavigate();
 
   const handleFormSwitch = () => {
-    setIsLogin(!isLogin);
+    const nextMode = isLogin ? "signup" : "login";
+    navigate(`/auth?mode=${nextMode}`, { replace: true });
     resetCaptchaUi();
     setPassword("");
     setConfirmPassword("");
