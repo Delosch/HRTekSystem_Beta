@@ -400,6 +400,7 @@ In today's fast-changing business landscape, Human Capital Management (HCM) solu
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 border border-slate-100 group cursor-pointer flex flex-col"
+                  onClick={() => handleToggle(blog.id)}
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
@@ -444,7 +445,11 @@ In today's fast-changing business landscape, Human Capital Management (HCM) solu
                     </div>
 
                     <button
-                      onClick={() => handleToggle(blog.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggle(blog.id);
+                      }}
+
                       className="flex items-center gap-2 text-blue-600 font-bold text-sm group-hover:gap-3 transition-all"
                     >
                       {selectedBlogId === blog.id ? "Hide Details" : "Read More"}
