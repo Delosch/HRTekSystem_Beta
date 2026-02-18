@@ -141,18 +141,6 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            to="/about-us"
-            className={pathname === "/about-us" ? activeStyle : inactiveStyle}
-          >
-            About Us
-          </Link>
-          <Link
-            to="/articles"
-            className={pathname === "/articles" ? activeStyle : inactiveStyle}
-          >
-            Articles
-          </Link>
 
           <div className="relative" ref={dropdownRef}>
             <button
@@ -201,6 +189,25 @@ export default function Navbar() {
           >
             Pricing
           </Link>
+
+          <Link
+            to="/articles"
+            className={pathname === "/articles" ? activeStyle : inactiveStyle}
+          >
+            Articles
+          </Link>
+
+          <Link
+            to="/about-us"
+            className={pathname === "/about-us" ? activeStyle : inactiveStyle}
+          >
+            About Us
+          </Link>
+          
+
+          
+
+          
           <Link
             to="/contact"
             className={pathname === "/contact" ? activeStyle : inactiveStyle}
@@ -306,20 +313,6 @@ export default function Navbar() {
                   >
                     Home
                   </Link>
-                  <Link
-                    to="/about-us"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
-                  >
-                    About Us
-                  </Link>
-                  <Link
-                    to="/articles"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/articles" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
-                  >
-                    Articles
-                  </Link>
 
                   <div className="pt-4 border-t border-white/10 mt-2">
                     <button
@@ -368,6 +361,25 @@ export default function Navbar() {
                     >
                       Pricing
                     </Link>
+                  </div>
+
+                  <Link
+                    to="/articles"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/articles" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    Articles
+                  </Link>
+
+                  <Link
+                    to="/about-us"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    About Us
+                  </Link>
+
+                  <div className="pt-4 border-t border-white/10 mt-2 flex flex-col space-y-2">
                     <Link
                       to="/contact"
                       onClick={() => setIsMobileMenuOpen(false)}
