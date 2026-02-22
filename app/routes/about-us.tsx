@@ -79,9 +79,9 @@ export default function AboutUs() {
         {/* Outer Large Card */}
         <div className="max-w-7xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden my-12 p-6 md:p-12 space-y-12">
           <div className="mb-8">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
               About Us
-            </h3>
+            </h2>
             <div className="w-16 h-1 bg-[#48cae4] mt-2 rounded"></div>
           </div>
           {/* Section 1 */}
@@ -193,9 +193,9 @@ export default function AboutUs() {
         <div className="p-6 md:p-12">
           <div className="bg-white shadow-xl rounded-2xl p-8 md:p-12">
             <div className="mb-8">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
                 Who We Are
-              </h3>
+              </h2>
               <div className="w-16 h-1 bg-[#ffbe0b] mt-2 rounded"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -295,9 +295,9 @@ export default function AboutUs() {
         <div className="p-6 md:p-12">
           <div className="bg-[#ece4db] rounded-lg shadow-lg p-6">
             <div className="mb-8">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
                 Our Leadership Team
-              </h3>
+              </h2>
               <div className="w-32 h-1 bg-[#0a9396] mt-2 rounded"></div>
             </div>
 
@@ -338,9 +338,9 @@ export default function AboutUs() {
                       />
                     </div>
                     <div className="text-center">
-                      <h2 className="text-xl font-bold text-gray-800">
+                      <h3 className="text-xl font-bold text-gray-800">
                         Atul Dixit
-                      </h2>
+                      </h3>
                       <p className="text-blue-600 font-semibold text-sm uppercase tracking-widest mb-2">Founder & CEO</p>
                       <a
                         href="https://www.linkedin.com/in/atul-dixit/"
@@ -386,9 +386,9 @@ export default function AboutUs() {
                       />
                     </div>
                     <div className="text-center">
-                      <h2 className="text-xl font-bold text-gray-800">
+                      <h3 className="text-xl font-bold text-gray-800">
                         Piyush Jaiswal
-                      </h2>
+                      </h3>
                       <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-2">Co-Founder & CMO</p>
                       <a
                         href="https://www.linkedin.com/in/piyush-jaiswal"
