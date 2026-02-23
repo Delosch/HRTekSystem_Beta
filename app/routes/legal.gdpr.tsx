@@ -90,17 +90,26 @@ export default function GDPRPolicyPage() {
                     <aside className="md:col-span-1 md:sticky top-24 self-start">
                         <nav className="space-y-1">
                             {gdprSections.map(({ id, title }) => (
-                                <a
+                                <button
                                     key={id}
-                                    href={`#${id}`}
-                                    className={`block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${activeId === id
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    onClick={() => {
+                                        const el = document.getElementById(id);
+                                        if (el) {
+                                            el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+                                            // update URL without creating history entry
+                                            window.history.replaceState(null, "", `#${id}`);
+                                        }
+                                    }}
+                                    className={`w-full text-left block px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150 ${activeId === id
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'text-gray-600 hover:bg-gray-100'
                                         }`}
                                 >
                                     {title}
-                                </a>
+                                </button>
                             ))}
+
                         </nav>
                     </aside>
 

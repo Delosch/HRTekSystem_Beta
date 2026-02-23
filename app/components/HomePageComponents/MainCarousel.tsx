@@ -120,12 +120,12 @@ export default function Carousel() {
 
                     {/* Main Heading */}
                     <div className="space-y-4 text-center lg:text-left">
-                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
                         HR-Tek Helps to Design
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                           Better HR System
                         </span>
-                      </h1>
+                      </h2>
                       <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         Automate Workflows, Empower Teams, and Drive Growth
                       </p>
@@ -188,12 +188,12 @@ export default function Carousel() {
 
                     {/* Main Heading */}
                     <div className="space-y-4 text-center lg:text-left">
-                      <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight px-2 sm:px-0">
                         Transform Your
                         <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                           HR Ecosystem
                         </span>
-                      </h1>
+                      </h2>
                       <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white/90 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         Leverage smart software to upgrade your HR ecosystem
                       </p>
