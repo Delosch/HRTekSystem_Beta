@@ -121,9 +121,9 @@ export default function ServicesTabs() {
     <section className="bg-gray-50 py-10 px-4">
       {/* Section Heading */}
       <div className="text-center mb-16 max-w-7xl mx-auto px-4">
-        <h3 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
+        <h2 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
           HR Cognitive Autopilot Engines that Diagnose, Predict, Execute
-        </h3>
+        </h2>
       </div>
 
       {/* Tab Icons */}
@@ -152,9 +152,9 @@ export default function ServicesTabs() {
             {/* Left Side */}
             <div className="space-y-8">
               <div className="space-y-6">
-                <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+                <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
                   {current!.title}
-                </h1>
+                </h3>
                 <p className="text-gray-700 text-base sm:text-lg">{current!.description}</p>
                 <Link
                   to={current!.link}
