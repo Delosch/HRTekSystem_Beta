@@ -4,9 +4,17 @@ import { json, redirect, unstable_composeUploadHandlers, unstable_createFileUplo
 import type { ActionFunction, LoaderFunction, UploadHandler } from "@remix-run/node";
 import { Layout } from "~/components/Layout";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { updateUser, deleteUser, saveOTP, verifyStoredOTP } from "~/models/user.model.server";
+import {
+  updateUser,
+  deleteUser,
+  saveOTP,
+  verifyStoredOTP,
+  getUserByEmail,
+  getUserByPhone
+} from "~/models/user.model.server";
 import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle, Smartphone, Key } from "lucide-react";
 import { sendLoginOTP } from "~/services/sms.server";
+import { createOTP, sendOTPEmail } from "~/lib/email.otp.server";
 
 import { getEnhancedUser } from "~/utils/user.server";
 
@@ -42,17 +50,27 @@ export const action: ActionFunction = async ({ request }) => {
     const last_name = formData.get("last_name") as string;
     const username = formData.get("username") as string;
     const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
     const photo = formData.get("photo");
 
     const updateData: any = {};
     if (first_name) updateData.first_name = first_name;
     if (last_name) updateData.last_name = last_name;
     if (username) updateData.username = username;
-    if (email && email !== user.email) {
-      // Store pending email in session temporarily
+    if (email && email.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
       session.set("pendingEmailChange", email);
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return json({ error: "Invalid email format." }, { status: 400 });
+      }
 
-      // Generate OTP
+      // Check if email already exists
+      const existingUser = await getUserByEmail(email.toLowerCase());
+      if (existingUser && existingUser.pk !== `USER#${user.userId}`) {
+        return json({ error: "Email is already in use." }, { status: 400 });
+      }
+
       try {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await saveOTP(user.userId, otp);
@@ -79,22 +97,59 @@ export const action: ActionFunction = async ({ request }) => {
           { status: 400 }
         );
       }
+    }
 
-      const cleanPhone = user.phone?.replace(/\D/g, "");
-      if (!cleanPhone) {
-        return json({ error: "No registered phone number found." }, { status: 400 });
+    const normalizedInput = phone.replace(/\D/g, "");
+    const normalizedStored = user.phone?.replace(/\D/g, "") || "";
+
+    if (normalizedInput !== normalizedStored) {
+      let cleanedPhone = phone.replace(/\D/g, "");
+      const countryISO = user.country_iso || "IN";
+
+      if (countryISO === "IN") {
+        // If user typed +91 or 91 manually, remove it
+        if (cleanedPhone.startsWith("91") && cleanedPhone.length > 10) {
+          cleanedPhone = cleanedPhone.substring(2);
+        }
+
+        if (!/^[6-9]\d{9}$/.test(cleanedPhone)) {
+          return json({ error: "Invalid Indian mobile number." }, { status: 400 });
+        }
+
+        cleanedPhone = `(+91)${cleanedPhone}`;
+      } else {
+        if (cleanedPhone.length < 6 || cleanedPhone.length > 15) {
+          return json({ error: "Invalid phone number length." }, { status: 400 });
+        }
+
+        cleanedPhone = `+${cleanedPhone}`;
       }
 
-      const smsResult = await sendLoginOTP(cleanPhone, otp);
+      const formattedPhone = cleanedPhone;
 
-      if (!smsResult.success) {
-        return json({ error: "Failed to send verification code." }, { status: 500 });
+      const existingUser = await getUserByPhone(formattedPhone);
+      if (existingUser && existingUser.pk !== `USER#${user.userId}`) {
+        return json({ error: "Phone number is already in use." }, { status: 400 });
       }
 
-      return json(
-        { requireEmailOTP: true, message: "Verification code sent to your phone." },
-        { headers: { "Set-Cookie": await commitSession(session) } }
-      );
+      session.set("pendingPhoneChange", formattedPhone);
+
+      try {
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await saveOTP(user.userId, otp);
+
+        await sendOTPEmail(user.email, otp);
+
+        return json(
+          { requirePhoneOTP: true, message: "Verification code sent to your email." },
+          { headers: { "Set-Cookie": await commitSession(session) } }
+        );
+      } catch (error: any) {
+        return json(
+          { error: error.message || "Please wait before requesting another OTP." },
+          { status: 400 }
+        );
+      }
     }
 
     if (photo && typeof photo === 'object' && 'name' in photo && (photo as any).size > 0) {
@@ -121,6 +176,7 @@ export const action: ActionFunction = async ({ request }) => {
     }
     return json({ success: true, message: "No data changed." });
   }
+
 
   if (intent === "request_delete_otp") {
     try {
@@ -206,6 +262,41 @@ export const action: ActionFunction = async ({ request }) => {
     }
   }
 
+  if (intent === "verify_phone_change_otp") {
+    const otp = formData.get("otp") as string;
+
+    if (!otp) {
+      return json({ error: "Verification code is required." }, { status: 400 });
+    }
+
+    const isValid = await verifyStoredOTP(user.userId, otp);
+
+    if (!isValid) {
+      return json({ error: "Invalid or expired verification code." }, { status: 400 });
+    }
+
+    const pendingPhone = session.get("pendingPhoneChange");
+
+    if (!pendingPhone) {
+      return json({ error: "No pending phone change found." }, { status: 400 });
+    }
+
+    try {
+      await updateUser(user.userId, {
+        phone: pendingPhone,
+      });
+      session.set("phone", pendingPhone);
+      session.unset("pendingPhoneChange");
+
+      return json(
+        { success: true, message: "Phone number successfully updated!" },
+        { headers: { "Set-Cookie": await commitSession(session) } }
+      );
+    } catch (error: any) {
+      return json({ error: error.message || "Failed to update phone number." }, { status: 400 });
+    }
+  }
+
   if (intent === "delete_account") {
     return json({ error: "Use OTP-based deletion instead." }, { status: 403 });
   }
@@ -215,6 +306,7 @@ export const action: ActionFunction = async ({ request }) => {
 
 export default function UserSettingsDashboard() {
   const [isEmailOtpModalOpen, setIsEmailOtpModalOpen] = useState(false);
+  const [isPhoneOtpModalOpen, setIsPhoneOtpModalOpen] = useState(false);
   const [emailOtpValue, setEmailOtpValue] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
   const { user } = useLoaderData<typeof loader>();
@@ -234,21 +326,19 @@ export default function UserSettingsDashboard() {
   }, [actionData]);
 
   useEffect(() => {
-  // Open modal when OTP is required
-  if (actionData?.requireEmailOTP) {
-    setIsEmailOtpModalOpen(true);
-  }
+    if (actionData?.requireEmailOTP) {
+      setIsEmailOtpModalOpen(true);
+    }
 
-  // Close modal after verification attempt (success OR error)
-  if (
-    actionData &&
-    !actionData.requireEmailOTP &&
-    (actionData.success || actionData.error)
-  ) {
-    setIsEmailOtpModalOpen(false);
-  }
-}, [actionData]);
+    if (actionData?.requirePhoneOTP) {
+      setIsPhoneOtpModalOpen(true);
+    }
 
+    if (actionData?.success || actionData?.error) {
+      setIsEmailOtpModalOpen(false);
+      setIsPhoneOtpModalOpen(false);
+    }
+  }, [actionData]);
   useEffect(() => {
     if (actionData?.error || actionData?.success) {
       topRef.current?.scrollIntoView({
@@ -366,6 +456,19 @@ export default function UserSettingsDashboard() {
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1.5 ml-1">If you change your email, you may need to verify it again.</p>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    defaultValue={user.phone || ""}
+                    placeholder="Enter mobile number"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                  <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                    Used for OTP verification and account security.
+                  </p>
                 </div>
               </div>
 
@@ -549,6 +652,51 @@ export default function UserSettingsDashboard() {
                     <button
                       type="button"
                       onClick={() => setIsEmailOtpModalOpen(false)}
+                      className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      {isSubmitting ? "Verifying..." : "Verify"}
+                    </button>
+                  </div>
+                </Form>
+
+              </div>
+            </div>
+          )}
+
+          {isPhoneOtpModalOpen && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative overflow-hidden">
+
+                <h3 className="text-xl font-bold mb-4">Verify Phone Change</h3>
+
+                <p className="text-gray-600 mb-6">
+                  Enter the 6-digit code sent to your registered email.
+                </p>
+
+                <Form method="post" className="space-y-4">
+                  <input type="hidden" name="intent" value="verify_phone_change_otp" />
+
+                  <input
+                    type="text"
+                    name="otp"
+                    maxLength={6}
+                    placeholder="000000"
+                    required
+                    className="w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] border-2 border-blue-100 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                  />
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsPhoneOtpModalOpen(false)}
                       className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100"
                     >
                       Cancel
