@@ -283,6 +283,30 @@ export async function getUserByEmail(email: string): Promise<DbUserItem | null> 
     }
 }
 
+export async function getUserByPhone(phone: string): Promise<DbUserItem | null> {
+    try {
+        const queryCommand = new QueryCommand({
+            TableName: USERS_TABLE,
+            IndexName: "phone-index",
+            KeyConditionExpression: "phone = :phone",
+            ExpressionAttributeValues: {
+                ":phone": phone,
+            },
+            Limit: 1,
+            ConsistentRead: false
+        });
+
+        const res = await ddbDocClient.send(queryCommand);
+        if (!res.Items || res.Items.length === 0) {
+            return null;
+        }
+
+        return res.Items[0] as DbUserItem;
+    } catch (error) {
+        console.error("Error finding user by phone:", error);
+        return null;
+    }
+}
 // updating the user
 export async function updateUser(
     userId: string,
