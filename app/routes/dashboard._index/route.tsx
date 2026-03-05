@@ -19,7 +19,7 @@ import {
   RadialBar,
   Cell,
 } from "recharts";
-import { CheckCircle, LayoutDashboard, TrendingUp, Cpu, Clock, Award, Zap, FileText } from "lucide-react";
+import { CheckCircle, LayoutDashboard, TrendingUp, Cpu, Clock, Award, Zap, FileText, Menu, X } from "lucide-react";
 import { requireUserSession } from "~/lib/session.server";
 import { getUserProfile } from "~/models/user.model.server";
 import { getCompanyProfile } from "~/models/company.model.server";
@@ -510,6 +510,7 @@ export default function Dashboard() {
   const data = useLoaderData<DashboardData>();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [activeRadialIndex, setActiveRadialIndex] = useState<number | null>(null);
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -759,10 +760,44 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {!isSidebarCollapsed && <Sidebar user={data.user} />}
+    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* Animated Background Orbs */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/30 rounded-full blur-[100px] -z-0"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-100/30 rounded-full blur-[100px] -z-0"></div>
 
-      <main className="flex-1 md:ml-64 p-4 sm:p-6">
+      {!isSidebarCollapsed && (
+        <div className="hidden md:block">
+          <Sidebar user={data.user} />
+        </div>
+      )}
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="w-64 h-full bg-white relative" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full z-10"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+            <Sidebar user={data.user} onLinkClick={() => setIsMobileMenuOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 md:ml-64 p-4 sm:p-6 relative z-10">
+        {/* Mobile Header Toggle */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-sm">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 hover:bg-white rounded-xl transition-colors">
+            <Menu className="w-6 h-6 text-slate-600" />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/hrtek_logo.png" alt="HRTek" className="h-7 w-auto" />
+            <div className="font-bold text-slate-900 font-outfit">HRTek Dashboard</div>
+          </div>
+          <div className="w-10"></div>
+        </div>
         {/* Professional Stats Overview Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           {[
@@ -772,7 +807,8 @@ export default function Dashboard() {
               value: data.metrics?.totalEngines || "5",
               subtext: "Assessment Engines",
               bg: "bg-blue-50",
-              border: "border-blue-100"
+              border: "border-blue-100",
+              accent: "bg-blue-500"
             },
             {
               icon: <CheckCircle className="w-6 h-6 text-emerald-600" />,
@@ -780,7 +816,8 @@ export default function Dashboard() {
               value: data.metrics?.completedEngines || "0",
               subtext: `${data.metrics?.progress || 0}% Done`,
               bg: "bg-emerald-50",
-              border: "border-emerald-100"
+              border: "border-emerald-100",
+              accent: "bg-emerald-500"
             },
             {
               icon: <TrendingUp className="w-6 h-6 text-indigo-600" />,
@@ -788,7 +825,8 @@ export default function Dashboard() {
               value: `${data.metrics?.progress || 0}%`,
               subtext: "Transformation",
               bg: "bg-indigo-50",
-              border: "border-indigo-100"
+              border: "border-indigo-100",
+              accent: "bg-indigo-500"
             },
             {
               icon: <Cpu className="w-6 h-6 text-amber-600" />,
@@ -796,7 +834,8 @@ export default function Dashboard() {
               value: data.metrics?.insights || "0",
               subtext: "Generated",
               bg: "bg-amber-50",
-              border: "border-amber-100"
+              border: "border-amber-100",
+              accent: "bg-amber-500"
             },
             {
               icon: <Clock className="w-6 h-6 text-cyan-600" />,
@@ -804,7 +843,8 @@ export default function Dashboard() {
               value: data.metrics?.avgTime || "45m",
               subtext: "Per Engine",
               bg: "bg-cyan-50",
-              border: "border-cyan-100"
+              border: "border-cyan-100",
+              accent: "bg-cyan-500"
             },
             {
               icon: <Award className="w-6 h-6 text-rose-600" />,
@@ -812,32 +852,33 @@ export default function Dashboard() {
               value: data.metrics?.maturity || "0.0/5",
               subtext: "Excellence",
               bg: "bg-rose-50",
-              border: "border-rose-100"
+              border: "border-rose-100",
+              accent: "bg-rose-500"
             },
           ].map((stat, idx) => (
             <div
               key={idx}
-              className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+              className="group bg-white rounded-3xl p-6 border border-slate-100/80 shadow-lg hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 relative overflow-hidden"
             >
-              <div className={`absolute top-0 left-0 w-1 h-full ${stat.bg.replace('bg-', 'bg-').replace('-50', '-500')}`}></div>
-              <div className="flex flex-col h-full">
+              <div className={`absolute top-0 left-0 w-full h-[3px] ${stat.accent} opacity-80`}></div>
+              <div className="flex flex-col h-full pt-2">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.border} border shadow-inner`}>
+                  <div className={`p-2.5 rounded-2xl ${stat.bg} ${stat.border} border shadow-inner group-hover:scale-110 transition-transform duration-300`}>
                     {stat.icon}
                   </div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.subtext.split(' ')[0]}</div>
+                  <div className={`text-[9px] font-black uppercase tracking-[0.18em] px-2 py-0.5 rounded-full ${stat.bg} ${stat.border} border text-slate-500`}>{stat.subtext.split(' ')[0]}</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-black text-slate-900 tracking-tighter mb-1 font-outfit">
+                  <div className="text-3xl font-black text-slate-900 tracking-tighter mb-0.5 font-outfit">
                     {stat.value}
                   </div>
-                  <div className="text-sm font-bold text-slate-500 uppercase tracking-tight">{stat.label}</div>
-                  <div className="mt-2 h-1 w-full bg-slate-50 rounded-full overflow-hidden">
+                  <div className="text-xs font-black text-slate-400 uppercase tracking-widest">{stat.label}</div>
+                  <div className="mt-3 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: "60%" }}
-                      transition={{ duration: 1, delay: idx * 0.1 }}
-                      className={`h-full ${stat.bg.replace('bg-', 'bg-').replace('-50', '-500')}`}
+                      transition={{ duration: 1.2, delay: idx * 0.1, ease: "easeOut" }}
+                      className={`h-full ${stat.accent} rounded-full`}
                     ></motion.div>
                   </div>
                 </div>
@@ -1206,10 +1247,11 @@ export default function Dashboard() {
               { label: "ROI (Est.)", value: "Developing", sub: "Based on data" },
               { label: "Payback Period", value: "Pending", sub: "Months" }
             ]).map((item: any, idx: number) => (
-              <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-xl transition-all group">
-                <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{item.sub || item.label?.split(' ').slice(-1)[0] || "Metric"}</div>
-                <div className="text-2xl font-black text-slate-900 tracking-tighter mb-2">{item.value || item.score || "—"}</div>
-                <div className="text-sm font-bold text-slate-600 tracking-tight">{item.label}</div>
+              <div key={idx} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                <div className="absolute bottom-0 right-0 w-20 h-20 bg-emerald-100/30 rounded-full blur-2xl group-hover:opacity-60 opacity-0 transition-opacity"></div>
+                <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-2 py-0.5 bg-slate-100 rounded-full w-fit">{item.sub || item.label?.split(' ').slice(-1)[0] || "Metric"}</div>
+                <div className="text-2xl font-black text-slate-900 tracking-tighter mb-1.5">{item.value || item.score || "—"}</div>
+                <div className="text-sm font-black text-slate-500 tracking-tight">{item.label}</div>
               </div>
             ))}
           </div>
@@ -1224,39 +1266,39 @@ export default function Dashboard() {
             <h3 className="text-xl font-black text-slate-900 tracking-tighter">Strategic Readiness Matrices</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {(data.readiness_metrics || [
               { label: "Automation Readiness", score: 0, status: "TBD" },
               { label: "ESG Maturity", score: 0, status: "TBD" },
               { label: "Cyber Resilience", score: 0, status: "TBD" },
               { label: "Future Readiness", score: 0, status: "TBD" }
             ]).map((metric, idx) => (
-              <div key={idx} className="relative p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:shadow-2xl transition-all duration-500 overflow-hidden">
-                <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 group-hover:opacity-30 transition-opacity ${metric.score >= 4 ? 'bg-emerald-400' :
+              <div key={idx} className="relative p-7 bg-slate-50 rounded-3xl border border-slate-100/80 group hover:bg-white hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-10 group-hover:opacity-25 transition-opacity ${metric.score >= 4 ? 'bg-emerald-400' :
                   metric.score >= 3 ? 'bg-blue-400' : 'bg-amber-400'
                   }`}></div>
 
-                <div className="flex items-center justify-between mb-6">
-                  <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${metric.score >= 4 ? 'bg-emerald-50 text-emerald-600' :
-                    metric.score >= 3 ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+                <div className="flex items-start justify-between mb-5">
+                  <div className={`text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-widest ${metric.score >= 4 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                    metric.score >= 3 ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
                     }`}>
                     {metric.status}
                   </div>
-                  <div className="text-2xl font-black text-slate-900 tracking-tighter">
+                  <div className={`text-2xl font-black tracking-tighter ${metric.score >= 4 ? 'text-emerald-600' : metric.score >= 3 ? 'text-blue-600' : 'text-amber-600'}`}>
                     {(metric.score || 0).toFixed(1)}
                   </div>
                 </div>
 
-                <h4 className="text-sm font-black text-slate-700 mb-4 tracking-tight">{metric.label}</h4>
+                <h4 className="text-sm font-black text-slate-800 mb-5 tracking-tight leading-tight">{metric.label}</h4>
 
-                <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                <div className="h-2 w-full bg-slate-200/80 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(metric.score / 5) * 100}%` }}
-                    transition={{ duration: 1.5, type: "spring" }}
+                    transition={{ duration: 1.5, type: "spring", delay: idx * 0.1 }}
                     className={`h-full rounded-full bg-gradient-to-r ${metric.score >= 4 ? 'from-emerald-400 to-emerald-600' :
                       metric.score >= 3 ? 'from-blue-400 to-blue-600' : 'from-amber-400 to-amber-600'
-                      } shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
+                      } shadow-sm`}
                   ></motion.div>
                 </div>
               </div>
@@ -1282,14 +1324,19 @@ export default function Dashboard() {
         )}
 
         {/* Charts - First Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-start">
           {/* Maturity Score */}
-          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="p-2 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-50 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tighter">Maturity Score</h3>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Maturity Score</h3>
+              <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full">
+                Radar Analysis
+              </div>
             </div>
             <div className="h-[400px] w-full relative">
               <ResponsiveContainer width="100%" height="100%">
@@ -1359,10 +1406,12 @@ export default function Dashboard() {
                 </RadarChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-blue-600" />
-                <h4 className="text-sm font-semibold text-slate-800">Areas of Improvement</h4>
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-blue-50 rounded-lg">
+                  <Award className="w-4 h-4 text-blue-600" />
+                </div>
+                <h4 className="text-sm font-black text-slate-800 uppercase tracking-tight">Areas of Improvement</h4>
               </div>
               <ul className="list-none space-y-2">
                 {renderImprovementContent()}
@@ -1371,15 +1420,25 @@ export default function Dashboard() {
           </div>
 
           {/* Radial Chart - Updated with Pastel Colors */}
-          <div className="bg-white rounded-xl p-6 shadow flex flex-col items-center w-full max-w-xl mx-auto">
-            <h3 className="text-lg font-semibold mb-4 text-[#1F2A5A] self-start">
-              Progress Overview
-              {activeRadialIndex !== null && (
-                <span className="text-sm font-normal text-gray-600 ml-2">
-                  (Click to deselect)
-                </span>
-              )}
-            </h3>
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl flex flex-col w-full">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 rounded-xl">
+                  <TrendingUp className="w-6 h-6 text-indigo-600" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 tracking-tighter">
+                  Progress Overview
+                  {activeRadialIndex !== null && (
+                    <span className="text-sm font-medium text-slate-400 ml-2 normal-case">
+                      (Click to deselect)
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full">
+                Dimension View
+              </div>
+            </div>
             <div className="w-full min-h-[400px] flex items-center justify-center">
               <ResponsiveContainer width="100%" height={400}>
                 <RadialBarChart
@@ -1428,14 +1487,14 @@ export default function Dashboard() {
                 </RadialBarChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 w-full">
+            <div className="mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 gap-x-6 gap-y-2 w-full">
               {data.progress_bars.map((item, index: number) => (
-                <div key={index} className="flex items-center mb-2">
+                <div key={index} className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 rounded-full mr-2"
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: PASTEL_COLORS[index % PASTEL_COLORS.length] }}
                   ></div>
-                  <span className="text-sm text-[#1F2A5A]"> {(item.dimension ?? "").split(" ")[0]}</span>
+                  <span className="text-xs font-bold text-slate-600 tracking-tight truncate">{(item.dimension ?? "").split(" ")[0]}</span>
                 </div>
               ))}
             </div>
@@ -1445,10 +1504,20 @@ export default function Dashboard() {
 
 
         {/* Middle Graphs - Second Row - Keep Original Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-          <div className="bg-white rounded-xl p-4 shadow flex flex-col justify-between h-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl flex flex-col justify-between h-full">
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-[#1F2A5A]">Assessment Completion</h3>
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-violet-50 rounded-xl">
+                    <LayoutDashboard className="w-6 h-6 text-violet-600" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tighter">Assessment Completion</h3>
+                </div>
+                <div className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-3 py-1 rounded-full">
+                  By Dimension
+                </div>
+              </div>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={barChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -1471,15 +1540,25 @@ export default function Dashboard() {
           </div>
 
           {/* Interactive Gap Analysis Bubble Chart */}
-          <div className="bg-white rounded-xl p-4 shadow flex flex-col justify-between h-full">
+          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl flex flex-col justify-between h-full">
             <motion.div
               variants={chartVariants}
               initial="hidden"
               animate="visible"
               className="h-full"
             >
-              <h3 className="text-lg font-semibold mb-2 text-[#1F2A5A]">Gap Analysis</h3>
-              <div className="relative bg-gray-50 rounded-lg p-2 h-72" onMouseLeave={() => setHovered(null)}>
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-rose-50 rounded-xl">
+                    <TrendingUp className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tighter">Gap Analysis</h3>
+                </div>
+                <div className="text-[10px] font-black text-rose-600 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full">
+                  Interactive
+                </div>
+              </div>
+              <div className="relative bg-slate-50/60 rounded-2xl p-2 h-72 border border-slate-100" onMouseLeave={() => setHovered(null)}>
                 <svg width="100%" height="100%" viewBox="0 0 500 320" className="overflow-visible">
                   {/* Grid and Axes */}
                   <defs>
@@ -1510,18 +1589,26 @@ export default function Dashboard() {
                   })}
                 </svg>
               </div>
-              <div className="mt-2 text-xs text-gray-600 text-center space-y-1">
-                <p><strong>Size:</strong> Investment • <strong>Numbers:</strong> Gap • <strong>Timeline:</strong> Months</p>
+              <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400 font-bold text-center tracking-tight">
+                <p><span className="text-slate-600 font-black">Size:</span> Investment &nbsp;•&nbsp; <span className="text-slate-600 font-black">Numbers:</span> Gap &nbsp;•&nbsp; <span className="text-slate-600 font-black">Timeline:</span> Months</p>
               </div>
             </motion.div>
           </div>
         </div>
 
         {/* Bottom Graph Row - Heatmap replacing Trends */}
-        <div className="bg-white rounded-xl p-4 shadow">
-          <h3 className="text-lg font-semibold text-[#1F2A5A] mb-4 text-center">
-            Detailed Capability Heatmap
-          </h3>
+        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl mb-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-50 rounded-xl">
+                <LayoutDashboard className="w-6 h-6 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter">Detailed Capability Heatmap</h3>
+            </div>
+            <div className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full">
+              Capability Matrix
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <Heatmap data={heatmapMatrixData} />
           </div>
@@ -1532,14 +1619,26 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 bg-white border border-gray-200 rounded-2xl p-8 shadow-xl"
+          className="mt-6 bg-white border border-slate-100 rounded-3xl p-10 shadow-xl relative overflow-hidden"
         >
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-            <span>💡</span> Key Recommendations
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600"></div>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-cyan-50 rounded-xl">
+                <Zap className="w-6 h-6 text-cyan-600" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tighter">Key Recommendations</h3>
+            </div>
+            <div className="text-[10px] font-black text-cyan-600 uppercase tracking-widest bg-cyan-50 px-3 py-1 rounded-full">
+              Strategic Guidance
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <h4 className="text-lg font-semibold text-green-600 mb-3">✓ Strengths to Leverage</h4>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-black">✓</div>
+                <h4 className="text-sm font-black text-emerald-700 uppercase tracking-widest">Strengths to Leverage</h4>
+              </div>
               {(data.consulting_report?.executive_summary?.what_this_means?.slice(0, 4) || [
                 "Analyzed infrastructure adoption",
                 "Leadership investment appetite mapping",
@@ -1551,15 +1650,18 @@ export default function Dashboard() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.9 + idx * 0.1 }}
-                  className="flex items-start gap-2 text-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100"
+                  className="flex items-start gap-3 text-slate-700 bg-gradient-to-r from-emerald-50/80 to-green-50/60 p-4 rounded-2xl border border-emerald-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <span className="text-green-500 mt-1 font-bold">✓</span>
-                  <span>{item}</span>
+                  <span className="text-emerald-500 mt-0.5 font-black text-sm flex-shrink-0">✓</span>
+                  <span className="text-sm font-medium leading-relaxed">{item}</span>
                 </motion.div>
               ))}
             </div>
             <div className="space-y-3">
-              <h4 className="text-lg font-semibold text-orange-600 mb-3">→ Priority Actions</h4>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-black">→</div>
+                <h4 className="text-sm font-black text-orange-700 uppercase tracking-widest">Priority Actions</h4>
+              </div>
               {(data.detailed_recommendations?.immediate_actions?.actions?.slice(0, 4).map((a: any) => a.action) || [
                 "Complete assessment for priority actions",
                 "Review strategic alignment",
@@ -1571,10 +1673,10 @@ export default function Dashboard() {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.9 + idx * 0.1 }}
-                  className="flex items-start gap-2 text-gray-700 bg-gradient-to-r from-orange-50 to-red-50 p-3 rounded-lg border border-orange-100"
+                  className="flex items-start gap-3 text-slate-700 bg-gradient-to-r from-orange-50/80 to-amber-50/60 p-4 rounded-2xl border border-orange-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <span className="text-orange-500 mt-1 font-bold">→</span>
-                  <span>{item}</span>
+                  <span className="text-orange-500 mt-0.5 font-black text-sm flex-shrink-0">→</span>
+                  <span className="text-sm font-medium leading-relaxed">{item}</span>
                 </motion.div>
               ))}
             </div>

@@ -1,0 +1,633 @@
+{
+    "pk": "QUESTION#roadmap-comprehensive",
+    "sk": "VERSION#2",
+    "questionSection": "HR Digital Roadmap Assessment",
+    "description": "Comprehensive assessment to generate 6/12/18/24-month HR Digital Transformation Roadmap",
+    "createdAt": "2026-02-14T12:22:00.000Z",
+    "createdBy": "system",
+    "parts": [
+        {
+            "part": "Section 1: Business Strategy & Transformation Intent",
+            "intro": "Understanding strategic drivers and alignment for HR digital transformation.",
+            "questions": [
+                {
+                    "id": "s1_q1",
+                    "number": "1",
+                    "title": "Top Business Drivers",
+                    "question": "What are the top business drivers for HR digital transformation? (Select up to 3)",
+                    "type": "checkbox",
+                    "maxSelections": 3,
+                    "options": [
+                        "Growth & scalability",
+                        "Cost optimization",
+                        "Employee experience",
+                        "Compliance & risk reduction",
+                        "Data-driven decisions",
+                        "Employer branding"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q2",
+                    "number": "2",
+                    "title": "Strategic Alignment",
+                    "question": "How aligned is HR digital strategy with overall business strategy?",
+                    "type": "radio",
+                    "options": [
+                        "Fully aligned",
+                        "Partially aligned",
+                        "HR-led only",
+                        "No formal alignment"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q3",
+                    "number": "3",
+                    "title": "Desired HR Role",
+                    "question": "What is the desired role of HR in the next 24 months?",
+                    "type": "radio",
+                    "options": [
+                        "Transactional support",
+                        "Operational partner",
+                        "Strategic advisor",
+                        "Predictive decision enabler"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q4",
+                    "number": "4",
+                    "title": "Initiative Sponsorship",
+                    "question": "Who sponsors HR digital initiatives today?",
+                    "type": "radio",
+                    "options": [
+                        "Board / CEO",
+                        "CXO leadership",
+                        "CHRO / HR Head",
+                        "No clear sponsor"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s1_q5",
+                    "number": "5",
+                    "title": "Visible Outcomes",
+                    "question": "What outcomes must be visible from HR transformation?",
+                    "type": "checkbox",
+                    "options": [
+                        "Faster hiring",
+                        "Lower HR cost",
+                        "Better workforce decisions",
+                        "Higher engagement",
+                        "Compliance readiness"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 2: HR Process Maturity & Standardization",
+            "intro": "Assessing current process standardization and documentation maturity.",
+            "questions": [
+                {
+                    "id": "s2_q1",
+                    "number": "6",
+                    "title": "Process Standardization",
+                    "question": "How standardized are HR processes across the organization?",
+                    "type": "radio",
+                    "options": [
+                        "Fully standardized",
+                        "Mostly standardized",
+                        "Partially localized",
+                        "Highly fragmented"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q2",
+                    "number": "7",
+                    "title": "SOP Documentation",
+                    "question": "Are HR SOPs documented and followed?",
+                    "type": "radio",
+                    "options": [
+                        "Fully documented & followed",
+                        "Documented but inconsistent",
+                        "Informal practices",
+                        "Not documented"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q3",
+                    "number": "8",
+                    "title": "Manual Processes",
+                    "question": "Which HR processes are still largely manual or Excel/email driven?",
+                    "type": "checkbox",
+                    "options": [
+                        "Recruitment",
+                        "Onboarding",
+                        "Payroll inputs",
+                        "Performance management",
+                        "Learning administration"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s2_q4",
+                    "number": "9",
+                    "title": "Process Benchmarking",
+                    "question": "Are HR process cycle times measured against benchmarks?",
+                    "type": "radio",
+                    "options": [
+                        "Regularly benchmarked",
+                        "Internally tracked only",
+                        "Ad-hoc",
+                        "Not measured"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 3: Current Digital Capability Landscape",
+            "intro": "Evaluating existing digital capabilities and pain points.",
+            "questions": [
+                {
+                    "id": "s3_q1",
+                    "number": "10",
+                    "title": "Digitized Areas",
+                    "question": "Which HR areas are currently digitized end-to-end?",
+                    "type": "checkbox",
+                    "options": [
+                        "Core HR",
+                        "Recruitment / ATS",
+                        "Payroll",
+                        "Performance",
+                        "Learning",
+                        "None fully digitized"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q2",
+                    "number": "11",
+                    "title": "Pain Points",
+                    "question": "What are the biggest pain points in the current HR setup? (Select up to 3)",
+                    "type": "checkbox",
+                    "maxSelections": 3,
+                    "options": [
+                        "Manual effort",
+                        "Poor user experience",
+                        "Multiple systems",
+                        "Lack of integration",
+                        "Limited analytics",
+                        "Compliance risks"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s3_q3",
+                    "number": "12",
+                    "title": "User Satisfaction",
+                    "question": "How satisfied are employees and managers with current HR systems?",
+                    "type": "radio",
+                    "options": [
+                        "Very satisfied",
+                        "Neutral",
+                        "Dissatisfied",
+                        "Strong resistance"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 4: Technology Landscape & Architecture",
+            "intro": "Understanding current technology infrastructure and integration maturity.",
+            "questions": [
+                {
+                    "id": "s4_q1",
+                    "number": "13",
+                    "title": "HCM Landscape",
+                    "question": "What is the current HCM / HR technology landscape?",
+                    "type": "radio",
+                    "options": [
+                        "Single-suite HCM",
+                        "Multiple best-of-breed tools",
+                        "Legacy / in-house systems",
+                        "No formal HR system"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q2",
+                    "number": "14",
+                    "title": "System Count",
+                    "question": "How many HR systems/tools are actively used?",
+                    "type": "radio",
+                    "options": [
+                        "1–2",
+                        "3–5",
+                        "6–10",
+                        "10+"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q3",
+                    "number": "15",
+                    "title": "System Integration",
+                    "question": "How well are HR systems integrated with ERP, Finance, ITSM, LMS?",
+                    "type": "radio",
+                    "options": [
+                        "Fully integrated",
+                        "Partially integrated",
+                        "Manual workarounds",
+                        "Not integrated"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s4_q4",
+                    "number": "16",
+                    "title": "License Optimization",
+                    "question": "Are HR vendor licenses and contracts optimized?",
+                    "type": "radio",
+                    "options": [
+                        "Fully optimized",
+                        "Underutilized",
+                        "Not reviewed"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 5: Automation, AI & Digital Enablers",
+            "intro": "Assessing automation maturity and AI readiness.",
+            "questions": [
+                {
+                    "id": "s5_q1",
+                    "number": "17",
+                    "title": "Automation Level",
+                    "question": "What level of automation exists in HR today?",
+                    "type": "radio",
+                    "options": [
+                        "Mostly manual",
+                        "Workflow-based automation",
+                        "RPA-enabled processes",
+                        "AI-assisted processes"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q2",
+                    "number": "18",
+                    "title": "Automation Percentage",
+                    "question": "Approximate percentage of HR transactions automated:",
+                    "type": "radio",
+                    "options": [
+                        "<20%",
+                        "20–40%",
+                        "40–60%",
+                        ">60%"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q3",
+                    "number": "19",
+                    "title": "AI Comfort Level",
+                    "question": "What is the organization's comfort level with AI in HR?",
+                    "type": "radio",
+                    "options": [
+                        "Fully open",
+                        "Pilot-based",
+                        "Cautious",
+                        "Not comfortable"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s5_q4",
+                    "number": "20",
+                    "title": "AI Use Cases",
+                    "question": "Which AI use cases are acceptable today?",
+                    "type": "checkbox",
+                    "options": [
+                        "Resume screening",
+                        "Chatbots / virtual HR",
+                        "Attrition prediction",
+                        "Learning recommendations",
+                        "Workforce planning"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 6: Data, Analytics & Decision Making",
+            "intro": "Evaluating data quality and analytics maturity.",
+            "questions": [
+                {
+                    "id": "s6_q1",
+                    "number": "21",
+                    "title": "Data Quality",
+                    "question": "How reliable and clean is HR data?",
+                    "type": "radio",
+                    "options": [
+                        "Highly reliable",
+                        "Mostly reliable",
+                        "Inconsistent",
+                        "Poor quality"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q2",
+                    "number": "22",
+                    "title": "Analytics Maturity",
+                    "question": "What level of HR analytics is currently used?",
+                    "type": "radio",
+                    "options": [
+                        "Basic reporting",
+                        "Diagnostic analytics",
+                        "Predictive analytics",
+                        "Prescriptive insights"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q3",
+                    "number": "23",
+                    "title": "Analytics Consumers",
+                    "question": "Who consumes HR analytics outputs?",
+                    "type": "checkbox",
+                    "options": [
+                        "HR only",
+                        "Business leaders",
+                        "Finance / strategy teams",
+                        "CXOs / Board"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s6_q4",
+                    "number": "24",
+                    "title": "Metrics Influence",
+                    "question": "Are people metrics influencing business decisions?",
+                    "type": "radio",
+                    "options": [
+                        "Regularly",
+                        "Occasionally",
+                        "Rarely",
+                        "Never"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 7: HR Operating Model & Shared Services",
+            "intro": "Understanding HR service delivery structure and efficiency.",
+            "questions": [
+                {
+                    "id": "s7_q1",
+                    "number": "25",
+                    "title": "Service Delivery Structure",
+                    "question": "How is HR service delivery structured today?",
+                    "type": "radio",
+                    "options": [
+                        "Centralized",
+                        "Decentralized",
+                        "Hybrid",
+                        "Informal"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q2",
+                    "number": "26",
+                    "title": "Shared Services Model",
+                    "question": "Is there an HR shared services model?",
+                    "type": "radio",
+                    "options": [
+                        "Mature & optimized",
+                        "Implemented but inefficient",
+                        "Planned",
+                        "Not considered"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q3",
+                    "number": "27",
+                    "title": "SLA Tracking",
+                    "question": "Are SLAs defined and tracked for HR services?",
+                    "type": "radio",
+                    "options": [
+                        "Automated tracking",
+                        "Manual tracking",
+                        "Informal",
+                        "Not tracked"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s7_q4",
+                    "number": "28",
+                    "title": "HR Effort Distribution",
+                    "question": "How is HR effort split today?",
+                    "type": "radio",
+                    "options": [
+                        "Mostly transactional",
+                        "Balanced",
+                        "Mostly strategic"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 8: Change Management & Adoption Readiness",
+            "intro": "Assessing organizational readiness for digital transformation.",
+            "questions": [
+                {
+                    "id": "s8_q1",
+                    "number": "29",
+                    "title": "Past Initiative Success",
+                    "question": "How successful were past HR technology initiatives?",
+                    "type": "radio",
+                    "options": [
+                        "Very successful",
+                        "Mixed results",
+                        "Mostly unsuccessful",
+                        "First major initiative"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s8_q2",
+                    "number": "30",
+                    "title": "Digital Capability",
+                    "question": "How digitally capable are managers and employees?",
+                    "type": "radio",
+                    "options": [
+                        "Highly capable",
+                        "Moderately capable",
+                        "Require training",
+                        "Resistant to change"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s8_q3",
+                    "number": "31",
+                    "title": "Change Management Approach",
+                    "question": "Is there a structured change management approach?",
+                    "type": "radio",
+                    "options": [
+                        "Enterprise-wide",
+                        "HR-led",
+                        "Ad-hoc",
+                        "None"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 9: Compliance, Risk & Governance",
+            "intro": "Evaluating compliance automation and governance maturity.",
+            "questions": [
+                {
+                    "id": "s9_q1",
+                    "number": "32",
+                    "title": "Compliance Automation",
+                    "question": "How automated are HR compliance and audit processes?",
+                    "type": "radio",
+                    "options": [
+                        "Fully automated",
+                        "Partially automated",
+                        "Manual",
+                        "Reactive"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q2",
+                    "number": "33",
+                    "title": "Audit Trails",
+                    "question": "Are audit trails and approvals system-driven?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "Partially",
+                        "No"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s9_q3",
+                    "number": "34",
+                    "title": "Data Privacy Governance",
+                    "question": "How mature is HR data privacy and security governance?",
+                    "type": "radio",
+                    "options": [
+                        "Enterprise-grade",
+                        "Basic policies",
+                        "Informal",
+                        "No framework"
+                    ],
+                    "required": true
+                }
+            ]
+        },
+        {
+            "part": "Section 10: Budget, Investment & Future Vision",
+            "intro": "Understanding investment readiness and long-term vision.",
+            "questions": [
+                {
+                    "id": "s10_q1",
+                    "number": "35",
+                    "title": "Budget Approval",
+                    "question": "Is a formal HR digital budget approved?",
+                    "type": "radio",
+                    "options": [
+                        "Current FY",
+                        "Next FY",
+                        "Under review",
+                        "Not planned"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q2",
+                    "number": "36",
+                    "title": "Investment Mindset",
+                    "question": "What is leadership's investment mindset?",
+                    "type": "radio",
+                    "options": [
+                        "Long-term strategic",
+                        "ROI-driven",
+                        "Cost-controlled",
+                        "Experimental"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q3",
+                    "number": "37",
+                    "title": "Future HR Perception",
+                    "question": "How should HR be perceived in 3 years?",
+                    "type": "radio",
+                    "options": [
+                        "Administrative function",
+                        "Service provider",
+                        "Strategic advisor",
+                        "Intelligence hub"
+                    ],
+                    "required": true
+                },
+                {
+                    "id": "s10_q4",
+                    "number": "38",
+                    "title": "Ecosystem Openness",
+                    "question": "Are you open to ecosystem-based HR services and partners?",
+                    "type": "radio",
+                    "options": [
+                        "Yes",
+                        "Maybe",
+                        "No"
+                    ],
+                    "required": true
+                }
+            ]
+        }
+    ],
+    "assessmentOutputs": {
+        "maturityScoring": "Calculated by section based on response patterns",
+        "phaseMapping": [
+            "6 months",
+            "12 months",
+            "18 months",
+            "24 months"
+        ],
+        "initiativeClassification": [
+            "Foundational",
+            "Tactical",
+            "Strategic",
+            "Innovative"
+        ],
+        "prioritization": {
+            "quickWins": "High impact, low effort initiatives identified from responses",
+            "longTermPrograms": "Strategic initiatives requiring sustained investment"
+        },
+        "recommendations": {
+            "platform": "Technology platform recommendations based on landscape assessment",
+            "consulting": "Consulting engagement recommendations based on maturity gaps",
+            "partners": "Ecosystem partner recommendations based on capability needs"
+        }
+    }
+}

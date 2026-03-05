@@ -38,7 +38,7 @@ const ENGINE_CONFIG: Record<string, { name: string; description: string; icon: s
     },
     "change-management": {
         id: "change-management",
-        name: "Intelligent Change Management Systems",
+        name: "Change Management Intelligence Engine",
         description: "Emotionally intelligent change strategy and stakeholder alignment",
         icon: "🔄",
     },
@@ -64,10 +64,15 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     const engineConfig = ENGINE_CONFIG[engineId];
     const engineFullName = ENGINE_NAME_MAP[engineId];
 
-    // Fetch engine data from DynamoDB
-    const engineData = user.organisationId
-        ? await findEngineData(user.organisationId, engineFullName)
-        : null;
+    // Fetch engine data from DynamoDB with error handling
+    let engineData = null;
+    try {
+        engineData = user.organisationId
+            ? await findEngineData(user.organisationId, engineFullName)
+            : null;
+    } catch (e) {
+        console.error("⚠️ DynamoDB fetch failed, using fallback:", e);
+    }
 
     const progress = engineData?.progress || 0;
 
@@ -88,9 +93,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
         totalSections: 10,
     };
 
-    // Generate contextual insights
-    const latestAnalysis = await getLatestAnalysis(user.organisationId || "", engineFullName);
-    const analysisResult = latestAnalysis?.result;
+    // Generate contextual insights with error handling
+    let analysisResult = null;
+    try {
+        const latestAnalysis = await getLatestAnalysis(user.organisationId || "", engineFullName);
+        analysisResult = latestAnalysis?.result;
+    } catch (e) {
+        console.error("⚠️ Analysis fetch failed:", e);
+    }
 
     // Generate contextual insights from real analysis
     let insights = [
@@ -151,6 +161,7 @@ export default function EngineDashboardRoute() {
             assessmentData: assessmentData as any,
             insights: insights as any,
             historicalData: historicalData as any,
+            brandName: "Your Organization" // Fallback or pass from loader
         };
 
         switch (engineConfig.id) {
@@ -162,9 +173,8 @@ export default function EngineDashboardRoute() {
 
             case "hcm-vendor-fit":
                 return <VendorFitDashboard
-                    engineData={engineConfig as any}
-                    assessmentData={assessmentData as any}
-                    insights={insights as any}
+                    data={analysisResult}
+                    brandName={commonProps.brandName}
                 />;
 
             case "shared-services":

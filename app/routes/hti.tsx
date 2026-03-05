@@ -15,7 +15,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await requireUserSession(request);
 
     if (!user.organisationId) {
-        return json({ error: "Organization ID required" }, { status: 400 });
+        const { redirect } = await import("@remix-run/node");
+        return redirect("/auth/drx");
     }
 
     // Fetch completed engines
@@ -23,17 +24,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const completedEngines = await completedEngine(user.organisationId);
 
     // Fetch company's advisories
-    const reportsResponse = await fetch(`${new URL(request.url).origin}/api/hti/reports`, {
-        headers: {
-            Cookie: request.headers.get("Cookie") || ""
-        }
-    });
+    const { getCompanyAdvisories } = await import("~/models/hti.model.server");
+    const rawReports = await getCompanyAdvisories(user.organisationId);
 
-    let reports = [];
-    if (reportsResponse.ok) {
-        const data = await reportsResponse.json();
-        reports = data.reports || [];
-    }
+    const reports = rawReports.map(report => ({
+        reportId: report.reportId,
+        status: report.status,
+        generatedAt: report.generatedAt,
+        approvedAt: report.approvedAt,
+        approvedBy: report.approvedBy,
+        executiveSummary: report.advisory?.executiveSummary
+            ? (report.advisory.executiveSummary.substring(0, 200) + "...")
+            : "No summary available",
+        completedEngines: report.inputData.completedEnginesCount || 0,
+        totalEngines: report.inputData.totalEngines || 5
+    }));
 
     // Get pricing tier
     let pricingTier = PRICING_TIERS.TRANSFORMATION;

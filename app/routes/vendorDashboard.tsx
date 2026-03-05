@@ -4,8 +4,8 @@ import EngineStatusActions from "../components/DashboardComponents/EngineStatusA
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
-import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
+import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users, Menu, X } from "lucide-react";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
@@ -50,6 +50,10 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { getCompanyPayments } = await import("~/models/payment.model.server");
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
+  const { getCompanyProfile } = await import("~/models/company.model.server");
+
+  const company = await getCompanyProfile(user.organisationId);
+  const companyLogo = company?.logo_url || null;
 
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
@@ -93,15 +97,17 @@ export const loader: LoaderFunction = async ({ request }) => {
     user,
     isPaid,
     isPending,
-    hasReport
+    hasReport,
+    companyLogo
   });
-};
+}
 
 export default function VendorDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
@@ -151,20 +157,63 @@ export default function VendorDashboard() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-yellow-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-red-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar user={user} />}
+      {!isSidebarCollapsed && (
+        <div className="hidden md:block">
+          <Sidebar user={user} />
+        </div>
+      )}
 
-      <div className={`flex-1 p-4 md:p-8 transition-all duration-300 relative z-10 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}`}>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="w-64 h-full bg-white relative animate-slide-in-left" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full z-10"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+            <Sidebar user={user} onLinkClick={() => setIsMobileMenuOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <div className={`flex-1 p-4 md:p-8 transition-all duration-300 relative z-10 ${isSidebarCollapsed ? "" : "md:ml-64"}`}>
+        {/* Mobile Header Toggle */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-sm">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 hover:bg-white rounded-xl transition-colors">
+            <Menu className="w-6 h-6 text-slate-600" />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/hrtek_logo.png" alt="HRTek" className="h-7 w-auto" />
+            {companyLogo && (
+              <>
+                <div className="h-5 w-[1px] bg-slate-200"></div>
+                <img src={companyLogo} alt="Company" className="h-7 w-auto object-contain rounded" />
+              </>
+            )}
+            <div className="font-bold text-slate-900 border-l border-slate-200 pl-2">Vendor Fit</div>
+          </div>
+          <div className="w-10"></div>
+        </div>
         {/* Header */}
         <div className="flex justify-between items-center mb-8 animate-fade-in-down">
-          <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center gap-3">
-              {engineDetails[ENGINE].icon} {engineDetails[ENGINE].name}
-              {isPaid && hasReport && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full border border-green-200">Unlocked</span>}
-              {isPending && hasReport && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200">Pending Verification</span>}
-            </h1>
-            <p className="text-gray-500 font-medium mt-1 ml-11">
-              {engineDetails[ENGINE].description}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <img src="/hrtek_logo.png" alt="HRTek" className="h-10 w-auto" />
+              {companyLogo && (
+                <>
+                  <div className="h-8 w-[1px] bg-slate-200"></div>
+                  <img src={companyLogo} alt="Company" className="h-9 w-auto object-contain rounded" />
+                </>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase whitespace-nowrap">Vendor Fit Dashboard</h1>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+                HCM Selection Intelligence • Generated for {user.organisationName || "Your Organization"}
+              </p>
+            </div>
           </div>
           <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
             <Clock className="w-4 h-4 text-orange-600" />

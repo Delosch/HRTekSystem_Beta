@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Bell, ChevronRight } from "lucide-react";
+import Logo from "./ui/Logo";
 
 interface DashboardHeaderProps {
     breadcrumbs: Array<{ label: string; href?: string }>;
@@ -36,10 +37,9 @@ export default function DashboardHeader({
                 <div className="flex items-center justify-between">
                     {/* Left: Branding + Breadcrumb */}
                     <div className="flex items-center gap-6">
-                        <a href="/" className="flex items-center gap-2 group border-r border-gray-200 pr-6">
-                            <img src="/hrtek_logo.png" alt="HRTEK" className="h-8 w-auto object-contain transition-transform group-hover:scale-105" />
-                            <span className="text-gray-900 font-black text-sm tracking-tighter">HRTEK <span className="text-blue-600">SYSTEM</span></span>
-                        </a>
+                        <div className="border-r border-gray-200 pr-6">
+                            <Logo orientation="stacked" />
+                        </div>
                         <div className="flex items-center gap-2 text-sm">
                             {breadcrumbs.map((crumb, index) => (
                                 <div key={index} className="flex items-center gap-2">

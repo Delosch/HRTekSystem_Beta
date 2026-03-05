@@ -21,11 +21,11 @@ try {
     ddbDocClient = getDynamoDBDocumentClient();
 } catch (e: unknown) {
     if (e instanceof Error) {
-        console.error(`CRITICAL ERROR: Application cannot start due to DynamoDB client error: ${e.message}`);
+        console.error(`⚠️ WARNING: DynamoDB client initialization failed: ${e.message}`);
     } else {
-        console.error("CRITICAL ERROR: Application cannot start due to an unknown DynamoDB client error.");
+        console.error("⚠️ WARNING: DynamoDB client initialization failed with an unknown error.");
     }
-    process.exit(1);
+    // Removed process.exit(1) to prevent dev server crashes on temporary network issues
 }
 
 // Define the name of your DynamoDB table.
