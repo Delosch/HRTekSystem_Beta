@@ -10,20 +10,21 @@ import { z } from "zod";
  * It includes validation rules for input data.
  */
 export const authSessionSchema = z.object({
-    userId: z.uuidv4("required uiser id"),
+    userId: z.string().uuid("Invalid user ID format"),
     first_name: z.string().min(1, "First name is required"),
     last_name: z.string().min(1, "Last name is required"),
-    email: z.email("Invalid email address").toLowerCase(),
+    email: z.string().email("Invalid email address").toLowerCase(),
     phone: z.string().refine(
         (val) => {
-            return /^\(\+\d{1,4}\)\d{6,15}$/.test(val);
+            // Updated to support (+CC)NUMBER, +CCNUMBER, and standard international formats
+            return /^\(\+\d{1,4}\)\d{6,15}$/.test(val) || /^\+\d{8,15}$/.test(val);
         },
         {
-            message: "Invalid Phone Number",
+            message: "Invalid Phone Number format",
         }
     ),
-    is_verified_phone: z.boolean("missing"),
-    is_verified_email: z.boolean("missing"),
+    is_verified_phone: z.boolean(),
+    is_verified_email: z.boolean(),
     organisationId: z.string().optional(),
     onboardingStatus: z.string(),
     two_fa_enabled: z.boolean(),
@@ -41,11 +42,11 @@ export const authSessionSchema = z.object({
  * All fields here should match what you expect to get from `session.get()`.
  */
 export const sessionDataSchema = z.object({
-    userId: z.uuidv4(), // Expecting a UUID string
+    userId: z.string().uuid(),
     first_name: z.string(),
     last_name: z.string(),
-    email: z.email(),
-    phone: z.string().optional(), // Must be optional here if it's optional in authSessionSchema
+    email: z.string().email(),
+    phone: z.string().optional(),
     is_verified_phone: z.boolean(),
     is_verified_email: z.boolean(),
     onboardingStatus: z.string(),

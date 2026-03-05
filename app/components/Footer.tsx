@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "@remix-run/react";
+import Logo from "./ui/Logo";
+import { Linkedin, Twitter, Facebook, ArrowRight, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -7,22 +9,7 @@ export default function Footer() {
       <div className="mx-auto px-6 grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
         {/* Company Info */}
         <div className="flex flex-col items-start gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-16 h-16 overflow-hidden flex items-center justify-center">
-              <img
-                src="/logo_icon_final.png"
-                alt="HR-Tek"
-                className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
-              />
-            </div>
-            <div className="flex flex-col">
-              <div className="text-2xl font-black tracking-tighter leading-none">
-                <span className="text-white">HR-TEK</span>{" "}
-                <span className="text-[#00B5E2]">SYSTEM</span>
-              </div>
-
-            </div>
-          </Link>
+          <Logo orientation="stacked" />
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
             Empowering HR transformation through intelligent software solutions
             tailored for growth.
@@ -62,9 +49,9 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/discover-more" className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 mt-2">
+              <Link to="/discover-more" className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5 mt-2 transition-all group">
                 Discover More
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </Link>
             </li>
           </ul>
@@ -109,11 +96,20 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Contact</h3>
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>Email: support@hrteksystem.com</li>
-            <li>Phone: +91 9335870619, 0522-3195292</li>
-            <li>Address: Lucknow, Uttar Pradesh, India</li>
+          <h3 className="text-lg font-semibold mb-6">Contact</h3>
+          <ul className="space-y-4 text-sm text-gray-300">
+            <li className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-cyan-400" />
+              <a href="mailto:support@hrteksystem.com" className="hover:text-white transition-colors">support@hrteksystem.com</a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-cyan-400" />
+              <span className="hover:text-white transition-colors">+91 9335870619, 0522-3195292</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <MapPin className="w-4 h-4 text-cyan-400 mt-1" />
+              <span className="hover:text-white transition-colors">Lucknow, Uttar Pradesh, India</span>
+            </li>
           </ul>
         </div>
 
@@ -194,45 +190,32 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="justify-self-end">
-          {/* <-- only change: justify-self-end so this column sits at the right */}
-          <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-          <div className="flex space-x-4">
+        <div className="justify-self-start lg:justify-self-end">
+          <h3 className="text-lg font-semibold mb-6">Follow Us</h3>
+          <div className="flex gap-4">
             <a
               href="https://in.linkedin.com/company/hr-tek-system"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-cyan-500 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/linkInSite.png"
-                alt="LinkedIn"
-                className="w-5 h-5 object-contain"
-              />
+              <Linkedin className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
             <a
               href="https://twitter.com/hrtek_system"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-black hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/xSite.png"
-                alt="X (Twitter)"
-                className="w-5 h-5 object-contain"
-              />
+              <Twitter className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
             <a
               href="https://facebook.com/hrteksystem"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/fbSite.png"
-                alt="Facebook"
-                className="w-5 h-5 object-contain"
-              />
+              <Facebook className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
           </div>
         </div>

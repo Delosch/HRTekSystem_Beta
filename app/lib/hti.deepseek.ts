@@ -1,6 +1,6 @@
 import {
-    BedrockRuntimeClient,
-    InvokeModelCommand
+  BedrockRuntimeClient,
+  InvokeModelCommand
 } from "@aws-sdk/client-bedrock-runtime";
 import type { HTIAggregatedInput, HTIAdvisoryContent } from "~/models/hti.model.server";
 
@@ -9,11 +9,11 @@ import type { HTIAggregatedInput, HTIAdvisoryContent } from "~/models/hti.model.
 // ========================================
 
 const bedrock = new BedrockRuntimeClient({
-    region: process.env.AWS_REGION || "ap-south-1",
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-    },
+  region: process.env.AWS_REGION || "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
 });
 
 const MODEL_ID = "deepseek.v3-v1:0";
@@ -25,254 +25,141 @@ const MODEL_ID = "deepseek.v3-v1:0";
 /**
  * Build comprehensive advisory prompt for DeepSeek
  */
-function buildAdvisoryPrompt(data: HTIAggregatedInput): string {
-    const { engines, completedEnginesCount, totalEngines } = data;
+export type EngineReportType = 'sharedServices' | 'changeManagement' | 'vendorFit';
 
-    // Format engine data for prompt
-    const engineSummaries: string[] = [];
+type SectionPlan = { title: string, focus: string };
 
-    if (engines.maturity) {
-        engineSummaries.push(`
-**HR Technology Maturity Analysis**:
-- Progress: ${engines.maturity.progress}%
-- Completed: ${engines.maturity.completedAt || "In Progress"}
-- Key Findings: ${JSON.stringify(engines.maturity.aiAnalysis || "Not available", null, 2)}
-`);
-    }
-
-    if (engines.roadmap) {
-        engineSummaries.push(`
-**HR Transformation Roadmap**:
-- Progress: ${engines.roadmap.progress}%
-- Completed: ${engines.roadmap.completedAt || "In Progress"}
-- Key Findings: ${JSON.stringify(engines.roadmap.aiAnalysis || "Not available", null, 2)}
-`);
-    }
-
-    if (engines.vendor) {
-        engineSummaries.push(`
-**Vendor Fit Analysis**:
-- Progress: ${engines.vendor.progress}%
-- Completed: ${engines.vendor.completedAt || "In Progress"}
-- Key Findings: ${JSON.stringify(engines.vendor.aiAnalysis || "Not available", null, 2)}
-`);
-    }
-
-    if (engines.change) {
-        engineSummaries.push(`
-**Change Management Assessment**:
-- Progress: ${engines.change.progress}%
-- Completed: ${engines.change.completedAt || "In Progress"}
-- Key Findings: ${JSON.stringify(engines.change.aiAnalysis || "Not available", null, 2)}
-`);
-    }
-
-    if (engines.sharedServices) {
-        engineSummaries.push(`
-**Shared Services Design**:
-- Progress: ${engines.sharedServices.progress}%
-- Completed: ${engines.sharedServices.completedAt || "In Progress"}
-- Key Findings: ${JSON.stringify(engines.sharedServices.aiAnalysis || "Not available", null, 2)}
-`);
-    }
-
-    const prompt = `You are a senior HR transformation consultant with 20+ years of experience advising Fortune 500 companies on HR digital transformation. You have deep expertise in HR technology, change management, shared services, and organizational design.
-
-**CONTEXT**:
-A company has completed ${completedEnginesCount} out of ${totalEngines} HR assessment engines. You have access to their comprehensive HR assessment data below.
-
-**YOUR TASK**:
-Provide board-level strategic advisory that answers:
-1. What should we do first?
-2. Is now the right time to transform?
-3. What is risky?
-4. What should we NOT do yet?
-
-**ASSESSMENT DATA**:
-${engineSummaries.join("\n---\n")}
-
-**CRITICAL INSTRUCTIONS FOR RICH CONTENT**:
-1. **Use HTML Formatting** in the executiveSummary field:
-   - Use <h2>, <h3> for section headings
-   - Use <strong>, <em> for emphasis
-   - Use <ul>, <ol> for lists
-   - Use <p> for paragraphs
-   - Use <table> for comparison data
-   - Use color coding: <span style="color: #10b981">green for strengths</span>, <span style="color: #ef4444">red for risks</span>
-
-2. **Include HTML Tables** where appropriate:
-   - Maturity comparison tables
-   - Readiness assessment matrices
-   - Priority matrices (Impact vs Effort)
-   - Timeline tables
-   Example:
-   <table border="1" style="border-collapse: collapse; width: 100%;">
-     <thead>
-       <tr style="background-color: #f3f4f6;">
-         <th style="padding: 8px;">Area</th>
-         <th style="padding: 8px;">Current</th>
-         <th style="padding: 8px;">Target</th>
-       </tr>
-     </thead>
-     <tbody>
-       <tr><td>Automation</td><td>20%</td><td>80%</td></tr>
-     </tbody>
-   </table>
-
-3. **Include Visual Heatmaps** using HTML/CSS:
-   Example for maturity heatmap:
-   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 10px 0;">
-     <div style="background: #ef4444; padding: 10px; text-align: center; color: white; border-radius: 4px;">Low: Area 1</div>
-     <div style="background: #f59e0b; padding: 10px; text-align: center; color: white; border-radius: 4px;">Medium: Area 2</div>
-     <div style="background: #10b981; padding: 10px; text-align: center; color: white; border-radius: 4px;">High: Area 3</div>
-   </div>
-
-4. **Include Progress Indicators**:
-   <div style="background: #e5e7eb; border-radius: 8px; overflow: hidden; height: 20px; margin: 10px 0;">
-     <div style="background: linear-gradient(to right, #3b82f6, #10b981); width: 65%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold;">65% Complete</div>
-   </div>
-
-5. **Include Comparison Charts** (as HTML tables with visual bars):
-   <table style="width: 100%; border-collapse: collapse;">
-     <tr>
-       <td style="padding: 8px; width: 150px;">Process Automation</td>
-       <td style="padding: 8px;">
-         <div style="background: #e5e7eb; border-radius: 4px; height: 24px; position: relative;">
-           <div style="background: linear-gradient(to right, #3b82f6, #10b981); width: 75%; height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; color: white; font-weight: bold; font-size: 12px;">75%</div>
-         </div>
-       </td>
-     </tr>
-   </table>
-
-6. **Include Risk Matrix** (HTML grid):
-   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 10px 0; font-size: 12px;">
-     <div style="background: #10b981; padding: 15px; text-align: center; color: white; font-weight: bold;">Low Risk<br/>Low Impact</div>
-     <div style="background: #f59e0b; padding: 15px; text-align: center; color: white; font-weight: bold;">Medium Risk<br/>Low Impact</div>
-     <div style="background: #ef4444; padding: 15px; text-align: center; color: white; font-weight: bold;">High Risk<br/>Low Impact</div>
-     <div style="background: #f59e0b; padding: 15px; text-align: center; color: white; font-weight: bold;">Low Risk<br/>High Impact</div>
-     <div style="background: #ef4444; padding: 15px; text-align: center; color: white; font-weight: bold;">Medium Risk<br/>High Impact</div>
-     <div style="background: #dc2626; padding: 15px; text-align: center; color: white; font-weight: bold;">CRITICAL<br/>High Impact</div>
-   </div>
-
-7. **Include Timeline Visualization**:
-   <div style="margin: 20px 0;">
-     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-       <div style="background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; flex: 1; text-align: center; font-weight: bold;">NOW<br/><small>3-6 months</small></div>
-       <div style="font-size: 24px;">→</div>
-       <div style="background: #f59e0b; color: white; padding: 10px 20px; border-radius: 8px; flex: 1; text-align: center; font-weight: bold;">NEXT<br/><small>6-12 months</small></div>
-       <div style="font-size: 24px;">→</div>
-       <div style="background: #3b82f6; color: white; padding: 10px 20px; border-radius: 8px; flex: 1; text-align: center; font-weight: bold;">LATER<br/><small>12-24 months</small></div>
-     </div>
-   </div>
-
-8. **Include Key Metrics Dashboard**:
-   <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0;">
-     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; color: white; text-align: center;">
-       <div style="font-size: 36px; font-weight: bold;">65%</div>
-       <div style="font-size: 14px; opacity: 0.9;">Digital Readiness</div>
-     </div>
-     <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 12px; color: white; text-align: center;">
-       <div style="font-size: 36px; font-weight: bold;">8/10</div>
-       <div style="font-size: 14px; opacity: 0.9;">Maturity Score</div>
-     </div>
-     <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 12px; color: white; text-align: center;">
-       <div style="font-size: 36px; font-weight: bold;">12</div>
-       <div style="font-size: 14px; opacity: 0.9;">Priority Actions</div>
-     </div>
-   </div>
-
-**CONTENT REQUIREMENTS**:
-- Be specific, not generic
-- Reference actual data from the assessments
-- Prioritize based on maturity, readiness, and risk
-- Flag dependencies clearly
-- Be honest about what should wait
-- **Make the executiveSummary rich with HTML tables, heatmaps, progress bars, and visual elements**
-- Use color coding consistently (green=good, yellow=caution, red=risk)
-
-**RESPOND IN VALID JSON FORMAT** with the following structure:
-
-{
-  "executiveSummary": "Rich HTML content with <h2> headings, <table> elements, heatmaps, progress bars, and visual dashboards. Include at least 2-3 tables, 1 heatmap, and 1 metrics dashboard. Use the HTML examples provided above.",
-  "currentState": {
-    "maturityLevel": "Low | Medium | High",
-    "digitalReadiness": "Not Ready | Partially Ready | Ready",
-    "keyGaps": ["Gap 1", "Gap 2", "Gap 3"],
-    "strengths": ["Strength 1", "Strength 2"]
-  },
-  "recommendations": {
-    "now": [
-      "Specific action 1 (Next 3-6 months)",
-      "Specific action 2",
-      "Specific action 3"
+function getEngineSections(engineType: EngineReportType): SectionPlan[] {
+  const SECTIONS: Record<EngineReportType, SectionPlan[]> = {
+    sharedServices: [
+      { title: "Executive Strategic Synthesis", focus: "Architecture of 'Case for Change', high-level maturity classification, and long-term organizational posture. (Approx 600-800 words)" },
+      { title: "Maturity Domain Deep-Dive: Service Delivery & Governance", focus: "Analyzing the 9 maturity domains specifically for governance, delivery models, and accountability structures. (Approx 800-1000 words)" },
+      { title: "The Agentic Transformation: AI-Powered Workflows", focus: "Detailed blueprint for replacing manual HR tasks with Agentic AI. Specific technology stack and operational impact. (Approx 600-800 words)" },
+      { title: "Financial Engineering & ROI Calculus", focus: "5-year cost bridge, efficiency benchmarks, and value realization timelines. Detailed ROI tables. (Approx 600-800 words)" },
+      { title: "Digital Infrastructure & Integration Architecture", focus: "Technical debt assessment and modern API-driven integration plan. (Approx 600-800 words)" },
+      { title: "3-Year Strategic Roadmap & KPIs", focus: "Phase-by-phase tactical execution plan from 'Now' to 'Future State'. (Approx 800-1000 words)" }
     ],
-    "next": [
-      "Specific action 1 (6-12 months)",
-      "Specific action 2"
+    changeManagement: [
+      { title: "Change Readiness Index Analysis (SFRI & LGI)", focus: "Strategic, Financial, and Leadership governance deep-dive. ROOT CAUSE analysis of readiness gaps. (Approx 800-1000 words)" },
+      { title: "Organizational & Cultural Readiness (OCRI)", focus: "Culture mapping, psychological safety, and change resistance drivers. (Approx 800-1000 words)" },
+      { title: "Digital & Workforce Readiness (DWRI)", focus: "Digital literacy assessment and workforce upskilling strategy. (Approx 800-1000 words)" },
+      { title: "Adoption & Sustainability Intelligence (ASII)", focus: "Ensuring persistent change and governance of adoption. (Approx 600-800 words)" },
+      { title: "Communication & Stakeholder Engagement Blueprint", focus: "Detailed communication matrix and stakeholder resistance map. (Approx 800-1000 words)" },
+      { title: "Transition Metrics & 12-Month Execution Plan", focus: "90-day quick wins and 12-month sustainability milestones. (Approx 600-800 words)" }
     ],
-    "later": [
-      "Specific action 1 (12-24 months)",
-      "Specific action 2"
+    vendorFit: [
+      { title: "Decision Framework & Recommendation", focus: "Overall fit score and Strategic Rationale. Why the selected architecture wins. (Approx 600-800 words)" },
+      { title: "Functional Coverage & Requirement Matrix", focus: "Item-by-item matching of business requirements vs vendor capability. (Approx 800-1000 words)" },
+      { title: "Technical & Security Architecture Evaluation", focus: "Cloud-native assessment, data security, and API maturity. (Approx 800-1000 words)" },
+      { title: "Total Cost of Ownership (TCO) & Negotiation Strategy", focus: "5-year financial model and license structures. (Approx 600-800 words)" },
+      { title: "Implementation Risk & Vendor Viability", focus: "Project failure risk assessment and vendor support model. (Approx 800-1000 words)" },
+      { title: "Strategic Alignment & Future-Proofing", focus: "Vendor roadmap vs Company’s 5-year growth strategy. (Approx 600-800 words)" }
     ]
-  },
-  "riskFlags": [
-    {
-      "risk": "Specific risk description",
-      "mitigation": "How to mitigate this risk"
-    }
-  ],
-  "dependencies": [
-    "Prerequisite 1 that must be in place",
-    "Prerequisite 2"
-  ],
-  "avoidNow": [
-    "Action to avoid and why",
-    "Another action to delay"
-  ],
-  "successMetrics": [
-    "Metric 1 to track progress",
-    "Metric 2"
-  ]
+  };
+  return SECTIONS[engineType];
 }
 
-**RESPOND ONLY WITH THE JSON OBJECT. NO ADDITIONAL TEXT.**`;
+function buildAdvisoryPrompt(data: HTIAggregatedInput, engineType: EngineReportType = 'sharedServices'): string {
+  const { engines } = data;
+  const sections = getEngineSections(engineType);
 
-    return prompt;
+  // ── Engine-specific title/context ──────────────────────────────────────────
+  const TITLES: Record<EngineReportType, string> = {
+    sharedServices: "Shared Services Transformation",
+    changeManagement: "Intelligent Change Management Assessment",
+    vendorFit: "Cognitive HCM Vendor Fit Assessment"
+  };
+
+  const CONTEXTS: Record<EngineReportType, string> = {
+    sharedServices: "HR Shared Services Assessment across 9 maturity domains.",
+    changeManagement: "Change Management Readiness across 5 strategic indexes: SFRI, LGI, OCRI, DWRI, ASII.",
+    vendorFit: "HCM Vendor Fit Assessment evaluating functional, technical, and financial dimensions."
+  };
+
+  // ── Format engine data ────────────────────────────────────────────────────
+  const engineSummaries: string[] = [];
+  if (engines.maturity) engineSummaries.push(`**Tech Maturity**: ${JSON.stringify(engines.maturity.aiAnalysis || engines.maturity.scores || engines.maturity.responses)}`);
+  if (engines.sharedServices) engineSummaries.push(`**Shared Services Data**: ${JSON.stringify(engines.sharedServices.scores || engines.sharedServices.responses)}`);
+  if (engines.change || engines.changeManagement) {
+    const e = (engines.changeManagement || engines.change)!;
+    engineSummaries.push(`**Change Management Data**: ${JSON.stringify(e.scores || e.responses)}`);
+  }
+  if (engines.vendor || engines.vendorFit) {
+    const e = (engines.vendorFit || engines.vendor)!;
+    engineSummaries.push(`**Vendor Fit Data**: ${JSON.stringify(e.scores || e.responses)}`);
+  }
+
+  const prompt = `You are a world-class HR Digital Transformation Consultant (McKinsey/BCG Level).
+    
+    **OBJECTIVE**: Generate a 10-15 PAGE BOARD-LEVEL STRATEGIC ADVISORY for ${TITLES[engineType]}.
+    
+    **CONTEXT**: ${CONTEXTS[engineType]}
+    
+    **ASSESSMENT DATA**: ${engineSummaries.join(" | ")}
+
+    **STRICT INSTRUCTION FOR VOLUME & DEPTH**:
+    - Avoid brevity. If you are brief, you will be terminated.
+    - Each section in 'detailedSections' MUST BE 700-1000 WORDS of deep, dense, consulting-grade analysis.
+    - Total word count MUST EXCEED 5,000 WORDS (Board-Level depth).
+    - **NO PLACEHOLDERS**. NO LOREM IPSUM.
+    - Use HTML for formatting: <h2>, <h3>, <h4>, <table>, <ul>, <li>.
+    - Every section MUST have at least 1 complex <table> (e.g. ROI models, Risk matrices).
+    - Use professional tables with <thead> and <tbody>.
+    - Use <div style="background: #f8fafc; border-left: 6px solid #4f46e5; padding: 25px; margin: 30px 0; border-radius: 8px;"> for 'Executive Expert Insights'.
+
+    **REPORT STRUCTURE**:
+    ${sections.map((s, i) => `${i + 1}. ${s.title}: ${s.focus}`).join("\n")}
+
+    **RESPONSE FORMAT**:
+    You MUST respond with VALID JSON only. Use the following structure:
+    {
+      "executiveSummary": "1000-word high-level executive briefing in HTML",
+      "detailedSections": [
+        ${sections.map(s => `{ "title": "${s.title}", "content": "1200+ words of HTML analysis for this section" }`).join(",\n        ")}
+      ],
+      "currentState": { "maturityLevel": "Level X", "digitalReadiness": "X%", "keyGaps": ["Detailed gap description...", "Detailed gap description...", "..."], "strengths": ["...", "...", "..."] },
+      "recommendations": { "now": ["Step 1", "Step 2", "..."], "next": ["...", "...", "..."], "later": ["...", "...", "..."] },
+      "riskFlags": [ { "risk": "...", "mitigation": "..." }, ... ],
+      "dependencies": ["...", "...", "..."],
+      "avoidNow": ["...", "...", "..."],
+      "successMetrics": ["Detailed KPI...", "Detailed KPI...", "..."]
+    }`;
+
+  return prompt;
 }
 
 /**
  * Extract JSON from LLM response
  */
 function safeJsonExtract(rawText: string): string {
-    const firstBrace = rawText.indexOf("{");
-    const lastBrace = rawText.lastIndexOf("}");
+  const firstBrace = rawText.indexOf("{");
+  const lastBrace = rawText.lastIndexOf("}");
 
-    if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-        throw new Error("No JSON object found in LLM response");
-    }
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error("No JSON object found in LLM response");
+  }
 
-    return rawText.slice(firstBrace, lastBrace + 1);
+  return rawText.slice(firstBrace, lastBrace + 1);
 }
 
 /**
  * Parse and validate LLM response
  */
 function parseAdvisoryResponse(llmOutput: string): HTIAdvisoryContent {
-    try {
-        const jsonStr = safeJsonExtract(llmOutput);
-        const parsed = JSON.parse(jsonStr);
+  try {
+    const jsonStr = safeJsonExtract(llmOutput);
+    const parsed = JSON.parse(jsonStr);
 
-        // Validate structure
-        if (!parsed.executiveSummary || !parsed.currentState || !parsed.recommendations) {
-            throw new Error("Invalid advisory structure from LLM");
-        }
-
-        return parsed as HTIAdvisoryContent;
-    } catch (error) {
-        console.error("Error parsing LLM response:", error);
-        console.error("Raw output:", llmOutput);
-        throw new Error("Failed to parse LLM advisory response");
+    // Validate structure (minimal check)
+    if (!parsed.executiveSummary || !parsed.currentState || !parsed.recommendations) {
+      throw new Error("Invalid advisory structure from LLM");
     }
+
+    return parsed as HTIAdvisoryContent;
+  } catch (error) {
+    console.error("Error parsing LLM response:", error);
+    throw new Error("Failed to parse LLM advisory response");
+  }
 }
 
 // ========================================
@@ -283,86 +170,48 @@ function parseAdvisoryResponse(llmOutput: string): HTIAdvisoryContent {
  * Generate HTI advisory using DeepSeek LLM
  */
 export async function generateHTIAdvisory(
-    aggregatedData: HTIAggregatedInput
+  aggregatedData: HTIAggregatedInput,
+  engineType: EngineReportType = 'sharedServices'
 ): Promise<HTIAdvisoryContent> {
-    console.log("🧠 Generating HTI Advisory with DeepSeek...");
+  console.log(`🧠 Generating HTI Advisory for ${engineType} with DeepSeek...`);
 
-    const prompt = buildAdvisoryPrompt(aggregatedData);
+  const prompt = buildAdvisoryPrompt(aggregatedData, engineType);
 
-    // DeepSeek API uses messages format, not prompt
-    const payload = {
-        messages: [
-            {
-                role: "user",
-                content: prompt
-            }
-        ],
-        max_tokens: 4000,
-        temperature: 0.7,
-        top_p: 0.9,
-    };
+  const payload = {
+    messages: [
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    max_tokens: 32000,
+    temperature: 0.7,
+  };
 
-    try {
-        const command = new InvokeModelCommand({
-            modelId: MODEL_ID,
-            contentType: "application/json",
-            accept: "application/json",
-            body: JSON.stringify(payload),
-        });
+  try {
+    const command = new InvokeModelCommand({
+      modelId: MODEL_ID,
+      contentType: "application/json",
+      accept: "application/json",
+      body: JSON.stringify(payload),
+    });
 
-        const response = await bedrock.send(command);
+    const response = await bedrock.send(command);
 
-        if (!response.body) {
-            throw new Error("Empty response from DeepSeek");
-        }
-
-        const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-        // DeepSeek with messages format returns: choices[0].message.content
-        const llmOutput = responseBody.choices?.[0]?.message?.content ||
-            responseBody.choices?.[0]?.text ||
-            responseBody.completion ||
-            "";
-
-        if (!llmOutput) {
-            console.error("❌ DeepSeek response structure:", JSON.stringify(responseBody, null, 2));
-            throw new Error("No text in DeepSeek response");
-        }
-
-        console.log("✅ DeepSeek response received");
-
-        const advisory = parseAdvisoryResponse(llmOutput);
-
-        console.log("✅ HTI Advisory generated successfully");
-        return advisory;
-    } catch (error) {
-        console.error("❌ Error generating HTI advisory:", error);
-        throw error;
+    if (!response.body) {
+      throw new Error("Empty response from DeepSeek");
     }
-}
 
-/**
- * Test function to validate DeepSeek connection
- */
-export async function testDeepSeekConnection(): Promise<boolean> {
-    try {
-        const testPayload = {
-            prompt: "Say 'HTI is ready' in JSON format: {\"message\": \"...\"}",
-            max_tokens: 50,
-            temperature: 0.1,
-        };
+    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+    const llmOutput = responseBody.choices?.[0]?.message?.content || "";
 
-        const command = new InvokeModelCommand({
-            modelId: MODEL_ID,
-            contentType: "application/json",
-            accept: "application/json",
-            body: JSON.stringify(testPayload),
-        });
-
-        const response = await bedrock.send(command);
-        console.log("✅ DeepSeek connection test successful");
-        return true;
-    } catch (error) {
-        console.error("❌ DeepSeek connection test failed:", error);
-        return false;
+    if (!llmOutput) {
+      throw new Error("No text in DeepSeek response");
     }
+
+    return parseAdvisoryResponse(llmOutput);
+  } catch (error) {
+    console.error("❌ Error generating HTI advisory:", error);
+    throw error;
+  }
 }

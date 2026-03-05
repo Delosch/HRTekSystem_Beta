@@ -301,26 +301,30 @@ export default function ProposalTransformationCorporate() {
               </div>
 
               <div className="prose prose-slate max-w-none">
-                <p className="text-xl leading-relaxed text-slate-700 font-medium">
+                <p className="text-xl leading-relaxed text-slate-700 font-medium mb-8">
                   HR-Tek System proposes a structured, outcome-driven engagement designed to assess, modernize, and unify {clientName}’s HR ecosystem. Our model ensures measurable business impact through the integration of proprietary assessment engines and advisory frameworks.
                 </p>
 
-                <div className="grid grid-cols-2 gap-8 my-12">
-                  <div className="bg-[#FAFBFD] p-8 border-l-4 border-blue-600">
-                    <h4 className="text-blue-900 font-bold text-sm mb-2">The Model</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                      Our <span className="font-bold text-slate-900 italic">Assess → Advise → Implement → Optimize</span> framework ensures that every technology decision is backed by data and aligned with business growth.
-                    </p>
+                {latestReport?.advisory?.executiveSummary ? (
+                  <div className="bg-slate-50 p-10 rounded-3xl border border-slate-100 proposal-html-content" dangerouslySetInnerHTML={{ __html: latestReport.advisory.executiveSummary }} />
+                ) : (
+                  <div className="grid grid-cols-2 gap-8 my-12">
+                    <div className="bg-[#FAFBFD] p-8 border-l-4 border-blue-600">
+                      <h4 className="text-blue-900 font-bold text-sm mb-2">The Model</h4>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        Our <span className="font-bold text-slate-900 italic">Assess → Advise → Implement → Optimize</span> framework ensures that every technology decision is backed by data and aligned with business growth.
+                      </p>
+                    </div>
+                    <div className="bg-[#FAFBFD] p-8 border-l-4 border-slate-900">
+                      <h4 className="text-slate-900 font-bold text-sm mb-2">The Impact</h4>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        We target a reduction in manual processing, enhancement in employee NPS, and total transparency in HR spend through consolidated SaaS governance.
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-[#FAFBFD] p-8 border-l-4 border-slate-900">
-                    <h4 className="text-slate-900 font-bold text-sm mb-2">The Impact</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                      We target a reduction in manual processing, enhancement in employee NPS, and total transparency in HR spend through consolidated SaaS governance.
-                    </p>
-                  </div>
-                </div>
+                )}
 
-                <p className="text-slate-500 text-sm italic">
+                <p className="text-slate-500 text-sm italic mt-8">
                   This proposal outlines the complete project lifecycle, processes, deliverables, and commercial structures managed natively within the HR-Tek System platform.
                 </p>
               </div>
@@ -337,13 +341,13 @@ export default function ProposalTransformationCorporate() {
                 <div>
                   <h3 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-8">Strategic Priorities</h3>
                   <ul className="space-y-6">
-                    {[
+                    {(latestReport?.advisory?.currentState?.keyGaps || [
                       "Standardize HR processes across global entities",
                       "Leverage AI for predictive talent analytics",
                       "Modernize legacy HCM infrastructure",
                       "Optimize total cost of HR ownership (TCO)",
                       "Establish a future-ready HR operating model"
-                    ].map((obj, i) => (
+                    ]).map((obj: string, i: number) => (
                       <li key={i} className="flex gap-4 items-start">
                         <div className="w-6 h-6 bg-blue-50 text-blue-600 rounded-md flex items-center justify-center shrink-0 mt-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
@@ -361,9 +365,9 @@ export default function ProposalTransformationCorporate() {
                   <div className="space-y-6">
                     {[
                       { label: "Complexity", val: "Enterprise / Multi-Entity" },
-                      { label: "Maturity Level", val: "Foundational / Transitional" },
-                      { label: "Integration Needs", val: "High (ERP/Financials/CRM)" },
-                      { label: "Change Intensity", val: "High Impact" }
+                      { label: "Maturity Level", val: latestReport?.advisory?.currentState?.maturityLevel || "Foundational / Transitional" },
+                      { label: "Readiness Index", val: latestReport?.advisory?.currentState?.digitalReadiness || "High Impact" },
+                      { label: "Key Strengths", val: latestReport?.advisory?.currentState?.strengths?.[0] || "Architecture Ready" }
                     ].map((item, i) => (
                       <div key={i} className="flex justify-between items-end border-b border-slate-200 pb-2">
                         <span className="text-xs font-bold text-slate-500 uppercase">{item.label}</span>
@@ -798,6 +802,15 @@ export default function ProposalTransformationCorporate() {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; }
 
+        .proposal-html-content h2 { color: #1e293b; font-weight: 800; font-size: 1.875rem; margin-top: 2.5rem; margin-bottom: 1.25rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .proposal-html-content h3 { color: #334155; font-weight: 700; font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+        .proposal-html-content p { color: #475569; line-height: 1.75; margin-bottom: 1.25rem; }
+        .proposal-html-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+        .proposal-html-content li { color: #475569; margin-bottom: 0.5rem; }
+        .proposal-html-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border: 1px solid #e2e8f0; }
+        .proposal-html-content th { background-color: #f8fafc; padding: 0.75rem; text-align: left; border: 1px solid #e2e8f0; font-weight: 600; }
+        .proposal-html-content td { padding: 0.75rem; border: 1px solid #e2e8f0; }
+
         @media print {
           body { background: white !important; }
           aside, header, footer { display: none !important; }
@@ -807,7 +820,7 @@ export default function ProposalTransformationCorporate() {
           h2 { border-bottom-color: black !important; }
         }
       `}</style>
-    </div>
+    </div >
   );
 }
 

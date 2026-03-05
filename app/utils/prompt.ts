@@ -96,11 +96,60 @@ Generate a comprehensive JSON response with this EXACT structure:
     "bar_chart": { "dimensions": [], "answeredQuestions": [], "totalQuestions": [] },
     "readiness_metrics": [{ "label": "...", "score": 0, "status": "..." }],
     "consulting_report": { 
-      "executive_summary": { "overall_maturity_index": 0, "maturity_category": "...", "what_this_means": [], "executive_recommendation": "..." },
-      "maturity_scorecard": [{ "dimension": "...", "score": 0, "max_score": 0, "risk_level": "..." }],
-      "dimension_deep_dives": [{ "dimension": "...", "current_state": [], "business_impact": [], "recommendations": [] }],
-      "business_risk_opportunity": { "top_risks": [], "opportunity_areas": [] },
-      "transformation_priority_matrix": [], "transformation_roadmap": [], "investment_indication": []
+      "executive_summary": { 
+        "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+        "key_insight": "string" 
+      },
+      "strategic_drivers": {
+        "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+        "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+        "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+      },
+      "capability_assessment": {
+        "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+        "bottlenecks": [{ "issue": "string", "severity": 0 }],
+        "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+      },
+      "priority_portfolio": {
+        "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+        "recommended_sequence": ["string"]
+      },
+      "change_readiness": {
+        "readiness_thermometer": { "score": 0, "label": "string" },
+        "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+        "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+        "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+      },
+      "architecture_assessment": {
+        "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+        "recommended_architecture": "string",
+        "integration_priority": "string"
+      },
+      "governance_metrics": {
+        "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+        "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+        "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+      },
+      "budget_timeline": {
+        "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+        "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+        "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+        "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+      },
+      "transformation_roadmap": {
+        "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+        "dependencies_critical_path": ["string"]
+      },
+      "scenario_risk_management": {
+        "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+      },
+      "recommendations_next_steps": {
+        "immediate_actions": ["string"],
+        "critical_success_factors": ["string"],
+        "risk_mitigation_strategy": ["string"]
+      }
     }
   },
   "strategic_insights": { "overall_assessment": "...", "maturity_stage_description": "...", "competitive_position": "...", "transformation_readiness": { "score": 0, "readiness_level": "...", "enabling_factors": [], "blocking_factors": [] } },
@@ -469,6 +518,14 @@ Tagging Rules (max 10, unique)
 Output schema
 Return exactly:
 {
+"meta": {
+  "narrativeAnalysis": {
+    "strategicLogic": "1000+ words on why these specific vendors were selected and the trade-offs involved.",
+    "marketPositioning": "Deep analysis of the vendor landscape as it relates to this specific user (600+ words).",
+    "financialTCOAnalysis": "Detailed explanation of the Year 0-3 projections and hidden cost levers (600+ words).",
+    "technicalSuitability": "Commentary on native vs custom feature coverage and integration risks (600+ words)."
+  }
+},
 "profile": {
 "organizationName": string|null,
 "industry": string|null,
@@ -552,15 +609,94 @@ Return exactly:
 "reasons": string[],
 "riskFlags": string[]
 }
+],
+"deepDive": {
+"featureCoverage": [
+{ "category": "Core HR", "native": number, "configurable": number, "custom": number },
+{ "category": "Talent", "native": number, "configurable": number, "custom": number },
+{ "category": "Payroll", "native": number, "configurable": number, "custom": number }
+],
+"financialTCO": [
+{ "year": "Year 0", "subscription": number, "implementation": number, "other": number },
+{ "year": "Year 1", "subscription": number, "implementation": number, "other": number },
+{ "year": "Year 2", "subscription": number, "implementation": number, "other": number },
+{ "year": "Year 3", "subscription": number, "implementation": number, "other": number }
+],
+"tradeOff": [
+{ "vendor": "Vendor A", "innovation": number, "cost": number, "risk": number },
+{ "vendor": "Vendor B", "innovation": number, "cost": number, "risk": number }
 ]
+},
+"consulting_report": { 
+  "executive_summary": { 
+    "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+    "key_insight": "string" 
+  },
+  "strategic_drivers": {
+    "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+    "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+    "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+  },
+  "capability_assessment": {
+    "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+    "bottlenecks": [{ "issue": "string", "severity": 0 }],
+    "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+  },
+  "priority_portfolio": {
+    "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+    "recommended_sequence": ["string"]
+  },
+  "change_readiness": {
+    "readiness_thermometer": { "score": 0, "label": "string" },
+    "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+    "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+    "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+  },
+  "architecture_assessment": {
+    "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+    "recommended_architecture": "string",
+    "integration_priority": "string"
+  },
+  "governance_metrics": {
+    "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+    "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+    "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+  },
+  "budget_timeline": {
+    "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+    "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+    "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+    "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+  },
+  "transformation_roadmap": {
+    "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+    "dependencies_critical_path": ["string"]
+  },
+  "scenario_risk_management": {
+    "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+    "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+    "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+  },
+  "recommendations_next_steps": {
+    "immediate_actions": ["string"],
+    "critical_success_factors": ["string"],
+    "risk_mitigation_strategy": ["string"]
+  }
+}
 }
 }
 
+## DETAILED REPORTING REQUIREMENTS (10-12 PAGES DEPTH):
+- **Executive Summary**: 500+ words of board-level strategic advice.
+- **Deep-Dive Feature Analysis**: Detailed comparison of Native vs Custom requirements.
+- **TCO Breakdown**: Explain every cost lever in the 3-year projection.
+- **Innovation vs Cost**: Provide a robust rationale for the scatter plot placement of each vendor.
+
 ## DASHBOARD VISUALIZATION RULES:
-- **Executive Radar**: All 5 metrics must be accurately calculated. Satisfaction should be inverted if needed to match a "higher is better" scale in radar.
-- **Landscape View**: Urgency score must align with challenges count and low satisfaction.
-- **Integration & Scalability**: Integration complexity should be a realistic reflection of the number of tools selected.
-- **Recommendations Table**: Ensure fit scores are differentiated and reasons are specific to the organization's profile.
+- **Executive Radar**: All 5 metrics must be accurately calculated.
+- **Feature Coverage**: Categories must align with the "modules" requested.
+- **Financial TCO**: Ensure "implementation" costs peak in Year 0/1.
+- **Trade-off Plot**: Values must reflect the balance between "costSensitivity" and "growthPercent".
 
 ${prompt_extra}
 
@@ -698,6 +834,62 @@ Output schema (return exactly this JSON shape):
 "sensitivityNotes": [
 "Which items are most sensitive to budget, change readiness, or governance shifts."
 ]
+},
+"consulting_report": { 
+  "executive_summary": { 
+    "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+    "key_insight": "string" 
+  },
+  "strategic_drivers": {
+    "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+    "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+    "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+  },
+  "capability_assessment": {
+    "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+    "bottlenecks": [{ "issue": "string", "severity": 0 }],
+    "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+  },
+  "priority_portfolio": {
+    "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+    "recommended_sequence": ["string"]
+  },
+  "change_readiness": {
+    "readiness_thermometer": { "score": 0, "label": "string" },
+    "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+    "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+    "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+  },
+  "architecture_assessment": {
+    "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+    "recommended_architecture": "string",
+    "integration_priority": "string"
+  },
+  "governance_metrics": {
+    "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+    "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+    "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+  },
+  "budget_timeline": {
+    "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+    "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+    "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+    "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+  },
+  "transformation_roadmap": {
+    "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+    "dependencies_critical_path": ["string"]
+  },
+  "scenario_risk_management": {
+    "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+    "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+    "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+  },
+  "recommendations_next_steps": {
+    "immediate_actions": ["string"],
+    "critical_success_factors": ["string"],
+    "risk_mitigation_strategy": ["string"]
+  }
 }
 }
 
@@ -1094,6 +1286,13 @@ Identify improvements in:
     "modelType": "Centralized | Hybrid | Decentralized | Recommended",
     "maturityLevel": "Initial | Developing | Defined | Managed | Optimized"
   },
+  "narrativeAnalysis": {
+    "executiveVerdict": "Comprehensive 1000+ word overview of the strategic direction and 'Why it matters'.",
+    "operationalFramework": "Detailed evaluation of the service delivery model and tiering logic (600+ words).",
+    "financialCase": "Deep dive into the cost bridge, TCO, and ROI timeframes (600+ words).",
+    "technologyEnablement": "Analysis of the tech stack suitability and integration requirements (600+ words).",
+    "riskAndChange": "Detailed commentary on governance risks and organizational change requirements (600+ words)."
+  },
   "currentStateAnalysis": {
     "deliveryModel": {
       "type": "Current model type",
@@ -1242,30 +1441,112 @@ Identify improvements in:
       "trainingNeeds": ["System training", "Process training", "Soft skills"]
     }
   },
-  "benchmarkComparison": {
-    "industryAverages": {
-      "hrToEmployeeRatio": "1:100",
-      "automationLevel": "45%",
-      "selfServiceAdoption": "60%",
-      "avgCostPerEmployee": "$1,200/year"
+    "benchmarkComparison": {
+      "industryAverages": {
+        "hrToEmployeeRatio": "1:100",
+        "automationLevel": "45%",
+        "selfServiceAdoption": "60%",
+        "avgCostPerEmployee": "$1,200/year"
+      },
+      "yourPosition": {
+        "hrToEmployeeRatio": "1:80",
+        "automationLevel": "30%",
+        "selfServiceAdoption": "40%",
+        "avgCostPerEmployee": "$1,500/year"
+      },
+      "gaps": ["Gap 1 with recommendation", "Gap 2 with recommendation"]
     },
-    "yourPosition": {
-      "hrToEmployeeRatio": "1:80",
-      "automationLevel": "30%",
-      "selfServiceAdoption": "40%",
-      "avgCostPerEmployee": "$1,500/year"
+    "deepViz": {
+      "costBridge": [
+        { "label": "Baseline", "value": number, "type": "baseline" },
+        { "label": "Automation", "value": number, "type": "saving" },
+        { "label": "Self-Service", "value": number, "type": "saving" },
+        { "label": "Outsourcing", "value": number, "type": "saving" },
+        { "label": "Target", "value": number, "type": "target" }
+      ],
+      "efficiencyScaling": [
+        { "period": "Q1", "volume": number, "headcount": number },
+        { "period": "Q2", "volume": number, "headcount": number },
+        { "period": "Q3", "volume": number, "headcount": number },
+        { "period": "Q4", "volume": number, "headcount": number }
+      ],
+      "demandCapacity": [
+        { "month": "Jan", "demand": number, "capacity": number },
+        { "month": "Feb", "demand": number, "capacity": number },
+        { "month": "Mar", "demand": number, "capacity": number }
+      ]
     },
-    "gaps": ["Gap 1 with recommendation", "Gap 2 with recommendation"]
+    "consulting_report": { 
+      "executive_summary": { 
+        "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+        "key_insight": "string" 
+      },
+      "strategic_drivers": {
+        "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+        "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+        "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+      },
+      "capability_assessment": {
+        "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+        "bottlenecks": [{ "issue": "string", "severity": 0 }],
+        "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+      },
+      "priority_portfolio": {
+        "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+        "recommended_sequence": ["string"]
+      },
+      "change_readiness": {
+        "readiness_thermometer": { "score": 0, "label": "string" },
+        "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+        "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+        "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+      },
+      "architecture_assessment": {
+        "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+        "recommended_architecture": "string",
+        "integration_priority": "string"
+      },
+      "governance_metrics": {
+        "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+        "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+        "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+      },
+      "budget_timeline": {
+        "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+        "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+        "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+        "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+      },
+      "transformation_roadmap": {
+        "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+        "dependencies_critical_path": ["string"]
+      },
+      "scenario_risk_management": {
+        "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+      },
+      "recommendations_next_steps": {
+        "immediate_actions": ["string"],
+        "critical_success_factors": ["string"],
+        "risk_mitigation_strategy": ["string"]
+      }
+    }
   }
 }
 
-${prompt_extra}
+## DETAILED REPORTING REQUIREMENTS (10-12 PAGES DEPTH):
+- **Service Blueprint**: 800+ words describing the end-to-end service journey.
+- **Financial Rationale**: Detailed explanation of the cost reduction levers (Waterfall).
+- **Scale Impact**: Explain how efficiency scaling (Volume vs Headcount) evolves over 4 quarters.
+- **Implementation Strategy**: Granular breakdown of Phase 1-3.
 
 ## DASHBOARD & VISUALIZATION RULES:
-- **Service Distribution**: Ensure percentages sum to exactly 100 for both current and target states.
-- **Process Maturity**: Standardization and Automation scores must reflect the specific pain points mentioned.
-- **Volume Metrics**: Ensure monthly tickets and resolution times are realistic for the company size.
-- **KPI Comparisons**: Target and Benchmark values should provide a clear "gap to close" visualization.
+- **Service Distribution**: Ensure percentages sum to exactly 100.
+- **Cost Bridge**: Ensure the 'Target' value equals Baseline + all intermediate levers.
+- **Demand/Capacity**: Reflect peak periods mentioned in the responses.
+
+${prompt_extra}
 
 Analyze the provided assessment data and generate the complete shared service design.`
   },
@@ -1326,6 +1607,12 @@ Analyze change readiness and generate a comprehensive change management strategy
     "changeType": "HR Technology | Process | Organizational | Cultural",
     "overallReadiness": "Low | Medium | High",
     "riskLevel": "Low | Medium | High | Critical"
+  },
+  "narrativeAnalysis": {
+    "psychologicalReadiness": "1000+ word analysis of the organization's collective emotional state (Hope/Fear/etc) and the 'Dominant Emotion' drivers.",
+    "stakeholderDynamics": "Deep dive into departmental risk, influence maps, and winning over 'Antagonists' (600+ words).",
+    "trainingPhilosophy": "Detailed strategy for skill gap closure, digital dexterity, and the 'Learning Loop' effectiveness (600+ words).",
+    "riskMitigationFramework": "Exhaustive commentary on the top risks, intervention triggers, and critical failure points (600+ words)."
   },
   "readinessAssessment": {
     "overallScore": 3.5,
@@ -1571,17 +1858,97 @@ Analyze change readiness and generate a comprehensive change management strategy
         "owner": "Change Manager"
       }
     ],
-    "assumptionsTested": ["Assumption 1 and validation approach", "Assumption 2 and validation approach"]
+    "assumptionsTested": ["Assumption 1 and validation approach", "Assumption 2 and validation approach"],
+    "deepViz": {
+      "emotionTracking": [
+        { "emotion": "Hope", "value": number, "fill": "#10b981" },
+        { "emotion": "Fear", "value": number, "fill": "#ef4444" },
+        { "emotion": "Confusion", "value": number, "fill": "#f59e0b" },
+        { "emotion": "Frustration", "value": number, "fill": "#6366f1" }
+      ],
+      "deptRiskHeatmap": [
+        { "dept": "IT", "crs": number, "risk": "Low" },
+        { "dept": "Finance", "crs": number, "risk": "High" },
+        { "dept": "Sales", "crs": number, "risk": "Med" },
+        { "dept": "HR", "crs": number, "risk": "Low" }
+      ],
+      "learningLoop": [
+        { "name": "Week 1", "predicted": number, "actual": number },
+        { "name": "Week 4", "predicted": number, "actual": number },
+        { "name": "Week 8", "predicted": number, "actual": number }
+      ]
+    },
+    "consulting_report": { 
+      "executive_summary": { 
+        "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+        "key_insight": "string" 
+      },
+      "strategic_drivers": {
+        "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+        "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+        "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+      },
+      "capability_assessment": {
+        "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+        "bottlenecks": [{ "issue": "string", "severity": 0 }],
+        "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+      },
+      "priority_portfolio": {
+        "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+        "recommended_sequence": ["string"]
+      },
+      "change_readiness": {
+        "readiness_thermometer": { "score": 0, "label": "string" },
+        "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+        "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+        "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+      },
+      "architecture_assessment": {
+        "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+        "recommended_architecture": "string",
+        "integration_priority": "string"
+      },
+      "governance_metrics": {
+        "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+        "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+        "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+      },
+      "budget_timeline": {
+        "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+        "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+        "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+        "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+      },
+      "transformation_roadmap": {
+        "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+        "dependencies_critical_path": ["string"]
+      },
+      "scenario_risk_management": {
+        "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+        "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+      },
+      "recommendations_next_steps": {
+        "immediate_actions": ["string"],
+        "critical_success_factors": ["string"],
+        "risk_mitigation_strategy": ["string"]
+      }
+    }
   }
 }
 
-${prompt_extra}
+## DETAILED REPORTING REQUIREMENTS (10-12 PAGES DEPTH):
+- **Strategic Intervention**: 600+ words on the most critical weekly priority.
+- **Sentiment Narrative**: Comprehensive analysis of the "Dominant Emotion" and its drivers.
+- **Risk Landscape**: Detailed heatmap commentary and stakeholder win strategies.
+- **Training Enablement**: Deep dive into audience-specific skill gaps.
 
 ## DASHBOARD & VISUALIZATION RULES:
-- **Readiness Dimension Scores**: Scores (1-5) must be well-justified by the "evidence" and "gaps" fields.
-- **Stakeholder Matrix**: Categorize groups onto the Power-Interest matrix logically. Influence and Impact should guide the placement.
-- **Timeline Logic**: Activities in Prepare, Enable, Sustain phases must follow a logical sequence.
-- **Metric Distributions**: Leading and Lagging indicators must have clear targets and frequencies.
+- **Emotion Tracking**: Values must sum to 100.
+- **Dept Risk**: CRS (Change Readiness Score) must be consistent with department size and influence.
+- **Learning Loop**: 'Actual' values should show a trend towards 'Predicted' values by the final week.
+
+${prompt_extra}
 
 Analyze the provided assessment data and generate the complete change management strategy.`
   },
@@ -1593,349 +1960,349 @@ Analyze the provided assessment data and generate the complete change management
 You are an expert HR technology strategist specializing in technology stack assessment, integration architecture, and digital maturity evaluation.
 
 ## ROLE & OBJECTIVES:
-Analyze HR technology landscape and generate comprehensive maturity assessment with:
-- Technology stack evaluation
-- Integration maturity analysis
-- Data management assessment
-- User experience evaluation
-- Security and compliance review
-- Optimization roadmap
+  Analyze HR technology landscape and generate comprehensive maturity assessment with:
+  - Technology stack evaluation
+    - Integration maturity analysis
+      - Data management assessment
+        - User experience evaluation
+          - Security and compliance review
+            - Optimization roadmap
 
 ## INPUT DATA:
 - Assessment responses covering:
   * Current HR technology portfolio
   * Integration architecture
-  * Data management practices
-  * User adoption and satisfaction
-  * Security and compliance posture
-  * Innovation and emerging tech
+    * Data management practices
+      * User adoption and satisfaction
+        * Security and compliance posture
+          * Innovation and emerging tech
 
-## MATURITY MODEL (1-5 Scale):
+## MATURITY MODEL(1 - 5 Scale):
 
-### Level 1: Initial (Ad-hoc)
-- Disconnected point solutions
-- Manual data entry and reconciliation
-- No integration strategy
-- Limited self-service
-- Reactive support
+### Level 1: Initial(Ad - hoc)
+  - Disconnected point solutions
+    - Manual data entry and reconciliation
+      - No integration strategy
+        - Limited self - service
+          - Reactive support
 
-### Level 2: Developing (Repeatable)
-- Some integrated modules
-- Basic automation
-- Documented processes
-- Growing self-service
-- Defined support model
+### Level 2: Developing(Repeatable)
+  - Some integrated modules
+    - Basic automation
+      - Documented processes
+        - Growing self - service
+          - Defined support model
 
-### Level 3: Defined (Standardized)
-- Integrated HR suite
-- Automated workflows
-- API-based integrations
-- Comprehensive self-service
-- Proactive monitoring
+### Level 3: Defined(Standardized)
+  - Integrated HR suite
+    - Automated workflows
+      - API - based integrations
+        - Comprehensive self - service
+          - Proactive monitoring
 
-### Level 4: Managed (Measured)
-- Cloud-native platform
-- Real-time data sync
-- Advanced analytics
-- Mobile-first experience
-- Predictive insights
+### Level 4: Managed(Measured)
+  - Cloud - native platform
+    - Real - time data sync
+      - Advanced analytics
+        - Mobile - first experience
+          - Predictive insights
 
-### Level 5: Optimized (Continuous Improvement)
-- AI-powered automation
-- Unified data model
-- Intelligent recommendations
-- Personalized experiences
-- Innovation-driven
+### Level 5: Optimized(Continuous Improvement)
+  - AI - powered automation
+    - Unified data model
+      - Intelligent recommendations
+        - Personalized experiences
+          - Innovation - driven
 
 ## ASSESSMENT DIMENSIONS:
 
-### 1. Platform Architecture (Weight: 20%)
-- **Core HRMS**: Legacy / Modern / Cloud-native
-- **Module Coverage**: Payroll, Benefits, Talent, Learning, etc.
-- **Deployment**: On-premise / Hybrid / SaaS
-- **Scalability**: Limited / Moderate / Highly scalable
-- **Vendor Strategy**: Best-of-breed / Suite / Hybrid
+### 1. Platform Architecture(Weight: 20 %)
+  - ** Core HRMS **: Legacy / Modern / Cloud - native
+    - ** Module Coverage **: Payroll, Benefits, Talent, Learning, etc.
+- ** Deployment **: On - premise / Hybrid / SaaS
+  - ** Scalability **: Limited / Moderate / Highly scalable
+    - ** Vendor Strategy **: Best - of - breed / Suite / Hybrid
 
-### 2. Integration & Data (Weight: 25%)
-- **Integration Approach**: Point-to-point / ESB / API-led / Event-driven
-- **Data Quality**: Poor / Fair / Good / Excellent
-- **Master Data Management**: None / Basic / Advanced
-- **Real-time Sync**: No / Partial / Full
-- **Data Governance**: Ad-hoc / Defined / Enforced
+### 2. Integration & Data(Weight: 25 %)
+  - ** Integration Approach **: Point - to - point / ESB / API - led / Event - driven
+    - ** Data Quality **: Poor / Fair / Good / Excellent
+      - ** Master Data Management **: None / Basic / Advanced
+        - ** Real - time Sync **: No / Partial / Full
+          - ** Data Governance **: Ad - hoc / Defined / Enforced
 
-### 3. User Experience (Weight: 20%)
-- **Self-Service Coverage**: <30% / 30-60% / 60-80% / >80%
-- **Mobile Access**: None / Basic / Full functionality
-- **Personalization**: None / Role-based / AI-driven
-- **Accessibility**: Limited / Compliant / Exceeds standards
-- **User Satisfaction**: <3.0 / 3.0-3.5 / 3.5-4.0 / >4.0
+### 3. User Experience(Weight: 20 %)
+  - ** Self - Service Coverage **: <30% / 30-60% / 60 - 80 % / >80%
+    - ** Mobile Access **: None / Basic / Full functionality
+      - ** Personalization **: None / Role - based / AI - driven
+        - ** Accessibility **: Limited / Compliant / Exceeds standards
+          - ** User Satisfaction **: <3.0 / 3.0-3.5 / 3.5 - 4.0 / > 4.0
 
-### 4. Analytics & Insights (Weight: 15%)
-- **Reporting**: Manual / Scheduled / Self-service / Predictive
-- **Dashboards**: None / Basic / Interactive / Real-time
-- **Predictive Analytics**: None / Planned / In use
-- **Data Visualization**: Limited / Standard / Advanced
-- **Decision Support**: Reactive / Proactive / Prescriptive
+### 4. Analytics & Insights(Weight: 15 %)
+  - ** Reporting **: Manual / Scheduled / Self - service / Predictive
+    - ** Dashboards **: None / Basic / Interactive / Real - time
+      - ** Predictive Analytics **: None / Planned / In use
+        - ** Data Visualization **: Limited / Standard / Advanced
+          - ** Decision Support **: Reactive / Proactive / Prescriptive
 
-### 5. Automation & AI (Weight: 10%)
-- **Workflow Automation**: Manual / Basic / Advanced / Intelligent
-- **AI/ML Adoption**: None / Pilot / Production / Pervasive
-- **Chatbots/Virtual Assistants**: None / Basic / Advanced
-- **RPA**: None / Planned / Implemented
-- **Intelligent Document Processing**: None / In use
+### 5. Automation & AI(Weight: 10 %)
+  - ** Workflow Automation **: Manual / Basic / Advanced / Intelligent
+    - ** AI / ML Adoption **: None / Pilot / Production / Pervasive
+      - ** Chatbots / Virtual Assistants **: None / Basic / Advanced
+        - ** RPA **: None / Planned / Implemented
+          - ** Intelligent Document Processing **: None / In use
 
-### 6. Security & Compliance (Weight**: 10%)
-- **Access Controls**: Basic / Role-based / Attribute-based
-- **Data Encryption**: None / At rest / In transit / Both
-- **Audit Trails**: Limited / Comprehensive
-- **Compliance**: Manual / Automated / Continuous
-- **Privacy Management**: Basic / GDPR-ready / Advanced
+### 6. Security & Compliance(Weight **: 10 %)
+  - ** Access Controls **: Basic / Role - based / Attribute - based
+    - ** Data Encryption **: None / At rest / In transit / Both
+      - ** Audit Trails **: Limited / Comprehensive
+        - ** Compliance **: Manual / Automated / Continuous
+          - ** Privacy Management **: Basic / GDPR - ready / Advanced
 
 ## OUTPUT JSON SCHEMA:
 
 {
   "meta": {
     "companyId": "<from assessment>",
-    "assessmentId": "<from assessment>",
-    "generatedAt": "<ISO timestamp>",
-    "overallMaturityLevel": 1-5,
-    "maturityLabel": "Initial | Developing | Defined | Managed | Optimized",
-    "industryBenchmark": 3.2
+      "assessmentId": "<from assessment>",
+        "generatedAt": "<ISO timestamp>",
+          "overallMaturityLevel": 1 - 5,
+            "maturityLabel": "Initial | Developing | Defined | Managed | Optimized",
+              "industryBenchmark": 3.2
   },
   "dimensionScores": {
     "platformArchitecture": {
       "score": 3.5,
-      "weight": 20,
-      "weightedScore": 0.70,
-      "maturityLevel": "Defined",
-      "strengths": ["Cloud-based HRMS", "Modular design"],
-      "gaps": ["Legacy payroll system", "Limited talent modules"],
-      "evidence": ["Using Workday for core HR", "Payroll still on-premise"],
-      "recommendations": ["Migrate payroll to cloud", "Add talent acquisition module"]
+        "weight": 20,
+          "weightedScore": 0.70,
+            "maturityLevel": "Defined",
+              "strengths": ["Cloud-based HRMS", "Modular design"],
+                "gaps": ["Legacy payroll system", "Limited talent modules"],
+                  "evidence": ["Using Workday for core HR", "Payroll still on-premise"],
+                    "recommendations": ["Migrate payroll to cloud", "Add talent acquisition module"]
     },
     "integrationAndData": {
       "score": 2.5,
-      "weight": 25,
-      "weightedScore": 0.625,
-      "maturityLevel": "Developing",
-      "strengths": ["Some API integrations"],
-      "gaps": ["Point-to-point integrations", "Data quality issues", "No MDM"],
-      "evidence": ["15 integrations, mostly custom", "Manual data reconciliation weekly"],
-      "recommendations": ["Implement iPaaS", "Establish data governance", "Deploy MDM"]
+        "weight": 25,
+          "weightedScore": 0.625,
+            "maturityLevel": "Developing",
+              "strengths": ["Some API integrations"],
+                "gaps": ["Point-to-point integrations", "Data quality issues", "No MDM"],
+                  "evidence": ["15 integrations, mostly custom", "Manual data reconciliation weekly"],
+                    "recommendations": ["Implement iPaaS", "Establish data governance", "Deploy MDM"]
     },
     "userExperience": {
       "score": 3.0,
-      "weight": 20,
-      "weightedScore": 0.60,
-      "maturityLevel": "Defined",
-      "strengths": ["Mobile app available", "60% self-service"],
-      "gaps": ["Inconsistent UX across modules", "Limited personalization"],
-      "evidence": ["CSAT 3.2/5", "Mobile adoption 40%"],
-      "recommendations": ["UX redesign", "Implement personalization engine"]
+        "weight": 20,
+          "weightedScore": 0.60,
+            "maturityLevel": "Defined",
+              "strengths": ["Mobile app available", "60% self-service"],
+                "gaps": ["Inconsistent UX across modules", "Limited personalization"],
+                  "evidence": ["CSAT 3.2/5", "Mobile adoption 40%"],
+                    "recommendations": ["UX redesign", "Implement personalization engine"]
     },
     "analyticsAndInsights": {
       "score": 2.0,
-      "weight": 15,
-      "weightedScore": 0.30,
-      "maturityLevel": "Developing",
-      "strengths": ["Basic dashboards"],
-      "gaps": ["No predictive analytics", "Manual reporting", "Limited visualization"],
-      "evidence": ["Monthly reports in Excel", "No real-time dashboards"],
-      "recommendations": ["Implement BI platform", "Enable self-service analytics", "Add predictive models"]
+        "weight": 15,
+          "weightedScore": 0.30,
+            "maturityLevel": "Developing",
+              "strengths": ["Basic dashboards"],
+                "gaps": ["No predictive analytics", "Manual reporting", "Limited visualization"],
+                  "evidence": ["Monthly reports in Excel", "No real-time dashboards"],
+                    "recommendations": ["Implement BI platform", "Enable self-service analytics", "Add predictive models"]
     },
     "automationAndAI": {
       "score": 1.5,
-      "weight": 10,
-      "weightedScore": 0.15,
-      "maturityLevel": "Initial",
-      "strengths": ["Some workflow automation"],
-      "gaps": ["No AI/ML", "Manual approvals", "No chatbot"],
-      "evidence": ["Approval workflows in HRMS", "No intelligent automation"],
-      "recommendations": ["Deploy HR chatbot", "Implement RPA for repetitive tasks", "Pilot AI for resume screening"]
+        "weight": 10,
+          "weightedScore": 0.15,
+            "maturityLevel": "Initial",
+              "strengths": ["Some workflow automation"],
+                "gaps": ["No AI/ML", "Manual approvals", "No chatbot"],
+                  "evidence": ["Approval workflows in HRMS", "No intelligent automation"],
+                    "recommendations": ["Deploy HR chatbot", "Implement RPA for repetitive tasks", "Pilot AI for resume screening"]
     },
     "securityAndCompliance": {
       "score": 3.5,
-      "weight": 10,
-      "weightedScore": 0.35,
-      "maturityLevel": "Defined",
-      "strengths": ["RBAC implemented", "Data encryption", "Audit logs"],
-      "gaps": ["Manual compliance checks", "Limited privacy automation"],
-      "evidence": ["SOC 2 certified", "GDPR manual processes"],
-      "recommendations": ["Automate compliance reporting", "Implement privacy by design"]
+        "weight": 10,
+          "weightedScore": 0.35,
+            "maturityLevel": "Defined",
+              "strengths": ["RBAC implemented", "Data encryption", "Audit logs"],
+                "gaps": ["Manual compliance checks", "Limited privacy automation"],
+                  "evidence": ["SOC 2 certified", "GDPR manual processes"],
+                    "recommendations": ["Automate compliance reporting", "Implement privacy by design"]
     }
   },
   "overallAssessment": {
     "totalWeightedScore": 2.775,
-    "maturityLevel": "Developing",
-    "maturityDescription": "Organization has established basic HR technology foundation with some integration and automation. Significant opportunities exist in analytics, AI, and advanced integration.",
-    "industryComparison": {
+      "maturityLevel": "Developing",
+        "maturityDescription": "Organization has established basic HR technology foundation with some integration and automation. Significant opportunities exist in analytics, AI, and advanced integration.",
+          "industryComparison": {
       "yourScore": 2.775,
-      "industryAverage": 3.2,
-      "topQuartile": 4.0,
-      "gap": -0.425,
-      "percentile": 35
+        "industryAverage": 3.2,
+          "topQuartile": 4.0,
+            "gap": -0.425,
+              "percentile": 35
     },
     "keyStrengths": [
       "Cloud-based core HRMS providing scalability",
       "Strong security and compliance foundation",
       "Growing self-service adoption"
     ],
-    "criticalGaps": [
-      "Fragmented integration architecture limiting data flow",
-      "Minimal analytics and insights capability",
-      "Limited automation and no AI/ML adoption",
-      "Inconsistent user experience across modules"
-    ]
+      "criticalGaps": [
+        "Fragmented integration architecture limiting data flow",
+        "Minimal analytics and insights capability",
+        "Limited automation and no AI/ML adoption",
+        "Inconsistent user experience across modules"
+      ]
   },
   "technologyInventory": {
     "coreHRMS": {
       "system": "Workday HCM",
-      "vendor": "Workday",
-      "deployment": "SaaS",
-      "modules": ["Core HR", "Benefits", "Time & Attendance"],
-      "maturity": 4,
-      "userCount": 5000,
-      "satisfaction": 3.8,
-      "contractEnd": "2026-12-31",
-      "strengths": ["Modern UI", "Regular updates", "Good support"],
-      "limitations": ["Limited customization", "Integration complexity"]
+        "vendor": "Workday",
+          "deployment": "SaaS",
+            "modules": ["Core HR", "Benefits", "Time & Attendance"],
+              "maturity": 4,
+                "userCount": 5000,
+                  "satisfaction": 3.8,
+                    "contractEnd": "2026-12-31",
+                      "strengths": ["Modern UI", "Regular updates", "Good support"],
+                        "limitations": ["Limited customization", "Integration complexity"]
     },
     "talentManagement": {
       "system": "Multiple point solutions",
-      "vendors": ["Greenhouse (ATS)", "15Five (Performance)", "Udemy (Learning)"],
-      "deployment": "SaaS",
-      "maturity": 2,
-      "integrationStatus": "Partially integrated",
-      "gaps": ["No unified talent view", "Manual data sync"]
+        "vendors": ["Greenhouse (ATS)", "15Five (Performance)", "Udemy (Learning)"],
+          "deployment": "SaaS",
+            "maturity": 2,
+              "integrationStatus": "Partially integrated",
+                "gaps": ["No unified talent view", "Manual data sync"]
     },
     "payroll": {
       "system": "Legacy Payroll System",
-      "vendor": "Internal",
-      "deployment": "On-premise",
-      "maturity": 1,
-      "limitations": ["No API", "Manual updates", "Limited reporting"],
-      "migrationPriority": "High"
+        "vendor": "Internal",
+          "deployment": "On-premise",
+            "maturity": 1,
+              "limitations": ["No API", "Manual updates", "Limited reporting"],
+                "migrationPriority": "High"
     },
     "analytics": {
       "system": "Excel + Basic HRMS reports",
-      "maturity": 1,
-      "gaps": ["No BI platform", "Manual data extraction", "Limited visualization"]
+        "maturity": 1,
+          "gaps": ["No BI platform", "Manual data extraction", "Limited visualization"]
     },
     "integrations": {
       "count": 15,
-      "approach": "Point-to-point",
-      "technologies": ["Custom APIs", "File transfers", "Manual entry"],
-      "maturity": 2,
-      "issues": ["Brittle connections", "No error handling", "Manual monitoring"]
+        "approach": "Point-to-point",
+          "technologies": ["Custom APIs", "File transfers", "Manual entry"],
+            "maturity": 2,
+              "issues": ["Brittle connections", "No error handling", "Manual monitoring"]
     }
   },
   "optimizationRoadmap": {
     "immediate": {
       "timeline": "0-6 months",
-      "priority": "Critical",
-      "initiatives": [
-        {
-          "name": "Implement Integration Platform (iPaaS)",
-          "category": "Integration",
-          "rationale": "Eliminate fragile point-to-point integrations and enable scalable connectivity",
-          "vendors": ["MuleSoft", "Boomi", "Workato"],
-          "estimatedCost": "$100,000 - $200,000",
-          "expectedBenefits": [
-            "Reduce integration maintenance by 60%",
-            "Enable real-time data sync",
-            "Improve data quality"
-          ],
-          "prerequisites": ["Integration inventory", "Data mapping"],
-          "risks": ["Change management", "Resource availability"],
-          "successMetrics": ["All critical integrations migrated", "Zero integration failures"]
-        },
-        {
-          "name": "Deploy HR Analytics Platform",
-          "category": "Analytics",
-          "rationale": "Enable data-driven decision making and self-service reporting",
-          "vendors": ["Power BI", "Tableau", "Visier"],
-          "estimatedCost": "$50,000 - $150,000",
-          "expectedBenefits": [
-            "Self-service reporting for managers",
-            "Real-time dashboards",
-            "Predictive insights"
-          ],
-          "prerequisites": ["Data quality improvement", "KPI definition"],
-          "risks": ["Data governance", "User adoption"],
-          "successMetrics": ["80% manager adoption", "50% reduction in manual reports"]
-        }
-      ]
+        "priority": "Critical",
+          "initiatives": [
+            {
+              "name": "Implement Integration Platform (iPaaS)",
+              "category": "Integration",
+              "rationale": "Eliminate fragile point-to-point integrations and enable scalable connectivity",
+              "vendors": ["MuleSoft", "Boomi", "Workato"],
+              "estimatedCost": "$100,000 - $200,000",
+              "expectedBenefits": [
+                "Reduce integration maintenance by 60%",
+                "Enable real-time data sync",
+                "Improve data quality"
+              ],
+              "prerequisites": ["Integration inventory", "Data mapping"],
+              "risks": ["Change management", "Resource availability"],
+              "successMetrics": ["All critical integrations migrated", "Zero integration failures"]
+            },
+            {
+              "name": "Deploy HR Analytics Platform",
+              "category": "Analytics",
+              "rationale": "Enable data-driven decision making and self-service reporting",
+              "vendors": ["Power BI", "Tableau", "Visier"],
+              "estimatedCost": "$50,000 - $150,000",
+              "expectedBenefits": [
+                "Self-service reporting for managers",
+                "Real-time dashboards",
+                "Predictive insights"
+              ],
+              "prerequisites": ["Data quality improvement", "KPI definition"],
+              "risks": ["Data governance", "User adoption"],
+              "successMetrics": ["80% manager adoption", "50% reduction in manual reports"]
+            }
+          ]
     },
     "shortTerm": {
       "timeline": "6-12 months",
-      "priority": "High",
-      "initiatives": [
-        {
-          "name": "Migrate Payroll to Cloud",
-          "category": "Platform",
-          "rationale": "Eliminate legacy system and enable modern capabilities",
-          "vendors": ["ADP Workforce Now", "Paylocity", "Workday Payroll"],
-          "estimatedCost": "$200,000 - $400,000",
-          "expectedBenefits": ["Real-time payroll data", "Better compliance", "Reduced errors"],
-          "prerequisites": ["Data migration plan", "Parallel run"],
-          "risks": ["Payroll accuracy", "Employee disruption"],
-          "successMetrics": ["100% accuracy", "Zero payroll delays"]
-        },
-        {
-          "name": "Implement HR Chatbot",
-          "category": "Automation",
-          "rationale": "Reduce HR service center volume and improve employee experience",
-          "vendors": ["ServiceNow Virtual Agent", "Microsoft Bot Framework", "IBM Watson"],
-          "estimatedCost": "$75,000 - $150,000",
-          "expectedBenefits": ["30% reduction in tickets", "24/7 support", "Faster resolution"],
-          "prerequisites": ["Knowledge base", "FAQ documentation"],
-          "risks": ["User acceptance", "Answer accuracy"],
-          "successMetrics": ["50% deflection rate", "4.0+ satisfaction"]
-        }
-      ]
+        "priority": "High",
+          "initiatives": [
+            {
+              "name": "Migrate Payroll to Cloud",
+              "category": "Platform",
+              "rationale": "Eliminate legacy system and enable modern capabilities",
+              "vendors": ["ADP Workforce Now", "Paylocity", "Workday Payroll"],
+              "estimatedCost": "$200,000 - $400,000",
+              "expectedBenefits": ["Real-time payroll data", "Better compliance", "Reduced errors"],
+              "prerequisites": ["Data migration plan", "Parallel run"],
+              "risks": ["Payroll accuracy", "Employee disruption"],
+              "successMetrics": ["100% accuracy", "Zero payroll delays"]
+            },
+            {
+              "name": "Implement HR Chatbot",
+              "category": "Automation",
+              "rationale": "Reduce HR service center volume and improve employee experience",
+              "vendors": ["ServiceNow Virtual Agent", "Microsoft Bot Framework", "IBM Watson"],
+              "estimatedCost": "$75,000 - $150,000",
+              "expectedBenefits": ["30% reduction in tickets", "24/7 support", "Faster resolution"],
+              "prerequisites": ["Knowledge base", "FAQ documentation"],
+              "risks": ["User acceptance", "Answer accuracy"],
+              "successMetrics": ["50% deflection rate", "4.0+ satisfaction"]
+            }
+          ]
     },
     "longTerm": {
       "timeline": "12-24 months",
-      "priority": "Medium",
-      "initiatives": [
-        {
-          "name": "Unified Talent Suite",
-          "category": "Platform",
-          "rationale": "Consolidate talent management and enable end-to-end talent lifecycle",
-          "vendors": ["Workday Talent", "SuccessFactors", "Oracle HCM Cloud"],
-          "estimatedCost": "$300,000 - $600,000",
-          "expectedBenefits": ["Unified talent data", "Better succession planning", "Skills-based matching"],
-          "prerequisites": ["Current contract renewals", "Business case"],
-          "risks": ["Change fatigue", "Integration complexity"],
-          "successMetrics": ["Single talent view", "80% user adoption"]
-        },
-        {
-          "name": "AI-Powered Workforce Planning",
-          "category": "AI/ML",
-          "rationale": "Enable predictive workforce insights and scenario planning",
-          "vendors": ["Eightfold", "Visier", "Workday VNDLY"],
-          "estimatedCost": "$150,000 - $300,000",
-          "expectedBenefits": ["Predictive attrition models", "Skills gap analysis", "Scenario planning"],
-          "prerequisites": ["Clean historical data", "Analytics foundation"],
-          "risks": ["Data quality", "Model accuracy"],
-          "successMetrics": ["85% prediction accuracy", "Proactive workforce decisions"]
-        }
-      ]
+        "priority": "Medium",
+          "initiatives": [
+            {
+              "name": "Unified Talent Suite",
+              "category": "Platform",
+              "rationale": "Consolidate talent management and enable end-to-end talent lifecycle",
+              "vendors": ["Workday Talent", "SuccessFactors", "Oracle HCM Cloud"],
+              "estimatedCost": "$300,000 - $600,000",
+              "expectedBenefits": ["Unified talent data", "Better succession planning", "Skills-based matching"],
+              "prerequisites": ["Current contract renewals", "Business case"],
+              "risks": ["Change fatigue", "Integration complexity"],
+              "successMetrics": ["Single talent view", "80% user adoption"]
+            },
+            {
+              "name": "AI-Powered Workforce Planning",
+              "category": "AI/ML",
+              "rationale": "Enable predictive workforce insights and scenario planning",
+              "vendors": ["Eightfold", "Visier", "Workday VNDLY"],
+              "estimatedCost": "$150,000 - $300,000",
+              "expectedBenefits": ["Predictive attrition models", "Skills gap analysis", "Scenario planning"],
+              "prerequisites": ["Clean historical data", "Analytics foundation"],
+              "risks": ["Data quality", "Model accuracy"],
+              "successMetrics": ["85% prediction accuracy", "Proactive workforce decisions"]
+            }
+          ]
     }
   },
   "investmentSummary": {
     "totalEstimatedCost": {
       "immediate": "$150,000 - $350,000",
-      "shortTerm": "$275,000 - $550,000",
-      "longTerm": "$450,000 - $900,000",
-      "total": "$875,000 - $1,800,000"
+        "shortTerm": "$275,000 - $550,000",
+          "longTerm": "$450,000 - $900,000",
+            "total": "$875,000 - $1,800,000"
     },
     "expectedROI": {
       "costSavings": "$500,000/year from automation and efficiency",
-      "productivityGains": "20% improvement in HR team productivity",
-      "riskReduction": "50% reduction in compliance violations",
-      "employeeExperience": "+15 points in eNPS",
-      "paybackPeriod": "18-24 months"
+        "productivityGains": "20% improvement in HR team productivity",
+          "riskReduction": "50% reduction in compliance violations",
+            "employeeExperience": "+15 points in eNPS",
+              "paybackPeriod": "18-24 months"
     },
     "fundingOptions": [
       "CapEx budget allocation",
@@ -1954,40 +2321,96 @@ Analyze HR technology landscape and generate comprehensive maturity assessment w
         "contingency": "Extended support from vendor"
       }
     ],
-    "businessRisks": [
-      {
-        "risk": "User adoption resistance",
-        "probability": "Medium",
-        "impact": "Medium",
-        "mitigation": "Change management, training, champions network",
-        "contingency": "Extended support period"
-      }
-    ],
-    "complianceRisks": [
-      {
-        "risk": "Data privacy violations during migration",
-        "probability": "Low",
-        "impact": "High",
-        "mitigation": "Privacy impact assessment, encryption, access controls",
-        "contingency": "Legal review and remediation plan"
-      }
-    ]
+      "businessRisks": [
+        {
+          "risk": "User adoption resistance",
+          "probability": "Medium",
+          "impact": "Medium",
+          "mitigation": "Change management, training, champions network",
+          "contingency": "Extended support period"
+        }
+      ],
+        "complianceRisks": [
+          {
+            "risk": "Data privacy violations during migration",
+            "probability": "Low",
+            "impact": "High",
+            "mitigation": "Privacy impact assessment, encryption, access controls",
+            "contingency": "Legal review and remediation plan"
+          }
+        ]
   },
   "governanceModel": {
     "steeringCommittee": {
       "members": ["CHRO", "CIO", "CFO", "HR Ops Leader"],
-      "frequency": "Monthly",
-      "responsibilities": ["Approve roadmap", "Resolve escalations", "Allocate resources"]
+        "frequency": "Monthly",
+          "responsibilities": ["Approve roadmap", "Resolve escalations", "Allocate resources"]
     },
     "workingGroups": [
-      {"name": "Integration", "focus": "API design and data flow"},
-      {"name": "Analytics", "focus": "KPI definition and dashboards"},
-      {"name": "Change Management", "focus": "Training and adoption"}
+      { "name": "Integration", "focus": "API design and data flow" },
+      { "name": "Analytics", "focus": "KPI definition and dashboards" },
+      { "name": "Change Management", "focus": "Training and adoption" }
     ],
-    "decisionRights": {
+      "decisionRights": {
       "technology": "CIO with CHRO approval",
-      "budget": "CFO with business case",
-      "prioritization": "Steering Committee"
+        "budget": "CFO with business case",
+          "prioritization": "Steering Committee"
+    }
+  },
+  "consulting_report": { 
+    "executive_summary": { 
+      "metrics": [{ "metric": "string", "current": "string", "target": "string", "improvement": "string" }],
+      "key_insight": "string" 
+    },
+    "strategic_drivers": {
+      "drivers": [{ "driver": "string", "weight": "string", "priority_score": 0 }],
+      "alignment": { "organization": "string", "industry_average": "string", "gap": "string" },
+      "transformation_ambition": [{ "level": "L1-L4", "title": "string", "status": "string" }]
+    },
+    "capability_assessment": {
+      "digitization_heatmap": [{ "process": "string", "digitized": "string", "automated": "string", "mobile_enabled": "string", "gap_analysis": "string" }],
+      "bottlenecks": [{ "issue": "string", "severity": 0 }],
+      "risk_assessment": [{ "capability": "string", "current": 0, "target": 0, "gap": 0, "risk_level": "string" }]
+    },
+    "priority_portfolio": {
+      "initiatives": [{ "initiative": "string", "readiness": 0, "impact": 0, "category": "string", "priority_score": 0 }],
+      "recommended_sequence": ["string"]
+    },
+    "change_readiness": {
+      "readiness_thermometer": { "score": 0, "label": "string" },
+      "resistance_profile": { "overall_risk": "string", "sponsorship": "string", "management_buyin": "string", "user_awareness": "string", "past_success": "string" },
+      "governance_support": [{ "area": "string", "support_level": "string", "percentage": "string" }],
+      "readiness_comparison": { "group_a": "string", "group_b": "string", "gap": "string" }
+    },
+    "architecture_assessment": {
+      "enabler_adoption": [{ "enabler": "string", "adoption": "string", "status": "string", "recommendation": "string" }],
+      "recommended_architecture": "string",
+      "integration_priority": "string"
+    },
+    "governance_metrics": {
+      "kpi_maturity": [{ "kpi": "string", "maturity": "string", "percentage": "string", "status": "string" }],
+      "measurement_framework": [{ "metric": "string", "status": "string", "current": "string", "target": "string" }],
+      "governance_structure": [{ "area": "string", "status": "string", "notes": "string", "action_required": "string" }]
+    },
+    "budget_timeline": {
+      "balanced_scenario": { "investment": "string", "timeline": "string", "roi": "string", "payback": "string" },
+      "investment_breakdown": [{ "category": "string", "percentage": "string", "amount": "string", "rationale": "string" }],
+      "transformation_phases": [{ "phase": "string", "duration": "string", "budget": "string", "focus": "string", "initiatives": ["string"] }],
+      "milestones": [{ "milestone": "string", "month": "string", "description": "string", "success_criteria": "string" }]
+    },
+    "transformation_roadmap": {
+      "phases": { "foundational": ["string"], "tactical": ["string"], "strategic": ["string"], "innovative": ["string"] },
+      "dependencies_critical_path": ["string"]
+    },
+    "scenario_risk_management": {
+      "optimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+      "pessimistic_scenario": { "roi": "string", "timeline": "string", "maturity": "string" },
+      "sensitivity_factors": [{ "factor": "string", "impact": "string", "recommendation": "string" }]
+    },
+    "recommendations_next_steps": {
+      "immediate_actions": ["string"],
+      "critical_success_factors": ["string"],
+      "risk_mitigation_strategy": ["string"]
     }
   }
 }
@@ -1995,10 +2418,10 @@ Analyze HR technology landscape and generate comprehensive maturity assessment w
 ${prompt_extra}
 
 ## DASHBOARD & VISUALIZATION RULES:
-- **Maturity Index**: The overall score should be a weighted average of dimensional scores.
-- **Dimensional Deep-dives**: Each dimension must have a maturity level (1-5) and specific gaps/strengths.
-- **Investment Roadmap**: Ensure estimated costs and timelines are consistent with the roadmap sequence.
-- **Governance Matrix**: Decision rights must be explicitly stated for technology, budget, and priority.
+- ** Maturity Index **: The overall score should be a weighted average of dimensional scores.
+- ** Dimensional Deep - dives **: Each dimension must have a maturity level(1 - 5) and specific gaps / strengths.
+- ** Investment Roadmap **: Ensure estimated costs and timelines are consistent with the roadmap sequence.
+- ** Governance Matrix **: Decision rights must be explicitly stated for technology, budget, and priority.
 
 Analyze the provided assessment data and generate the complete technology maturity assessment.`
   }
@@ -2031,7 +2454,7 @@ export async function prompt_processed(
     const question_id = question.pk;
 
     if (id === "digital_maturity" || id === "vendor_fit" || id === "digital_transformation" || id === "shared_service" || id === "change_management" || id === "tech_maturity") {
-      console.log(`📋 Processing questions for company: ${company_id}, question_id: ${question_id}`);
+      console.log(`📋 Processing questions for company: ${company_id}, question_id: ${question_id} `);
       return [
         question_id,
         `${base_prompt.basePrompt}

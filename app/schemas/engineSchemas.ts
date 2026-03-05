@@ -1,5 +1,5 @@
 
-import {z} from 'zod'
+import { z } from 'zod'
 export interface Engine {
     pk: string//"ENGINE#company_id",
     sk: string//"engine_name#version",
@@ -17,12 +17,12 @@ export interface Engine {
 }
 
 export const EngineValidation = z.object({
-    company_id : z.uuidv4(),
-    // engine_id: z.uuidv4(),
-    user_id: z.uuidv4(),
+    company_id: z.string().uuid(),
+    // engine_id: z.string().uuid(),
+    user_id: z.string().uuid(),
     engine_name: z.string().trim().min(1).refine(
-        (val)=>{
-            if(val==="HCM Vendor Fit Engine"||val==="HR Transformation Roadmap Generator"||val==="Shared Service Designer"||val==="Intelligent Change Management"||val==="HR Technology Maturity Analysis"){
+        (val) => {
+            if (val === "HCM Vendor Fit Engine" || val === "HR Transformation Roadmap Generator" || val === "Shared Service Designer" || val === "Intelligent Change Management" || val === "HR Technology Maturity Analysis") {
                 return true
             }
             else
@@ -45,8 +45,9 @@ export const EngineValidation = z.object({
     //         message: "Invalid engine_name",
     //     }
     // ),
-    progress:z.number(),
-    country:z.string().trim().min(1),
-    // created_by:z.uuidv4(),// we have userid
-    // updated_by : z.uuidv4().optional()
+    progress: z.number(),
+    responses: z.any().optional(),
+    country: z.string().trim().min(1),
+    // created_by:z.string().uuid(),// we have userid
+    // updated_by : z.string().uuid().optional()
 })

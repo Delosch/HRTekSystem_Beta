@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import { MetaFunction } from "@remix-run/node";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
+import { motion } from "framer-motion";
 
 export const meta: MetaFunction = () => {
   return generateMeta({
@@ -22,6 +23,42 @@ export default function AboutUs() {
     { name: "Home", url: "/" },
     { name: "About Us", url: "/about-us" }
   ]);
+
+  const whoWeAreItems = [
+    {
+      title: "Our Mission",
+      subtitle: "Revolutionizing HR through technology for a smarter and agile workforce",
+      description:
+        "Our mission is to enable businesses to achieve their utmost capabilities by offering specialized advice and cutting-edge solutions in HR Technology and Transformation.",
+      image: "/assets/aboutUsAssets/aboutUs2a.png",
+      gradient: "from-yellow-400 to-orange-500",
+    },
+    {
+      title: "Our Claim for Fame",
+      subtitle: "Empowering businesses with innovative HR technology solutions",
+      description:
+        "At HRTek System, we believe in transforming the way organizations manage their human resources. Our vision is to empower businesses with innovative HR technology solutions that drive efficiency and enhance employee engagement.",
+      image: "/assets/aboutUsAssets/aboutUs2b.png",
+      gradient: "from-orange-500 to-red-500",
+    },
+    {
+      title: "Our Vision",
+      subtitle: "To redefine the future of HR Technology",
+      description:
+        "Transform HR technology by becoming the global leader in delivering innovative, ROI-driven solutions that empower organizations to build smarter, more agile, and employee-focused workplaces on global scale.",
+      image: "/assets/aboutUsAssets/aboutUs2c.png",
+      gradient: "from-pink-500 to-rose-600",
+    },
+    {
+      title: "Our Values",
+      subtitle:
+        "Transform HR with innovative tech that empowers people and drives growth",
+      description:
+        "At HRTek System, our core values are integrity, excellence, and collaboration. We commit to fostering robust relationships with our clients and providing outstanding service that surpasses their expectations.",
+      image: "/assets/aboutUsAssets/aboutUs2d.png",
+      gradient: "from-purple-600 to-indigo-600",
+    },
+  ];
 
   return (
     <>
@@ -189,104 +226,67 @@ export default function AboutUs() {
           </div>
         </div>
 
-        {/* Section 3: Alternating grid */}
-        <div className="p-6 md:p-12">
-          <div className="bg-white shadow-xl rounded-2xl p-8 md:p-12">
-            <div className="mb-8">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
-                Who We Are
-              </h3>
-              <div className="w-16 h-1 bg-[#ffbe0b] mt-2 rounded"></div>
+        {/* Section 3: Who We Are - Enhanced */}
+        <div className="p-6 md:p-12 relative overflow-hidden">
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 bg-gray-50 opacity-50 z-0"></div>
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="mb-16 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h3 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">
+                  Who We Are
+                </h3>
+                <div className="h-1.5 w-24 bg-gradient-to-r from-[#023e8a] to-[#48cae4] rounded-full mx-auto"></div>
+                <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
+                  We are innovators, strategists, and technologists dedicated to reshaping the future of human resources.
+                </p>
+              </motion.div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card 1 */}
-              <div className="bg-[#ffbe0b] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[220px] md:min-h-[280px]">
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">
-                  Our Mission - Revolutionizing HR through technology for a
-                  smarter and agile workforce
-                </h3>
-                <p className="text-gray-700 text-sm leading-relaxed text-justify">
-                  Our mission is to enable businesses to achieve their utmost
-                  capabilities by offering specialized advice and cutting-edge
-                  solutions in HR Technology and Transformation.
-                </p>
-              </div>
 
-              {/* Image 1 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#ffbe0b] flex items-center justify-center p-4 order-2 md:order-none">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2a.png"
-                  alt="Inefficient manual HR process contrasted with modern automated HR system"
-                  className="w-full h-auto max-h-48 md:max-h-full object-contain"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+              {whoWeAreItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group relative bg-white rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-gray-100"
+                >
+                  <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${item.gradient}`}></div>
 
-              {/* Card 2 - Swapped order for mobile flow */}
-              <div className="bg-[#fb5607] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[220px] md:min-h-[280px] order-4 md:order-none">
-                <h3 className="text-xl md:text-2xl font-semibold text-white mb-2">
-                  Our Claim for Fame
-                </h3>
-                <p className="text-gray-100 text-sm leading-relaxed text-justify">
-                  At HRTek System, we believe in transforming the way
-                  organizations manage their human resources. Our vision is to
-                  empower businesses with innovative HR technology solutions
-                  that drive efficiency and enhance employee engagement.
-                </p>
-              </div>
+                  <div className="p-8 pb-4 flex-grow relative z-10">
+                    <h3 className={`text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r ${item.gradient}`}>
+                      {item.title}
+                    </h3>
+                    <h4 className="text-lg font-medium text-gray-700 mb-4 italic leading-snug">
+                      {item.subtitle}
+                    </h4>
+                    <p className="text-gray-600 leading-relaxed text-justify">
+                      {item.description}
+                    </p>
+                  </div>
 
-              {/* Image 2 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#fb5607] flex items-center justify-center p-4 order-3 md:order-none">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2b.png"
-                  alt="Improved business processes due to streamlined workforce management"
-                  className="w-full h-auto max-h-48 md:max-h-full object-contain"
-                />
-              </div>
+                  <div className="relative w-full h-56 bg-gradient-to-b from-transparent to-gray-50 flex items-end justify-center p-6 overflow-hidden">
+                    {/* Decorative Blob */}
+                    <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-gradient-to-br ${item.gradient} blur-2xl`}></div>
 
-              {/* Card 3 */}
-              <div className="bg-[#ff006e] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[220px] md:min-h-[280px] order-5 md:order-none">
-                <h3 className="text-xl md:text-2xl font-semibold text-black mb-2">
-                  Our Vision - To redefine the future of HR Technology
-                </h3>
-                <p className="text-black text-sm leading-relaxed text-justify">
-                  Transform HR technology by becoming the global leader in
-                  delivering innovative, ROI-driven solutions that empower
-                  organizations to build smarter, more agile, and
-                  employee-focused workplaces on global scale.
-                </p>
-              </div>
-
-              {/* Image 3 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#ff006e] flex items-center justify-center p-4 order-6 md:order-none">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2c.png"
-                  alt="Employees collaborating toward a unified organizational vision"
-                  className="w-full h-auto max-h-48 md:max-h-full object-contain"
-                />
-              </div>
-
-              {/* Card 4 - Swapped order for mobile flow */}
-              <div className="bg-[#8338ec] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[220px] md:min-h-[280px] order-8 md:order-none">
-                <h3 className="text-xl md:text-2xl font-semibold text-white mb-2">
-                  Our Values - Transform HR with innovative tech that empowers
-                  people and drives growth.
-                </h3>
-                <p className="text-gray-100 text-sm leading-relaxed text-justify">
-                  At HRTek System, our core values are integrity, excellence,
-                  and collaboration. We commit to fostering robust relationships
-                  with our clients and providing outstanding service that
-                  surpasses their expectations.
-                </p>
-              </div>
-
-              {/* Image 4 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#8338ec] flex items-center justify-center p-4 order-7 md:order-none">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2d.png"
-                  alt="Visual representation of core values including streamlined automation and operational simplicity"
-                  className="w-full h-auto max-h-48 md:max-h-full object-contain"
-                />
-              </div>
+                    <motion.img
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      transition={{ duration: 0.4 }}
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-contain relative z-10 drop-shadow-md"
+                    />
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>

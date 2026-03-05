@@ -4,18 +4,13 @@ import { requireUserSession } from "~/lib/session.server"
 import { getAnswerSheetByAssessmentName, getLatestQuestion, save_answers } from "~/utils/question.utils"
 import { QuestionSchema } from "./questionSchema"
 import EngineFormRender from "./RenderEngineForm"
-// import { generate } from "~/lib/processor.genAi"
+import VendorFitAssessmentWrapper from "~/components/assessment/VendorFitAssessmentWrapper"
+import { generateHTIAdvisory } from "~/lib/hti.deepseek";
+import { saveAdvisoryReport } from "~/models/hti.model.server";
 import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model.server"
 import { createLog } from "~/models/companylogs.model.server"
 import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server"
 import { calculateFinalPrice } from "~/lib/pricing"
-
-//
-//HCM Vendor Fit Engine
-// let question_section = "HR Digital Transformation"
-//digital_transformation
-// //vendor_fit
-// const prompt_id = "digital_transformation"
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
     // Require authentication first - this will redirect to login if not authenticated
@@ -31,6 +26,12 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
     };
 
     const slug = params.id ? decodeURIComponent(params.id) : undefined;
+
+    // Redirect Change Management to the new interactive assessment
+    if (slug === "change-management" || slug === "Intelligent Change Management") {
+        return redirect("/change-management/assessment");
+    }
+
     const question_section = slug ? (ENGINE_SLUG_MAP[slug] || slug) : undefined;
 
     if (!question_section) {
@@ -56,6 +57,7 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
 
     return { questions, question_section, existingResponses };
 }
+
 export const action: ActionFunction = async ({ request }: { request: Request }) => {
     try {
         const user = await requireUserSession(request)
@@ -63,14 +65,23 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
         console.log("action function\n", body)
         const companyId = user.organisationId;
         if (!companyId) { return null }
-        // save response 
 
+        // Determine engine type for HTI
+        const engineTypeMap: Record<string, 'vendorFit' | 'sharedServices' | 'changeManagement'> = {
+            "HCM Vendor Fit Engine": "vendorFit",
+            "Shared Service Designer": "sharedServices",
+            "Intelligent Change Management": "changeManagement"
+        };
+        const engineType = engineTypeMap[body.params] || 'vendorFit';
+
+        // save response 
         const dataSheet = {
             company_id: user.organisationId,
             user_id: user.userId,
             engine_name: body.params,
             country: user.country_iso,
-            progress: body.progress
+            progress: body.progress,
+            responses: body.answers // Storing structured answers
         }
         await createOrUpdateEngineStorage(dataSheet)
 
@@ -83,7 +94,41 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
         const assessmentId = body.assessment_id ? body.assessment_id.toString() : "";
         await save_answers(companyId, assessmentId.replace("QUESTION#", ""), user.userId, body);
 
+        // Handle AI Report Generation Intent
+        if (body.intent === "generate_report") {
+            const aggregatedData = {
+                companyId: user.organisationId,
+                timestamp: new Date().toISOString(),
+                engines: {
+                    [engineType]: {
+                        engineName: body.params,
+                        progress: body.progress,
+                        responses: body.answers,
+                        scores: {}, // Scoring logic for schema-based engines varies
+                        aiAnalysis: { }
+                    }
+                },
+                completedEnginesCount: 1,
+                totalEngines: 1
+            };
+
+            try {
+                const advisory = await generateHTIAdvisory(aggregatedData as any, engineType);
+                await saveAdvisoryReport(
+                    user.organisationId,
+                    user.userId,
+                    advisory,
+                    aggregatedData as any
+                );
+                return json({ success: true, advisory });
+            } catch (error) {
+                console.error("AI Generation Error:", error);
+                return json({ error: "Failed to generate AI report" }, { status: 500 });
+            }
+        }
+
         if (body.progress === 100) {
+            // ... (rest of completion logic remains same)
             console.log("__________________________")
             const recommendation = await fetchEngineRecomendations(companyId);
             const rankings = recommendation && recommendation.allRankings ? recommendation.allRankings : [];
@@ -150,13 +195,18 @@ export default function EngineForm() {
     const engineNameFromUrl = decodeURIComponent(location.pathname.split('/').pop() || '');
     const engineName = LoaderData?.question_section || engineNameFromUrl || "Unknown Engine";
 
-    // Debug logging
-    console.log("🔍 EngineForm - LoaderData:", LoaderData);
-    console.log("🔍 EngineForm - question_section:", LoaderData?.question_section);
-    console.log("🔍 EngineForm - engineNameFromUrl:", engineNameFromUrl);
-    console.log("🔍 EngineForm - final engineName:", engineName);
-    console.log("🔍 EngineForm - questions:", LoaderData?.questions);
-    console.log("🔍 EngineForm - existingResponses:", LoaderData?.existingResponses);
+    // Use premium assessment wrapper for specific engines
+    const isPremiumEngine = engineName === "HCM Vendor Fit Engine" || engineName === "Shared Service Designer";
+
+    if (isPremiumEngine && LoaderData?.questions?.parts?.length > 0) {
+        return (
+            <VendorFitAssessmentWrapper
+                data={LoaderData.questions}
+                engineName={engineName}
+                existingResponses={LoaderData?.existingResponses}
+            />
+        );
+    }
 
     return (
         <EngineFormRender

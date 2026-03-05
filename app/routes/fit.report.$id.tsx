@@ -14,7 +14,8 @@ import { requireUserSession } from "~/lib/session.server";
 import { getLatestAnalysis } from "~/utils/analysis.server";
 import { getCompanyProfile } from "~/models/company.model.server";
 import { getVerifiedPaymentsByCompany, getCompanyPayments } from "~/models/payment.model.server";
-import { Clock, AlertTriangle, CheckCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle, ArrowLeft, Sparkles, FileText } from "lucide-react";
+import VendorFitReportDashboard from "~/components/reports/VendorFitReportDashboard";
 
 // --- Data Types ---
 type HcmAnalysis = {
@@ -192,7 +193,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         answers: rawResult.answers || { completeness: { percent: 0 } }
       };
 
-      return json({ analysis });
+      return json({ analysis, companyLogo: companyInfo?.logo_url });
     }
 
     throw new Response("The requested assessment was not found.", { status: 404 });
@@ -205,7 +206,6 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
 };
 
-// --- Main Report Component ---
 export default function VendorFitReport() {
   const loaderData = useLoaderData<{ analysis?: HcmAnalysis; paymentStatus?: string }>();
 
@@ -221,9 +221,9 @@ export default function VendorFitReport() {
             Your payment has been submitted and is currently being verified by our administrators.
             This usually takes less than 24 hours. You will be notified once the report is unlocked.
           </p>
-          <a href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
+          <a href="/reports" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors">
             <ArrowLeft className="w-5 h-5" />
-            Return to Dashboard
+            Return to My Reports
           </a>
         </div>
       </div>
@@ -233,168 +233,49 @@ export default function VendorFitReport() {
   const analysis = loaderData.analysis;
   if (!analysis) return null;
 
+  // Map the analysis object to the structure expected by the premium dashboard
+  const dashboardData = {
+    ...analysis,
+    brandName: analysis.profile.organizationName,
+    businessPriorityFit: {
+      goals: Object.entries(analysis.viz.priorityFit.goalsWeighted || {}).map(([name, weight]) => ({
+        name: name.replace(/_/g, ' '),
+        score: Math.round(weight * 100),
+        priority: weight > 0.8 ? "Critical" : weight > 0.5 ? "High" : "Medium"
+      }))
+    },
+    currentHCMLandscape: analysis.viz.landscape,
+    decisionMakingAgility: {
+      ...analysis.viz.decisionAgility,
+      decisionTeamSize: analysis.viz.decisionAgility.teamSizeLabel,
+      selectionTimeline: analysis.viz.decisionAgility.vendorSelectionLabel,
+      implementationStart: analysis.viz.decisionAgility.implementationStartLabel,
+      agilityScore: analysis.viz.decisionAgility.decisionAgility
+    },
+    keyProfileTags: analysis.viz.tags,
+    vendorRecommendations: analysis.viz.recommendationsTable,
+    executiveRadarData: [
+      { axis: "Satisfaction", value: analysis.viz.executiveRadar.Satisfaction },
+      { axis: "Priority", value: analysis.viz.executiveRadar.BusinessPriority },
+      { axis: "Integration", value: analysis.viz.executiveRadar.IntegrationNeeds },
+      { axis: "Budget", value: analysis.viz.executiveRadar.BudgetReadiness },
+      { axis: "Score", value: analysis.viz.executiveRadar.FitScore },
+    ],
+    organizationDemographics: {
+      industry: analysis.profile.industry,
+      employeeCount: analysis.profile.employeeBand,
+      geographicalPresence: analysis.profile.geoPresence?.join(", "),
+      globalization: analysis.fitVector.globalization
+    },
+    diagnostics: {
+      missingData: (analysis.diagnostics.missingOrInvalid || []).map(m => ({ item: m, found: false }))
+    },
+    integrationScalability: [
+      { complexity: analysis.viz.integrationScalability.integrationComplexity, scalability: 100 - (analysis.viz.integrationScalability.integrationComplexity * 10) }
+    ]
+  };
 
-  // Memoized data transformations for charts
-  const radarData = useMemo(() => [
-    { metric: "Satisfaction", value: analysis.viz.executiveRadar.Satisfaction },
-    { metric: "Business Priority", value: analysis.viz.executiveRadar.BusinessPriority },
-    { metric: "Integration", value: analysis.viz.executiveRadar.IntegrationNeeds },
-    { metric: "Budget", value: analysis.viz.executiveRadar.BudgetReadiness },
-    { metric: "Fit Score", value: analysis.viz.executiveRadar.FitScore },
-  ], [analysis.viz.executiveRadar]);
-
-  const barLandscape = useMemo(() => [
-    { name: "Modules", value: analysis.viz.landscape.modulesCount },
-    { name: "Challenges", value: analysis.viz.landscape.challengesCount },
-    { name: "Urgency", value: Math.round(analysis.viz.landscape.urgencyScore) },
-    { name: "Satisfaction", value: Math.round(analysis.viz.landscape.satisfaction) },
-  ], [analysis.viz.landscape]);
-
-  const goalsTreemapData = useMemo(() => {
-    const entries = Object.entries(analysis.viz.priorityFit.goalsWeighted || {});
-    if (entries.length === 0) return [{ name: "No goals defined", size: 1 }];
-    return entries.map(([name, weight]) => ({
-      name: name.replace(/_/g, ' '),
-      size: Math.max(1, Math.round(weight * 100)),
-    }));
-  }, [analysis.viz.priorityFit.goalsWeighted]);
-
-  const integrationScatter = useMemo(() => {
-    const growth = analysis.viz.integrationScalability.growthPercent ?? 0;
-    const ints = analysis.viz.integrationScalability.integrationsCount ?? 0;
-    const comp = analysis.viz.integrationScalability.integrationComplexity ?? 0;
-    return [{ x: ints, y: growth, z: Math.max(1, comp) }];
-  }, [analysis.viz.integrationScalability]);
-
-  // Color definitions for Treemap
-  const TREEMAP_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#a4de6c', '#d0ed57', '#ff8042'];
-
-  return (
-    // The main container with a light background and professional font
-    <div className="bg-gray-50 font-sans text-gray-800 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-
-        <HeaderSection analysis={analysis} />
-
-        {/* Main grid for report widgets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-
-          {/* --- WIDGETS --- */}
-          <Card title="Executive Snapshot" className="lg:col-span-2">
-            <ResponsiveContainer width="100%" height={350}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                <PolarGrid stroke="#e0e0e0" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: '#555', fontSize: 12 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#999' }} />
-                <Radar name="Score" dataKey="value" stroke="#4A90E2" fill="#4A90E2" fillOpacity={0.6} />
-                <Tooltip content={<CustomTooltip />} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card title="Organization Demographics">
-            <Demographics analysis={analysis} />
-          </Card>
-
-          <Card title="Current HCM Landscape" className="lg:col-span-2">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barLandscape} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="name" tick={{ fill: '#555', fontSize: 12 }} />
-                <YAxis tick={{ fill: '#555', fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(74, 144, 226, 0.1)' }} />
-                <Bar dataKey="value" name="Value" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
-            <Kpis items={[
-              { label: "Satisfaction", value: `${Math.round(analysis.scores.satisfaction)} / 100` },
-              { label: "Pain Index", value: `${Math.round(analysis.scores.painIndex)} / 100` },
-              { label: "Integration Complexity", value: `${Math.round(analysis.scores.integrationComplexity)} / 100` },
-              { label: "Change Readiness", value: `${Math.round(analysis.scores.changeReadiness)} / 100` },
-            ]} />
-          </Card>
-
-          <Card title="Business Priority Fit">
-            <ResponsiveContainer width="100%" height={300}>
-              <Treemap
-                data={goalsTreemapData}
-                dataKey="size"
-                aspectRatio={4 / 3}
-                stroke="#fff"
-                fill="#8884d8"
-                content={<CustomizedTreemapContent colors={TREEMAP_COLORS} />}
-              >
-                <Tooltip content={<CustomTooltip />} />
-              </Treemap>
-            </ResponsiveContainer>
-            <div className="mt-4 text-sm text-gray-600 border-t pt-3">
-              <strong>Deployment:</strong> {labelizeDeployment(analysis.fitVector.deployment)}<br />
-              <strong>Budget:</strong> {labelizeBudget(analysis.fitVector.budgetBand)}
-            </div>
-          </Card>
-
-          <Card title="Integration & Scalability">
-            <ResponsiveContainer width="100%" height={350}>
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <CartesianGrid stroke="#e0e0e0" />
-                <XAxis type="number" dataKey="x" name="Integrations" unit="" tick={{ fill: '#555' }} />
-                <YAxis type="number" dataKey="y" name="Growth" unit="%" tick={{ fill: '#555' }} />
-                <ZAxis type="number" dataKey="z" range={[60, 400]} name="Complexity" />
-                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter name="Profile" data={integrationScatter} fill="#ff7300" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card title="Decision-making Agility">
-            <div className="space-y-4">
-              <InlineStat label="Decision Team Size" value={analysis.viz.decisionAgility.teamSizeLabel ?? "—"} />
-              <InlineStat label="Selection Timeline" value={analysis.viz.decisionAgility.vendorSelectionLabel ?? "—"} />
-              <InlineStat label="Implementation Start" value={analysis.viz.decisionAgility.implementationStartLabel ?? "—"} />
-              <InlineStat label="Agility Score" value={`${Math.round(analysis.viz.decisionAgility.decisionAgility)} / 100`} isScore={true} />
-            </div>
-          </Card>
-
-          <Card title="Key Profile Tags">
-            <TagList tags={analysis.viz.tags} />
-          </Card>
-
-        </div>
-
-        {/* Diagnostics and Recommendations Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <Card title="Diagnostics" className="md:col-span-2">
-            <Diagnostics analysis={analysis} />
-          </Card>
-          <Card title="Top Recommendations">
-            {analysis.diagnostics.recommendations.length === 0 ? (
-              <p className="text-sm text-gray-500">No specific recommendations generated based on the provided data.</p>
-            ) : (
-              <ul className="space-y-2 text-sm text-gray-700">
-                {analysis.diagnostics.recommendations.map((r, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <CheckIcon className="w-4 h-4 mr-2 mt-0.5 text-green-500" />
-                    <span>{r}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
-
-        <div className="mt-6">
-          <Card title="Vendor Category Recommendations">
-            <RecommendationsTable rows={analysis.viz.recommendationsTable} />
-          </Card>
-        </div>
-
-        <footer className="text-center mt-8 text-xs text-gray-400">
-          <p>HCM Vendor Fit Report generated for {analysis.profile.organizationName} on {new Date().toLocaleDateString()}</p>
-        </footer>
-
-      </div>
-    </div>
-  );
+  return <VendorFitReportDashboard data={dashboardData} brandName={analysis.profile.organizationName || "Your Company"} />;
 }
 
 /* --- Sub-components for UI --- */

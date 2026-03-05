@@ -38,7 +38,9 @@ export interface HTIAggregatedInput {
         maturity?: HTIEngineData;
         roadmap?: HTIEngineData;
         vendor?: HTIEngineData;
+        vendorFit?: HTIEngineData;
         change?: HTIEngineData;
+        changeManagement?: HTIEngineData;
         sharedServices?: HTIEngineData;
     };
     completedEnginesCount: number;
@@ -46,7 +48,11 @@ export interface HTIAggregatedInput {
 }
 
 export interface HTIAdvisoryContent {
-    executiveSummary: string;
+    executiveSummary: string; // Brief overview (1-2 pages)
+    detailedSections?: Array<{
+        title: string;
+        content: string; // Rich HTML content for this specific chapter
+    }>;
     currentState: {
         maturityLevel?: string;
         digitalReadiness?: string;
@@ -302,7 +308,8 @@ export async function getCompanyAdvisories(companyId: string): Promise<HTIAdviso
                     ":pk": `COMPANY#${companyId}`,
                     ":sk": "HTI_REPORT#"
                 },
-                ScanIndexForward: false // Most recent first
+                ScanIndexForward: false, // Most recent first
+                ConsistentRead: true
             })
         );
 

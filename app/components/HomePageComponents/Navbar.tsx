@@ -15,6 +15,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import Logo from "../ui/Logo";
 
 export default function Navbar() {
   const location = useLocation();
@@ -112,29 +113,7 @@ export default function Navbar() {
     <div className="fixed top-0 left-0 right-0 z-[9999]">
       <nav className="relative bg-[#000033] px-6 md:px-8 py-4 flex items-center justify-between border-b border-white/5 shadow-2xl backdrop-blur-md">
         {/* Left: Branding */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center">
-            <img
-              src="/logo_icon_final.png"
-              alt="HR-Tek"
-              className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform drop-shadow-lg"
-              style={{ mixBlendMode: 'normal' }}
-            />
-          </div>
-          <div className="flex flex-col">
-            {pathname === "/" ? (
-              <div className="text-xl md:text-2xl font-black tracking-tighter leading-none">
-                <span className="text-white">HR-TEK</span>{" "}
-                <span className="text-[#00B5E2]">SYSTEM</span>
-              </div>
-            ) : (
-              <div className="text-xl md:text-2xl font-black tracking-tighter leading-none">
-                <span className="text-white">HR-TEK</span>{" "}
-                <span className="text-[#00B5E2]">SYSTEM</span>
-              </div>
-            )}
-          </div>
-        </Link>
+        <Logo />
 
         {/* Center: Navigation Links (Desktop) */}
         <div className="hidden lg:flex items-center space-x-2 ml-10">

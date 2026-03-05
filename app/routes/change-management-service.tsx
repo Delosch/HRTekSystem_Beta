@@ -106,7 +106,7 @@ export default function ChangeManagementDiagnosticPage() {
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link
-                    to="/engine/change-management"
+                    to="/change-management/assessment"
                     className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
                   >
                     Start Assessment
@@ -316,7 +316,7 @@ export default function ChangeManagementDiagnosticPage() {
               >
                 Talk to a Consultant
               </button>
-              <Link to="/engine/change-management" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300 text-center">Take the Assessment</Link>
+              <Link to="/change-management/assessment" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300 text-center">Take the Assessment</Link>
             </div>
           </div>
         </section>

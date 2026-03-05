@@ -21,6 +21,7 @@ import {
   CpuChipIcon,
 } from "@heroicons/react/24/outline";
 import { getUserCountryFromIP } from "~/utils/ip.detector";
+import Logo from "./ui/Logo";
 
 export interface Country {
   iso2: string;
@@ -646,18 +647,7 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
           {/* Left Column: AI HR Images/Features */}
           <div className="hidden md:flex flex-col justify-between p-10 bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
             {/* Top Section: Logo and Brand Name */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center overflow-hidden">
-                <img
-                  src="/logo_icon_final.png"
-                  alt="HR-Tek Logo"
-                  className="h-full w-auto object-contain"
-                />
-              </div>
-              <span className="font-black text-xl tracking-tighter uppercase">
-                HR-TEK <span className="text-[#00B5E2]">SYSTEM</span>
-              </span>
-            </div>
+            <Logo />
 
             {/* Middle Section: Main Headline */}
             <div className="my-12">

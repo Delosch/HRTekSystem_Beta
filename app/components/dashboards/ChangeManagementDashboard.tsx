@@ -1,35 +1,26 @@
-import { Users, AlertTriangle, TrendingUp, MessageSquare, Target } from "lucide-react";
-import MetricsCard from "../MetricsCard";
-import InsightsPanel from "../InsightsPanel";
-import ProgressRing from "../ProgressRing";
+import { useState } from "react";
+import { Link } from "@remix-run/react";
+import {
+    ArrowLeft, Download, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown,
+    Users, Brain, Target, Activity, Zap, Shield, BarChart3, Heart, MessageCircle,
+    Clock, ChevronDown, ChevronUp, UserCheck, UserX, Lightbulb, Bell, XCircle,
+    ThumbsUp, ThumbsDown, Eye, Filter, Calendar, DollarSign, Gauge
+} from "lucide-react";
+import {
+    ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid,
+    Tooltip, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+    Radar, BarChart as ReBarChart, Bar, Cell, LineChart, Line, ScatterChart,
+    Scatter, ZAxis, PieChart, Pie
+} from 'recharts';
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ChangeManagementDashboardProps {
-    engineData: {
-        name: string;
-        description: string;
-        icon: string;
-    };
-    metrics: {
-        completionRate: number;
-        totalSubmissions: number;
-        averageScore: number;
-        lastUpdated: string;
-        activeUsers: number;
-        timeSpent: number;
-    };
-    assessmentData: {
-        currentProgress: number;
-        sectionsCompleted: number;
-        totalSections: number;
-    };
-    insights: Array<{
-        id: string;
-        title: string;
-        description: string;
-        priority: "high" | "medium" | "low";
-        category: "strength" | "improvement" | "recommendation" | "risk";
-        actionable: boolean;
-    }>;
+    engineData: any;
+    metrics: any;
+    assessmentData: any;
+    insights: any;
+    historicalData?: any;
+    brandName: string;
 }
 
 export default function ChangeManagementDashboard({
@@ -37,255 +28,209 @@ export default function ChangeManagementDashboard({
     metrics,
     assessmentData,
     insights,
+    historicalData,
+    brandName
 }: ChangeManagementDashboardProps) {
-    // Stakeholder groups
-    const stakeholders = [
-        { group: "Executive Leadership", influence: "High", support: "High", readiness: 85, count: 12, risk: "Low" },
-        { group: "Middle Management", influence: "High", support: "Medium", readiness: 65, count: 45, risk: "Medium" },
-        { group: "Frontline Employees", influence: "Low", support: "Medium", readiness: 55, count: 320, risk: "Medium" },
-        { group: "HR Team", influence: "Medium", support: "High", readiness: 90, count: 25, risk: "Low" },
-        { group: "IT Department", influence: "Medium", support: "Low", readiness: 45, count: 18, risk: "High" },
-    ];
+    const [activeTab, setActiveTab] = useState("executive");
+    const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
 
-    // Communication timeline
-    const communicationPhases = [
-        { phase: "Awareness", duration: "Weeks 1-2", status: "Completed", activities: 5, completed: 5 },
-        { phase: "Understanding", duration: "Weeks 3-4", status: "In Progress", activities: 6, completed: 4 },
-        { phase: "Acceptance", duration: "Weeks 5-8", status: "Planned", activities: 8, completed: 0 },
-        { phase: "Adoption", duration: "Weeks 9-12", status: "Planned", activities: 10, completed: 0 },
-    ];
+    const scrollToSection = (id: string) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setActiveTab(id);
+        }
+    };
 
-    // Resistance areas
-    const resistanceAreas = [
-        { area: "Process Changes", level: "High", impact: "Critical", mitigation: "Hands-on training sessions" },
-        { area: "Technology Adoption", level: "High", impact: "High", mitigation: "Extended support period" },
-        { area: "Role Clarity", level: "Medium", impact: "Medium", mitigation: "Clear communication plan" },
-        { area: "Workload Concerns", level: "Medium", impact: "Medium", mitigation: "Phased rollout approach" },
-    ];
+    const downloadPDF = async () => {
+        const root = document.getElementById('cm-dashboard-root');
+        if (!root) return;
+        const { default: jsPDF } = await import('jspdf');
+        const { default: html2canvas } = await import('html2canvas');
+        const canvas = await html2canvas(root, {
+            scale: 1.5,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#0a0c10',
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = pageWidth / canvas.width;
+        const imgHeight = canvas.height * ratio;
+        const canvasPageHeight = pageHeight / ratio;
+        let heightLeft = canvas.height;
+        let position = 0;
+        let pageNum = 1;
+        while (heightLeft > 0) {
+            pdf.addImage(imgData, 'PNG', 0, -position * ratio, pageWidth, imgHeight);
+            // Watermark
+            pdf.setTextColor(40, 40, 40);
+            pdf.setFontSize(60);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('HRTEKSYSTEM', pageWidth / 2, pageHeight / 2, { angle: 45, align: 'center' });
+            // Header bar
+            pdf.setFillColor(10, 12, 16); pdf.rect(0, 0, pageWidth, 48, 'F');
+            pdf.setTextColor(255, 255, 255); pdf.setFontSize(10); pdf.setFont('helvetica', 'bold');
+            pdf.text('HRTek Systems', 30, 20);
+            pdf.setTextColor(168, 85, 247); pdf.setFontSize(8);
+            pdf.text('CHANGE MANAGEMENT INTELLIGENCE | CONFIDENTIAL', 30, 34);
+            pdf.setTextColor(148, 163, 184); pdf.setFontSize(8); pdf.setFont('helvetica', 'normal');
+            pdf.text(`${brandName}`, pageWidth - 30, 27, { align: 'right' });
+            // Footer bar
+            pdf.setFillColor(10, 12, 16); pdf.rect(0, pageHeight - 26, pageWidth, 26, 'F');
+            pdf.setFontSize(7); pdf.setTextColor(100, 116, 139);
+            pdf.text(`© 2026 HRTek Systems | Page ${pageNum}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+            heightLeft -= canvasPageHeight;
+            position += canvasPageHeight;
+            pageNum++;
+            if (heightLeft > 0) pdf.addPage();
+        }
+        pdf.save(`HRTek-ChangeManagement-${brandName.replace(/\s+/g, '_')}-${Date.now()}.pdf`);
+    };
+
+    // Map insights to dashboard categories if possible
+    const readinessScore = metrics?.completionRate || 0;
+    const avgScore = metrics?.averageScore || 0;
+
+    const getCRSColor = (crs: number) => {
+        if (crs >= 71) return "text-emerald-400";
+        if (crs >= 41) return "text-amber-400";
+        return "text-red-400";
+    };
+
+    const getCRSBg = (crs: number) => {
+        if (crs >= 71) return "bg-emerald-500/10 border-emerald-500/30";
+        if (crs >= 41) return "bg-amber-500/10 border-amber-500/30";
+        return "bg-red-500/10 border-red-500/30";
+    };
 
     return (
-        <main className="max-w-[1600px] mx-auto px-6 py-8">
-            {/* Hero Section */}
-            <div className="mb-8">
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="text-6xl">{engineData.icon}</div>
+        <div id="cm-dashboard-root" className="min-h-screen bg-[#0a0c10] text-slate-200">
+            {/* Nav Header */}
+            <nav className="sticky top-0 z-50 bg-[#0f1117]/80 backdrop-blur-xl border-b border-slate-800/50 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <img src="/logo-icon.png" alt="Logo" className="w-10 h-10 object-contain" />
                     <div>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                            {engineData.name}
+                        <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            Change Management Intelligence Engine
                         </h1>
-                        <p className="text-lg text-gray-600">{engineData.description}</p>
+                        <p className="text-xs text-slate-500 font-medium tracking-wider uppercase">{brandName} • Live Dashboard</p>
                     </div>
                 </div>
-                <p className="text-sm text-gray-500">
-                    Assess stakeholder readiness, identify resistance points, and develop targeted change strategies.
-                </p>
-            </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-1 mr-4">
+                        <button onClick={() => scrollToSection("executive")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "executive" ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                            Executive View
+                        </button>
+                        <button onClick={() => scrollToSection("detailed")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "detailed" ? 'bg-purple-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>
+                            Detailed Analytics
+                        </button>
+                    </div>
+                    <button onClick={downloadPDF} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-sm font-bold rounded-lg border border-slate-700 transition-all flex items-center gap-2">
+                        <Download className="w-4 h-4" /> Export PDF
+                    </button>
+                    <Link to="/dashboard" className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700">
+                        <ArrowLeft className="w-5 h-5" />
+                    </Link>
+                </div>
+            </nav>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <MetricsCard
-                    title="Overall Readiness"
-                    value={metrics.averageScore}
-                    suffix="%"
-                    icon={Target}
-                    colorScheme="blue"
-                    trend={{ value: 8, isPositive: true }}
-                />
-                <MetricsCard
-                    title="Stakeholder Groups"
-                    value={5}
-                    suffix=" groups"
-                    icon={Users}
-                    colorScheme="green"
-                />
-                <MetricsCard
-                    title="High Risk Areas"
-                    value={2}
-                    suffix=" areas"
-                    icon={AlertTriangle}
-                    colorScheme="red"
-                />
-                <MetricsCard
-                    title="Communication Activities"
-                    value={9}
-                    suffix="/29"
-                    icon={MessageSquare}
-                    colorScheme="purple"
-                />
-            </div>
+            <main className="max-w-[1800px] mx-auto p-6 space-y-24 scroll-smooth">
+                {/* Executive Section */}
+                <section id="executive" className="space-y-8 scroll-mt-24">
+                    {/* KPI Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Target className="w-5 h-5 text-purple-400" />
+                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Completion</h3>
+                            </div>
+                            <p className="text-4xl font-black text-white">{readinessScore}%</p>
+                        </div>
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Brain className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Intelligence Score</h3>
+                            </div>
+                            <p className="text-4xl font-black text-emerald-400">{avgScore}/100</p>
+                        </div>
+                        {/* Insights mapping ... */}
+                    </div>
 
-            {/* Stakeholder Readiness Matrix */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                    Stakeholder Readiness Matrix
-                </h2>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b-2 border-gray-200">
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Stakeholder Group</th>
-                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Influence</th>
-                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Support</th>
-                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Readiness</th>
-                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Count</th>
-                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-600 uppercase">Risk</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stakeholders.map((stakeholder, index) => (
-                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                                    <td className="py-4 px-4 text-sm font-medium text-gray-900">{stakeholder.group}</td>
-                                    <td className="py-4 px-4 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stakeholder.influence === "High" ? "bg-purple-100 text-purple-700" :
-                                            stakeholder.influence === "Medium" ? "bg-blue-100 text-blue-700" :
-                                                "bg-gray-100 text-gray-700"
-                                            }`}>
-                                            {stakeholder.influence}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stakeholder.support === "High" ? "bg-green-100 text-green-700" :
-                                            stakeholder.support === "Medium" ? "bg-amber-100 text-amber-700" :
-                                                "bg-red-100 text-red-700"
-                                            }`}>
-                                            {stakeholder.support}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                                <div
-                                                    className={`h-2 rounded-full ${stakeholder.readiness >= 80 ? "bg-green-500" :
-                                                        stakeholder.readiness >= 60 ? "bg-blue-500" :
-                                                            stakeholder.readiness >= 40 ? "bg-amber-500" :
-                                                                "bg-red-500"
-                                                        }`}
-                                                    style={{ width: `${stakeholder.readiness}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-sm font-bold text-gray-900 w-12">{stakeholder.readiness}%</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-4 text-center text-sm text-gray-600">{stakeholder.count}</td>
-                                    <td className="py-4 px-4 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${stakeholder.risk === "Low" ? "bg-green-100 text-green-700" :
-                                            stakeholder.risk === "Medium" ? "bg-amber-100 text-amber-700" :
-                                                "bg-red-100 text-red-700"
-                                            }`}>
-                                            {stakeholder.risk}
-                                        </span>
-                                    </td>
-                                </tr>
+                    {/* Insights List */}
+                    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-white mb-6">AI-Generated Insights</h3>
+                        <div className="space-y-4">
+                            {insights.map((insight: any) => (
+                                <div key={insight.id} className="p-4 bg-black/30 border border-slate-800 rounded-xl">
+                                    <h4 className="font-bold text-white mb-1 uppercase text-sm tracking-tight">{insight.title}</h4>
+                                    <p className="text-sm text-slate-400 font-medium italic">{insight.description}</p>
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Communication Timeline */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                    Communication Plan Timeline
-                </h2>
-
-                <div className="space-y-4">
-                    {communicationPhases.map((phase, index) => (
-                        <div key={index} className="relative">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${phase.status === "Completed" ? "bg-green-100" :
-                                        phase.status === "In Progress" ? "bg-blue-100" :
-                                            "bg-gray-100"
-                                        }`}>
-                                        <span className={`text-lg font-bold ${phase.status === "Completed" ? "text-green-600" :
-                                            phase.status === "In Progress" ? "text-blue-600" :
-                                                "text-gray-600"
-                                            }`}>{index + 1}</span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900">{phase.phase}</h3>
-                                        <p className="text-sm text-gray-500">{phase.duration}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm text-gray-500">Activities</p>
-                                    <p className="text-lg font-bold text-gray-900">{phase.completed}/{phase.activities}</p>
-                                </div>
-                            </div>
-
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                <div
-                                    className={`h-2 rounded-full ${phase.status === "Completed" ? "bg-green-500" :
-                                        phase.status === "In Progress" ? "bg-blue-500" :
-                                            "bg-gray-400"
-                                        }`}
-                                    style={{ width: `${(phase.completed / phase.activities) * 100}%` }}
-                                />
-                            </div>
-
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${phase.status === "Completed" ? "bg-green-100 text-green-700" :
-                                phase.status === "In Progress" ? "bg-blue-100 text-blue-700" :
-                                    "bg-gray-100 text-gray-700"
-                                }`}>
-                                {phase.status}
-                            </span>
-
-                            {index < communicationPhases.length - 1 && (
-                                <div className="absolute left-5 top-full w-0.5 h-4 bg-gray-300" />
-                            )}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
+                </section>
 
-            {/* Resistance Risk Areas */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                    Resistance Risk Heatmap
-                </h2>
-
-                <div className="space-y-4">
-                    {resistanceAreas.map((area, index) => (
-                        <div
-                            key={index}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900">{area.area}</h3>
-                                <p className="text-sm text-gray-600 mt-1">Mitigation: {area.mitigation}</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500">Impact</p>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${area.impact === "Critical" ? "bg-red-100 text-red-700" :
-                                        area.impact === "High" ? "bg-orange-100 text-orange-700" :
-                                            "bg-amber-100 text-amber-700"
-                                        }`}>
-                                        {area.impact}
-                                    </span>
-                                </div>
-                                <span className={`px-4 py-2 rounded-lg text-sm font-semibold ${area.level === "High" ? "bg-red-100 text-red-700" :
-                                    "bg-amber-100 text-amber-700"
-                                    }`}>
-                                    {area.level} Risk
-                                </span>
+                {/* Detailed Section */}
+                <section id="detailed" className="space-y-8 scroll-mt-24 border-t border-slate-800 pt-24">
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">Detailed Analytics</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8">
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Historical Readiness Trend</h4>
+                            <div className="h-[300px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={[
+                                        { date: 'Week 1', score: 45 },
+                                        { date: 'Week 2', score: 52 },
+                                        { date: 'Week 3', score: 48 },
+                                        { date: 'Week 4', score: 65 },
+                                        { date: 'Week 5', score: readinessScore }
+                                    ]}>
+                                        <defs>
+                                            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                        <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} />
+                                        <Area type="monotone" dataKey="score" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorScore)" strokeWidth={3} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* AI Insights */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <svg className="w-7 h-7 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-                    </svg>
-                    Change Strategy Recommendations
-                </h2>
-                <InsightsPanel insights={insights} />
-            </div>
-        </main>
+                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8">
+                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Sentiment Distribution</h4>
+                            <div className="h-[300px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ReBarChart data={[
+                                        { name: 'Optimism', value: 40 },
+                                        { name: 'Anxiety', value: 25 },
+                                        { name: 'Resistance', value: 15 },
+                                        { name: 'Neutral', value: 20 }
+                                    ]}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                                        <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
+                                        <Tooltip cursor={{ fill: '#1e293b' }} contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b' }} />
+                                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                            {
+                                                [0, 1, 2, 3].map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={['#10b981', '#f59e0b', '#ef4444', '#64748b'][index]} />
+                                                ))
+                                            }
+                                        </Bar>
+                                    </ReBarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
     );
 }

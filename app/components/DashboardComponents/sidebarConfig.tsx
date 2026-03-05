@@ -55,7 +55,7 @@ export const sidebarSections: SidebarSection[] = [
       { label: "Cognitive HCM Vendor Fit Engine", path: "/vendorDashboard", icon: Puzzle },
       { label: "AI-driven HR Tech Diagnostics", path: "/analysisDashboard", icon: FileChartColumn },
       { label: "Shared Services Operating Model Planner", path: "/sharedDashboard", icon: DraftingCompass },
-      { label: "Intelligent Change Management Systems to Enhance Execution", path: "/changeDashboard", icon: Shapes },
+      { label: "Change Management Intelligence Engine", path: "/changeDashboard", icon: Shapes },
     ],
   },
   {
