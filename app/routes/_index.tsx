@@ -431,11 +431,11 @@ function BusinessCard({
             >
               <div className="flex justify-between items-center">
                 <span className="relative z-10">{feature}</span>
-                <span className="text-blue-500 group-hover/item:text-indigo-600 text-lg font-bold transform group-hover/item:translate-x-1 transition-transform duration-300">→</span>
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover/item:from-blue-500/5 group-hover/item:to-indigo-500/10 transition-all duration-300"></div>
             </div>
           ))}
+
         </div>
       </div>
 
