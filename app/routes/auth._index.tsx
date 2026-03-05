@@ -290,7 +290,7 @@ export default function Auth() {
             <section className="relative flex-1 flex items-center justify-center p-4 pt-20">
                 <AnimatedCircles />
                 <div className="relative z-10">
-                    <AuthForm />
+                    <AuthForm initialIsLogin={searchParams.get("mode") !== "signup"} />
                 </div>
                 <ToastContainer position="bottom-right" />
             </section>

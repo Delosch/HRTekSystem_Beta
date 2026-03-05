@@ -68,13 +68,10 @@ export default function Navbar() {
   }, [pathname]);
 
   const handleServicesClick = () => {
-    if (pathname === "/") {
-      navigate("#services");
-    } else {
-      navigate("/#services");
-    }
-    setIsMobileMenuOpen(false);
-  };
+  navigate("/#services");
+  setIsMobileMenuOpen(false);
+};
+
 
   const toggleServicesDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,18 +119,6 @@ export default function Navbar() {
             className={pathname === "/" && !hash ? activeStyle : inactiveStyle}
           >
             Home
-          </Link>
-          <Link
-            to="/about-us"
-            className={pathname === "/about-us" ? activeStyle : inactiveStyle}
-          >
-            About Us
-          </Link>
-          <Link
-            to="/articles"
-            className={pathname === "/articles" ? activeStyle : inactiveStyle}
-          >
-            Articles
           </Link>
 
           <div className="relative" ref={dropdownRef}>
@@ -183,6 +168,25 @@ export default function Navbar() {
           >
             Pricing
           </Link>
+
+          <Link
+            to="/articles"
+            className={pathname === "/articles" ? activeStyle : inactiveStyle}
+          >
+            Articles
+          </Link>
+
+          <Link
+            to="/about-us"
+            className={pathname === "/about-us" ? activeStyle : inactiveStyle}
+          >
+            About Us
+          </Link>
+          
+
+          
+
+          
           <Link
             to="/contact"
             className={pathname === "/contact" ? activeStyle : inactiveStyle}
@@ -226,12 +230,22 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link
-                to="/auth"
-                className="px-8 py-2.5 rounded-full bg-white text-[#000033] font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white flex items-center justify-center"
-              >
-                Login | SignUp
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/auth?mode=login"
+                  className="px-6 py-2.5 rounded-full bg-white text-[#000033] font-bold text-sm shadow-xl hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/auth?mode=signup"
+                  className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#00B5E2] to-[#0077b6] text-white font-bold text-sm shadow-xl hover:opacity-90 transition-all duration-300 transform hover:scale-105 active:scale-95"
+                >
+                  Sign Up
+                </Link>
+              </div>
+
             )}
           </div>
 
@@ -277,20 +291,6 @@ export default function Navbar() {
                     className={`text-xl font-bold py-3 transition-colors ${pathname === "/" && !hash ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
                   >
                     Home
-                  </Link>
-                  <Link
-                    to="/about-us"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
-                  >
-                    About Us
-                  </Link>
-                  <Link
-                    to="/articles"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/articles" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
-                  >
-                    Articles
                   </Link>
 
                   <div className="pt-4 border-t border-white/10 mt-2">
@@ -340,6 +340,25 @@ export default function Navbar() {
                     >
                       Pricing
                     </Link>
+                  </div>
+
+                  <Link
+                    to="/articles"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/articles" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    Articles
+                  </Link>
+
+                  <Link
+                    to="/about-us"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`text-xl font-bold py-3 transition-colors ${pathname === "/about-us" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
+                  >
+                    About Us
+                  </Link>
+
+                  <div className="pt-4 border-t border-white/10 mt-2 flex flex-col space-y-2">
                     <Link
                       to="/contact"
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -379,13 +398,24 @@ export default function Navbar() {
                         </div>
                       </div>
                     ) : (
-                      <Link
-                        to="/auth"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center justify-center py-4 bg-gradient-to-r from-[#00B5E2] to-[#0077b6] text-white font-black rounded-xl shadow-lg active:scale-95 transition-all text-sm tracking-widest"
-                      >
-                        LOGIN | SIGNUP
-                      </Link>
+                      <div className="flex flex-col gap-3">
+                        <Link
+                          to="/auth?mode=login"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center justify-center py-4 bg-white text-[#000033] font-bold rounded-xl shadow-lg"
+                        >
+                          Login
+                        </Link>
+
+                        <Link
+                          to="/auth?mode=signup"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center justify-center py-4 bg-gradient-to-r from-[#00B5E2] to-[#0077b6] text-white font-black rounded-xl shadow-lg"
+                        >
+                          Sign Up
+                        </Link>
+                      </div>
+
                     )}
                   </div>
                 </div>
