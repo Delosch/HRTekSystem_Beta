@@ -6,3 +6,19 @@ node_modules
 .env*
 /app/tmp
 ./test.ts
+
+# Python / Chatbot
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+myvenv/
+
+# Python logs
+*.log
+"@ | Out-File -FilePath .gitignore -Encoding utf8 -Append
