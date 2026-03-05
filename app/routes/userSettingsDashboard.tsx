@@ -12,10 +12,10 @@ import {
   getUserByEmail,
   getUserByPhone
 } from "~/models/user.model.server";
-import { AlertTriangle, Shield, Trash2, Camera, Save, User, Mail, CheckCircle, Smartphone, Key } from "lucide-react";
+import { AlertTriangle, Shield, Trash2, Camera, Save, Mail, CheckCircle, Smartphone, Key } from "lucide-react";
 import { sendLoginOTP } from "~/services/sms.server";
-import { createOTP, sendOTPEmail } from "~/lib/email.otp.server";
-
+import { sendOTPEmail } from "~/lib/email.otp.server";
+import { randomInt } from "crypto";
 import { getEnhancedUser } from "~/utils/user.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -58,7 +58,7 @@ export const action: ActionFunction = async ({ request }) => {
     if (last_name) updateData.last_name = last_name;
     if (username) updateData.username = username;
     if (email && email.trim().toLowerCase() !== user.email?.trim().toLowerCase()) {
-      session.set("pendingEmailChange", email);
+
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -71,8 +71,11 @@ export const action: ActionFunction = async ({ request }) => {
         return json({ error: "Email is already in use." }, { status: 400 });
       }
 
+      // ✅ Move session.set here (AFTER validation passes)
+      session.set("pendingEmailChange", email);
+
       try {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = randomInt(100000, 999999).toString();
         await saveOTP(user.userId, otp);
 
         const cleanPhone = user.phone?.replace(/\D/g, "");
@@ -135,7 +138,7 @@ export const action: ActionFunction = async ({ request }) => {
       session.set("pendingPhoneChange", formattedPhone);
 
       try {
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otp = randomInt(100000, 999999).toString();
         await saveOTP(user.userId, otp);
 
         await sendOTPEmail(user.email, otp);
@@ -185,7 +188,7 @@ export const action: ActionFunction = async ({ request }) => {
       }
 
       // Generate 6-digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otp = randomInt(100000, 999999).toString();
 
       // Save to DB
       await saveOTP(user.userId, otp);
@@ -307,7 +310,6 @@ export const action: ActionFunction = async ({ request }) => {
 export default function UserSettingsDashboard() {
   const [isEmailOtpModalOpen, setIsEmailOtpModalOpen] = useState(false);
   const [isPhoneOtpModalOpen, setIsPhoneOtpModalOpen] = useState(false);
-  const [emailOtpValue, setEmailOtpValue] = useState("");
   const topRef = useRef<HTMLDivElement>(null);
   const { user } = useLoaderData<typeof loader>();
   const [previewImage, setPreviewImage] = useState<string | null>(user.photoUrl || null);
