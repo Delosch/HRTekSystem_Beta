@@ -155,6 +155,12 @@ export const action: ActionFunction = async ({ request }) => {
       }
     }
 
+    const removePhoto = formData.get("remove_photo");
+
+    if (removePhoto === "true") {
+      updateData.photoUrl = "";
+    }
+
     if (photo && typeof photo === 'object' && 'name' in photo && (photo as any).size > 0) {
       updateData.photoUrl = `/uploads/${(photo as any).name}`;
     }
@@ -312,7 +318,8 @@ export default function UserSettingsDashboard() {
   const [isPhoneOtpModalOpen, setIsPhoneOtpModalOpen] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
   const { user } = useLoaderData<typeof loader>();
-  const [previewImage, setPreviewImage] = useState<string | null>(user.photoUrl || null);
+  const [previewImage, setPreviewImage] = useState<string | null>(user.photoUrl || null); 
+  const [removePhoto, setRemovePhoto] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<"confirm" | "otp">("confirm");
   const [otpValue, setOtpValue] = useState("");
@@ -352,6 +359,7 @@ export default function UserSettingsDashboard() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    if (!file) return;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => setPreviewImage(reader.result as string);
@@ -391,6 +399,7 @@ export default function UserSettingsDashboard() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <Form method="post" encType="multipart/form-data" className="p-8 space-y-8">
               <input type="hidden" name="intent" value="update_profile" />
+              <input type="hidden" name="remove_photo" value={removePhoto ? "true" : "false"} />
 
               <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
                 <div className="relative group">
@@ -405,6 +414,18 @@ export default function UserSettingsDashboard() {
                     <Camera className="w-8 h-8 text-white" />
                     <input type="file" name="photo" accept="image/*" className="hidden" onChange={handleImageChange} />
                   </label>
+                  {previewImage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewImage(null);
+                        setRemovePhoto(true);
+                      }}
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-3 py-1 rounded-full shadow hover:bg-red-700 transition"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
                 <div className="text-center sm:text-left">
                   <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
