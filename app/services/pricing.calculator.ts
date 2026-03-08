@@ -231,21 +231,7 @@ export function calculateUpgradeCost(
  * Format currency
  */
 export function formatCurrency(amount: number, currency: string): string {
-    const symbols: { [key: string]: string } = {
-        INR: "₹",
-        USD: "$",
-        EUR: "€",
-        GBP: "£",
-        AED: "AED "
-    };
-
-    const symbol = symbols[currency] || currency;
-    const formatted = amount.toLocaleString("en-IN", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    });
-
-    return `${symbol}${formatted}`;
+    return "₹*****";
 }
 
 /**
