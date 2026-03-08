@@ -327,17 +327,17 @@ export default function Index() {
                 {
                   title: "Why Most HR Technology Investments Fail",
                   img: "/assets/blogAssets/fail_invest.png",
-                  link: "/articles",
+                  link: "/article/3",
                 },
                 {
                   title: "From HR Automation to HR Intelligence",
                   img: "/assets/blogAssets/hr_intelligence.png",
-                  link: "/articles",
+                  link: "/article/4",
                 },
                 {
                   title: "Designing a Future-Ready HR Operating Model",
                   img: "/assets/blogAssets/op_model.png",
-                  link: "/articles",
+                  link: "/article/5",
                 },
               ].map((item, index) => (
                 <div
