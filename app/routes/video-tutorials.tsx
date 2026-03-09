@@ -20,6 +20,14 @@ export const meta: MetaFunction = () => {
 const videos = [
     {
         id: 1,
+        title: "HR Transformation Intelligence (HTI)",
+        description: "Explore the cognitive advisory layer that delivers decision intelligence, moving beyond basic dashboards and reports.",
+        duration: "Engine Guide",
+        category: "HTI",
+        videoId: "3_mEgGnjFXc"
+    },
+    {
+        id: 2,
         title: "What is HRTek?",
         description: "An introduction to the HRTek platform and its capabilities for transforming your HR operations.",
         duration: "Overview",
@@ -27,15 +35,15 @@ const videos = [
         videoId: "pK8XCrflcdc"
     },
     {
-        id: 2,
-        title: "HR Technology Maturity Analysis",
-        description: "Learn how to assess your current HR technology landscape and identify gaps with our Maturity Engine.",
+        id: 3,
+        title: "Intelligent Change Management (ICMS)",
+        description: "Manage the people side of transformation with HR-Tek’s strategic ICMS capability, ensuring successful adoption.",
         duration: "Engine Guide",
-        category: "Maturity",
-        videoId: "bsW0rYwrBbQ"
+        category: "ICMS",
+        videoId: "pNXK9mVIqpc"
     },
     {
-        id: 3,
+        id: 4,
         title: "HR Transformation Roadmap Generator",
         description: "Step-by-step guide to generating a comprehensive, actionable transformation roadmap for your organization.",
         duration: "Engine Guide",
@@ -43,7 +51,15 @@ const videos = [
         videoId: "jXtoM_-kiNY"
     },
     {
-        id: 4,
+        id: 5,
+        title: "HR Technology Maturity Analysis",
+        description: "Learn how to assess your current HR technology landscape and identify gaps with our Maturity Engine.",
+        duration: "Engine Guide",
+        category: "Maturity",
+        videoId: "bsW0rYwrBbQ"
+    },
+    {
+        id: 6,
         title: "HCM Vendor Fit & Selection",
         description: "Discover how to find the perfect HCM vendor match based on your unique organizational requirements.",
         duration: "Engine Guide",
@@ -51,7 +67,7 @@ const videos = [
         videoId: "yTvgbv1Z1RU"
     },
     {
-        id: 5,
+        id: 7,
         title: "Shared Services Designer",
         description: "A tutorial on designing and optimizing your HR Shared Services model for maximum efficiency.",
         duration: "Engine Guide",
