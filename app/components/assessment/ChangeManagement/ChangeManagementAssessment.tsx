@@ -43,7 +43,7 @@ export function ChangeManagementAssessment({ initialResponses }: ChangeManagemen
         const val = responses[k];
         return val !== undefined && val !== null;
     }).length;
-    const progress = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+    const progress = totalQuestions > 0 ? Math.min(100, Math.round((answeredCount / totalQuestions) * 100)) : 0;
     const isComplete = progress === 100;
 
     // AI Report Generation

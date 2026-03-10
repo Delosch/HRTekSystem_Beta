@@ -350,7 +350,7 @@ export default function QuestionnaireEngine({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentStepData = steps[currentStep];
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const progress = Math.min(100, Math.round((currentStep / steps.length) * 100));
 
   // Auto-save form hook
   const effectiveKey = autoSaveKey || `draft_${assessmentId}`;

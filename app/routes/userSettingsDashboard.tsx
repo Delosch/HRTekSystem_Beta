@@ -403,12 +403,18 @@ export default function UserSettingsDashboard() {
 
               <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-gray-100">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
-                    <img
-                      src={previewImage || "/assets/avatar-placeholder.png"}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-blue-500 to-indigo-600">
+                    {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white font-bold text-3xl select-none">
+                        {(user.first_name?.[0] ?? "").toUpperCase()}{(user.last_name?.[0] ?? "").toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
                     <Camera className="w-8 h-8 text-white" />

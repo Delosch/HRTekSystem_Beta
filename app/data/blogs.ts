@@ -1,6 +1,7 @@
 export const blogs = [
   {
     id: 3,
+    slug: "why-most-hr-technology-investments-fail-and-how-to-fix-them",
     title: "Why Most HR Technology Investments Fail (And How to Fix Them)",
     category: "HR Tech",
     author: "HRTek Strategy Team",
@@ -35,6 +36,7 @@ The core issue is not that organizations lack HR technology. It is that HR techn
 
   {
     id: 4,
+    slug: "from-hr-automation-to-hr-intelligence",
     title: "From HR Automation to HR Intelligence",
     category: "Analytics",
     author: "HRTek Analytics Team",
@@ -68,6 +70,7 @@ Artificial intelligence plays a critical role in enabling HR intelligence, but o
 
   {
     id: 5,
+    slug: "designing-a-future-ready-hr-operating-model",
     title: "Designing a Future-Ready HR Operating Model",
     category: "Transformation",
     author: "HRTek Transformation Team",
@@ -106,6 +109,7 @@ Establish clear stewardship and ethical application standards to ensure consiste
 
   {
     id: 1,
+    slug: "hr-trends-for-2025",
     title: "HR Trends for 2025",
     category: "HR Tech",
     author: "HRTek Research Team",
@@ -129,6 +133,7 @@ The rise of Generative AI is transforming HR processes across the board. Tools l
 
   {
     id: 2,
+    slug: "hcm-solutions-the-choice-for-a-future-ready-hr-transformation",
     title: "HCM Solutions: The Choice for a Future-Ready HR Transformation",
     category: "Transformation",
     author: "Strategic Insights Team",

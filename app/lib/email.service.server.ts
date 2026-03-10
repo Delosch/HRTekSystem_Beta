@@ -287,15 +287,62 @@ export async function sendBookingEmail({ name, email, date, time, phoneNumber, e
         </html>
         `;
 
+        // 1. Notify support team
         await transporter.sendMail({
             from: `"HRTek Bookings" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
             to: supportEmail,
-            cc: email, // Optional: send a copy to the user
-            subject: `[Booking] Consultation confirmed for ${name} - ${date}`,
+            subject: `[Booking] ${name} - ${engineName || "Consultation"} - ${date} at ${time}`,
             html: htmlContent
         });
 
-        console.log(`✅ Booking notification email sent to ${supportEmail} and cc'd to ${email}`);
+        // 2. Send user a confirmation email
+        const userConfirmHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; padding: 20px; }
+                .card { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #001845, #0077b6); color: white; padding: 32px; text-align: center; }
+                .content { padding: 40px; }
+                .info-box { background: #f1f5f9; border-left: 4px solid #2563eb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                .label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+                .value { font-size: 16px; color: #0f172a; font-weight: 600; margin-top: 4px; }
+                .footer { text-align: center; padding: 24px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="header">
+                    <h2 style="margin:0; font-size:24px; font-weight:800;">Booking Confirmed ✓</h2>
+                    <p style="margin:8px 0 0; opacity:0.8;">Your expert consultation is scheduled</p>
+                </div>
+                <div class="content">
+                    <p style="color:#475569;">Hello <strong>${name}</strong>,</p>
+                    <p style="color:#475569;">Thank you for booking a consultation with HRTek System. Here are your appointment details:</p>
+                    <div class="info-box">
+                        <div style="margin-bottom:16px"><div class="label">Engine / Service</div><div class="value">${engineName || "Expert Consultation"}</div></div>
+                        <div style="display:flex; gap:40px;">
+                            <div><div class="label">Date</div><div class="value">${date}</div></div>
+                            <div><div class="label">Time</div><div class="value">${time}</div></div>
+                        </div>
+                    </div>
+                    <p style="color:#64748b; font-size:14px;">Our team will reach out to you at <strong>${email}</strong>${phoneNumber ? ` or <strong>${phoneNumber}</strong>` : ""} within 48 hours to confirm the session.</p>
+                </div>
+                <div class="footer">© ${new Date().getFullYear()} HRTek System — A Brand of Delosch Technologies Pvt Ltd</div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        await transporter.sendMail({
+            from: `"HRTek System" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+            to: email,
+            subject: `Booking Confirmed: ${engineName || "Consultation"} on ${date} at ${time}`,
+            html: userConfirmHtml
+        });
+
+        console.log(`✅ Booking emails sent — support: ${supportEmail} | user: ${email}`);
         return true;
 
     } catch (error: any) {

@@ -445,7 +445,9 @@ export default function VendorFitAssessmentWrapper({
     const fetcher = useFetcher();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const [formData, setFormData] = useState<Record<string, any>>(existingResponses || {});
+    const hasExistingData = !!(existingResponses && Object.keys(existingResponses).length > 0);
+    const [started, setStarted] = useState(false);
+    const [formData, setFormData] = useState<Record<string, any>>({});
     const [currentStep, setCurrentStep] = useState(0);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -464,7 +466,7 @@ export default function VendorFitAssessmentWrapper({
         if (Array.isArray(val) && val.length === 0) return false;
         return true;
     }).length;
-    const progress = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0;
+    const progress = totalQuestions > 0 ? Math.min(100, Math.round((answeredCount / totalQuestions) * 100)) : 0;
     const isComplete = progress === 100;
 
     // AI Report Generation
@@ -518,17 +520,11 @@ export default function VendorFitAssessmentWrapper({
     const handleStepSave = async () => {
         try {
             setIsSubmitting(true);
-            const sectionAnswers: Record<string, any> = {};
-            currentStepData.questions.forEach(q => {
-                if (formData[q.id] !== undefined) sectionAnswers[q.id] = formData[q.id];
-                if (formData[`${q.id}_other`]) sectionAnswers[`${q.id}_other`] = formData[`${q.id}_other`];
-            });
-
             const payload = {
                 assessment_id: data.pk,
-                progress: totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0,
+                progress: totalQuestions > 0 ? Math.min(100, Math.round((answeredCount / totalQuestions) * 100)) : 0,
                 section: currentStepData.part,
-                answers: sectionAnswers,
+                answers: formData,
                 currentStepIndex: currentStep,
                 params: engineName
             };
@@ -583,6 +579,53 @@ export default function VendorFitAssessmentWrapper({
         setIsSidebarOpen(false);
         scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    if (!started) {
+        const existingProgress = hasExistingData
+            ? Math.min(100, Math.round((Object.keys(existingResponses).filter(k => !k.endsWith("_other") && existingResponses[k] !== undefined && existingResponses[k] !== "" && existingResponses[k] !== null && !(Array.isArray(existingResponses[k]) && existingResponses[k].length === 0)).length / Math.max(1, steps.reduce((a, s) => a + s.questions.length, 0))) * 100))
+            : 0;
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+                <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
+                    <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
+                    <h1 className="text-2xl font-black text-slate-900">{engineName} Assessment</h1>
+                    {hasExistingData ? (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                You have a saved session with <span className="font-bold text-blue-600">{existingProgress}%</span> progress. Would you like to continue where you left off?
+                            </p>
+                            <div className="flex flex-col gap-3 pt-2">
+                                <button
+                                    onClick={() => { setFormData(existingResponses); setStarted(true); }}
+                                    className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                                >
+                                    Continue Previous Session ({existingProgress}%)
+                                </button>
+                                <button
+                                    onClick={() => { setFormData({}); setStarted(true); }}
+                                    className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
+                                >
+                                    Start Fresh
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                Welcome! This assessment will help us understand your requirements and recommend the best fit. It covers {steps.length} sections with {steps.reduce((a, s) => a + s.questions.length, 0)} questions.
+                            </p>
+                            <button
+                                onClick={() => { setFormData({}); setStarted(true); }}
+                                className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                            >
+                                Begin Assessment →
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">

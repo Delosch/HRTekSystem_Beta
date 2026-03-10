@@ -3,7 +3,7 @@ import Navbar from "~/components/HomePageComponents/Navbar";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { UsersIcon, Cog6ToothIcon, ChartBarIcon, BuildingOfficeIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
-import { Link, useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData } from "@remix-run/react";
 import BookingModal from "~/components/HomePageComponents/BookingModal";
 import { MetaFunction } from "@remix-run/node";
 import { generateMeta, generateBreadcrumbSchema, generateServiceSchema } from "~/utils/seo";
@@ -93,15 +93,6 @@ export default function HRSharedServicesPage() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Link
-                  to="/shared-services/assessment"
-                  className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
-                  Start Assessment
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
                 <button
                   onClick={() => setShowPopup(true)}
                   className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
@@ -293,8 +284,7 @@ export default function HRSharedServicesPage() {
             Ready to Begin Your Transformation Journey
           </h2>
           <p className="text-lg mb-8">
-            Take the assessment today and let HR-Tek System show you a smarter
-            path forward.
+            Connect with our HR experts to discover how HR-Tek can accelerate your transformation.
           </p>
 
           <div className="flex flex-col gap-4 items-center">
@@ -304,7 +294,6 @@ export default function HRSharedServicesPage() {
             >
               Talk to a Consultant
             </button>
-            <Link to="/shared-services/assessment" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300 text-center">Take the Assessment</Link>
           </div>
         </div>
       </section>
