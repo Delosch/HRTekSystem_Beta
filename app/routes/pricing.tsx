@@ -13,6 +13,7 @@ export const meta: MetaFunction = () => {
         keywords: "HR software pricing, HCM pricing, HR transformation cost, affordable HR solutions, enterprise HR pricing",
         url: "https://www.hrteksystem.com/pricing",
         image: "https://www.hrteksystem.com/logo_icon_final.png",
+        robots: "noindex, nofollow", 
     });
 };
 

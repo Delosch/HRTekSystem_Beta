@@ -162,12 +162,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          <Link
-            to="/pricing"
-            className={pathname === "/pricing" ? activeStyle : inactiveStyle}
-          >
-            Pricing
-          </Link>
+          
 
           <Link
             to="/articles"
@@ -332,15 +327,7 @@ export default function Navbar() {
                     </AnimatePresence>
                   </div>
 
-                  <div className="pt-4 border-t border-white/10 mt-2 flex flex-col space-y-2">
-                    <Link
-                      to="/pricing"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`text-xl font-bold py-3 transition-colors ${pathname === "/pricing" ? 'text-[#00B5E2]' : 'text-white hover:text-[#00B5E2]'}`}
-                    >
-                      Pricing
-                    </Link>
-                  </div>
+                  
 
                   <Link
                     to="/articles"
