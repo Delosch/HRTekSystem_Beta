@@ -10,6 +10,7 @@ interface SEOConfig {
     author?: string;
     publishedTime?: string;
     modifiedTime?: string;
+    robots?: string;
 }
 
 export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
@@ -33,8 +34,8 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
         { name: "description", content: description },
         { name: "keywords", content: keywords || "HR transformation, HCM, digital maturity, HR technology, workforce management" },
         { name: "author", content: author },
-        { name: "robots", content: "index, follow" },
-        { name: "googlebot", content: "index, follow" },
+        { name: "robots", content: config.robots || "index, follow" },
+        { name: "googlebot", content: config.robots || "index, follow" },
         { name: "language", content: "English" },
         { name: "revisit-after", content: "7 days" },
 
