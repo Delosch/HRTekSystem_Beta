@@ -101,8 +101,8 @@ export default function Navbar() {
     { to: "/roadmap-service", icon: Map, label: "HR Digital Roadmap", color: "blue" },
     { to: "/hcm-service", icon: Puzzle, label: "HCM Vendor Fit", color: "purple" },
     { to: "/maturity-analysis-service", icon: FileBarChart2, label: "HR Tech Diagnostics", color: "green" },
-    { to: "/shared-service", icon: DraftingCompass, label: "Shared Services", color: "amber" },
-    { to: "/change-management-service", icon: Shapes, label: "Change Management", color: "rose" },
+    { to: "/shared-service", icon: DraftingCompass, label: "HR Shared Services", color: "amber" },
+    { to: "/change-management-service", icon: Shapes, label: "HR Change Management", color: "rose" },
     { to: "/hrtech-advisory-service", icon: Lightbulb, label: "HR Tech Advisory", color: "yellow" },
   ];
 
@@ -152,7 +152,7 @@ export default function Navbar() {
                             idx === 1 ? "Cognitive Selection Engine" :
                               idx === 2 ? "AI-driven Maturity Assessment" :
                                 idx === 3 ? "Operating Model Planner" :
-                                  idx === 4 ? "Intelligent Execution Systems" : "Expert Strategic Guidance"}
+                                  idx === 4 ? "Intelligent Change Management System" : "Expert Strategic Guidance"}
                         </p>
                       </div>
                     </Link>

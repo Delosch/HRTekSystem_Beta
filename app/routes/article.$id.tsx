@@ -5,7 +5,7 @@ import { blogs } from "~/data/blogs";
 
 export default function ArticlePage() {
   const { id } = useParams();
-  const article = blogs.find(b => b.id === Number(id));
+  const article = blogs.find(b => b.slug === id || b.id === Number(id));
 
   if (!article) {
     return (

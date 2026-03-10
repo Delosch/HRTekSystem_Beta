@@ -1,13 +1,10 @@
 // landing page (main site)
-import { useState } from "react";
 import { Link } from "@remix-run/react";
 import FAQSection from "app/components/HomePageComponents/FAQsection";
 import Footer from "../components/Footer";
-import CustomerSuccessCarousel from "~/components/HomePageComponents/CustomerSuccessCarousel";
 import Carousel from "~/components/HomePageComponents/MainCarousel";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import ServicesTabs from "~/components/HomePageComponents/ServicesTabs";
-import TestimonialsSection from "~/components/HomePageComponents/TestimonialsSection";
 import { MetaFunction } from "@remix-run/node";
 import { generateMeta, generateFAQSchema } from "~/utils/seo";
 
@@ -286,77 +283,93 @@ export default function Index() {
 
         */}
 
-        {/* Costumer Success Stories Section
-
-        <CustomerSuccessCarousel />
-
-        */}
-
         <FAQSection />
 
-        <section className="bg-[#f7fbff] py-16 px-6 md:px-20">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
-            {/* Left Column: Heading + Text */}
-            <div>
-              <h2 className="text-4xl font-semibold mb-4 text-gray-800">
+        {/* Knowledge Hub Section */}
+        <section className="bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/40 py-20 px-6 md:px-20">
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-14">
+              <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold mb-4">
+                Knowledge Hub
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                 What’s Shaping the Future of HR?
               </h2>
-              <p className="text-lg text-gray-600">
-                Our Knowledge Hub is where HR innovation meets practical execution. Read
-                how organizations are building scalable processes, choosing the
-                right HCM tools, and managing change intelligently. Whether
-                you’re scaling up or optimizing, our insights are designed to
-                support your unique journey.
+              <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                Practical insights on HR transformation, technology selection, and intelligent change management.
               </p>
             </div>
 
-            {/* Center Image */}
-            <div>
-              <img
-                src="/assets/homepageAssets/readArticles.png"
-                alt="HR technology insights and transformation strategies Knowledge Hub"
-                className="w-full rounded-lg shadow"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
+              {/* Center Image */}
+              <div className="hidden lg:block">
+                <img
+                  src="/assets/homepageAssets/readArticles.png"
+                  alt="HR technology insights and transformation strategies Knowledge Hub"
+                  className="w-full rounded-2xl shadow-xl"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
 
-            {/* Right Column: Blog Entries */}
-            <div className="space-y-8">
-              {[
-                {
-                  title: "Why Most HR Technology Investments Fail",
-                  img: "/assets/blogAssets/fail_invest.png",
-                  link: "/article/3",
-                },
-                {
-                  title: "From HR Automation to HR Intelligence",
-                  img: "/assets/blogAssets/hr_intelligence.png",
-                  link: "/article/4",
-                },
-                {
-                  title: "Designing a Future-Ready HR Operating Model",
-                  img: "/assets/blogAssets/op_model.png",
-                  link: "/article/5",
-                },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-start justify-between border-b pb-4"
-                >
+              {/* Article Cards */}
+              <div className="lg:col-span-2 space-y-4">
+                {[
+                  {
+                    title: "Why Most HR Technology Investments Fail",
+                    img: "/assets/blogAssets/fail_invest.png",
+                    link: "/article/why-most-hr-technology-investments-fail-and-how-to-fix-them",
+                    tag: "HR Technology",
+                  },
+                  {
+                    title: "From HR Automation to HR Intelligence",
+                    img: "/assets/blogAssets/hr_intelligence.png",
+                    link: "/article/from-hr-automation-to-hr-intelligence",
+                    tag: "AI & Automation",
+                  },
+                  {
+                    title: "Designing a Future-Ready HR Operating Model",
+                    img: "/assets/blogAssets/op_model.png",
+                    link: "/article/designing-a-future-ready-hr-operating-model",
+                    tag: "Operating Model",
+                  },
+                ].map((item, index) => (
                   <Link
+                    key={index}
                     to={item.link}
-                    className="text-blue-600 text-base font-medium leading-snug pr-4 hover:underline"
+                    className="group flex items-center gap-5 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-300"
                   >
-                    {item.title}
+                    <img
+                      src={item.img}
+                      alt={item.title}
+                      className="w-20 h-16 object-cover rounded-xl flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-1">
+                        {item.tag}
+                      </span>
+                      <p className="text-gray-900 font-semibold text-sm leading-snug group-hover:text-blue-700 transition-colors line-clamp-2">
+                        {item.title}
+                      </p>
+                    </div>
+                    <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-500 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    className="w-20 h-14 object-cover rounded-md"
-                  />
+                ))}
+                <div className="pt-2">
+                  <Link
+                    to="/articles"
+                    className="inline-flex items-center gap-2 text-blue-600 font-semibold text-sm hover:text-blue-800 transition-colors"
+                  >
+                    View all articles
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </Link>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </section>
@@ -403,7 +416,6 @@ function BusinessCard({
   title,
   description,
   features,
-  cta,
 }: BusinessCardProps) {
   return (
     <div className="group relative bg-white border-2 border-blue-100 rounded-2xl flex flex-col justify-between h-full overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
@@ -443,77 +455,4 @@ function BusinessCard({
       <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
     </div>
   );
-}
-
-{
-  /* Array For Test Testimonials Data
-
-
-const testimonials = [
-  {
-    quote:
-      "HR Sols completely transformed how we manage our people.From onboarding to payroll, everything runs smoother now.It’s easy to use and saves our team so much time.Can’t imagine going back!",
-    name: "Jonathon Bartlett",
-    title: "Chief Human Resources Officer at Indica Labs",
-    image: "/assets/homepageAssets/scroll3/square1/pp1.png",
-  },
-  {
-    quote:
-      "HR Sols and HR Transformation are a package deal. If you want transformation, I’m making the case for HR Sols.",
-    name: "Marijane Moreau Peterson",
-    title: "Director of Talents and Culture at Viridia Terra International",
-    image: "/assets/homepageAssets/scroll3/square8/pp8.png",
-  },
-  {
-    quote:
-      "The automation tools in HR Sol saved us countless hours.We used to drown in spreadsheets — now it’s all streamlined.What’s more, the learning curve was surprisingly low.Our HR team loves the self-service features.Even employees are happier with the experience.The support team? Absolutely top-notch.",
-    title: "VP of HR & Sustainability at PROBI",
-    image: "/assets/homepageAssets/scroll3/square2/pp2.png",
-    name: "Morgan Von Berg",
-  },
-  {
-    quote:
-      "HR Sols shared service design and payroll together have saved me almost 20 hours a week...",
-    name: "Rachael Schau",
-    title: "Chief of Staff at Rockford Silk Screen Process",
-    image: "/assets/homepageAssets/scroll3/square3/pp3.png",
-  },
-  {
-    quote:
-      "HR Sol’s shared service model brought structure to our HR chaos.We had fragmented systems and no consistency.Now, everything is centralized and accessible.Support tickets are resolved faster.Service delivery is smooth across all our branches.Highly recommend it to any multi-site organization.",
-    name: "Anne Seebach",
-    title: "Head of People & Culture at Architrave",
-    image: "/assets/homepageAssets/scroll3/square4/pp4.png",
-  },
-  {
-    quote:
-      "The way HR Sols has designed the product has been very thoughtful — the needs of the employee as well as the needs of HR.",
-    name: "Rob Scott",
-    title: "Chief Operating Officer at Smart WFM",
-    image: "/assets/homepageAssets/scroll3/square5/pp5.png",
-  },
-  {
-    quote:
-      "HR Sols was easy to learn and start using for everyone at the company and made compliance easy.",
-    name: "Josh Franklin",
-    title: "HR Program Manager at CTI, Inc.",
-    image: "/assets/homepageAssets/scroll3/square6/pp6.png",
-  },
-  {
-    quote:
-      "I’d absolutely recommend HR Sols Time Tracking. It’s a great system that does exactly what you need it to do.",
-    name: "Jessica Neal",
-    title: "HR General Manager at American Cedar & Millwork",
-    image: "/assets/homepageAssets/scroll3/square7/pp7.png",
-  },
-  {
-    quote:
-      "We’ve seen a real shift in employee engagement since switching.The pulse surveys, feedback tools, and performance tracking really work.Managers are more proactive with coaching.HR Sol made everything feel more people-first.The UI is clean and easy to navigate.It’s more than software — it’s a culture enabler",
-    name: "Rajeev Kapoor",
-    title: "HR Director",
-    image: "/assets/homepageAssets/scroll3/square2/pp2.png",
-  },
-];
-
-*/
 }

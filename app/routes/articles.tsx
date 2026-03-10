@@ -184,7 +184,7 @@ export default function BlogPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/10 border border-slate-100 group cursor-pointer"
-              onClick={() => navigate(`/article/${featuredBlog.id}`)}
+              onClick={() => navigate(`/article/${featuredBlog.slug}`)}
             >
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="relative h-64 lg:h-auto overflow-hidden">
@@ -248,7 +248,7 @@ export default function BlogPage() {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 border border-slate-100 group cursor-pointer flex flex-col"
-                  onClick={() => navigate(`/article/${blog.id}`)}
+                  onClick={() => navigate(`/article/${blog.slug}`)}
 
                 >
                   <div className="relative h-48 overflow-hidden">
@@ -296,7 +296,7 @@ export default function BlogPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/article/${blog.id}`);
+                        navigate(`/article/${blog.slug}`);
                       }}
 
 

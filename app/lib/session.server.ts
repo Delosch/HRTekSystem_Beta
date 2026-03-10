@@ -32,8 +32,8 @@ try {
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
 const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
 const SESSIONS_TABLE = "sessions";
-// Increase session duration to 7 days (was 20 minutes)
-const expiryTime = 60 * 60 * 24 * 7;
+// Session duration: 24 hours
+const expiryTime = 60 * 60 * 24;
 
 // Create a cookie to store the session ID on the client.
 const session_cookie = createCookie("__session", {

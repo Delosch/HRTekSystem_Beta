@@ -44,6 +44,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link to="/contact" className="hover:text-white">
+                Contact Us
+              </Link>
+            </li>
+            <li>
               <Link to="/discover-more" className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5 mt-2 transition-all group">
                 Discover More
                 <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
