@@ -64,8 +64,8 @@ function RankingQuestion({ question, value, onChange }: {
 }
 
 export default function EngineFormRender({
-  data, engineName, existingResponses
-}: { data: QuestionSchema, engineName: string, existingResponses?: any }) {
+  data, engineName, existingResponses, savedProgress = 0
+}: { data: QuestionSchema, engineName: string, existingResponses?: any, savedProgress?: number }) {
   const navigate = useNavigate()
   const [started, setStarted] = useState(false);
   const path = useLocation()
@@ -138,22 +138,47 @@ export default function EngineFormRender({
   };
 
   if (!started) {
-    const hasExistingData = existingResponses && Object.keys(existingResponses).length > 0;
+    const hasExistingData = !!(existingResponses && Object.keys(existingResponses).length > 0);
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-black bg-gradient-to-br from-slate-200 via-zinc-400 to-white" >
-        <h1 className="text-3xl font-bold mb-4">{engineName} Assessment</h1>
-        <p className="text-black mb-8 max-w-md text-center">
-          {hasExistingData
-            ? "You have previously completed this assessment. Click below to review and modify your responses."
-            : "Welcome! This is a brief diagnostic assessment to help us to understand the real issues..."}
-        </p>
-        <button
-          onClick={() => { setStarted(true) }}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-semibold"
-        >
-          {hasExistingData ? "Review & Modify Responses" : "Get Started"}
-        </button>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
+          <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
+          <h1 className="text-2xl font-black text-slate-900">{engineName} Assessment</h1>
+          {hasExistingData ? (
+            <>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress. Would you like to continue where you left off?
+              </p>
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  onClick={() => setStarted(true)}
+                  className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                >
+                  Continue with Saved Responses ({savedProgress}%)
+                </button>
+                <button
+                  onClick={() => setStarted(true)}
+                  className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
+                >
+                  Start Fresh
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Welcome! This assessment will help us understand your HR landscape. Answer all sections and save your progress at any time.
+              </p>
+              <button
+                onClick={() => setStarted(true)}
+                className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+              >
+                Begin Assessment →
+              </button>
+            </>
+          )}
+        </div>
       </div>
     )
   }

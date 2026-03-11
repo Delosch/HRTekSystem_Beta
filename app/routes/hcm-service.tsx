@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
-import { useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData, Link } from "@remix-run/react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
 import BookingModal from "~/components/HomePageComponents/BookingModal";
@@ -111,6 +111,12 @@ export default function HCMVendorFitPage() {
                   >
                     Talk to Expert
                   </button>
+                  <Link
+                    to="/engine/hcm-vendor-fit"
+                    className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center justify-center"
+                  >
+                    Start Selection Engine
+                  </Link>
                 </div>
 
                 {/* Stats */}

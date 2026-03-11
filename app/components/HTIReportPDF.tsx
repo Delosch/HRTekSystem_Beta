@@ -143,6 +143,10 @@ interface HTIReportPDFProps {
         generatedAt: string;
         advisory: {
             executiveSummary: string;
+            detailedSections?: Array<{
+                title: string;
+                content: string;
+            }>;
             currentState: {
                 maturityLevel?: string;
                 digitalReadiness?: string;
@@ -163,51 +167,82 @@ interface HTIReportPDFProps {
             successMetrics?: string[];
         };
     };
+    brandName?: string;
 }
 
 /**
- * Strip HTML tags and create concise summary
+ * Strip HTML tags for simple text rendering
  */
-function createPDFSummary(html: string): string {
-    // Add line breaks for block elements
-    let text = html.replace(/<\/?( div|p|h1|h2|h3|h4|h5|h6|table|tr|thead|tbody|br)[^>]*>/gi, '\n');
-    // Remove all HTML tags
-    text = text.replace(/<[^>]*>/g, '');
-    // Decode HTML entities
-    text = text.replace(/&nbsp;/g, ' ');
-    text = text.replace(/&amp;/g, '&');
-    text = text.replace(/&lt;/g, '<');
-    text = text.replace(/&gt;/g, '>');
-    text = text.replace(/&quot;/g, '"');
-    // Clean up whitespace
-    text = text.replace(/ +/g, ' ');
-    text = text.split('\n').map(line => line.trim()).filter(line => line.length > 0).join(' ');
-
-    // Take first 500 characters for concise summary
-    if (text.length > 500) {
-        text = text.substring(0, 500);
-        const lastPeriod = text.lastIndexOf('.');
-        if (lastPeriod > 300) {
-            text = text.substring(0, lastPeriod + 1);
-        } else {
-            text = text + '...';
-        }
-    }
-
-    return text.trim();
+function stripHTML(html: string): string {
+    if (!html) return "";
+    return html
+        .replace(/<[^>]*>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .trim();
 }
 
-export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
+/**
+ * A basic component to render HTML-like strings from DeepSeek into React-PDF components.
+ * Supports: h2, h3, p, ul, li, table, tr, td, th
+ */
+const HTMLRenderer = ({ html }: { html: string }) => {
+    if (!html) return null;
+
+    // Split by tags to identify blocks
+    // This is a naive parser for the specific tags DeepSeek uses
+    const blocks = html.split(/(<\/?(?:h2|h3|h4|p|ul|li|table|tr|td|th|div)[^>]*>)/gi);
+    
+    let currentTag = "";
+    let listDepth = 0;
+    
+    return (
+        <View style={{ marginTop: 10 }}>
+            {blocks.map((block, i) => {
+                const tagMatch = block.match(/<(\/?)(\w+)[^>]*>/);
+                
+                if (tagMatch) {
+                    const isClosing = tagMatch[1] === "/";
+                    const tagName = tagMatch[2].toLowerCase();
+                    
+                    if (isClosing) {
+                        if (tagName === "ul") listDepth--;
+                        currentTag = "";
+                    } else {
+                        currentTag = tagName;
+                        if (tagName === "ul") listDepth++;
+                    }
+                    return null;
+                }
+
+                const text = block.trim();
+                if (!text) return null;
+
+                // Render based on current open tag (or last seen tag)
+                // Note: This is simplified; true nested tag parsing would require a stack
+                if (block.includes("<h2")) return <Text key={i} style={[styles.sectionTitle, { marginTop: 20 }]}>{stripHTML(text)}</Text>;
+                if (block.includes("<h3")) return <Text key={i} style={[styles.subsectionTitle, { marginTop: 15 }]}>{stripHTML(text)}</Text>;
+                if (block.includes("<li")) return <Text key={i} style={styles.bulletPoint}>• {stripHTML(text)}</Text>;
+                
+                // Default paragraph
+                return <Text key={i} style={styles.text}>{stripHTML(text)}</Text>;
+            })}
+        </View>
+    );
+};
+
+export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName }) => {
     const { advisory, companyId, generatedAt } = report;
-    const conciseSummary = createPDFSummary(advisory.executiveSummary);
 
     return (
         <Document>
+            {/* Page 1: Executive Summary */}
             <Page size="A4" style={styles.page}>
-                {/* Watermark */}
                 <Text style={styles.watermark}>HRTekSystem</Text>
 
-                {/* Header */}
                 <View style={styles.header}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <View>
@@ -225,16 +260,16 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
                     </Text>
                 </View>
 
-                {/* Executive Summary */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>📋 Executive Summary</Text>
-                    <Text style={styles.text}>{conciseSummary}</Text>
+                    {/* Render the full summary, splitting by paragraphs if needed */}
+                    {advisory.executiveSummary.split('</p>').map((p, i) => (
+                        <Text key={i} style={[styles.text, { marginBottom: 10 }]}>{stripHTML(p)}</Text>
+                    ))}
                 </View>
 
-                {/* Current State - Compact */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>📊 Current State Assessment</Text>
-
                     <View style={styles.grid}>
                         <View style={styles.gridItem}>
                             <Text style={styles.gridLabel}>Maturity Level</Text>
@@ -245,101 +280,85 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
                             <Text style={styles.gridValue}>{advisory.currentState.digitalReadiness || 'N/A'}</Text>
                         </View>
                     </View>
-
-                    {advisory.currentState.keyGaps.length > 0 && (
-                        <View style={{ marginTop: 6 }}>
-                            <Text style={styles.subsectionTitle}>Key Gaps</Text>
-                            {advisory.currentState.keyGaps.slice(0, 5).map((gap, i) => (
-                                <Text key={i} style={styles.bulletPoint}>• {gap}</Text>
-                            ))}
-                        </View>
-                    )}
-
-                    {advisory.currentState.strengths.length > 0 && (
-                        <View style={{ marginTop: 6 }}>
-                            <Text style={styles.subsectionTitle}>Strengths</Text>
-                            {advisory.currentState.strengths.slice(0, 5).map((strength, i) => (
-                                <Text key={i} style={styles.bulletPoint}>• {strength}</Text>
-                            ))}
-                        </View>
-                    )}
                 </View>
 
-                {/* Recommendations - Structured */}
+                <Text style={styles.footer}>
+                    Page 1 • © {new Date().getFullYear()} HRTekSystem • Confidential Advisory Report
+                </Text>
+            </Page>
+
+            {/* Detailed Sections - Each on its own page or continuing */}
+            {advisory.detailedSections?.map((section, index) => (
+                <Page key={index} size="A4" style={styles.page}>
+                    <View style={styles.header}>
+                        <Text style={[styles.subtitle, { fontSize: 8 }]}>HTI ADVISORY • CHAPTER {index + 1}</Text>
+                        <Text style={[styles.sectionTitle, { borderBottom: '2 solid #2563eb', paddingBottom: 5 }]}>{section.title}</Text>
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                        {/* We use a simplified rendering approach here */}
+                        {section.content.split('\n').map((line, li) => {
+                            const clean = stripHTML(line);
+                            if (!clean) return null;
+                            
+                            if (line.includes('<h2')) return <Text key={li} style={styles.sectionTitle}>{clean}</Text>;
+                            if (line.includes('<h3')) return <Text key={li} style={styles.subsectionTitle}>{clean}</Text>;
+                            if (line.includes('<li')) return <Text key={li} style={styles.bulletPoint}>• {clean}</Text>;
+                            
+                            return <Text key={li} style={[styles.text, { marginBottom: 8 }]}>{clean}</Text>;
+                        })}
+                    </View>
+
+                    <Text style={styles.footer}>
+                        Page {index + 2} • {brandName || "Strategic Advisory"} • HRTek Intelligence
+                    </Text>
+                </Page>
+            ))}
+
+            {/* Recommendations & Risks Page */}
+            <Page size="A4" style={styles.page}>
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>🎯 Strategic Recommendations</Text>
-
+                    <Text style={styles.sectionTitle}>🎯 Strategic Roadmap Recommendations</Text>
                     <View style={styles.recommendationBox}>
-                        <Text style={styles.recommendationTitle}>NOW (3-6 months)</Text>
-                        {advisory.recommendations.now.slice(0, 4).map((item, i) => (
+                        <Text style={styles.recommendationTitle}>PHASE 1: NOW (3-6 months)</Text>
+                        {advisory.recommendations.now.map((item, i) => (
                             <Text key={i} style={styles.bulletPoint}>• {item}</Text>
                         ))}
                     </View>
-
                     <View style={[styles.recommendationBox, { backgroundColor: '#fffbeb', borderLeftColor: '#f59e0b' }]}>
-                        <Text style={[styles.recommendationTitle, { color: '#92400e' }]}>NEXT (6-12 months)</Text>
-                        {advisory.recommendations.next.slice(0, 3).map((item, i) => (
+                        <Text style={[styles.recommendationTitle, { color: '#92400e' }]}>PHASE 2: NEXT (6-12 months)</Text>
+                        {advisory.recommendations.next.map((item, i) => (
                             <Text key={i} style={styles.bulletPoint}>• {item}</Text>
                         ))}
                     </View>
-
                     <View style={[styles.recommendationBox, { backgroundColor: '#f0fdf4', borderLeftColor: '#10b981' }]}>
-                        <Text style={[styles.recommendationTitle, { color: '#065f46' }]}>LATER (12-24 months)</Text>
-                        {advisory.recommendations.later.slice(0, 3).map((item, i) => (
+                        <Text style={[styles.recommendationTitle, { color: '#065f46' }]}>PHASE 3: BEYOND (12-24 months)</Text>
+                        {advisory.recommendations.later.map((item, i) => (
                             <Text key={i} style={styles.bulletPoint}>• {item}</Text>
                         ))}
                     </View>
                 </View>
 
-                {/* Risk Flags */}
                 {advisory.riskFlags.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>⚠️ Risk Flags</Text>
-                        {advisory.riskFlags.slice(0, 3).map((risk, i) => (
+                        <Text style={styles.sectionTitle}>⚠️ Critical Risk Vectors</Text>
+                        {advisory.riskFlags.map((risk, i) => (
                             <View key={i} style={styles.riskBox}>
                                 <Text style={styles.riskTitle}>{risk.risk}</Text>
-                                <Text style={[styles.text, { fontSize: 8 }]}>
-                                    <Text style={{ fontWeight: 'bold' }}>Mitigation: </Text>
-                                    {risk.mitigation}
-                                </Text>
+                                <Text style={styles.text}>{risk.mitigation}</Text>
                             </View>
                         ))}
                     </View>
                 )}
 
-                {/* Dependencies & Actions to Avoid - Side by Side */}
-                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-                    {advisory.dependencies.length > 0 && (
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.subsectionTitle}>🔗 Dependencies</Text>
-                            {advisory.dependencies.slice(0, 3).map((dep, i) => (
-                                <Text key={i} style={[styles.bulletPoint, { fontSize: 8 }]}>• {dep}</Text>
-                            ))}
-                        </View>
-                    )}
+                <Text style={styles.footer}>
+                    Strategic Implementation Framework • HRTek Intelligence
+                </Text>
+            </Page>
 
-                    {advisory.avoidNow.length > 0 && (
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.subsectionTitle}>🚫 Avoid Now</Text>
-                            {advisory.avoidNow.slice(0, 3).map((item, i) => (
-                                <Text key={i} style={[styles.bulletPoint, { fontSize: 8 }]}>• {item}</Text>
-                            ))}
-                        </View>
-                    )}
-                </View>
-
-                {/* Success Metrics */}
-                {advisory.successMetrics && advisory.successMetrics.length > 0 && (
-                    <View style={styles.section}>
-                        <Text style={styles.subsectionTitle}>📈 Success Metrics</Text>
-                        {advisory.successMetrics.slice(0, 4).map((metric, i) => (
-                            <Text key={i} style={[styles.bulletPoint, { fontSize: 8 }]}>• {metric}</Text>
-                        ))}
-                    </View>
-                )}
-
-                {/* Terms and Conditions */}
-                <View style={{
+            {/* Terms and Conditions Page */}
+            <Page size="A4" style={styles.page}>
+                 <View style={{
                     marginTop: 20,
                     paddingTop: 12,
                     borderTop: '2 solid #e5e7eb',
@@ -376,24 +395,6 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
                         </Text>
                     </View>
 
-                    <View style={{ marginBottom: 6 }}>
-                        <Text style={[styles.text, { fontSize: 7, fontWeight: 'bold', marginBottom: 2 }]}>
-                            4. Validity and Updates
-                        </Text>
-                        <Text style={[styles.text, { fontSize: 7, lineHeight: 1.4 }]}>
-                            This advisory is valid as of the generation date specified in this document. Business conditions, technology landscapes, and organizational contexts may change. HRTekSystem recommends periodic reassessment to ensure recommendations remain relevant.
-                        </Text>
-                    </View>
-
-                    <View style={{ marginBottom: 6 }}>
-                        <Text style={[styles.text, { fontSize: 7, fontWeight: 'bold', marginBottom: 2 }]}>
-                            5. Intellectual Property
-                        </Text>
-                        <Text style={[styles.text, { fontSize: 7, lineHeight: 1.4 }]}>
-                            All methodologies, frameworks, and analytical approaches used in generating this report are proprietary to HRTekSystem. The client organization may use this report for internal strategic planning but may not reproduce or share the methodologies without written permission.
-                        </Text>
-                    </View>
-
                     <Text style={[styles.text, { fontSize: 7, fontStyle: 'italic', marginTop: 4, textAlign: 'center', color: '#64748b' }]}>
                         By using this report, you acknowledge and agree to these terms and conditions.
                     </Text>
@@ -403,9 +404,8 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report }) => {
                     </Text>
                 </View>
 
-                {/* Footer */}
                 <Text style={styles.footer}>
-                    © {new Date().getFullYear()} HRTekSystem • Confidential Advisory Report • All Rights Reserved
+                    Final Page • © {new Date().getFullYear()} HRTekSystem • All Rights Reserved
                 </Text>
             </Page>
         </Document>

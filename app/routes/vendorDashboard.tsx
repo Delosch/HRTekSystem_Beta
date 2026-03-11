@@ -312,6 +312,14 @@ export default function VendorDashboard() {
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
                   {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
+                {currentEngine.progress > 0 && (
+                  <button
+                    onClick={() => navigate('/engine/hcm-vendor-fit?modify=true')}
+                    className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    ✏️ Modify Responses
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -25,7 +25,7 @@ const MODEL_ID = "deepseek.v3-v1:0";
 /**
  * Build comprehensive advisory prompt for DeepSeek
  */
-export type EngineReportType = 'sharedServices' | 'changeManagement' | 'vendorFit';
+export type EngineReportType = 'sharedServices' | 'changeManagement' | 'vendorFit' | 'digitalRoadmap' | 'aiMaturity';
 
 type SectionPlan = { title: string, focus: string };
 
@@ -54,6 +54,22 @@ function getEngineSections(engineType: EngineReportType): SectionPlan[] {
       { title: "Total Cost of Ownership (TCO) & Negotiation Strategy", focus: "5-year financial model and license structures. (Approx 600-800 words)" },
       { title: "Implementation Risk & Vendor Viability", focus: "Project failure risk assessment and vendor support model. (Approx 800-1000 words)" },
       { title: "Strategic Alignment & Future-Proofing", focus: "Vendor roadmap vs Company’s 5-year growth strategy. (Approx 600-800 words)" }
+    ],
+    digitalRoadmap: [
+      { title: "Transformation Vision & Digital Pillars", focus: "Strategic alignment of digital roadmap with 9 transformation pillars. (Approx 800-1000 words)" },
+      { title: "System Synergy & Architecture Roadmap", focus: "How current and future systems will integrate. (Approx 800-1000 words)" },
+      { title: "Workforce Impact & Reskilling Strategy", focus: "Transition planning for employees and digital upskilling. (Approx 800-1000 words)" },
+      { title: "Implementation Timeline & Milestones", focus: "6, 12, and 24-month granular action plan. (Approx 800-1000 words)" },
+      { title: "Financial Forecast & ROI Projections", focus: "Budget planning and value realization metrics. (Approx 600-800 words)" },
+      { title: "Risk Mitigation & Governance Framework", focus: "Security, compliance, and change governance. (Approx 600-800 words)" }
+    ],
+    aiMaturity: [
+      { title: "AI Readiness & Maturity Index", focus: "Deep-dive into current AI adoption vs industry benchmarks. (Approx 800-1000 words)" },
+      { title: "Agentic AI Use-Case Prioritization", focus: "Identifying high-impact HR areas for AI agents. (Approx 800-1000 words)" },
+      { title: "Data Infrastructure for AI Success", focus: "Assessing data quality and accessibility for AI models. (Approx 800-1000 words)" },
+      { title: "Ethical AI & Governance Model", focus: "Bias mitigation, privacy, and transparent AI policies. (Approx 600-800 words)" },
+      { title: "ROI of AI Implementation", focus: "Efficiency gains vs implementation costs. (Approx 600-800 words)" },
+      { title: "Strategic 24-Month AI Adoption Roadmap", focus: "Phase-by-phase rollout of AI capabilities. (Approx 800-1000 words)" }
     ]
   };
   return SECTIONS[engineType];
@@ -67,13 +83,17 @@ function buildAdvisoryPrompt(data: HTIAggregatedInput, engineType: EngineReportT
   const TITLES: Record<EngineReportType, string> = {
     sharedServices: "Shared Services Transformation",
     changeManagement: "Intelligent Change Management Assessment",
-    vendorFit: "Cognitive HCM Vendor Fit Assessment"
+    vendorFit: "Cognitive HCM Vendor Fit Assessment",
+    digitalRoadmap: "HR Digital Transformation Roadmap",
+    aiMaturity: "AI Driven Maturity Assessment"
   };
 
   const CONTEXTS: Record<EngineReportType, string> = {
     sharedServices: "HR Shared Services Assessment across 9 maturity domains.",
-    changeManagement: "Change Management Readiness across 5 strategic indexes: SFRI, LGI, OCRI, DWRI, ASII.",
-    vendorFit: "HCM Vendor Fit Assessment evaluating functional, technical, and financial dimensions."
+    changeManagement: "Change Management Readiness across 5 strategic indexes.",
+    vendorFit: "HCM Vendor Fit Assessment evaluating functional, technical, and financial dimensions.",
+    digitalRoadmap: "HR Digital Transformation Roadmap evaluating 9 strategic pillars.",
+    aiMaturity: "AI Driven Maturity Assessment evaluating readiness for Agentic AI and data maturity."
   };
 
   // ── Format engine data ────────────────────────────────────────────────────
@@ -88,6 +108,8 @@ function buildAdvisoryPrompt(data: HTIAggregatedInput, engineType: EngineReportT
     const e = (engines.vendorFit || engines.vendor)!;
     engineSummaries.push(`**Vendor Fit Data**: ${JSON.stringify(e.scores || e.responses)}`);
   }
+  if (engines.digitalRoadmap) engineSummaries.push(`**Digital Roadmap Data**: ${JSON.stringify(engines.digitalRoadmap.scores || engines.digitalRoadmap.responses)}`);
+  if (engines.aiMaturity) engineSummaries.push(`**AI Maturity Data**: ${JSON.stringify(engines.aiMaturity.scores || engines.aiMaturity.responses)}`);
 
   const prompt = `You are a world-class HR Digital Transformation Consultant (McKinsey/BCG Level).
     

@@ -1,0 +1,11 @@
+export { ExecutiveSummary } from "./ExecutiveSummary";
+export { Section1TechArchitecture } from "./Section1TechArchitecture";
+export { Section2ProcessIntelligence } from "./Section2ProcessIntelligence";
+export { Section3DataGravity } from "./Section3DataGravity";
+export { Section4CostROI } from "./Section4CostROI";
+export { Section5ChangeVelocity } from "./Section5ChangeVelocity";
+export { Section6AIDepth } from "./Section6AIDepth";
+export { Section7ExperienceIntelligence } from "./Section7ExperienceIntelligence";
+export { Section8Governance } from "./Section8Governance";
+export { Section9Scalability } from "./Section9Scalability";
+export { Section10OperatingModel } from "./Section10OperatingModel";

@@ -25,6 +25,11 @@ interface RoadmapReportProps {
 export default function RoadmapReport({ data, brandName, companyLogo, responses, questions }: RoadmapReportProps) {
     const [expandedInsight, setExpandedInsight] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState("overview");
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -245,7 +250,7 @@ export default function RoadmapReport({ data, brandName, companyLogo, responses,
                                         </div>
                                         <div className="flex justify-between border-b-2 border-gray-100 pb-4">
                                             <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Generated Date</span>
-                                            <span className="font-bold text-gray-900 font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                            <span className="font-bold text-gray-900 font-sans">{isMounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-- --- ----'}</span>
                                         </div>
                                         <div className="flex justify-between border-b-2 border-gray-100 pb-4">
                                             <span className="font-bold text-gray-600 uppercase tracking-widest text-sm">Status</span>
@@ -254,7 +259,7 @@ export default function RoadmapReport({ data, brandName, companyLogo, responses,
                                     </div>
 
                                     <div className="mt-24 text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                        <p className="mb-2">© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                                        <p className="mb-2">© {isMounted ? new Date().getFullYear() : '2026'} HR TEK SYSTEMS. All rights reserved.</p>
                                         <p>Proprietary & Confidential Strategic Advisory</p>
                                     </div>
                                 </div>

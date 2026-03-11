@@ -51,6 +51,14 @@ export async function action({ request }: ActionFunctionArgs) {
         responses: responses
     });
 
+    // Full submission (no specific intent) — redirect to intermediate/dashboard
+    if (!intent) {
+        return json({
+            success: true,
+            redirect: `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}`
+        });
+    }
+
     if (intent === "generate_report") {
         const compositeScore = calculateCompositeScore(responses);
         
@@ -97,14 +105,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // We can load existing assessment data here if needed
     const engineData = await findEngineData(user.organisationId, "Intelligent Change Management");
     const initialAnswers = engineData?.responses || {};
+    const savedProgress = engineData?.progress || 0;
 
-    return json({ user, initialAnswers });
+    return json({ user, initialAnswers, savedProgress });
 }
 
 export default function ChangeManagementAssessmentRoute() {
-    const { user, initialAnswers } = useLoaderData<typeof loader>();
+    const { user, initialAnswers, savedProgress } = useLoaderData<typeof loader>();
 
     return (
-        <ChangeManagementAssessment initialResponses={initialAnswers} />
+        <ChangeManagementAssessment initialResponses={initialAnswers} savedProgress={savedProgress} />
     );
 }

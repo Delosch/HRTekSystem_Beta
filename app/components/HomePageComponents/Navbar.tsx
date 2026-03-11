@@ -99,7 +99,7 @@ export default function Navbar() {
 
   const serviceItems = [
     { to: "/roadmap-service", icon: Map, label: "HR Digital Roadmap", color: "blue" },
-    { to: "/hcm-service", icon: Puzzle, label: "HCM Vendor Fit", color: "purple" },
+    { to: "/hcm-service", icon: Puzzle, label: "HR HCM Vendor Fit", color: "purple" },
     { to: "/maturity-analysis-service", icon: FileBarChart2, label: "HR Tech Diagnostics", color: "green" },
     { to: "/shared-service", icon: DraftingCompass, label: "HR Shared Services", color: "amber" },
     { to: "/change-management-service", icon: Shapes, label: "HR Change Management", color: "rose" },
@@ -126,7 +126,7 @@ export default function Navbar() {
               onClick={toggleServicesDropdown}
               className={`${(servicePaths.includes(pathname) || hash === "#services") ? activeStyle : inactiveStyle} flex items-center gap-1`}
             >
-              Engines
+              HR Engines
               <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isServicesOpen ? 'rotate-180' : ''}`} />
             </button>
             <div

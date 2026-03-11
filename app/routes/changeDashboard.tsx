@@ -39,6 +39,11 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     description: "Select the right HCM vendors for your business",
     icon: "🎯"
   },
+  "AI Driven Maturity Engine": {
+    name: "AI Driven Maturity Engine",
+    description: "Assess your AI transformation maturity and digital readiness",
+    icon: "🤖"
+  },
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -316,6 +321,14 @@ export default function ChangeDashboard() {
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
                   {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
+                {currentEngine.progress > 0 && (
+                  <button
+                    onClick={() => navigate('/change-management/assessment?modify=true')}
+                    className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    ✏️ Modify Responses
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -521,14 +534,12 @@ export default function ChangeDashboard() {
         }
       `}</style>
 
-      {
-        showToast && (
-          <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
-            <CheckCircle className="w-6 h-6" />
-            <span className="font-semibold">{toastMessage}</span>
-          </div>
-        )
-      }
-    </div >
+      {showToast && (
+        <div className="fixed bottom-6 right-6 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
+          <CheckCircle className="w-6 h-6" />
+          <span className="font-semibold">{toastMessage}</span>
+        </div>
+      )}
+    </div>
   );
 }

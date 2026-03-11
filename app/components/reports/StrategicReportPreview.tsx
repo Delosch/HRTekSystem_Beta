@@ -51,6 +51,30 @@ const ENGINE_PHRASES: Record<string, string[]> = {
         "Quantifying transformation risk exposure...",
         "Architecting your change risk mitigation blueprint...",
     ],
+    aiMaturity: [
+        "Evaluating enterprise intelligence readiness...",
+        "Identifying high-impact Agentic use cases...",
+        "Assessing data infrastructure for model training...",
+        "Designing ethical governance frameworks...",
+        "Calculating ROI from Agentic transformation...",
+        "Mapping 24-month intelligence adoption trajectory...",
+        "Analyzing workforce readiness for machine collaboration...",
+        "Securing data privacy and compliance protocols...",
+        "Architecting your enterprise intelligence strategy...",
+        "Synthesizing your strategic maturity brief...",
+    ],
+    digitalRoadmap: [
+        "Synthesizing your 9-pillar digital transformation vision...",
+        "Mapping complex system synergy and architecture...",
+        "Architecting multi-phase implementation timelines...",
+        "Evaluating workforce digital upskilling pathways...",
+        "Calculating ROI across the transformation lifecycle...",
+        "Designing risk mitigation and governance models...",
+        "Benchmarking your roadmap against industry standard...",
+        "Identifying critical path dependencies for rollout...",
+        "Optimizing your strategic transformation sequence...",
+        "Finalizing your board-level digital roadmap...",
+    ],
 };
 
 function getEnginePhrases(title: string): string[] {
@@ -58,6 +82,8 @@ function getEnginePhrases(title: string): string[] {
     if (t.includes('vendor') || t.includes('hcm')) return ENGINE_PHRASES.vendor;
     if (t.includes('shared') || t.includes('service')) return ENGINE_PHRASES.shared;
     if (t.includes('change')) return ENGINE_PHRASES.change;
+    if (t.includes('ai') || t.includes('maturity')) return ENGINE_PHRASES.aiMaturity;
+    if (t.includes('roadmap')) return ENGINE_PHRASES.digitalRoadmap;
     return ENGINE_PHRASES.change; // fallback
 }
 
@@ -71,7 +97,12 @@ export function StrategicReportPreview({
     brandName
 }: StrategicReportPreviewProps) {
     const [phraseIdx, setPhraseIdx] = useState(0);
+    const [isMounted, setIsMounted] = useState(false);
     const phrases = getEnginePhrases(engineTitle);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     useEffect(() => {
         if (!isGenerating) return;
@@ -192,7 +223,7 @@ export function StrategicReportPreview({
             pdf.setFontSize(6);
             pdf.setTextColor(148, 163, 184);
             pdf.setFont('helvetica', 'normal');
-            pdf.text('Strategic Intelligence Report  •  AI-Powered by HRTek Systems', textX, 19);
+            pdf.text('Strategic Intelligence Report  •  Intelligence-Driven Insight', textX, 19);
 
             pdf.setFontSize(7);
             pdf.setTextColor(100, 116, 139);
@@ -417,7 +448,9 @@ export function StrategicReportPreview({
                                         <div className="text-right">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Company</p>
                                             <p className="text-sm font-bold text-slate-700">{brandName}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                                            <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">
+                                                {isMounted ? new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-- --- ----'}
+                                            </p>
                                         </div>
                                     </div>
 

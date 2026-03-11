@@ -166,7 +166,7 @@ export default function ReceiptDashboard() {
                         )}
                       </div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                        ₹{payment.totalAmount?.toLocaleString('en-IN')}
+                        Payment Record
                       </h3>
                       <p className="text-gray-600">{payment.items?.[0]?.engineName || 'Payment'}</p>
                     </div>

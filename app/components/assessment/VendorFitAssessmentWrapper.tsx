@@ -435,10 +435,11 @@ interface VendorFitAssessmentWrapperProps {
     data: QuestionSchema;
     engineName: string;
     existingResponses?: any;
+    savedProgress?: number;
 }
 
 export default function VendorFitAssessmentWrapper({
-    data, engineName, existingResponses
+    data, engineName, existingResponses, savedProgress = 0
 }: VendorFitAssessmentWrapperProps) {
     const navigate = useNavigate();
     const path = useLocation();
@@ -446,8 +447,11 @@ export default function VendorFitAssessmentWrapper({
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const hasExistingData = !!(existingResponses && Object.keys(existingResponses).length > 0);
-    const [started, setStarted] = useState(false);
-    const [formData, setFormData] = useState<Record<string, any>>({});
+    const modify = new URLSearchParams(path.search).get('modify') === 'true';
+    const [started, setStarted] = useState(modify ? true : false);
+    const [formData, setFormData] = useState<Record<string, any>>(
+        hasExistingData ? existingResponses : {}
+    );
     const [currentStep, setCurrentStep] = useState(0);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -581,9 +585,7 @@ export default function VendorFitAssessmentWrapper({
     };
 
     if (!started) {
-        const existingProgress = hasExistingData
-            ? Math.min(100, Math.round((Object.keys(existingResponses).filter(k => !k.endsWith("_other") && existingResponses[k] !== undefined && existingResponses[k] !== "" && existingResponses[k] !== null && !(Array.isArray(existingResponses[k]) && existingResponses[k].length === 0)).length / Math.max(1, steps.reduce((a, s) => a + s.questions.length, 0))) * 100))
-            : 0;
+        const displayProgress = savedProgress > 0 ? savedProgress : 0;
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
                 <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
@@ -592,14 +594,14 @@ export default function VendorFitAssessmentWrapper({
                     {hasExistingData ? (
                         <>
                             <p className="text-slate-600 text-sm leading-relaxed">
-                                You have a saved session with <span className="font-bold text-blue-600">{existingProgress}%</span> progress. Would you like to continue where you left off?
+                                You have a saved session with <span className="font-bold text-blue-600">{displayProgress}%</span> progress. Would you like to continue where you left off?
                             </p>
                             <div className="flex flex-col gap-3 pt-2">
                                 <button
-                                    onClick={() => { setFormData(existingResponses); setStarted(true); }}
+                                    onClick={() => setStarted(true)}
                                     className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
                                 >
-                                    Continue Previous Session ({existingProgress}%)
+                                    Continue with Saved Responses ({displayProgress}%)
                                 </button>
                                 <button
                                     onClick={() => { setFormData({}); setStarted(true); }}

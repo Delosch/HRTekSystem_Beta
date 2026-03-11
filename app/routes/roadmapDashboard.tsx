@@ -39,6 +39,11 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     description: "Select the right HCM vendors for your business",
     icon: "🎯"
   },
+  "AI Driven Maturity Engine": {
+    name: "AI Driven Maturity Engine",
+    description: "Assess your AI transformation maturity and digital readiness",
+    icon: "🤖"
+  }
 };
 
 
@@ -133,16 +138,15 @@ export default function RoadmapDashboard() {
   const handleReportAction = () => {
     if (hasReport) {
       if (isPaid || isPending) {
-        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+        navigate(`/digital-roadmap/dashboard`);
       } else {
         navigate('/payment/checkout');
       }
     } else {
-      // If 100%, trigger generation (should be handled by intermediate, so redirect there)
       if (currentEngine.progress === 100) {
         navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
       } else {
-        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+        navigate(`/digital-roadmap/assessment`);
       }
     }
   };
@@ -316,6 +320,14 @@ export default function RoadmapDashboard() {
                   {isPaid && hasReport ? "View Detailed Report" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : "Continue"}
                 </button>
               </div>
+              {currentEngine.progress > 0 && (
+                <button
+                  onClick={() => navigate('/digital-roadmap/assessment?modify=true')}
+                  className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100 transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  ✏️ Modify Responses
+                </button>
+              )}
             </div>
           </div>
         </div>

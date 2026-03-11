@@ -10,7 +10,7 @@ const slides = [
     sub: "Smart software that upgrades your HR ecosystem — intelligently and at scale.",
     img: "/assets/homepageAssets/scroll0/images/heroImg3.png",
     alt: "HR AI platform visual",
-    imgSize: "clamp(440px, 78vh, 820px)",
+    imgSize: "clamp(500px, 88vh, 960px)",
   },
   {
     badge: "Real-Time AI Execution",
@@ -19,7 +19,7 @@ const slides = [
     sub: "Automate workflows, empower teams, and drive measurable growth.",
     img: "/assets/homepageAssets/scroll0/images/heroImg.png",
     alt: "HR product interface",
-    imgSize: "clamp(440px, 78vh, 820px)",
+    imgSize: "clamp(500px, 88vh, 960px)",
   },
   {
     badge: "Enterprise-Ready",
@@ -28,7 +28,7 @@ const slides = [
     sub: "End-to-end transformation intelligence for CHROs and HR leaders.",
     img: "/assets/homepageAssets/scroll0/images/heroImg2.png",
     alt: "HR ecosystem transformation",
-    imgSize: "clamp(360px, 62vh, 700px)",
+    imgSize: "clamp(440px, 78vh, 860px)",
   },
 ];
 
@@ -101,7 +101,7 @@ export default function Carousel() {
           <div
             className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 w-full"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-4 lg:gap-8 items-center w-full py-10 lg:py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-4 lg:gap-6 items-center w-full py-8 lg:py-10">
 
               {/* Left: Text */}
               <motion.div
@@ -143,7 +143,7 @@ export default function Carousel() {
                     </svg>
                   </Link>
                   <Link
-                    to="/contact/demo"
+                    to="/contact"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm sm:text-base rounded-xl border border-white/20 backdrop-blur-sm transition-all duration-300"
                   >
                     Book a Demo

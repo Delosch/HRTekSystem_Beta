@@ -334,7 +334,7 @@ export default function PaymentCheckout() {
                                     {data.cartItems.map((item: any, idx: number) => (
                                         <div key={idx} className="flex justify-between text-sm">
                                             <span className="text-gray-600">{item.productName}</span>
-                                            <span className="font-medium text-gray-900">₹{item.price.toLocaleString()}</span>
+                                            <span className="font-medium text-gray-900">—</span>
                                         </div>
                                     ))}
                                 </div>
@@ -343,11 +343,11 @@ export default function PaymentCheckout() {
                                 <div className="space-y-2 text-sm mb-4">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Subtotal</span>
-                                        <span className="font-medium text-gray-900">₹{data.subtotal.toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">—</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">GST (18%)</span>
-                                        <span className="font-medium text-gray-900">₹{data.gst.toLocaleString()}</span>
+                                        <span className="font-medium text-gray-900">—</span>
                                     </div>
                                 </div>
 
@@ -355,7 +355,7 @@ export default function PaymentCheckout() {
                                 <div className="pt-4 border-t border-gray-200">
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-semibold text-gray-900">Total Amount</span>
-                                        <span className="text-2xl font-bold text-blue-600">₹{data.total.toLocaleString()}</span>
+                                        <span className="text-2xl font-bold text-blue-600">—</span>
                                     </div>
                                 </div>
 
