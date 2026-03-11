@@ -4,7 +4,6 @@ import { requireUserSession } from "~/lib/session.server";
 import { useState } from "react";
 import { CreditCard, Building2, Smartphone, QrCode, Upload, CheckCircle, X } from "lucide-react";
 import { ENGINE_PRICING, BUNDLE_PRICING } from "~/config/pricing.config";
-import { formatCurrency } from "~/services/pricing.calculator";
 
 /**
  * Manual Payment Page
@@ -174,7 +173,7 @@ export default function ManualPayment() {
                                             🎉 Bundle Discount Applied!
                                         </p>
                                         <p className="text-xs text-green-700">
-                                            Save {formatCurrency(data.savings, "INR")}
+                                            Bundle discount applied
                                         </p>
                                     </div>
                                 )}
@@ -183,9 +182,7 @@ export default function ManualPayment() {
                                     {data.selectedEngines.map((engine: any) => (
                                         <div key={engine.id} className="flex justify-between text-sm">
                                             <span className="text-gray-700">{engine.name}</span>
-                                            <span className="text-gray-900 font-medium">
-                                                {formatCurrency(engine.basePrice, "INR")}
-                                            </span>
+                                            <span className="text-gray-900 font-medium">—</span>
                                         </div>
                                     ))}
                                 </div>
@@ -193,21 +190,21 @@ export default function ManualPayment() {
                                 <div className="border-t border-gray-200 pt-4 space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-700">Subtotal</span>
-                                        <span className="text-gray-900">{formatCurrency(data.subtotal, "INR")}</span>
+                                        <span className="text-gray-900">—</span>
                                     </div>
                                     {data.savings > 0 && (
                                         <div className="flex justify-between text-sm">
                                             <span className="text-green-700">Bundle Savings</span>
-                                            <span className="text-green-700">-{formatCurrency(data.savings, "INR")}</span>
+                                            <span className="text-green-700">—</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-700">GST (18%)</span>
-                                        <span className="text-gray-900">{formatCurrency(data.gst, "INR")}</span>
+                                        <span className="text-gray-900">—</span>
                                     </div>
                                     <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
                                         <span className="text-gray-900">Total</span>
-                                        <span className="text-blue-600">{formatCurrency(data.grandTotal, "INR")}</span>
+                                        <span className="text-blue-600">—</span>
                                     </div>
                                 </div>
                             </div>

@@ -179,6 +179,11 @@ interface DigitalMaturityReportProps {
 export default function DigitalMaturityReport({ data, brandName, assessmentId, reportType = 'detailed' }: DigitalMaturityReportProps) {
     const isDetailed = reportType === 'detailed';
     const [activeTab, setActiveTab] = useState("overview");
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -684,7 +689,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                     </div>
                                     <div className="flex justify-between border-b border-slate-200 pb-2">
                                         <span className="font-semibold text-slate-600">Generated Date:</span>
-                                        <span className="text-slate-900">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                        <span className="text-slate-900">{isMounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-- --- ----'}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-slate-200 pb-2">
                                         <span className="font-semibold text-slate-600">Maturity Score:</span>
@@ -696,7 +701,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 <div className="mt-16 text-sm text-slate-500">
                                     <p className="font-semibold">Confidential Report</p>
-                                    <p>© {new Date().getFullYear()} HR TEK SYSTEMS. All rights reserved.</p>
+                                    <p>© {isMounted ? new Date().getFullYear() : '2026'} HR TEK SYSTEMS. All rights reserved.</p>
                                 </div>
                             </div>
                         </div>

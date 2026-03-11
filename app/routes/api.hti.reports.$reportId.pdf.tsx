@@ -23,7 +23,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     }
 
     // Render PDF to stream
-    const stream = await renderToStream(<HTIReportPDF report={report} />);
+    const stream = await renderToStream(<HTIReportPDF report={report} brandName={user.organisationName} />);
 
     // Convert stream to readable stream (if needed by platform, but standard Response accepts standard streams usually)
     // Remix node adapter handles node streams well.

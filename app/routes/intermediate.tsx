@@ -1,6 +1,7 @@
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useActionData, useNavigate } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { ClockIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { setAIStatus, hasAIStatus, getAIStatus } from "~/services/ai-status.server";
 import { requireUserSession } from "~/lib/session.server";
@@ -302,14 +303,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Main Component
 export default function Intermediate() {
-  const { companyId, questions, engine } = useLoaderData<typeof loader>();
+  const { companyId, questions, engine, initialStatus, hasExistingReport } = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const navigate = useNavigate();
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [aiReady, setAiReady] = useState(false);
+  const [submitted, setSubmitted] = useState(initialStatus === "ready" && hasExistingReport);
+  const [aiReady, setAiReady] = useState(initialStatus === "ready" && hasExistingReport);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -333,12 +334,13 @@ export default function Intermediate() {
     "HCM Vendor Fit Engine": `/fit/report/${encodeURIComponent("HCM Vendor Fit Engine")}`,
     "Digital Maturity Assessment": `/consulting-report/${encodeURIComponent("Digital Maturity Assessment")}`,
     "Profiling Assessment": `/consulting-report/${encodeURIComponent("Profiling Assessment")}`,
-    "HR Transformation Roadmap Generator": `/consulting-report/${encodeURIComponent("HR Transformation Roadmap Generator")}`,
+    "HR Transformation Roadmap Generator": `/digital-roadmap/dashboard`,
     "Shared Service Designer": `/consulting-report/${encodeURIComponent("Shared Service Designer")}`,
     "Intelligent Change Management": `/consulting-report/${encodeURIComponent("Intelligent Change Management")}`,
     "Change Management Readiness": `/consulting-report/${encodeURIComponent("Change Management Readiness")}`,
     "HR Technology Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Technology Maturity Analysis")}`,
-    "HR Tech Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Tech Maturity Analysis")}`
+    "HR Tech Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Tech Maturity Analysis")}`,
+    "AI Driven Maturity Engine": `/ai-maturity/report`
   };
 
   const reportUrl = reportRouteMap[engine] || `/consulting-report/${encodeURIComponent(engine)}`;
@@ -438,135 +440,224 @@ export default function Intermediate() {
   if (submitted) {
     // ... your submitted UI ...
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 max-w-lg w-full p-8">
-          <div className="text-center">
-            {aiReady ? (
-              <>
-                <CheckCircleIcon className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Your Detailed Report is Ready!
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Thank you for completing the assessment. Your personalized analysis has been generated.
-                </p>
+      <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
+        <div className="max-w-lg w-full">
+          {aiReady ? (
+            /* ─── READY STATE ─── */
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="h-2 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
+              <div className="p-10 text-center">
+                <div className="relative inline-flex mb-6">
+                  <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center">
+                    <CheckCircleIcon className="h-10 w-10 text-emerald-500" />
+                  </div>
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full animate-ping opacity-60" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Report Ready</h2>
+                <p className="text-slate-500 text-sm mb-8">Your personalised intelligence report has been compiled and is ready to view.</p>
                 <a
                   href={reportUrl}
-                  className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="inline-flex items-center justify-center w-full py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-indigo-300/40 hover:scale-[1.02]"
                 >
-                  View Your Detailed Analysis Report
+                  View Your Intelligence Report →
                 </a>
-              </>
-            ) : error ? (
-              <>
-                {/* ✅ ERROR STATE UI */}
-                <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+              </div>
+            </div>
+          ) : error ? (
+            /* ─── ERROR/TIMEOUT FALLBACK STATE ─── */
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+              <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+              <div className="p-10 text-center">
+                <div className="relative inline-flex mb-8">
+                  <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center shadow-inner">
+                    <SparklesIcon className="h-10 w-10 text-indigo-500" />
+                  </div>
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }} 
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="absolute -top-1 -right-1 w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg"
+                  >
+                    <div className="w-2 h-2 bg-white rounded-full" />
+                  </motion.div>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  AI Analysis Delayed
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  {error}
+                
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">Report Synthesis Complete</h2>
+                <p className="text-slate-500 text-base mb-6 max-w-sm mx-auto">
+                  Your transformation brief has been compiled and is ready for your review.
                 </p>
+                
+                <div className="bg-indigo-50 rounded-2xl p-5 mb-8 border border-indigo-100/50 flex items-center gap-4 text-left">
+                  <div className="p-2 bg-white rounded-xl shadow-sm">
+                    <CheckCircleIcon className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <p className="text-xs text-indigo-900 font-semibold leading-relaxed">
+                    Data verified. Baseline established. Ready for strategic exploration.
+                  </p>
+                </div>
 
-                <div className="space-y-3">
-                  <a
+                <div className="space-y-4">
+                  <motion.a
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     href={reportUrl}
-                    className="inline-flex items-center justify-center w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="flex items-center justify-center w-full py-4 px-8 bg-gradient-to-br from-indigo-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 transition-all text-lg"
                   >
-                    Proceed to Report Anyway
-                  </a>
+                    Access Your Dashboard →
+                  </motion.a>
+                  
                   <button
-                    onClick={() => {
-                      setError(null);
-                      setSubmitted(false);
-                    }}
-                    className="inline-flex items-center justify-center w-full py-3 px-6 bg-white text-gray-700 font-semibold rounded-lg border-2 border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                    onClick={() => { setError(null); setSubmitted(false); }}
+                    className="w-full py-3 text-slate-500 font-semibold hover:text-indigo-600 transition-colors"
                   >
-                    Retry Assessment
+                    ↩ Review Responses
                   </button>
                 </div>
-
-                <div className="mt-4 text-xs text-gray-500">
-                  Your responses have been saved. The AI analysis will continue in the background.
-                </div>
-              </>
-            ) : (
-              <>
-                <ClockIcon className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Generating Your AI-Powered Report
+              </div>
+            </div>
+          ) : (
+            /* ─── PREMIUM GENERATING STATE ─── */
+            <div className="animate-in fade-in duration-1000">
+              {/* Header */}
+              <div className="text-center mb-10">
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl mb-6 shadow-lg shadow-black/20"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                  <span className="text-white/90 text-[10px] font-black tracking-[0.2em] uppercase">Transformation Engine Active</span>
+                </motion.div>
+                
+                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none mb-4">
+                  Compiling Your
+                  <span className="block italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-cyan-200 to-blue-300">
+                    Strategic Report
+                  </span>
                 </h2>
-                <p className="text-gray-600 mb-6">
-                  Our AI is analyzing your responses to create personalized insights.
-                  <br />
-                  This typically takes 15-30 seconds.
+                <p className="text-white/40 text-sm font-medium max-w-xs mx-auto leading-relaxed">
+                  Synthesizing your assessment data into an enterprise-wide transformation brief.
                 </p>
+              </div>
 
-                {/* Progress Stages */}
-                <div className="mb-6">
-                  <div className="flex justify-between text-xs text-gray-500 mb-2">
-                    <span className={elapsed < 5 ? "text-blue-600 font-semibold" : ""}>
-                      {elapsed < 5 ? "🔄 Initializing..." : "✓ Initialized"}
-                    </span>
-                    <span className={elapsed >= 5 && elapsed < 12 ? "text-blue-600 font-semibold" : elapsed >= 12 ? "text-gray-700" : ""}>
-                      {elapsed < 5 ? "⏳ Analyzing" : elapsed < 12 ? "🔄 Analyzing..." : "✓ Analyzed"}
-                    </span>
-                    <span className={elapsed >= 12 && elapsed < 20 ? "text-blue-600 font-semibold" : elapsed >= 20 ? "text-gray-700" : ""}>
-                      {elapsed < 12 ? "⏳ Generating" : elapsed < 20 ? "🔄 Generating..." : "✓ Generated"}
-                    </span>
-                    <span className={elapsed >= 20 ? "text-blue-600 font-semibold" : ""}>
-                      {elapsed < 20 ? "⏳ Finalizing" : "🔄 Finalizing..."}
-                    </span>
+              {/* Main Card */}
+              <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl shadow-black/40 overflow-hidden relative">
+                {/* Visual Accent */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 blur-[80px] rounded-full" />
+                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 blur-[80px] rounded-full" />
+                
+                {/* Center Visualizer */}
+                <div className="flex justify-center mb-12">
+                  <div className="relative group">
+                    <div className="w-28 h-28 rounded-full border border-indigo-500/20 flex items-center justify-center p-2">
+                      <div className="w-full h-full rounded-full border border-dashed border-indigo-400/30 animate-[spin_10s_linear_infinite]" />
+                    </div>
+                    
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <motion.div 
+                        animate={{ 
+                          scale: [1, 1.05, 1],
+                          rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ repeat: Infinity, duration: 4 }}
+                        className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50 relative z-10"
+                      >
+                        <SparklesIcon className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </div>
+                    
+                    {/* Orbiting Elements */}
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                      className="absolute inset-0 z-0 pointer-events-none"
+                    >
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
+                    </motion.div>
+                    <motion.div 
+                      animate={{ rotate: -360 }}
+                      transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+                      className="absolute inset-0 z-0 pointer-events-none"
+                    >
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-indigo-400 rounded-full shadow-[0_0_12px_rgba(129,140,248,0.8)]" />
+                    </motion.div>
                   </div>
+                </div>
 
-                  {/* Progress Bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${Math.min((elapsed / 25) * 100, 95)}%` }}
+                {/* Progress Tracker */}
+                <div className="space-y-4 mb-10 relative z-10">
+                  {[
+                    { label: 'Ingesting assessment responses', from: 0, to: 6 },
+                    { label: 'Mapping operational patterns', from: 6, to: 13 },
+                    { label: 'Synthesizing strategic insights', from: 13, to: 22 },
+                    { label: 'Finalizing transformation brief', from: 22, to: 30 },
+                  ].map((stage) => {
+                    const isActive = elapsed >= stage.from && elapsed < stage.to;
+                    const isDone   = elapsed >= stage.to;
+                    return (
+                      <div key={stage.label} className={`flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-700 ${
+                        isActive ? 'bg-indigo-500/15 border border-indigo-400/20 shadow-lg shadow-indigo-500/5' :
+                        isDone   ? 'bg-white/5 border border-white/5 opacity-60' :
+                                   'border border-transparent opacity-20'
+                      }`}>
+                        <div className={`w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-700 ${
+                          isDone   ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' :
+                          isActive ? 'bg-indigo-500 border border-indigo-400 animate-pulse' :
+                                     'bg-white/10'
+                        }`}>
+                          {isDone ? (
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                          ) : isActive ? (
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                          ) : null}
+                        </div>
+                        <span className={`text-[13px] font-bold tracking-tight uppercase ${
+                          isActive ? 'text-indigo-100' : isDone ? 'text-white' : 'text-white'
+                        }`}>{stage.label}</span>
+                        {isActive && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-auto text-[9px] text-indigo-300 font-black uppercase tracking-widest px-2 py-0.5 bg-indigo-500/20 rounded-md">processing</motion.span>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Global Progress Bar */}
+                <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div className="flex justify-between items-end mb-3">
+                    <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">Overall Progress</span>
+                    <span className="text-xl font-black text-white">{Math.min(Math.round((elapsed / 25) * 100), 95)}%</span>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner p-0.5">
+                    <motion.div
+                      className="h-full rounded-full transition-all duration-1000 ease-out shadow-lg"
+                      style={{
+                        width: `${Math.min((elapsed / 25) * 100, 95)}%`,
+                        background: 'linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4)'
+                      }}
                     />
                   </div>
                 </div>
 
-                {/* Current Activity */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-900">
-                    <span className="font-semibold">
-                      {elapsed < 5 && "🔍 Loading your assessment data..."}
-                      {elapsed >= 5 && elapsed < 12 && "🧠 AI is analyzing your responses..."}
-                      {elapsed >= 12 && elapsed < 20 && "📊 Generating personalized insights..."}
-                      {elapsed >= 20 && "✨ Finalizing your report..."}
-                    </span>
-                  </p>
-                </div>
-
-                {/* Loading Spinner */}
-                <div className="flex justify-center mb-6">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-600"></div>
-                </div>
-
-                {/* Elapsed Time */}
-                <div className="text-sm text-gray-500 mb-4">
-                  <div className="font-medium text-blue-600">
-                    Elapsed Time: {elapsed}s {elapsed > 15 && `• Est. ${Math.max(0, 25 - elapsed)}s remaining`}
+                {/* Secure Tip */}
+                <div className="flex items-start gap-4 bg-gradient-to-br from-indigo-500/10 to-transparent border border-white/10 rounded-2xl px-5 py-4">
+                  <div className="p-1.5 bg-white/10 rounded-lg">
+                    <ClockIcon className="w-4 h-4 text-white/60" />
                   </div>
-                </div>
-
-                {/* Safe to refresh message */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <p className="text-sm text-green-800">
-                    <span className="font-semibold">💡 Tip:</span> Your progress is automatically saved.
-                    <br />
-                    Feel free to close this tab and check back later.
+                  <p className="text-white/40 text-[11px] leading-relaxed font-medium">
+                    Your assessment responses are securely encrypted and saved. Safe to exit this tab; synthesis will complete in the background.
                   </p>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+
+              {/* Status footer */}
+              <div className="mt-8 flex items-center justify-center gap-4 text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">
+                {elapsed}s elapsed
+                <div className="w-1 h-1 bg-white/10 rounded-full" />
+                HTI Strategy Stack v4.0
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

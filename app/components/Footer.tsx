@@ -4,6 +4,9 @@ import Logo from "./ui/Logo";
 import { Linkedin, Twitter, Facebook, ArrowRight, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => setIsMounted(true), []);
+
   return (
     <footer className="bg-[#0B2A57] text-white py-10">
       <div className="mx-auto px-6 grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
@@ -223,7 +226,7 @@ export default function Footer() {
 
       <div className="mt-10 border-t border-white/10 pt-6 text-sm text-gray-400">
         <div className="flex justify-between items-center">
-          <span className="text-left ml-6">© {new Date().getFullYear()} HR-Tek System. All rights reserved.</span>
+          <span className="text-left ml-6">© {isMounted ? new Date().getFullYear() : '2026'} HR-Tek System. All rights reserved.</span>
           <span className="text-center">This website comes under the GDPR Laws</span>
           <span className="text-right mr-6">CIN - U62010UP2025PTC219986</span>
         </div>

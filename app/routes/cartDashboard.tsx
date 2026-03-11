@@ -67,15 +67,15 @@ const OrderSummary = ({ subtotal, gst, total }: { subtotal: number; gst: number;
     <div className="space-y-3 text-sm">
       <div className="flex justify-between">
         <span className="text-gray-600">Subtotal</span>
-        <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+        <span className="font-medium text-gray-900">—</span>
       </div>
       <div className="flex justify-between">
         <span className="text-gray-600">GST (18%)</span>
-        <span className="font-medium text-gray-900">₹{gst.toFixed(2)}</span>
+        <span className="font-medium text-gray-900">—</span>
       </div>
       <div className="flex justify-between text-base font-semibold border-t pt-3 mt-3">
         <span className="text-gray-900">Total</span>
-        <span className="text-blue-600">₹{total.toFixed(2)}</span>
+        <span className="text-blue-600">—</span>
       </div>
     </div>
     <Link
@@ -121,7 +121,7 @@ const CartItemRow = ({ item }: { item: CartItem }) => {
       </div>
       <div className="flex items-center gap-6 flex-shrink-0">
         <span className="text-lg font-bold text-gray-900 w-28 text-right">
-          ₹{item.price.toFixed(2)}
+          —
         </span>
         <fetcher.Form method="post">
           <input type="hidden" name="intent" value="removeItem" />
@@ -149,12 +149,12 @@ const CostBreakdownChart = ({ data }: { data: { name: string; value: number }[] 
       <div style={{ width: '100%', height: 250 }}>
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
+            <Tooltip formatter={() => `—`} />
           </PieChart>
         </ResponsiveContainer>
       </div>

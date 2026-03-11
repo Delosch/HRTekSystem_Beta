@@ -306,6 +306,14 @@ export default function SharedDashboard() {
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
                   {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
+                {currentEngine.progress > 0 && (
+                  <button
+                    onClick={() => navigate('/shared-services/assessment?modify=true')}
+                    className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    ✏️ Modify Responses
+                  </button>
+                )}
               </div>
             </div>
           </div>

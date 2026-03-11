@@ -5,6 +5,7 @@ interface StaffingData {
     name: string;
     value: number;
     fill: string;
+    [key: string]: string | number;
 }
 
 const COLORS = {
@@ -18,13 +19,13 @@ const COLORS = {
 
 export const StaffingSunburst: React.FC = () => {
     // Inner ring: Location
-    const innerData: StaffingData[] = [
+    const innerData: any[] = [
         { name: 'Onshore', value: 60, fill: COLORS.onshore },
         { name: 'Offshore', value: 40, fill: COLORS.offshore },
     ];
 
     // Outer ring: Role Level (proportional to inner)
-    const outerData: StaffingData[] = [
+    const outerData: any[] = [
         { name: 'Onshore Senior', value: 25, fill: COLORS.onshoreSenior },
         { name: 'Onshore Junior', value: 35, fill: COLORS.onshoreJunior },
         { name: 'Offshore Senior', value: 15, fill: COLORS.offshoreSenior },

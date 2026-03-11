@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useFetcher, useNavigate } from "@remix-run/react";
+import { useFetcher, useNavigate, useSearchParams } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     CheckCircle2, Circle, ChevronRight, Menu, X,
@@ -20,13 +20,18 @@ import type { HTIAdvisoryContent } from "~/models/hti.model.server";
 
 interface ChangeManagementAssessmentProps {
     initialResponses?: Record<string, any>;
+    savedProgress?: number;
 }
 
-export function ChangeManagementAssessment({ initialResponses }: ChangeManagementAssessmentProps) {
+export function ChangeManagementAssessment({ initialResponses, savedProgress = 0 }: ChangeManagementAssessmentProps) {
     const navigate = useNavigate();
     const fetcher = useFetcher();
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [searchParams] = useSearchParams();
+    const modify = searchParams.get('modify') === 'true';
 
+    const hasExistingData = !!(initialResponses && Object.keys(initialResponses).length > 0);
+    const [started, setStarted] = useState(modify || !hasExistingData);
     const [responses, setResponses] = useState<Response>(initialResponses || {});
     const [currentStep, setCurrentStep] = useState(0);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -104,12 +109,30 @@ export function ChangeManagementAssessment({ initialResponses }: ChangeManagemen
     };
 
     const handleNext = async () => {
-        await handleSave();
         if (currentStep < sections.length - 1) {
+            await handleSave();
             setCurrentStep(p => p + 1);
             scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+            // Final submission — send ALL responses
+            setIsSubmitting(true);
+            fetcher.submit({
+                responses: JSON.stringify(responses),
+                progress: String(progress),
+                params: "Intelligent Change Management",
+            }, { method: "POST" });
         }
     };
+
+    // Handle redirect after final submission
+    useEffect(() => {
+        if (fetcher.data && (fetcher.data as any).redirect) {
+            window.location.href = (fetcher.data as any).redirect;
+        }
+        if (fetcher.state === "idle" && isSubmitting) {
+            setIsSubmitting(false);
+        }
+    }, [fetcher.data, fetcher.state]);
 
     const handlePrevious = () => {
         if (currentStep > 0) {
@@ -133,6 +156,34 @@ export function ChangeManagementAssessment({ initialResponses }: ChangeManagemen
     // Score for current section header display
     const currentSectionAnswered = getSectionAnsweredCount(currentStep);
     const currentSectionTotal = currentSection.questions.length;
+
+    if (!started) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+                <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
+                    <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
+                    <h1 className="text-2xl font-black text-slate-900">Intelligent Change Management Assessment</h1>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                        You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress. Would you like to continue where you left off?
+                    </p>
+                    <div className="flex flex-col gap-3 pt-2">
+                        <button
+                            onClick={() => setStarted(true)}
+                            className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                        >
+                            Continue with Saved Responses ({savedProgress}%)
+                        </button>
+                        <button
+                            onClick={() => { setResponses({} as Response); setStarted(true); }}
+                            className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
+                        >
+                            Start Fresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">

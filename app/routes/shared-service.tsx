@@ -3,7 +3,7 @@ import Navbar from "~/components/HomePageComponents/Navbar";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { UsersIcon, Cog6ToothIcon, ChartBarIcon, BuildingOfficeIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
-import { useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData, Link } from "@remix-run/react";
 import BookingModal from "~/components/HomePageComponents/BookingModal";
 import { MetaFunction } from "@remix-run/node";
 import { generateMeta, generateBreadcrumbSchema, generateServiceSchema } from "~/utils/seo";
@@ -99,6 +99,12 @@ export default function HRSharedServicesPage() {
                 >
                   Talk to Expert
                 </button>
+                <Link
+                  to="/engine/shared-services"
+                  className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center justify-center"
+                >
+                  Start Model Designer
+                </Link>
               </div>
 
               {/* Stats */}
