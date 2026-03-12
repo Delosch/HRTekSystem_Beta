@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Calendar, Clock, ArrowRight, TrendingUp, Sparkles, BookOpen, Tag } from "lucide-react";
 import Navbar from "~/components/HomePageComponents/Navbar";
@@ -21,7 +21,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function BlogPage() {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -51,7 +50,7 @@ export default function BlogPage() {
     image: `https://hrteksystem.com${blog.imageUrl}`,
     author: blog.author,
     datePublished: "2024-11-13",
-    url: `https://hrteksystem.com/articles#${blog.id}`
+    url: `https://hrteksystem.com/article/${blog.slug}`
   }));
 
   return (
@@ -178,58 +177,58 @@ export default function BlogPage() {
               <Sparkles className="w-6 h-6 text-amber-500" />
               <h2 className="text-2xl font-black text-[#000033]">Featured Article</h2>
             </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/10 border border-slate-100 group cursor-pointer"
-              onClick={() => navigate(`/article/${featuredBlog.slug}`)}
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2">
-                <div className="relative h-64 lg:h-auto overflow-hidden">
-                  <img
-                    src={featuredBlog.imageUrl}
-                    alt={featuredBlog.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-full shadow-lg">
-                      FEATURED
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-10 flex flex-col justify-center">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">
-                      {featuredBlog.category}
-                    </span>
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                      <Calendar className="w-4 h-4" />
-                      {featuredBlog.date}
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                      <Clock className="w-4 h-4" />
-                      {featuredBlog.readTime}
+            <Link to={`/article/${featuredBlog.slug}`} className="block">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-white rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/10 border border-slate-100 group cursor-pointer"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="relative h-64 lg:h-auto overflow-hidden">
+                    <img
+                      src={featuredBlog.imageUrl}
+                      alt={featuredBlog.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-full shadow-lg">
+                        FEATURED
+                      </span>
                     </div>
                   </div>
 
-                  <h3 className="text-3xl font-black text-[#000033] mb-4 group-hover:text-blue-600 transition-colors">
-                    {featuredBlog.title}
-                  </h3>
+                  <div className="p-10 flex flex-col justify-center">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full">
+                        {featuredBlog.category}
+                      </span>
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <Calendar className="w-4 h-4" />
+                        {featuredBlog.date}
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-500 text-sm">
+                        <Clock className="w-4 h-4" />
+                        {featuredBlog.readTime}
+                      </div>
+                    </div>
 
-                  <p className="text-slate-600 mb-6 leading-relaxed">
-                    {featuredBlog.excerpt}
-                  </p>
+                    <h3 className="text-3xl font-black text-[#000033] mb-4 group-hover:text-blue-600 transition-colors">
+                      {featuredBlog.title}
+                    </h3>
 
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-slate-500">By {featuredBlog.author}</span>
-                    <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-2 transition-transform" />
+                    <p className="text-slate-600 mb-6 leading-relaxed">
+                      {featuredBlog.excerpt}
+                    </p>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-medium text-slate-500">By {featuredBlog.author}</span>
+                      <ArrowRight className="w-5 h-5 text-blue-600 group-hover:translate-x-2 transition-transform" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           </div>
         )}
 
@@ -238,77 +237,68 @@ export default function BlogPage() {
           <h2 className="text-3xl font-black text-[#000033] mb-12">Latest Articles</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatePresence>
+            
               {filteredBlogs.filter(b => !b.featured).map((blog, index) => (
-                <motion.div
-                  key={blog.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 border border-slate-100 group cursor-pointer flex flex-col"
-                  onClick={() => navigate(`/article/${blog.slug}`)}
-
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={blog.imageUrl}
-                      alt={blog.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-blue-600 text-xs font-bold rounded-full">
-                        {blog.category}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {blog.date}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {blog.readTime}
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-[#000033] mb-3 group-hover:text-blue-600 transition-colors leading-tight">
-                      {blog.title}
-                    </h3>
-
-                    <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">
-                      {blog.excerpt.substring(0, 120)}...
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {blog.tags?.map((tag) => (
-                        <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                          <Tag className="w-3 h-3" />
-                          {tag}
+                <Link key={blog.id} to={`/article/${blog.slug}`} className="block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 border border-slate-100 group cursor-pointer flex flex-col"
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={blog.imageUrl}
+                        alt={blog.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-blue-600 text-xs font-bold rounded-full">
+                          {blog.category}
                         </span>
-                      ))}
+                      </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/article/${blog.slug}`);
-                      }}
+                    <div className="p-6 flex-grow flex flex-col">
+                      <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {blog.date}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {blog.readTime}
+                        </div>
+                      </div>
 
+                      <h3 className="text-xl font-bold text-[#000033] mb-3 group-hover:text-blue-600 transition-colors leading-tight">
+                        {blog.title}
+                      </h3>
 
-                      className="flex items-center gap-2 text-blue-600 font-bold text-sm group-hover:gap-3 transition-all"
-                    >
-                      Read More
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </motion.div>
+                      <p className="text-slate-600 text-sm mb-4 leading-relaxed flex-grow">
+                        {blog.excerpt.substring(0, 120)}...
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {blog.tags?.map((tag) => (
+                          <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
+                            <Tag className="w-3 h-3" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-blue-600 font-bold text-sm group-hover:gap-3 transition-all">
+                        Read More
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
               ))}
-            </AnimatePresence>
+          
           </div>
 
           {filteredBlogs.length === 0 && (
