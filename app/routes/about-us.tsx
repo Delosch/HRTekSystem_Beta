@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "About HRTek System - Transforming HR with AI",
     description: "Learn how HRTek System is revolutionizing HR transformation through AI-powered diagnostics, strategic consulting, and innovative technology solutions. Meet our team and discover our mission.",
     keywords: "about HRTek, HR technology company, AI HR solutions, HR transformation experts, Atul Dixit, HR consulting",
-    url: "https://hrteksystem.com/about-us",
-    image: "https://hrteksystem.com/og-about.jpg",
+    url: "https://www.hrteksystem.com/about-us",
+    image: "https://www.hrteksystem.com/og-about.jpg",
   });
 };
 
@@ -62,7 +62,7 @@ export default function AboutUs() {
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/about-us" />
+      <link rel="canonical" href="https://www.hrteksystem.com/about-us" />
 
       {/* Breadcrumb Schema */}
       <script

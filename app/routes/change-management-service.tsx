@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "Intelligent Change Management - HR Digital Transformation",
     description: "Manage the people-side of HR transformation with our Intelligent Change Management Diagnostic. Assess readiness, identify fatigue, and ensure high user adoption.",
     keywords: "change management, HR transition, digital transformation change, workforce readiness, change fatigue assessment, HR tech adoption",
-    url: "https://hrteksystem.com/change-management-service",
-    image: "https://hrteksystem.com/og-change-management.jpg",
+    url: "https://www.hrteksystem.com/change-management-service",
+    image: "https://www.hrteksystem.com/og-change-management.jpg",
   });
 };
 
@@ -46,12 +46,12 @@ export default function ChangeManagementDiagnosticPage() {
     description: "Diagnostic capability for managing the human aspect of HR digital transformation",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/change-management-service"
+    url: "https://www.hrteksystem.com/change-management-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/change-management-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/change-management-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

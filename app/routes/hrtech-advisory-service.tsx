@@ -29,8 +29,8 @@ export const meta: MetaFunction = () => {
         title: "Cognitive HR Advisory - AI-Powered HR Strategy",
         description: "Experience the first AI-powered advisory layer that converts HR data into board-ready strategies. 50-70% cost savings compared to traditional consulting.",
         keywords: "HR advisory, cognitive HR strategy, AI consulting, board-ready HR reports, HR digital transformation advisor, HR ROI strategy",
-        url: "https://hrteksystem.com/hrtech-advisory-service",
-        image: "https://hrteksystem.com/og-advisory.jpg",
+        url: "https://www.hrteksystem.com/hrtech-advisory-service",
+        image: "https://www.hrteksystem.com/og-advisory.jpg",
     });
 };
 
@@ -61,12 +61,12 @@ export default function HRTechAdvisoryServicePage() {
         description: "AI-powered strategic HR advisory layer",
         provider: "HRTek System",
         areaServed: "Global",
-        url: "https://hrteksystem.com/hrtech-advisory-service"
+        url: "https://www.hrteksystem.com/hrtech-advisory-service"
     });
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/hrtech-advisory-service" />
+            <link rel="canonical" href="https://www.hrteksystem.com/hrtech-advisory-service" />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

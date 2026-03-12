@@ -303,50 +303,113 @@ export function StrategicReportPreview({
                         </div>
 
                         {/* Content Area */}
-                        <div className="flex-1 overflow-y-auto p-12 bg-slate-100/30">
+                        <div className="flex-1 overflow-y-auto p-8 sm:p-12 bg-slate-100/30 relative">
                             {isGenerating ? (
-                                <div className="h-full flex flex-col items-center justify-center space-y-8">
-                                    <div className="relative">
-                                        <div className="w-24 h-24 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
-                                        </div>
-                                    </div>
-                                    <div className="text-center space-y-4 max-w-md mx-auto">
-                                        <h3 className="text-2xl font-black text-slate-900 italic uppercase tracking-tight">
-                                            Architecting Strategic Advisory
+                                <div className="h-full flex flex-col items-center justify-center space-y-12 py-10">
+                                    {/* Header Animation */}
+                                    <div className="text-center space-y-4 max-w-lg mx-auto">
+                                        <motion.div 
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 shadow-sm mb-4"
+                                        >
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+                                            </span>
+                                            <span className="text-indigo-600 text-[10px] font-black tracking-[0.2em] uppercase">DeepSeek Engine Active</span>
+                                        </motion.div>
+                                        
+                                        <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">
+                                            Architecting Your
+                                            <span className="block italic text-indigo-600">Strategic Advisory</span>
                                         </h3>
-                                        {/* Rotating engine-specific phrase */}
-                                        <AnimatePresence mode="wait">
-                                            <motion.p
-                                                key={phraseIdx}
-                                                initial={{ opacity: 0, y: 8 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -8 }}
-                                                transition={{ duration: 0.4 }}
-                                                className="text-indigo-600 font-bold text-sm tracking-wide min-h-[24px]"
-                                            >
-                                                {phrases[phraseIdx]}
-                                            </motion.p>
-                                        </AnimatePresence>
-                                        <p className="text-slate-400 text-xs font-medium">
-                                            Your report will be ready in about 30–45 seconds
+                                        <p className="text-slate-400 text-sm font-medium">
+                                            Synthesizing assessment data into a board-level transformation brief.
                                         </p>
                                     </div>
-                                    <div className="w-64 space-y-2">
-                                        <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-gradient-to-r from-indigo-600 to-cyan-500"
-                                                initial={{ width: "0%" }}
-                                                animate={{ width: "100%" }}
-                                                transition={{ duration: 40, ease: "linear" }}
-                                            />
+
+                                    {/* Main Loading visualizer */}
+                                    <div className="relative group">
+                                        <div className="w-32 h-32 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <Sparkles className="w-10 h-10 text-indigo-600 animate-pulse" />
                                         </div>
-                                        <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                            <span>Analysis</span>
-                                            <span>Synthesis</span>
-                                            <span>Reporting</span>
+                                    </div>
+
+                                    {/* Progress Tracker (Stages) */}
+                                    <div className="w-full max-w-md space-y-3">
+                                        {[
+                                            { label: 'Ingesting assessment responses', from: 0, to: 8 },
+                                            { label: 'Mapping operational patterns', from: 8, to: 18 },
+                                            { label: 'Synthesizing strategic insights', from: 18, to: 30 },
+                                            { label: 'Finalizing transformation brief', from: 30, to: 45 },
+                                        ].map((stage, idx) => {
+                                            const isActive = idx === Math.min(3, Math.floor(phraseIdx / 2.5));
+                                            const isDone = Math.floor(phraseIdx / 2.5) > idx;
+                                            
+                                            return (
+                                                <div key={idx} className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-500 ${
+                                                    isActive ? 'bg-white border border-indigo-200 shadow-xl shadow-indigo-100/50' :
+                                                    isDone   ? 'bg-slate-50 border border-slate-100 opacity-60' :
+                                                               'border border-transparent opacity-20'
+                                                }`}>
+                                                    <div className={`w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all ${
+                                                        isDone   ? 'bg-emerald-500 text-white' :
+                                                        isActive ? 'bg-indigo-600 text-white' :
+                                                                   'bg-slate-200'
+                                                    }`}>
+                                                        {isDone ? (
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        ) : isActive ? (
+                                                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                                                        ) : null}
+                                                    </div>
+                                                    <span className={`text-[11px] font-black tracking-wider uppercase flex-1 ${
+                                                        isActive ? 'text-slate-900' : 'text-slate-400'
+                                                    }`}>{stage.label}</span>
+                                                    {isActive && <span className="text-[8px] text-indigo-600 font-black uppercase tracking-widest px-2 py-0.5 bg-indigo-50 rounded-md">processing</span>}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Detailed Status */}
+                                    <div className="w-full max-w-md space-y-4">
+                                        <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                                            <div className="flex justify-between items-end mb-3">
+                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Overall Progress</span>
+                                                <span className="text-xl font-black text-slate-900">{Math.min(95, Math.round((phraseIdx / phrases.length) * 100))}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5">
+                                                <motion.div
+                                                    className="h-full bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 rounded-full shadow-lg"
+                                                    initial={{ width: "0%" }}
+                                                    animate={{ width: `${Math.min(95, Math.round((phraseIdx / phrases.length) * 100))}%` }}
+                                                    transition={{ duration: 0.5 }}
+                                                />
+                                            </div>
+                                            
+                                            {/* Rotating engine-specific phrase */}
+                                            <div className="mt-6 pt-6 border-t border-slate-50 text-center">
+                                                <AnimatePresence mode="wait">
+                                                    <motion.p
+                                                        key={phraseIdx}
+                                                        initial={{ opacity: 0, y: 8 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -8 }}
+                                                        transition={{ duration: 0.4 }}
+                                                        className="text-indigo-600 font-bold text-[11px] uppercase tracking-wider min-h-[16px]"
+                                                    >
+                                                        {phrases[phraseIdx]}
+                                                    </motion.p>
+                                                </AnimatePresence>
+                                            </div>
                                         </div>
+                                        
+                                        <p className="text-slate-400 text-[10px] font-black text-center uppercase tracking-[0.3em]">
+                                            Estimated time: 45 seconds • AI Synthesis v4.0
+                                        </p>
                                     </div>
                                 </div>
                             ) : reportData ? (

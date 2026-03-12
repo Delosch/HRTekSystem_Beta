@@ -249,7 +249,7 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                             <Text style={styles.title}>HTI Advisory Report</Text>
                             <Text style={styles.subtitle}>HR Transformation Intelligence</Text>
                         </View>
-                        <Image src="https://hrteksystem.com/logo_icon_final.png" style={{ width: 40, height: 40 }} />
+                        <Image src="https://www.hrteksystem.com/logo_icon_final.png" style={{ width: 40, height: 40 }} />
                     </View>
                     <Text style={[styles.subtitle, { marginTop: 6 }]}>
                         Company ID: {companyId} • Generated: {new Date(generatedAt).toLocaleDateString('en-US', {

@@ -13,8 +13,8 @@ export const meta: MetaFunction = () => {
     title: "HR Shared Services Operating Model Designer",
     description: "Design and optimize your HR Shared Services Operating Model. Centralize HR tasks, improve consistency, and drive operational efficiency with our intelligent designer.",
     keywords: "HR shared services, operating model design, SSOM, centralized HR hub, HR process standardization, service delivery model",
-    url: "https://hrteksystem.com/shared-service",
-    image: "https://hrteksystem.com/og-shared-services.jpg",
+    url: "https://www.hrteksystem.com/shared-service",
+    image: "https://www.hrteksystem.com/og-shared-services.jpg",
   });
 };
 
@@ -33,12 +33,12 @@ export default function HRSharedServicesPage() {
     description: "Operating model planner for centralized HR service delivery",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/shared-service"
+    url: "https://www.hrteksystem.com/shared-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/shared-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/shared-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

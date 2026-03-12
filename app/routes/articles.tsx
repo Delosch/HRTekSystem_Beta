@@ -14,9 +14,9 @@ export const meta: MetaFunction = () => {
     title: "HR Insights & Innovation Blog",
     description: "Stay ahead with expert insights on HR technology, digital transformation, workforce management, and industry trends from HRTek System. Read the latest articles from HR experts.",
     keywords: "HR articles, HR technology trends, digital transformation, workforce management insights, HCM solutions, HR best practices",
-    url: "https://hrteksystem.com/articles",
+    url: "https://www.hrteksystem.com/articles",
     type: "article",
-    image: "https://hrteksystem.com/og-blog.jpg",
+    image: "https://www.hrteksystem.com/og-blog.jpg",
   });
 };
 
@@ -48,15 +48,15 @@ export default function BlogPage() {
   const blogSchemas = blogs.map(blog => generateBlogPostSchema({
     title: blog.title,
     description: blog.excerpt,
-    image: `https://hrteksystem.com${blog.imageUrl}`,
+    image: `https://www.hrteksystem.com${blog.imageUrl}`,
     author: blog.author,
     datePublished: "2024-11-13",
-    url: `https://hrteksystem.com/articles#${blog.id}`
+    url: `https://www.hrteksystem.com/articles#${blog.id}`
   }));
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/articles" />
+      <link rel="canonical" href="https://www.hrteksystem.com/articles" />
 
       {/* Breadcrumb Schema */}
       <script

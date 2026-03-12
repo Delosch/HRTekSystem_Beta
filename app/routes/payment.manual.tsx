@@ -64,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
             Method: ${paymentMethod}\n
             Transaction ID: ${transactionId}\n
             Amount: ${amount}\n
-            Link to verify: https://hrteksystem.com/admin/payments/verification`
+            Link to verify: https://www.hrteksystem.com/admin/payments/verification`
         );
     } catch (notifierError) {
         console.warn("Failed to notify admin about payment:", notifierError);
