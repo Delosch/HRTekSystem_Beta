@@ -5,7 +5,12 @@ import { blogs } from "~/data/blogs";
 
 export default function ArticlePage() {
   const { id } = useParams();
-  const article = blogs.find(b => b.slug === id || b.id === Number(id));
+  const slugParam = id || "";
+
+
+  const articleId = Number(slugParam.split("-").pop());
+
+  const article = blogs.find(b => b.id === articleId);
 
   if (!article) {
     return (
