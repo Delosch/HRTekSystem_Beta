@@ -68,9 +68,9 @@ export default function Index() {
 
         {/* Business Size + Our Engagement Model Section*/}
         <section className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-24 px-6 overflow-hidden">
-           {/* Decorative Background Elements */}
-           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
           {/* Business Size Part */}
           <div className="max-w-7xl mx-auto text-center relative z-10">
@@ -319,19 +319,19 @@ export default function Index() {
                   {
                     title: "Why Most HR Technology Investments Fail",
                     img: "/assets/blogAssets/fail_invest.png",
-                    link: "/article/why-most-hr-technology-investments-fail-and-how-to-fix-them",
+                    link: "/article/why-most-hr-technology-investments-fail-and-how-to-fix-them-3",
                     tag: "HR Technology",
                   },
                   {
                     title: "From HR Automation to HR Intelligence",
                     img: "/assets/blogAssets/hr_intelligence.png",
-                    link: "/article/from-hr-automation-to-hr-intelligence",
+                    link: "/article/from-hr-automation-to-hr-intelligence-4",
                     tag: "AI & Automation",
                   },
                   {
                     title: "Designing a Future-Ready HR Operating Model",
                     img: "/assets/blogAssets/op_model.png",
-                    link: "/article/designing-a-future-ready-hr-operating-model",
+                    link: "/article/designing-a-future-ready-hr-operating-model-5",
                     tag: "Operating Model",
                   },
                 ].map((item, index) => (
@@ -401,7 +401,7 @@ export default function Index() {
         <section className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
           {/* Decorative Background */}
           <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/30 -skew-x-12 translate-x-1/2"></div>
-          
+
           <div className="max-w-7xl mx-auto px-6 relative z-10">
             <div className="text-center mb-16">
               <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold uppercase tracking-wider mb-4 border border-indigo-100">

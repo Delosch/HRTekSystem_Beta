@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@remix-run/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Search, Calendar, Clock, ArrowRight, TrendingUp, Sparkles, BookOpen, Tag } from "lucide-react";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import Footer from "../components/Footer";
@@ -50,7 +50,7 @@ export default function BlogPage() {
     image: `https://www.hrteksystem.com${blog.imageUrl}`,
     author: blog.author,
     datePublished: "2024-11-13",
-    url: `https://www.hrteksystem.com/article/${blog.slug}`
+    url: `https://www.hrteksystem.com/article/${blog.slug}-${blog.id}`
   }));
 
   return (
@@ -177,7 +177,7 @@ export default function BlogPage() {
               <Sparkles className="w-6 h-6 text-amber-500" />
               <h2 className="text-2xl font-black text-[#000033]">Featured Article</h2>
             </div>
-            <Link to={`/article/${featuredBlog.slug}`} className="block">
+            <Link to={`/article/${featuredBlog.slug}-${featuredBlog.id}`} className="block">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -239,7 +239,7 @@ export default function BlogPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
               {filteredBlogs.filter(b => !b.featured).map((blog, index) => (
-                <Link key={blog.id} to={`/article/${blog.slug}`} className="block">
+                <Link key={blog.id} to={`/article/${blog.slug}-${blog.id}`} className="block">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
