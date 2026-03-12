@@ -13,8 +13,8 @@ export const meta: MetaFunction = () => {
     title: "AI-Powered HR Transformation Platform",
     description: "Transform your HR operations with HRTek System's AI-driven diagnostics, strategic roadmaps, and intelligent change management solutions. Trusted by leading organizations worldwide.",
     keywords: "HR transformation, AI HR platform, digital maturity assessment, HCM vendor selection, HR roadmap generator, change management, HR technology",
-    url: "https://hrteksystem.com",
-    image: "https://hrteksystem.com/og-home.jpg",
+    url: "https://www.hrteksystem.com",
+    image: "https://www.hrteksystem.com/og-home.jpg",
   });
 };
 
@@ -53,7 +53,7 @@ export default function Index() {
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/" />
+      <link rel="canonical" href="https://www.hrteksystem.com/" />
 
       {/* FAQ Schema */}
       <script
@@ -68,9 +68,9 @@ export default function Index() {
 
         {/* Business Size + Our Engagement Model Section*/}
         <section className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-24 px-6 overflow-hidden">
-          {/* Decorative Background Elements */}
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+           {/* Decorative Background Elements */}
+           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
 
           {/* Business Size Part */}
           <div className="max-w-7xl mx-auto text-center relative z-10">
@@ -394,6 +394,73 @@ export default function Index() {
               <span>Get in Touch</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
+          </div>
+        </section>
+
+        {/* Dedicated Accreditations Section */}
+        <section className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+          {/* Decorative Background */}
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/30 -skew-x-12 translate-x-1/2"></div>
+          
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="text-center mb-16">
+              <span className="inline-block px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold uppercase tracking-wider mb-4 border border-indigo-100">
+                Institutional Support
+              </span>
+              <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-6">
+                Recognized & Incubated By <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-black">Prestigious Institutions</span>
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                HRTek System is proud to be supported by India's leading innovation hubs and government initiatives, ensuring our solutions meet the highest standards of excellence.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              {/* AIC IIT Delhi Card */}
+              <div className="bg-white p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-blue-200 transition-all duration-500 group">
+                <div className="h-32 flex items-center justify-center mb-8 transform group-hover:scale-110 transition-transform duration-500">
+                  <img
+                    src="/assets/homepageAssets/accreditations.png"
+                    alt="AIC IIT Delhi - Sonipat Innovation Foundation"
+                    className="max-h-full object-contain"
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">AIC IIT Delhi</h3>
+                  <p className="text-gray-500 text-sm">Incubated at Sonipat Innovation Foundation, Supported by AIM, NITI Aayog</p>
+                </div>
+              </div>
+
+              {/* Startup India Card */}
+              <div className="bg-white p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-orange-200 transition-all duration-500 group">
+                <div className="h-32 flex items-center justify-center mb-8 transform group-hover:scale-110 transition-transform duration-500">
+                  <img
+                    src="/assets/certificates/startup_india_logo.png"
+                    alt="Startup India"
+                    className="max-h-full object-contain"
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Startup India</h3>
+                  <p className="text-gray-500 text-sm">Recognized by Department for Promotion of Industry and Internal Trade (DPIIT)</p>
+                </div>
+              </div>
+
+              {/* Start in UP Card */}
+              <div className="bg-white p-8 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 hover:border-teal-200 transition-all duration-500 group">
+                <div className="h-32 flex items-center justify-center mb-8 transform group-hover:scale-110 transition-transform duration-500 text-center">
+                  <img
+                    src="/assets/certificates/start_in_up_cert.jpg"
+                    alt="Start In UP"
+                    className="max-h-full object-contain rounded-xl shadow-sm"
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">Start In UP</h3>
+                  <p className="text-gray-500 text-sm">Official Registration under the Uttar Pradesh Startup Policy</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 

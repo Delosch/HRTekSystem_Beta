@@ -38,6 +38,19 @@ const sections = [
   { id: 'budget-vision', title: 'Budget & Vision', component: BudgetVisionSection, description: "Define your investment capacity and ROI tracking mechanisms." },
 ];
 
+const SECTION_KEYS: { [key: string]: string[] } = {
+    'business-strategy': ['drivers', 'outcomes', 'alignment', 'hr-role', 'sponsor'],
+    'process-maturity': ['manual-areas', 'standardization', 'sop-maturity', 'benchmarking'],
+    'digital-capability': ['digitized-areas', 'pain-points', 'user-satisfaction'],
+    'technology-landscape': ['integrated-systems', 'hcm-platform', 'tool-count', 'vendor-optimization'],
+    'automation-ai': ['ai-use-cases', 'automation-level', 'automation-percent', 'ai-comfort'],
+    'data-analytics': ['data-consumers', 'data-quality', 'analytics-level', 'business-influence'],
+    'operating-model': ['operating-model', 'shared-services-maturity', 'sla-tracking', 'effort-split'],
+    'change-readiness': ['past-success', 'digital-capability', 'change-approach'],
+    'compliance-risk': ['compliance-automation', 'audit-trails', 'privacy-maturity'],
+    'budget-vision': ['budget-readiness', 'leadership-mindset', 'hr-vision', 'ecosystem-openness'],
+};
+
 export default function App({ initialData = {}, savedProgress = 0 }: { initialData?: any; savedProgress?: number }) {
     const navigate = useNavigate();
     const fetcher = useFetcher();
@@ -57,11 +70,62 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
     const [sectionCompletion, setSectionCompletion] = useState<{ [key: string]: boolean }>({});
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
+    // Initialize completion and step on load
+    useEffect(() => {
+        if (hasExistingData) {
+            const completion: { [key: string]: boolean } = {};
+            let firstIncomplete = -1;
+
+            sections.forEach((section, index) => {
+                const keys = SECTION_KEYS[section.id] || [];
+                const isComplete = keys.every(key => assessmentData[key] !== undefined && assessmentData[key] !== null && (Array.isArray(assessmentData[key]) ? assessmentData[key].length > 0 : true));
+                completion[section.id] = isComplete;
+                if (!isComplete && firstIncomplete === -1) {
+                    firstIncomplete = index;
+                }
+            });
+
+            setSectionCompletion(completion);
+            if (firstIncomplete !== -1 && !modify) {
+                setCurrentStep(firstIncomplete);
+            }
+        }
+    }, [hasExistingData, modify]);
+
     const currentSection = sections[currentStep];
     const totalQuestions = 38;
-    const answeredQuestions = Object.keys(assessmentData).length;
+    
+    // Calculate progress based on unique answered keys in SECTION_KEYS
+    const allExpectedKeys = Object.values(SECTION_KEYS).flat();
+    const answeredKeys = allExpectedKeys.filter(k => assessmentData[k] !== undefined && assessmentData[k] !== null && (Array.isArray(assessmentData[k]) ? assessmentData[k].length > 0 : true));
+    const answeredQuestions = answeredKeys.length;
+    
     const progress = totalQuestions > 0 ? Math.min(100, Math.round((answeredQuestions / totalQuestions) * 100)) : 0;
-    const isComplete = progress >= 95; // Since we don't have exactly 38 easily trackable fields sometimes
+    const isComplete = progress >= 95;
+
+    // Derive section completion
+    const getSectionStatus = (sectionId: string) => {
+        const keys = SECTION_KEYS[sectionId] || [];
+        if (keys.length === 0) return false;
+        return keys.every(k => assessmentData[k] !== undefined && assessmentData[k] !== null && (Array.isArray(assessmentData[k]) ? assessmentData[k].length > 0 : true));
+    };
+
+    // Initialize step on load
+    useEffect(() => {
+        if (hasExistingData && !modify) {
+            let firstIncomplete = -1;
+            sections.forEach((section, index) => {
+                if (firstIncomplete === -1 && !getSectionStatus(section.id)) {
+                    firstIncomplete = index;
+                }
+            });
+            if (firstIncomplete !== -1) {
+                setCurrentStep(firstIncomplete);
+            } else {
+                setCurrentStep(sections.length - 1);
+            }
+        }
+    }, [hasExistingData, modify]);
 
     // AI Report Generation
     const generateReport = () => {
@@ -94,16 +158,11 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
         setAssessmentData(prev => ({ ...prev, [key]: value }));
     };
 
-    const markSectionComplete = (sectionId: string) => {
-        setSectionCompletion((prev) => ({ ...prev, [sectionId]: true }));
-    };
-
     const handleSave = async () => {
         try {
             setIsSubmitting(true);
-            const prog = Math.round((Object.keys(assessmentData).length / totalQuestions) * 100);
             fetcher.submit({
-                progress: prog,
+                progress: progress,
                 responses: assessmentData,
                 params: "HR Digital Transformation Roadmap",
             }, { method: "POST", encType: "application/json", action: location.pathname });
@@ -125,7 +184,6 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
             scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         } else {
             setIsSubmitting(true);
-            const prog = Math.round((Object.keys(assessmentData).length / totalQuestions) * 100);
             fetcher.submit({
                 responses: assessmentData,
                 progress: 100,
@@ -250,8 +308,8 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
                         <nav className="space-y-1">
                             {sections.map((section, idx) => {
                                 const isActive = currentStep === idx;
-                                const isSectionComplete = sectionCompletion[section.id];
-                                const isStarted = true;
+                                const isSectionComplete = getSectionStatus(section.id);
+                                const isStarted = Object.keys(assessmentData).some(k => (SECTION_KEYS[section.id] || []).includes(k));
 
                                 return (
                                     <button
@@ -403,8 +461,8 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
                                     {/* Section Intelligence Panel */}
                                     <SectionInsightPanel
                                         sectionNumber={currentStep + 1}
-                                        total={Math.ceil(totalQuestions / sections.length)}
-                                        answered={Object.keys(assessmentData).filter(k => k.startsWith(currentSection.id)).length || Math.min(Math.ceil(totalQuestions / sections.length), answeredQuestions)}
+                                        total={SECTION_KEYS[currentSection.id]?.length || 4}
+                                        answered={(SECTION_KEYS[currentSection.id] || []).filter(k => assessmentData[k] !== undefined && assessmentData[k] !== null && (Array.isArray(assessmentData[k]) ? assessmentData[k].length > 0 : true)).length}
                                         label={currentSection.title}
                                     />
                                     

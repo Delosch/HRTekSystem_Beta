@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "HR Tech Maturity Analysis - Digital Readiness Assessment",
     description: "Analyze your HR technology maturity across 9 critical pillars. Discover digital readiness, identify gaps, and benchmark your HR tech stack for future innovation.",
     keywords: "HR tech maturity, digital readiness, HR assessment, maturity analysis, HR technology pillars, digital HR transformation assessment",
-    url: "https://hrteksystem.com/maturity-analysis-service",
-    image: "https://hrteksystem.com/og-maturity.jpg",
+    url: "https://www.hrteksystem.com/maturity-analysis-service",
+    image: "https://www.hrteksystem.com/og-maturity.jpg",
   });
 };
 
@@ -53,12 +53,12 @@ export default function HRTechMaturityServicePage() {
     description: "Holistic evaluation of HR technology landscape across 9 critical pillars",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/maturity-analysis-service"
+    url: "https://www.hrteksystem.com/maturity-analysis-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/maturity-analysis-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/maturity-analysis-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

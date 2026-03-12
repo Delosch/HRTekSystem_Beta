@@ -34,7 +34,7 @@ export async function notifyAdmin(subject: string, message: string) {
             });
         }
 
-        const fromAddress = process.env.SMTP_FROM || `"HRTEK SYSTEM" <${process.env.SMTP_USER || 'noreply@hrteksystem.com'}>`;
+        const fromAddress = process.env.SMTP_FROM || `"HRTEK SYSTEM" <${process.env.SMTP_USER || 'noreply@www.hrteksystem.com'}>`;
 
         await transporter.sendMail({
             from: fromAddress,

@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "HCM Vendor Fit Engine - AI-Powered Selection Tool",
     description: "Choose the right HCM provider with our AI-powered Vendor Fit Engine. Eliminate bias and find the perfect partner for your unique HR requirements.",
     keywords: "HCM vendor selection, HR software fit, HCM matching engine, vendor evaluation, HR tech procurement, best HCM platform",
-    url: "https://hrteksystem.com/hcm-service",
-    image: "https://hrteksystem.com/og-hcm.jpg",
+    url: "https://www.hrteksystem.com/hcm-service",
+    image: "https://www.hrteksystem.com/og-hcm.jpg",
   });
 };
 
@@ -46,12 +46,12 @@ export default function HCMVendorFitPage() {
     description: "AI-powered tool for selecting the most compatible HCM vendor based on organizational needs",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/hcm-service"
+    url: "https://www.hrteksystem.com/hcm-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/hcm-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/hcm-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

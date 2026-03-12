@@ -22,8 +22,8 @@ export const meta: MetaFunction = () => {
         title: "Discover More - HRTek System Resources",
         description: "Explore all resources, legal information, and quick links for HRTek System. Find everything you need in one place.",
         keywords: "HRTek resources, quick links, sitemap, discover more, legal docs, HRTek pages",
-        url: "https://hrteksystem.com/discover-more",
-        image: "https://hrteksystem.com/og-discover.jpg",
+        url: "https://www.hrteksystem.com/discover-more",
+        image: "https://www.hrteksystem.com/og-discover.jpg",
     });
 };
 
@@ -48,7 +48,7 @@ export default function DiscoverMorePage() {
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/discover-more" />
+            <link rel="canonical" href="https://www.hrteksystem.com/discover-more" />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

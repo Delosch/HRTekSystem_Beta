@@ -9,8 +9,8 @@ export const meta: MetaFunction = () => {
     title: "Careers at HRTek System - Join Our Team",
     description: "Explore exciting career opportunities at HRTek System. Join our innovative team transforming HR technology. We're hiring talented professionals passionate about HR innovation.",
     keywords: "HRTek careers, HR tech jobs, join HRTek, HR technology careers, work at HRTek, HR transformation jobs",
-    url: "https://hrteksystem.com/careers",
-    image: "https://hrteksystem.com/og-careers.jpg",
+    url: "https://www.hrteksystem.com/careers",
+    image: "https://www.hrteksystem.com/og-careers.jpg",
   });
 };
 
@@ -35,7 +35,7 @@ export default function CareerPage() {
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/careers" />
+      <link rel="canonical" href="https://www.hrteksystem.com/careers" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

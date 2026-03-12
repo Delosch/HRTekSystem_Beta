@@ -116,49 +116,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Accreditations */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Accreditations</h3>
-          <div className="space-y-4">
-            {/* Startup India */}
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
-              <div className="w-12 h-12 bg-white rounded flex items-center justify-center p-1">
-                <img
-                  src="/assets/certificates/startup_india_logo.png"
-                  alt="Startup India Recognized"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Startup India</p>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-500 uppercase">Certificate No.</span>
-                  <span className="text-[10px] text-gray-300 font-mono font-medium">DIPP202318</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Start In UP */}
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
-              <div className="w-12 h-12 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100">
-                <img
-                  src="/assets/certificates/start_in_up_cert.jpg"
-                  alt="Start In UP Registered"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Start In UP</p>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-500 uppercase">Registration No.</span>
-                  <span className="text-[10px] text-gray-300 font-mono font-medium leading-tight max-w-[120px] break-all">
-                    R/STARTUP/UP/LKO/ 2025/000038500
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Legal & Privacy */}
         <div>

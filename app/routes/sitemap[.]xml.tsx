@@ -1,7 +1,7 @@
 import type { LoaderFunction } from "@remix-run/node";
 
 export const loader: LoaderFunction = () => {
-    const baseUrl = "https://hrteksystem.com";
+    const baseUrl = "https://www.hrteksystem.com";
 
     const routes = [
         { url: "/", priority: "1.0", changefreq: "daily" },

@@ -11,8 +11,8 @@ export const meta: MetaFunction = () => {
         title: "Video Tutorials - Learn HRTek System",
         description: "Watch our comprehensive video tutorials to master HRTek System. Step-by-step guides for HR transformation, assessment tools, and platform features.",
         keywords: "HRTek tutorials, HR software training, video guides, how to use HRTek, platform tutorials, HR transformation training",
-        url: "https://hrteksystem.com/video-tutorials",
-        image: "https://hrteksystem.com/og-tutorials.jpg",
+        url: "https://www.hrteksystem.com/video-tutorials",
+        image: "https://www.hrteksystem.com/og-tutorials.jpg",
     });
 };
 
@@ -87,7 +87,7 @@ export default function VideoTutorialsPage() {
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/video-tutorials" />
+            <link rel="canonical" href="https://www.hrteksystem.com/video-tutorials" />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

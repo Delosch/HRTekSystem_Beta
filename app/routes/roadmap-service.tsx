@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "HR Transformation Roadmap Generator - Strategic Planning",
     description: "Generate AI-powered HR transformation roadmaps tailored to your organization. Strategic planning with ROI focus, timeline optimization, and actionable milestones.",
     keywords: "HR roadmap, transformation planning, HR strategy, digital roadmap, HR transformation timeline, strategic HR planning",
-    url: "https://hrteksystem.com/roadmap-service",
-    image: "https://hrteksystem.com/og-roadmap.jpg",
+    url: "https://www.hrteksystem.com/roadmap-service",
+    image: "https://www.hrteksystem.com/og-roadmap.jpg",
   });
 };
 
@@ -45,12 +45,12 @@ export default function RoadmapGenServicePage() {
     description: "AI-powered strategic roadmap generation for HR digital transformation",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/roadmap-service"
+    url: "https://www.hrteksystem.com/roadmap-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/roadmap-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/roadmap-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
