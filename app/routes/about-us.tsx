@@ -410,44 +410,6 @@ export default function AboutUs() {
             </div>
           </div>
         </div>
-        <div className="max-w-5xl mx-auto p-6">
-          <div className="bg-white shadow-lg rounded-2xl p-6 text-center">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-              HR Transformation Projects Completed
-            </h2>
-            <p className="text-gray-600 font-medium italic mb-8">
-              Delivering excellence through every milestone
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center">
-              <img
-                src="/assets/aboutUsAssets/client1.webp"
-                alt="Vandana Global logo – past work experience of our founder"
-                className="h-16 object-contain"
-              />
-              <img
-                src="/assets/aboutUsAssets/client2.webp"
-                alt="SpiceJet logo – past work experience of our founder"
-                className="h-16 object-contain"
-              />
-              <img
-                src="/assets/aboutUsAssets/client3.webp"
-                alt="Simpa logo – past work experience of our founder"
-                className="h-16 object-contain"
-              />
-              <img
-                src="/assets/aboutUsAssets/client4.webp"
-                alt="Eureka Forbes logo – past work experience of our founder"
-                className="h-16 object-contain"
-              />
-              <img
-                src="/assets/aboutUsAssets/client5.webp"
-                alt="CMS Info Systems logo – past work experience of our founder "
-                className="h-16 object-contain"
-              />
-            </div>
-          </div>
-        </div>
         <Footer />
       </div>
     </>
