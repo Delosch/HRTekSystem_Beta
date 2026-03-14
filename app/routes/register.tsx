@@ -204,7 +204,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
             const url = new URL(request.url);
             const redirectTo = url.searchParams.get("redirectTo") || "/auth/drx";
 
-            return await createAuthSession({
+            return await createAuthSession(request, {
                 userId: user.userId,
                 first_name: user.first_name,
                 last_name: user.last_name,
@@ -225,7 +225,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 const url = new URL(request.url);
                 const redirectTo = url.searchParams.get("redirectTo") || "/auth/drx";
 
-                return await createAuthSession({
+                return await createAuthSession(request, {
                     userId: user.userId,
                     first_name: user.first_name,
                     last_name: user.last_name,
