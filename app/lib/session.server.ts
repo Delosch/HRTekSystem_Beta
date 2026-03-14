@@ -30,7 +30,6 @@ try {
 
 // Define the name of your DynamoDB table.
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
 const SESSIONS_TABLE = "sessions";
 // Session duration: 24 hours
 const expiryTime = 60 * 60 * 24;
@@ -87,33 +86,46 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         if (!sessionId) {
             return null;
         }
-        const command = new GetCommand({
-            TableName: SESSIONS_TABLE,
-            Key: { sessionId },
-        });
 
-        const { Item } = await ddbDocClient.send(command);
-        console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - ${Item ? 'Found' : 'Not Found'}`);
-
-        if (!Item) {
-            return null;
-        }
-
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        // Check if the session has expired based on the TTL.
-        // FIX: The database stores this as 'expiresAt', not 'expires'
-        if (Item.expiresAt && Item.expiresAt < nowInSeconds) {
-            // If expired, delete the session and return null.
-            const command = new DeleteCommand({
+        // Add retry logic to prevent race conditions during session creation
+        // DynamoDB writes are eventually consistent by default, so a slight delay
+        // might occur before the item is readable.
+        for (let i = 0; i < 2; i++) {
+            const command = new GetCommand({
                 TableName: SESSIONS_TABLE,
                 Key: { sessionId },
             });
-            await ddbDocClient.send(command);
-            return null;
+
+            const { Item } = await ddbDocClient.send(command);
+
+            if (Item) {
+                console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Found`);
+
+                const nowInSeconds = Math.floor(Date.now() / 1000);
+                // Check if the session has expired based on the TTL.
+                if (Item.expiresAt && Item.expiresAt < nowInSeconds) {
+                    // If expired, delete the session and return null.
+                    const command = new DeleteCommand({
+                        TableName: SESSIONS_TABLE,
+                        Key: { sessionId },
+                    });
+                    await ddbDocClient.send(command);
+                    return null;
+                }
+
+                // Return the session data if it's valid.
+                return Item.data;
+            }
+
+            // If not found, wait slightly before retrying
+            if (i === 0) {
+                console.warn(`⏳ [SESSION STORAGE] Session ${sessionId} not found on first attempt, retrying in 50ms...`);
+                await new Promise(r => setTimeout(r, 50));
+            }
         }
 
-        // Return the session data if it's valid.
-        return Item.data;
+        console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Not Found`);
+        return null;
     },
 
     /**
@@ -232,6 +244,7 @@ export async function getUserSession(request: Request): Promise<SessionData | nu
             onboardingStatus: session.get("onboardingStatus"),
             organisationId: session.get("organisationId"),
             country_iso: session.get("country_iso"),
+            two_fa_enabled: session.get("two_fa_enabled") ?? false,
             photoUrl: session.get("photoUrl") ?? null,
             username: session.get("username") ?? null,
             isAdmin: session.get("isAdmin") ?? false
