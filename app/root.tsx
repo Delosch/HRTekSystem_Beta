@@ -9,6 +9,7 @@ import {
   isRouteErrorResponse,
 } from "@remix-run/react";
 import { json, type LinksFunction, type LoaderFunctionArgs } from "@remix-run/node";
+import { motion } from "framer-motion";
 
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
@@ -36,6 +37,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await getSession(cookie);
   const user = await getUserSession(request).catch(() => null);
 
+  const headers = new Headers();
+  // Optimization: Only commit session if user is logged in or a session already exists.
+  // This prevents flooding DynamoDB with empty sessions for guest visitors/bots.
+  if (user || cookie) {
+    headers.set("Set-Cookie", await commitSession(session));
+  }
+
   return json(
     {
       user,
@@ -43,11 +51,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         VITE_HCAPTCHA_SITE_KEY: process.env.VITE_HCAPTCHA_SITE_KEY || process.env.HCAPTCHA_SITE_KEY || "",
       },
     },
-    {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    }
+    { headers }
   );
 }
 
@@ -72,6 +76,9 @@ export const links: LinksFunction = () => [
    ============================ */
 export function ErrorBoundary() {
   const error = useRouteError();
+  const is404 = isRouteErrorResponse(error) && error.status === 404;
+  const is500 = isRouteErrorResponse(error) && error.status === 500;
+
   console.error("Root ErrorBoundary caught error:", error);
 
   return (
@@ -80,27 +87,119 @@ export function ErrorBoundary() {
         <Meta />
         <Links />
       </head>
-      <body className="bg-slate-50 min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-slate-100">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-          <p className="text-gray-600 mb-8">
-            {isRouteErrorResponse(error)
-              ? `${error.status} ${error.statusText}`
-              : error instanceof Error
-                ? error.message
-                : "An unexpected error occurred"}
-          </p>
-          <a
-            href="/"
-            className="inline-block px-8 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-lg"
+      <body className="bg-slate-50 min-h-screen flex items-center justify-center p-6 font-sans antialiased overflow-hidden">
+        {/* Animated Background Blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              x: [0, 50, 0],
+              y: [0, 30, 0]
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/40 blur-[100px]" 
+          />
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.3, 1],
+              x: [0, -40, 0],
+              y: [0, -20, 0]
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] rounded-full bg-indigo-100/30 blur-[120px]" 
+          />
+        </div>
+
+        <div className="relative z-10 max-w-2xl w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/80 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] p-12 md:p-16 text-center border border-white relative overflow-hidden"
           >
-            Back to Home
-          </a>
+            {/* Stress Line */}
+            <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${is404 ? 'from-blue-500 to-indigo-600' : 'from-rose-500 to-orange-600'}`} />
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mb-12"
+            >
+              <img src="/hrtek_logo.png" alt="HRTek Logo" className="h-10 w-auto mx-auto mb-10 opacity-80" />
+            </motion.div>
+
+            <div className={`w-28 h-28 ${is404 ? 'bg-blue-50' : 'bg-rose-50'} rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-inner group transition-transform hover:scale-105 duration-500`}>
+              {is404 ? (
+                <svg className="w-12 h-12 text-blue-500 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : (
+                <svg className="w-12 h-12 text-rose-500 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              )}
+            </div>
+
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-4 leading-tight">
+              {is404 ? "Location Insight Not Found" : "Intelligence Link Interrupted"}
+            </h1>
+            
+            <p className="text-slate-500 mb-12 max-w-sm mx-auto font-medium leading-relaxed text-lg">
+              {is404 
+                ? "The requested digital pathway either doesn't exist or has been moved within our ecosystem."
+                : "We've encountered a synchronized system error. Our recovery agents have been alerted."}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/"
+                className="inline-flex items-center justify-center px-12 py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-slate-200 text-xs uppercase tracking-widest group"
+              >
+                Return to Command
+                <motion.span 
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  &rarr;
+                </motion.span>
+              </a>
+              <a
+                href="/contact"
+                className="inline-flex items-center justify-center px-12 py-5 bg-white text-slate-900 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all text-xs uppercase tracking-widest"
+              >
+                Contact Specialist
+              </a>
+            </div>
+
+            {process.env.NODE_ENV === "development" && !is404 && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-12 p-6 bg-slate-900 rounded-2xl text-left border border-slate-800 overflow-hidden shadow-2xl"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Diagnostic Kernel Dump</p>
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-rose-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-amber-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-emerald-500/50" />
+                  </div>
+                </div>
+                <pre className="text-xs text-rose-400 font-mono overflow-auto max-h-48 scrollbar-hide">
+                  {error instanceof Error ? error.stack : JSON.stringify(error, null, 2)}
+                </pre>
+              </motion.div>
+            )}
+          </motion.div>
+          
+          <div className="mt-10 text-center">
+            <div className="inline-block px-4 py-1.5 bg-slate-200/50 rounded-full backdrop-blur-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">
+                System_Code: {isRouteErrorResponse(error) ? error.status : "500_INT_FAILURE"}
+              </span>
+            </div>
+          </div>
         </div>
         <Scripts />
       </body>

@@ -165,15 +165,19 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
  * @throws {Response} A Remix Response object with an error status if validation or session commitment fails.
  */
 export async function createAuthSession(
-    data: z.infer<typeof authSessionSchema>,
+    data: any,
     redirectTo: string = '/auth/drx' // Default redirect path
 ): Promise<Response> {
     let validatedData: z.infer<typeof authSessionSchema>;
     try {
         validatedData = authSessionSchema.parse(data);
     } catch (error) {
-        console.error("Session login failed: Invalid data");
-        return json({ error: "Invalid session data provided." }, { status: 400 });
+        if (error instanceof z.ZodError) {
+            console.error("❌ Session Data Validation Failed:", JSON.stringify(error.flatten().fieldErrors, null, 2));
+        } else {
+            console.error("❌ Session login failed: Unknown validation error");
+        }
+        return json({ error: "Authentication successful, but session initialization failed. Please contact support." }, { status: 400 });
     }
 
     const session = await getSession();
