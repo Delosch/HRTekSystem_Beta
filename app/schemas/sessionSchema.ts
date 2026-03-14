@@ -10,28 +10,20 @@ import { z } from "zod";
  * It includes validation rules for input data.
  */
 export const authSessionSchema = z.object({
-    userId: z.string().uuid("Invalid user ID format"),
+    userId: z.string().min(1, "User ID is required"),
     first_name: z.string().min(1, "First name is required"),
     last_name: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email address").toLowerCase(),
-    phone: z.string().refine(
-        (val) => {
-            // Updated to support (+CC)NUMBER, +CCNUMBER, and standard international formats
-            return /^\(\+\d{1,4}\)\d{6,15}$/.test(val) || /^\+\d{8,15}$/.test(val);
-        },
-        {
-            message: "Invalid Phone Number format",
-        }
-    ),
-    is_verified_phone: z.boolean(),
-    is_verified_email: z.boolean(),
-    organisationId: z.string().optional(),
-    onboardingStatus: z.string(),
-    two_fa_enabled: z.boolean(),
-    country_iso: z.string().min(2).max(2),
-    photoUrl: z.string().optional(),
-    username: z.string().optional(),
-    isAdmin: z.boolean().optional(),
+    phone: z.string().optional().default(""),
+    is_verified_phone: z.boolean().default(false),
+    is_verified_email: z.boolean().default(false),
+    organisationId: z.string().optional().default(""),
+    onboardingStatus: z.string().optional().default("None"),
+    two_fa_enabled: z.boolean().default(false),
+    country_iso: z.string().optional().default("IN"),
+    photoUrl: z.string().nullable().optional(),
+    username: z.string().nullable().optional(),
+    isAdmin: z.boolean().optional().default(false),
 })
 
 /**
@@ -42,19 +34,19 @@ export const authSessionSchema = z.object({
  * All fields here should match what you expect to get from `session.get()`.
  */
 export const sessionDataSchema = z.object({
-    userId: z.string().uuid(),
-    first_name: z.string(),
-    last_name: z.string(),
-    email: z.string().email(),
-    phone: z.string().optional(),
-    is_verified_phone: z.boolean(),
-    is_verified_email: z.boolean(),
-    onboardingStatus: z.string(),
-    organisationId: z.string().optional(),
-    country_iso: z.string().min(2).max(2),
-    photoUrl: z.string().optional(),
-    username: z.string().optional(),
-    isAdmin: z.boolean().optional(),
+    userId: z.string().min(1),
+    first_name: z.string().optional().default(""),
+    last_name: z.string().optional().default(""),
+    email: z.string().email().optional().default(""),
+    phone: z.string().optional().default(""),
+    is_verified_phone: z.boolean().optional().default(false),
+    is_verified_email: z.boolean().optional().default(false),
+    onboardingStatus: z.string().optional().default("None"),
+    organisationId: z.string().optional().default(""),
+    country_iso: z.string().optional().default("IN"),
+    photoUrl: z.string().nullable().optional(),
+    username: z.string().nullable().optional(),
+    isAdmin: z.boolean().optional().default(false),
 });
 
 /**
