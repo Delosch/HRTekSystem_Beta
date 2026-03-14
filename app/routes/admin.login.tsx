@@ -94,7 +94,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         const adminId = "00000000-0000-4000-a000-000000000000";
 
-        return await createAuthSession({
+        return await createAuthSession(request, {
             userId: adminId,
             email: ADMIN_EMAIL,
             first_name: "Atul",

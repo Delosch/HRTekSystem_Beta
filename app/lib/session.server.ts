@@ -74,6 +74,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`✅ [SESSION STORAGE] Created session: ${sessionId}`);
         return sessionId;
     },
 
@@ -92,6 +93,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         const { Item } = await ddbDocClient.send(command);
+        console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - ${Item ? 'Found' : 'Not Found'}`);
 
         if (!Item) {
             return null;
@@ -136,6 +138,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`update [SESSION STORAGE] Updated session: ${sessionId}`);
     },
 
     /**
@@ -152,6 +155,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`🗑️ [SESSION STORAGE] Deleted session: ${sessionId}`);
     }
 });
 
@@ -165,6 +169,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
  * @throws {Response} A Remix Response object with an error status if validation or session commitment fails.
  */
 export async function createAuthSession(
+    request: Request,
     data: any,
     redirectTo: string = '/auth/drx' // Default redirect path
 ): Promise<Response> {
@@ -180,7 +185,7 @@ export async function createAuthSession(
         return json({ error: "Authentication successful, but session initialization failed. Please contact support." }, { status: 400 });
     }
 
-    const session = await getSession();
+    const session = await getSession(request.headers.get("Cookie"));
 
     // Set all validated user data into the session
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -227,9 +232,9 @@ export async function getUserSession(request: Request): Promise<SessionData | nu
             onboardingStatus: session.get("onboardingStatus"),
             organisationId: session.get("organisationId"),
             country_iso: session.get("country_iso"),
-            photoUrl: session.get("photoUrl"),
-            username: session.get("username"),
-            isAdmin: session.get("isAdmin")
+            photoUrl: session.get("photoUrl") ?? null,
+            username: session.get("username") ?? null,
+            isAdmin: session.get("isAdmin") ?? false
         };
 
         // Ensure all required fields are present and valid according to sessionDataSchema
