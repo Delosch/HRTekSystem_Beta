@@ -44,6 +44,7 @@ export const sessionDataSchema = z.object({
     onboardingStatus: z.string().optional().default("None"),
     organisationId: z.string().optional().default(""),
     country_iso: z.string().optional().default("IN"),
+    two_fa_enabled: z.boolean().optional().default(false),
     photoUrl: z.string().nullable().optional(),
     username: z.string().nullable().optional(),
     isAdmin: z.boolean().optional().default(false),
