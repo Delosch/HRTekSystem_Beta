@@ -192,8 +192,9 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
       resetCaptchaUi();
       // Force regeneration of submission hash on error to ensure freshness
       const regenerateHash = async () => {
-        const freshHash = await generateSecureSubmissionHash();
+        const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
         setSubmissionHash(freshHash);
+        setFormTimestamp(freshTimestamp);
       };
       regenerateHash();
     }
@@ -294,13 +295,14 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
       const hashHex = hashArray
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
-      return hashHex.slice(0, 16);
+      return { hash: hashHex.slice(0, 16), timestamp };
     } catch (error) {
       console.warn(
         "Failed to generate secure hash, falling back to simple hash:",
         error
       );
-      return generateSimpleSubmissionHash();
+      const timestamp = Date.now();
+      return { hash: generateSimpleSubmissionHash(), timestamp };
     }
   };
 
@@ -334,41 +336,9 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
   useEffect(() => {
     if (isHydrated && (password || confirmPassword)) {
       const generateHash = async () => {
-        const timestamp = Date.now();
-
-        // Set timestamp in form field
+        const { hash, timestamp } = await generateSecureSubmissionHash();
+        setSubmissionHash(hash);
         setFormTimestamp(timestamp);
-
-        const formData = {
-          action: isLogin ? "sign_in" : "sign_up",
-          password: password,
-          confirmPassword: confirmPassword,
-          timestamp: timestamp,
-          countryComposite: `${selectedCountryIso}_${selectedDialCode}`,
-          email: email || "",
-        };
-
-        const dataString = Object.values(formData).join("|");
-
-        try {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(dataString);
-          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const hashHex = hashArray
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          setSubmissionHash(hashHex.slice(0, 16));
-        } catch (error) {
-          // Fallback to simple hash
-          let hash = 0;
-          for (let i = 0; i < dataString.length; i++) {
-            const char = dataString.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash;
-          }
-          setSubmissionHash(Math.abs(hash).toString(36));
-        }
       };
 
       const timeoutId = setTimeout(generateHash, 500);
@@ -529,8 +499,9 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
     }
 
     // Generate fresh hash right before submission
-    const freshHash = await generateSecureSubmissionHash();
+    const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
     setSubmissionHash(freshHash);
+    setFormTimestamp(freshTimestamp);
 
     // Enhanced password validation before submission
     if (!isLogin) {
