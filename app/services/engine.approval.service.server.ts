@@ -41,6 +41,19 @@ export async function approveEngine(
             };
         }
 
+        // Check for payment status specifically for Roadmap Generator as requested
+        if (engineName === "HR Transformation Roadmap Generator") {
+            const { hasVerifiedPaymentForEngines } = await import("~/models/payment.model.server");
+            const hasPayment = await hasVerifiedPaymentForEngines(companyId, ["HR Transformation Roadmap Generator"]);
+            
+            if (!hasPayment) {
+                return {
+                    success: false,
+                    message: "Approval Denied: No verified payment found for 'HR Transformation Roadmap Generator'. Please verify payment before approving."
+                };
+            }
+        }
+
         // Update status to approved
         await updateApprovalStatus(companyId, engineName, "approved", approvedBy);
 

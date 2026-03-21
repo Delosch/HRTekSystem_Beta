@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
     },
     section: {
         marginBottom: 12,
-        pageBreakInside: 'avoid',
     },
     sectionTitle: {
         fontSize: 13,
@@ -55,12 +54,14 @@ const styles = StyleSheet.create({
     },
     text: {
         fontSize: 9,
+        fontWeight: 'normal',
         color: '#4b5563',
         lineHeight: 1.6,
         marginBottom: 4,
     },
     bulletPoint: {
         fontSize: 9,
+        fontWeight: 'normal',
         color: '#4b5563',
         marginLeft: 12,
         marginBottom: 3,
@@ -126,7 +127,6 @@ const styles = StyleSheet.create({
         borderTop: '1 solid #e5e7eb',
     },
     badge: {
-        display: 'inline-block',
         padding: '3 8',
         backgroundColor: '#dbeafe',
         color: '#1e40af',
@@ -296,17 +296,7 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                     </View>
 
                     <View style={{ flex: 1 }}>
-                        {/* We use a simplified rendering approach here */}
-                        {section.content.split('\n').map((line, li) => {
-                            const clean = stripHTML(line);
-                            if (!clean) return null;
-                            
-                            if (line.includes('<h2')) return <Text key={li} style={styles.sectionTitle}>{clean}</Text>;
-                            if (line.includes('<h3')) return <Text key={li} style={styles.subsectionTitle}>{clean}</Text>;
-                            if (line.includes('<li')) return <Text key={li} style={styles.bulletPoint}>• {clean}</Text>;
-                            
-                            return <Text key={li} style={[styles.text, { marginBottom: 8 }]}>{clean}</Text>;
-                        })}
+                        <HTMLRenderer html={section.content} />
                     </View>
 
                     <Text style={styles.footer}>

@@ -68,12 +68,12 @@
                     "question": "What is your annual budget range for this solution?",
                     "type": "radio",
                     "options": [
-                        "Less than $10,000",
-                        "$10,000 - $50,000",
-                        "$50,000 - $100,000",
-                        "$100,000 - $250,000",
-                        "$250,000 - $500,000",
-                        "More than $500,000",
+                        "Less than ₹10 Lakhs",
+                        "₹10 Lakhs - ₹50 Lakhs",
+                        "₹50 Lakhs - ₹1 Crore",
+                        "₹1 Crore - ₹2.5 Crores",
+                        "₹2.5 Crores - ₹5 Crores",
+                        "More than ₹5 Crores",
                         "Prefer not to disclose"
                     ],
                     "required": true

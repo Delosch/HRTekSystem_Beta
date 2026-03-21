@@ -213,6 +213,15 @@ export async function processAdminApproval(
 
         // If approved, deliver to company
         if (action === "approve") {
+            // Check for payment status specifically for Roadmap Generator as requested
+            const hasPayment = await hasVerifiedPaymentForEngines(companyId, ["HR Transformation Roadmap Generator"]);
+            
+            if (!hasPayment) {
+                return {
+                    success: false,
+                    error: "Approval Denied: No verified payment found for 'HR Transformation Roadmap Generator'. Please ensure the company has purchased this module before final approval."
+                };
+            }
             await deliverApprovedReport(reportId);
         }
 

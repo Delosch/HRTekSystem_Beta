@@ -9,6 +9,9 @@ import { json, LoaderFunction, redirect } from "@remix-run/node";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import SharedServicesMonthModal from "~/components/SharedServicesMonthModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 const ENGINE = "Shared Service Designer";
 
@@ -59,21 +62,11 @@ export const loader: LoaderFunction = async ({ request }) => {
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
 
-  // Check payment status
-  const payments = await getCompanyPayments(user.organisationId);
+  // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
-
-  // Check if any payment record for this engine is verified
-  const isPaid = isAdmin || payments.some((p: any) =>
-    (p.status === "payment_verified" || p.status === "completed") &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
-
-  // Check if any payment record for this engine is pending
-  const isPending = !isPaid && payments.some((p: any) =>
-    p.status === "payment_submitted" &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -96,6 +89,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
+    paymentStatus,
     isPaid,
     isPending,
     hasReport,
@@ -104,13 +98,15 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function SharedDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -137,10 +133,12 @@ export default function SharedDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
+      if (isPaid) {
         navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
-        navigate('/payment/checkout');
+        setIsMonthModalOpen(true);
       }
     } else {
       if (currentEngine.progress === 100) {
@@ -149,6 +147,21 @@ export default function SharedDashboard() {
         navigate(`/shared-services/assessment`);
       }
     }
+  };
+
+  const handleMonthSelect = (months: number) => {
+    setIsMonthModalOpen(false);
+    // Add to cart with months context
+    fetcher.submit(
+      { 
+        intent: "addToCart", 
+        engineName: ENGINE,
+        durationMonths: months.toString()
+      },
+      { method: "post", action: "/startTransformationDashboard" }
+    );
+    // Redirect to checkout after a short delay
+    setTimeout(() => navigate('/payment/checkout'), 500);
   };
 
   return (
@@ -496,6 +509,21 @@ export default function SharedDashboard() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
+
+      <PaymentStatusModal 
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        status={paymentStatus.status}
+        engineName={ENGINE}
+        expiresAt={paymentStatus.expiresAt}
+        onProceed={paymentStatus.status === "paid" ? () => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
+      />
+
+      <SharedServicesMonthModal 
+        isOpen={isMonthModalOpen}
+        onClose={() => setIsMonthModalOpen(false)}
+        onSelect={handleMonthSelect}
+      />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
             <div className="p-12 text-center bg-slate-50 rounded-3xl border border-slate-200">
                 <Brain className="w-12 h-12 text-indigo-600 mx-auto mb-4 animate-pulse" />
                 <h3 className="text-xl font-bold text-slate-900">Strategic Analysis in Progress</h3>
-                <p className="text-slate-500 mt-2">The AI is currently synthesizing the board-level strategic briefing...</p>
+                <p className="text-slate-500 mt-2 font-medium">The AI is currently synthesizing the board-level strategic briefing...</p>
             </div>
         );
     }
@@ -56,8 +56,8 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                     </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Confidential Report</p>
-                    <p className="text-xs font-bold text-slate-500">{new Date().toLocaleDateString()}</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Confidential Report</p>
+                    <p className="text-xs font-medium text-slate-500">{new Date().toLocaleDateString()}</p>
                 </div>
             </div>
 
@@ -70,20 +70,20 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-indigo-600 text-white">
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Metric</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Current State</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Target State</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Improvement</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Metric</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Current State</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Target State</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Improvement</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200">
                                     {doc.executive_summary.metrics?.map((m: any, i: number) => (
                                         <tr key={i} className="hover:bg-slate-100/50 transition-colors">
-                                            <td className="p-4 font-bold text-slate-900">{m.metric}</td>
+                                            <td className="p-4 font-medium text-slate-900">{m.metric}</td>
                                             <td className="p-4 text-slate-600 font-medium">{m.current}</td>
-                                            <td className="p-4 text-indigo-600 font-black">{m.target}</td>
+                                            <td className="p-4 text-indigo-600 font-semibold">{m.target}</td>
                                             <td className="p-4">
-                                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-black tracking-widest border border-emerald-200">
+                                                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold tracking-widest border border-emerald-200">
                                                     {m.improvement}
                                                 </span>
                                             </td>
@@ -93,7 +93,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             </table>
                         </div>
                         <div className="p-8 bg-indigo-50 border-l-8 border-indigo-600 rounded-r-2xl shadow-sm">
-                            <h4 className="text-sm font-black text-indigo-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-indigo-700 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Star className="w-4 h-4" /> Key Strategic Insight
                             </h4>
                             <p className="text-2xl text-slate-900 font-serif italic leading-relaxed">"{doc.executive_summary.key_insight}"</p>
@@ -109,21 +109,21 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-900 text-white">
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Transformation Driver</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Strategic Weight</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Priority Score</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Transformation Driver</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Strategic Weight</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Priority Score</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200">
                                 {doc.strategic_drivers?.drivers?.map((d: any, i: number) => (
                                     <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-bold text-slate-900">{d.driver}</td>
+                                        <td className="p-4 font-medium text-slate-900">{d.driver}</td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                                                     <div className="h-full bg-indigo-500 rounded-full" style={{ width: d.weight }}></div>
                                                 </div>
-                                                <span className="text-xs font-black text-slate-600">{d.weight}</span>
+                                                <span className="text-xs font-semibold text-slate-600">{d.weight}</span>
                                             </div>
                                         </td>
                                         <td className="p-4">
@@ -135,7 +135,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                         </table>
                     </div>
                     <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm lg:col-span-12">
-                        <h4 className="text-xs font-black text-indigo-700 uppercase tracking-widest mb-4">Strategic Realignment</h4>
+                        <h4 className="text-xs font-semibold text-indigo-700 uppercase tracking-widest mb-4">Strategic Realignment</h4>
                         <p className="text-slate-700 leading-relaxed font-medium">
                             {doc.strategic_drivers.strategic_realignment}
                         </p>
@@ -148,22 +148,22 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                 <div className="space-y-12">
                     {/* Heatmap */}
                     <div className="space-y-4">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em]">HR Digitization Heatmap</h4>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-[0.3em]">HR Digitization Heatmap</h4>
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-900 text-white">
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Process Area</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Digitized</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Automated</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Mobile</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Gap Analysis</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Process Area</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Digitized</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Automated</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Mobile</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Gap Analysis</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {doc.capability_assessment?.digitization_heatmap?.map((h: any, i: number) => (
                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                            <td className="p-4 font-bold text-slate-900">{h.process}</td>
+                                            <td className="p-4 font-medium text-slate-900">{h.process}</td>
                                             <td className="p-4 text-slate-600 border-x border-slate-100">{h.digitized}</td>
                                             <td className="p-4 text-slate-600 border-x border-slate-100">{h.automated}</td>
                                             <td className="p-4 text-slate-600 border-x border-slate-100">{h.mobile_enabled}</td>
@@ -184,21 +184,21 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-indigo-600 text-white">
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Strategic Initiative</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-center text-white/90">Readiness</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-center text-white/90">Impact</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/90">Category</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-right text-white/90">Score</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Strategic Initiative</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-center text-white/90">Readiness</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-center text-white/90">Impact</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/90">Category</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-right text-white/90">Score</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {doc.priority_portfolio?.initiatives?.map((n: any, i: number) => (
                                     <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-bold text-slate-900">{n.initiative}</td>
+                                        <td className="p-4 font-medium text-slate-900">{n.initiative}</td>
                                         <td className="p-4 text-center text-slate-600">{n.readiness}</td>
                                         <td className="p-4 text-center text-slate-600">{n.impact}</td>
-                                        <td className="p-4 text-xs font-bold text-indigo-600">{n.category}</td>
-                                        <td className="p-4 text-right font-black text-indigo-600">{n.priority_score}</td>
+                                        <td className="p-4 text-xs font-semibold text-indigo-600">{n.category}</td>
+                                        <td className="p-4 text-right font-bold text-indigo-600">{n.priority_score}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -211,20 +211,20 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
             <Section title="Change Readiness Analysis" number={5}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="p-8 bg-white border border-slate-200 rounded-3xl text-center shadow-sm">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Adoption Readiness Thermometer</h4>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">Adoption Readiness Thermometer</h4>
                         <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
                             <div className="absolute inset-0 rounded-full border-8 border-slate-100 shadow-inner"></div>
                             <div className="text-6xl font-black text-slate-900">{doc.change_readiness?.readiness_thermometer?.score}%</div>
-                            <div className="absolute -bottom-4 bg-indigo-600 text-[10px] font-black uppercase p-2 rounded-lg tracking-[0.2em] text-white shadow-lg">{doc.change_readiness?.readiness_thermometer?.label}</div>
+                            <div className="absolute -bottom-4 bg-indigo-600 text-[10px] font-semibold uppercase p-2 rounded-lg tracking-[0.2em] text-white shadow-lg">{doc.change_readiness?.readiness_thermometer?.label}</div>
                         </div>
                     </div>
                     <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Resistance Risk Profile</h4>
+                        <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">Resistance Risk Profile</h4>
                         <div className="space-y-4">
                             {Object.entries(doc.change_readiness?.resistance_profile || {}).map(([key, val]: any) => (
                                 <div key={key} className="flex justify-between items-center pb-2 border-b border-slate-100 last:border-0">
-                                    <span className="text-xs font-bold text-slate-600 capitalize">{key.replace(/_/g, ' ')}</span>
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${val === 'Strong' || val === 'High' ? 'text-emerald-700 bg-emerald-100' : val === 'Low' || val === 'Critical' ? 'text-rose-700 bg-rose-100' : 'text-amber-700 bg-amber-100'}`}>{val}</span>
+                                    <span className="text-xs font-semibold text-slate-600 capitalize">{key.replace(/_/g, ' ')}</span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${val === 'Strong' || val === 'High' ? 'text-emerald-700 bg-emerald-100' : val === 'Low' || val === 'Critical' ? 'text-rose-700 bg-rose-100' : 'text-amber-700 bg-amber-100'}`}>{val}</span>
                                 </div>
                             ))}
                         </div>
@@ -239,18 +239,18 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-900 text-white">
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Enabler</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Adoption</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Status</th>
-                                    <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Recommendation</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Enabler</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Adoption</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Status</th>
+                                    <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Recommendation</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {doc.architecture_assessment?.enabler_adoption?.map((e: any, i: number) => (
                                     <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                        <td className="p-4 font-bold text-slate-900">{e.enabler}</td>
+                                        <td className="p-4 font-medium text-slate-900">{e.enabler}</td>
                                         <td className="p-4 text-slate-600">{e.adoption}</td>
-                                        <td className="p-4"><span className="px-2 py-1 bg-slate-100 text-[10px] uppercase font-black tracking-widest rounded border border-slate-200">{e.status}</span></td>
+                                        <td className="p-4"><span className="px-2 py-1 bg-slate-100 text-[10px] uppercase font-semibold tracking-widest rounded border border-slate-200">{e.status}</span></td>
                                         <td className="p-4 text-xs text-slate-500 italic">{e.recommendation}</td>
                                     </tr>
                                 ))}
@@ -258,7 +258,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                         </table>
                     </div>
                     <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
-                        <strong className="text-xs font-black text-indigo-700 uppercase tracking-widest block mb-2">Recommended Architecture</strong>
+                        <strong className="text-xs font-semibold text-indigo-700 uppercase tracking-widest block mb-2">Recommended Architecture</strong>
                         <p className="text-slate-700 italic">{doc.architecture_assessment?.recommended_architecture}</p>
                     </div>
                 </div>
@@ -273,7 +273,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             {doc.governance_metrics?.kpi_maturity?.map((k: any, i: number) => (
                                 <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                                     <div>
-                                        <div className="font-bold text-slate-900">{k.kpi}</div>
+                                        <div className="font-medium text-slate-900">{k.kpi}</div>
                                         <div className="text-[10px] text-slate-500 uppercase tracking-widest">{k.maturity}</div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -298,7 +298,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 <tbody className="divide-y divide-slate-100">
                                     {doc.governance_metrics?.measurement_framework?.map((m: any, i: number) => (
                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                            <td className="p-3 text-slate-900 font-medium">{m.metric}</td>
+                                            <td className="p-3 text-slate-900 font-normal">{m.metric}</td>
                                             <td className="p-3 text-slate-600">{m.current}</td>
                                             <td className="p-3 text-indigo-600 font-black">{m.target}</td>
                                         </tr>
@@ -345,7 +345,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 <tbody className="divide-y divide-slate-100 text-xs">
                                     {doc.budget_timeline?.investment_breakdown?.map((b: any, i: number) => (
                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                            <td className="p-4 font-bold text-slate-900">{b.category}</td>
+                                            <td className="p-4 font-medium text-slate-900">{b.category}</td>
                                             <td className="p-4 font-black text-indigo-600">{b.percentage}</td>
                                             <td className="p-4 font-bold text-slate-600">{b.amount}</td>
                                             <td className="p-4 text-slate-500 italic max-w-xs">{b.rationale}</td>
@@ -366,7 +366,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest border-b border-slate-100 pb-2">{phase.replace(/_/g, ' ')}</h4>
                             <ul className="space-y-2">
                                 {inits.map((it: string, j: number) => (
-                                    <li key={j} className="flex gap-2 text-xs font-bold text-slate-600 items-start">
+                                    <li key={j} className="flex gap-2 text-xs font-medium text-slate-600 items-start">
                                         <ArrowRight className="w-3 h-3 text-indigo-500 mt-0.5 flex-shrink-0" />
                                         <span>{it}</span>
                                     </li>
@@ -416,7 +416,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             {doc.recommendations_next_steps?.immediate_actions?.map((a: string, i: number) => (
                                 <li key={i} className="flex gap-3 items-start p-4 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm">
                                     <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black text-white">{i + 1}</div>
-                                    <span className="text-sm font-bold text-slate-700">{a}</span>
+                                    <span className="text-sm font-medium text-slate-700">{a}</span>
                                 </li>
                             ))}
                         </ul>
@@ -550,8 +550,8 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 <div>
                                     <h3 className="text-2xl font-black text-slate-900 mb-2">{phase.phase}</h3>
                                     <div className="flex items-center gap-4 text-sm">
-                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-bold">{phase.duration}</span>
-                                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">{phase.budget}</span>
+                                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">{phase.duration}</span>
+                                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">{phase.budget}</span>
                                     </div>
                                 </div>
                                 <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
@@ -638,7 +638,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 ].map((stakeholder, i) => (
                                     <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="font-bold text-slate-900">{stakeholder.group}</span>
+                                            <span className="font-medium text-slate-900">{stakeholder.group}</span>
                                             <span className={`px-2 py-1 rounded-full text-[10px] font-black ${stakeholder.engagement === "Very High" ? "bg-emerald-100 text-emerald-700" :
                                                 stakeholder.engagement === "High" ? "bg-blue-100 text-blue-700" :
                                                     "bg-amber-100 text-amber-700"
@@ -739,7 +739,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                     ].map((cost, i) => (
                                         <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                                             <div className="flex-1">
-                                                <div className="text-sm font-bold text-slate-900 mb-1">{cost.item}</div>
+                                                <div className="text-sm font-medium text-slate-900 mb-1">{cost.item}</div>
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                                                         <div className="h-full bg-blue-600" style={{ width: cost.percentage }}></div>
@@ -827,12 +827,12 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 }
                             ].map((category: any, idx) => (
                                 <div key={idx} className="bg-emerald-50 border border-emerald-100 border-l-4 border-l-emerald-600 rounded-r-xl p-6 shadow-sm">
-                                    <h4 className="text-lg font-black text-emerald-800 mb-4">{category.category}</h4>
+                                    <h4 className="text-lg font-bold text-emerald-800 mb-4">{category.category}</h4>
                                     <div className="space-y-3">
                                         {category.items.map((item: any, i: number) => (
                                             <div key={i} className="flex items-start justify-between gap-4 p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
                                                 <div className="flex-1">
-                                                    <div className="font-bold text-slate-900 text-sm mb-1">{item.benefit}</div>
+                                                    <div className="font-semibold text-slate-900 text-sm mb-1">{item.benefit}</div>
                                                     <div className="text-xs text-slate-500">{item.calculation}</div>
                                                 </div>
                                                 <div className="text-lg font-black text-emerald-600 whitespace-nowrap">{item.value}</div>
@@ -845,17 +845,17 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             <div className="bg-indigo-600 border border-indigo-700 rounded-3xl p-8 text-white shadow-xl">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="text-center">
-                                        <div className="text-xs font-black text-indigo-200 uppercase tracking-widest mb-2">Total Annual Benefits</div>
+                                        <div className="text-xs font-semibold text-indigo-200 uppercase tracking-widest mb-2">Total Annual Benefits</div>
                                         <div className="text-4xl font-black text-white mb-1">$6.25M</div>
                                         <div className="text-xs text-indigo-300">Recurring value per year</div>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-xs font-black text-emerald-300 uppercase tracking-widest mb-2">3-Year Net Value</div>
+                                        <div className="text-xs font-semibold text-emerald-300 uppercase tracking-widest mb-2">3-Year Net Value</div>
                                         <div className="text-4xl font-black text-white mb-1">$12.75M</div>
                                         <div className="text-xs text-emerald-400">Benefits $18.75M - Costs $6.0M</div>
                                     </div>
                                     <div className="text-center">
-                                        <div className="text-xs font-black text-purple-200 uppercase tracking-widest mb-2">ROI & Payback</div>
+                                        <div className="text-xs font-semibold text-purple-200 uppercase tracking-widest mb-2">ROI & Payback</div>
                                         <div className="text-4xl font-black text-white mb-1">213%</div>
                                         <div className="text-xs text-purple-300">Payback in 11 months</div>
                                     </div>
@@ -893,18 +893,18 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                 }
                             ].map((stack: any, i: number) => (
                                 <div key={i} className="bg-blue-50 border border-blue-100 rounded-2xl p-6 shadow-sm">
-                                    <h4 className="text-lg font-black text-blue-700 mb-4">{stack.layer}</h4>
+                                    <h4 className="text-lg font-bold text-blue-700 mb-4">{stack.layer}</h4>
                                     <div className="space-y-4">
                                         <div>
-                                            <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Vendor Options</div>
+                                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">Vendor Options</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {stack.vendors.map((vendor: string, j: number) => (
-                                                    <span key={j} className="px-2 py-1 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-lg">{vendor}</span>
+                                                    <span key={j} className="px-2 py-1 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg">{vendor}</span>
                                                 ))}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Key Capabilities</div>
+                                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">Key Capabilities</div>
                                             <ul className="space-y-1">
                                                 {stack.capabilities.map((cap: string, j: number) => (
                                                     <li key={j} className="flex items-start gap-2 text-sm text-slate-600">
@@ -915,7 +915,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                             </ul>
                                         </div>
                                         <div className="pt-3 border-t border-blue-100">
-                                            <div className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-1">Recommendation</div>
+                                            <div className="text-xs font-semibold text-emerald-600 uppercase tracking-widest mb-1">Recommendation</div>
                                             <p className="text-xs text-slate-600 leading-relaxed font-bold">{stack.recommendation}</p>
                                         </div>
                                     </div>
@@ -1005,11 +1005,11 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-900 text-white">
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Evaluation Criteria</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Weight</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Workday</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">SAP SF</th>
-                                        <th className="p-4 text-xs font-black uppercase tracking-widest text-white/80">Oracle</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Evaluation Criteria</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Weight</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Workday</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">SAP SF</th>
+                                        <th className="p-4 text-xs font-semibold uppercase tracking-widest text-white/80">Oracle</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -1023,7 +1023,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                         { criteria: "Vendor Stability & Roadmap", weight: "5%", workday: "95", sap: "90", oracle: "88" }
                                     ].map((row, i) => (
                                         <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                            <td className="p-4 font-bold text-slate-900">{row.criteria}</td>
+                                            <td className="p-4 font-semibold text-slate-900">{row.criteria}</td>
                                             <td className="p-4 text-slate-500 font-medium">{row.weight}</td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
@@ -1062,7 +1062,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                             </table>
                         </div>
                         <div className="mt-6 p-6 bg-emerald-50 border-l-4 border-emerald-600 rounded-r-xl">
-                            <h4 className="text-sm font-black text-emerald-700 uppercase tracking-widest mb-2">Recommended Vendor</h4>
+                            <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-widest mb-2">Recommended Vendor</h4>
                             <p className="text-slate-700 leading-relaxed font-medium">
                                 <strong className="text-slate-900">Workday HCM</strong> emerges as the top choice with a weighted score of 89.4, excelling in functional fit, user experience, and analytics. While slightly higher in TCO, the superior adoption rates and lower change management costs justify the investment.
                             </p>
@@ -1198,7 +1198,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                             <div key={i} className="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="text-sm font-bold text-slate-900">{metric.kpi}</span>
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase">{metric.frequency}</span>
+                                                    <span className="text-[10px] font-semibold text-slate-400 uppercase">{metric.frequency}</span>
                                                 </div>
                                                 <div className="flex items-center gap-3 text-xs">
                                                     <div className="flex-1">
@@ -1252,7 +1252,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                         <step.icon className="w-8 h-8 text-white" />
                                     </div>
-                                    <h4 className="text-lg font-black text-white mb-2">{step.phase}</h4>
+                                    <h4 className="text-lg font-bold text-white mb-2">{step.phase}</h4>
                                     <div className="text-xs font-bold text-indigo-200 mb-4">{step.frequency}</div>
                                     <ul className="space-y-2 text-left">
                                         {step.activities.map((activity, j) => (
@@ -1274,8 +1274,8 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                 <div className="w-16 h-8 mx-auto mb-4 grayscale contrast-125">
                     <img src="/logo_icon_final.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Confidential Board Dossier • {engineName} Analysis • Powered by HRTEKSYSTEM AI</p>
-                <p className="text-[10px] mt-1 text-slate-400 font-black uppercase tracking-[0.4em]">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Confidential Board Dossier • {engineName} Analysis • Powered by HRTEKSYSTEM AI</p>
+                <p className="text-[10px] mt-1 text-slate-400 font-semibold uppercase tracking-[0.4em]">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </footer>
         </div>
     );

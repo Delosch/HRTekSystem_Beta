@@ -58,7 +58,7 @@ export const action: ActionFunction = async ({ request }) => {
       await createOrUpdateEngineStorage({
         company_id: companyId,
         user_id: user.userId,
-        engine_name: "HR Technology Maturity Analysis",
+        engine_name: "Profiling Assessment",
         country: user.country_iso,
         progress: 100
       });

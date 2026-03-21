@@ -6,10 +6,10 @@ import { getLatestAnalysis } from "~/utils/analysis.server";
 import { getCompanyProfile } from "~/models/company.model.server";
 import { getAnswerSheetByAssessmentName, getLatestQuestion } from "~/utils/question.utils";
 import { DatabaseRecord } from "../v2.$id/schemas";
-import { Clock, ArrowLeft, Brain } from "lucide-react";
+import { Clock, ArrowLeft, Brain, XCircle } from "lucide-react";
 import { getCompanyPayments } from "~/models/payment.model.server";
-import { getEnginePriceByName } from "~/lib/pricing";
 import { addOrUpdateCartItem } from "~/models/cart.model.server";
+import { calculatePricing } from "~/services/pricing.server";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport } from "~/models/hti.model.server";
 
@@ -37,43 +37,48 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         console.log(`[Consulting Report Loader] User: ${user.organisationId}, Engine: ${params.id}`);
 
-        const allPayments = await getCompanyPayments(user.organisationId);
+        const { getEnginePaymentStatus } = await import("~/models/payment.model.server");
         const isAdmin = (user as any).role === "ADMIN";
 
         // Check if this is a free assessment (onboarding)
-        const isFreeEngine = params.id === "Profiling Assessment" ||
-            params.id === "Digital Maturity Assessment" ||
-            params.id === "HR Technology Maturity Analysis" ||
-            params.id === "HR Tech Maturity Analysis";
+        const isFreeEngine = params.id === "Profiling Assessment";
 
-        // Check if any payment record for this engine is verified
-        const isPaid = isAdmin || isFreeEngine || allPayments.some((p: any) =>
-            p.status === "payment_verified" &&
-            p.items?.some((i: any) => i.engineName.trim() === params.id?.trim())
-        );
-
-        // Check if any payment record for this engine is pending (submitted but not verified)
-        const isPending = !isPaid && !isFreeEngine && allPayments.some((p: any) =>
-            p.status === "payment_submitted" &&
-            p.items?.some((i: any) => i.engineName.trim() === params.id?.trim())
-        );
+        // Get detailed payment status
+        const paymentStatusResult = isFreeEngine ? { status: "paid" } : await getEnginePaymentStatus(user.organisationId, params.id || "");
+        
+        const isPaid = isAdmin || isFreeEngine || paymentStatusResult.status === "paid";
+        const isPending = !isPaid && paymentStatusResult.status === "pending";
 
         console.log(`[Consulting Report Loader] Payment Status - isPaid: ${isPaid}, isPending: ${isPending}, isAdmin: ${isAdmin}`);
 
-        if (!isPaid && !isAdmin) {
-            if (isPending) {
-                return json({ paymentStatus: "pending" });
+        if (!isPaid) {
+            if (isPending || paymentStatusResult.status === "rejected") {
+                return json({ paymentStatus: paymentStatusResult.status });
             }
 
-            // Redirect to payment: Add to cart first then checkout
-            const price = getEnginePriceByName(params.id);
+            // Redirect to payment: Add to cart with employee-based pricing
+            const companyForPrice = await getCompanyProfile(user.organisationId);
+            const employeeCount = companyForPrice?.employee_count || 100;
+
+            const engineTypeMap: Record<string, any> = {
+                "HR Transformation Roadmap Generator": "roadmap",
+                "HCM Vendor Fit Engine": "hcm-vendor-fit",
+                "Shared Service Designer": "shared-services",
+                "Intelligent Change Management": "icms",
+                "HR Technology Maturity Analysis": "hcm-vendor-fit",
+                "Digital Maturity Engine": "ai-maturity",
+                "AI Driven Maturity Engine": "ai-maturity",
+            };
+            const engineType = engineTypeMap[params.id || ""] || "hcm-vendor-fit";
+            const pricingResult = calculatePricing({ engine: engineType, employeeCount });
+
             await addOrUpdateCartItem({
                 companyId: user.organisationId,
-                productName: params.id,
-                price: price,
+                productName: params.id || "",
+                price: pricingResult.totalPrice,
                 userId: user.userId,
             });
-            return redirect('/payment/checkout');
+            return redirect('/cartDashboard');
         }
 
         // FIX: Don't add COMPANY# prefix - getLatestAnalysis already does this
@@ -203,6 +208,31 @@ export default function ConsultingReport() {
                         <ArrowLeft className="w-5 h-5" />
                         Return to Dashboard
                     </a>
+                </div>
+            </div>
+        );
+    }
+
+    if (loaderData.paymentStatus === 'rejected') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+                <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-lg text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <XCircle className="w-10 h-10 text-red-600" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Rejected</h1>
+                    <p className="text-gray-500 mb-8 text-lg leading-relaxed">
+                        Your payment proof was rejected by our administrators. Please check your email for the reason or contact support. 
+                        You can try submitting payment again.
+                    </p>
+                    <div className="flex flex-col gap-4">
+                        <a href="/payment/checkout" className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">
+                            Pay Again
+                        </a>
+                        <a href="/dashboard" className="text-gray-500 font-semibold hover:text-gray-700 transition-colors">
+                            Return to Dashboard
+                        </a>
+                    </div>
                 </div>
             </div>
         );

@@ -113,27 +113,21 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
     const chartData = viz?.bar_chart?.dimensions?.map((d: string, i: number) => ({
         name: d,
         progress: viz.bar_chart.answeredQuestions[i] || 0
-    })) || [
-            { name: 'Initial', progress: 25 },
-            { name: 'Developing', progress: 45 },
-            { name: 'Optimized', progress: 85 },
-        ];
+    })) || [];
 
     const gaps = consulting?.gap_data?.map((g: any) => ({
         title: g.name || "Gap identified",
-        text: "Strategic intervention required",
-        explanation: `Impact level: ${g.impact || 'High'}. Improving this will increase overall efficiency.`,
+        text: g.description || "Strategic intervention required",
+        explanation: g.explanation || `Impact level: ${g.impact || 'High'}. Improving this will increase overall efficiency.`,
         gap: g.gap || 10,
         priority: g.impact === 10 ? "CRITICAL" : g.impact > 7 ? "HIGH" : "MEDIUM"
-    })) || [
-            {
-                title: "Integration Capability",
-                text: "Connect disparate HR systems to a single data hub.",
-                explanation: "Siloed data leads to duplication and manual reentry risks.",
-                gap: 10,
-                priority: "CRITICAL"
-            }
-        ];
+    })) || maturity?.gaps?.map((g: any) => ({
+        title: g.name || g.gap_area || "Gap identified",
+        text: g.description || "Strategic intervention required",
+        explanation: g.explanation || `Impact: ${g.impact || 'High'}`,
+        gap: g.gap || g.severity || 10,
+        priority: (g.priority || "HIGH").toUpperCase()
+    })) || [];
 
     return (
         <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12">
@@ -147,20 +141,20 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             <div>
                                 <h1 className="text-lg font-bold text-slate-800">{brandName}</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-400">
-                                    <span className="font-bold text-blue-600 uppercase tracking-wide">AI-driven HR Tech Diagnostics</span>
+                                    <span className="font-medium text-blue-600 uppercase tracking-wide">AI-driven HR Tech Diagnostics</span>
                                     <span className="text-slate-400">•</span>
                                     <nav className="flex items-center gap-2">
                                         <Link to="/dashboard" className="hover:text-slate-900">Dashboard</Link>
                                         <span>/</span>
-                                        <span className="font-semibold text-slate-900">Tech Diagnostics</span>
+                                        <span className="font-medium text-slate-900">Tech Diagnostics</span>
                                     </nav>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex bg-slate-100 border border-slate-200 rounded-lg p-1 mr-4">
-                                <button onClick={() => setActiveTab("overview")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "overview" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Dashboard</button>
-                                <button onClick={() => setActiveTab("narrative")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "narrative" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Detailed Report</button>
+                                <button onClick={() => setActiveTab("overview")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "overview" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Dashboard</button>
+                                <button onClick={() => setActiveTab("narrative")} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "narrative" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Detailed Report</button>
                             </div>
                             <button
                                 onClick={handleExportPDF}
@@ -186,27 +180,26 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             </div>
                             <div>
                                 <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tight">AI-driven HR Tech Diagnostics</h1>
-                                <p className="text-xl font-bold text-slate-400">Comprehensive assessment of your HR technology landscape and digital readiness</p>
+                                <p className="text-xl font-semibold text-slate-400">Comprehensive assessment of your HR technology landscape and digital readiness</p>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {kpis.map((kpi: any, i: number) => (
                                 <div key={i} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 group">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className={`p-3 rounded-2xl ${kpi.color === 'blue' ? 'bg-blue-600' :
+                                    <div className="flex justify-between items-start mb-6">                                         <div className={`p-3 rounded-2xl ${kpi.color === 'blue' ? 'bg-blue-600' :
                                             kpi.color === 'green' ? 'bg-green-500' :
                                                 kpi.color === 'purple' ? 'bg-purple-600' : 'bg-orange-500'
                                             } text-white shadow-lg group-hover:scale-110 transition-transform`}>
                                             <kpi.icon className="w-5 h-5" />
                                         </div>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mt-2">{kpi.title}</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mt-2">{kpi.title}</span>
                                     </div>
                                     <div className="flex items-baseline gap-2 mb-4">
                                         <span className="text-5xl font-black text-slate-800 tracking-tighter">{kpi.value}</span>
-                                        <span className="text-xl font-bold text-slate-400">{kpi.unit}</span>
+                                        <span className="text-xl font-medium text-slate-400">{kpi.unit}</span>
                                     </div>
-                                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
                                         {kpi.description}
                                     </p>
                                 </div>
@@ -230,14 +223,14 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                                     </svg>
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                                         <span className="text-5xl font-black text-slate-800">100%</span>
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Confidence</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Confidence</span>
                                     </div>
                                 </div>
 
                                 <div className="w-full space-y-4">
                                     <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Diagnostic Status</h4>
-                                        <p className="text-sm font-bold text-slate-700 leading-relaxed">
+                                        <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-3">Diagnostic Status</h4>
+                                        <p className="text-sm font-normal text-slate-700 leading-relaxed">
                                             Our AI engine has successfully parsed all 10 diagnostic vectors. The data synthesis is <strong>Optimized</strong> and reflects your organization's real-world capacity.
                                         </p>
                                     </div>
@@ -246,7 +239,7 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
 
                             <div className="lg:col-span-8 bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100">
                                 <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Technology performance Radar</h2>
-                                <p className="text-sm font-bold text-slate-400 mb-8 uppercase tracking-widest">Multi-dimensional Infrastructure Scorecard</p>
+                                <p className="text-sm font-semibold text-slate-400 mb-8 uppercase tracking-widest">Multi-dimensional Infrastructure Scorecard</p>
                                 <div className="h-[350px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RadarChart data={radarData}>
@@ -260,7 +253,7 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 mt-6">
-                                    <p className="text-xs text-blue-800 leading-relaxed font-bold italic">
+                                    <p className="text-xs text-blue-800 leading-relaxed font-medium italic">
                                         "Interpretation: Your 'Digital Infrastructure' is leading the curve, but 'Integration Capability' remains a strategic bottleneck. Prioritize centralized API management to unify your ecosystem."
                                     </p>
                                 </div>
@@ -271,9 +264,9 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
                                 <div>
                                     <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tight">Critical Deployment Gaps</h2>
-                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Actionable tactical interventions required</p>
+                                    <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest mt-2">Actionable tactical interventions required</p>
                                 </div>
-                                <div className="px-6 py-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] font-black text-red-600 uppercase tracking-[0.2em] shadow-sm">
+                                <div className="px-6 py-3 bg-red-50 border border-red-200 rounded-2xl text-[10px] font-semibold text-red-600 uppercase tracking-[0.2em] shadow-sm">
                                     Strategic Priority: High
                                 </div>
                             </div>
@@ -281,21 +274,20 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                             <div className="space-y-4">
                                 {gaps.map((row: any, i: number) => (
                                     <div key={i} className="flex flex-col lg:flex-row lg:items-center justify-between p-8 rounded-[2.5rem] border border-slate-50 transition-all hover:bg-slate-50 relative group">
-                                        <div className="max-w-2xl">
-                                            <div className="flex items-center gap-3 mb-2">
+                                        <div className="max-w-2xl">                                             <div className="flex items-center gap-3 mb-2">
                                                 <h4 className="text-xl font-black text-slate-800">{row.title}</h4>
-                                                <span className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest uppercase ${row.priority === 'CRITICAL' ? 'bg-red-600 text-white' : row.priority === 'HIGH' ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600'}`}>
+                                                <span className={`px-3 py-1 rounded-lg text-[9px] font-bold tracking-widest uppercase ${row.priority === 'CRITICAL' ? 'bg-red-600 text-white' : row.priority === 'HIGH' ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600'}`}>
                                                     {row.priority}
                                                 </span>
                                             </div>
-                                            <p className="text-sm font-bold text-blue-600 mb-3">{row.text}</p>
-                                            <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                            <p className="text-sm font-normal text-blue-600 mb-3">{row.text}</p>
+                                            <p className="text-xs text-slate-500 leading-relaxed font-normal">
                                                 {row.explanation}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-8 mt-6 lg:mt-0 lg:border-l border-slate-200 lg:pl-10">
                                             <div className="text-right">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Maturity Gap</span>
+                                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-1">Maturity Gap</span>
                                                 <span className="text-4xl font-black text-slate-800 tracking-tighter">-{row.gap}%</span>
                                             </div>
                                             <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all">
@@ -353,8 +345,8 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                     main { padding: 0 !important; max-width: 100% !important; }
                     .bg-white, .bg-blue-50, .bg-green-50, .bg-purple-50, .bg-orange-50, .bg-slate-50 { background: white !important; border: 1px solid #e2e8f0 !important; }
                     .text-slate-800, .text-slate-400, .text-slate-500 { color: black !important; }
-                    .text-blue-600, .text-green-500, .text-red-600 { color: black !important; font-weight: bold !important; }
-                    h1, h2, h3, h4 { color: black !important; page-break-after: avoid; font-weight: 900 !important; }
+                    .text-blue-600, .text-green-500, .text-red-600 { color: black !important; font-weight: 600 !important; }
+                    h1, h2, h3, h4 { color: black !important; page-break-after: avoid; font-weight: 800 !important; }
                     section, .grid { page-break-inside: avoid; margin-bottom: 2rem !important; }
                     .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
                     .rounded-[3rem], .rounded-[2.5rem], .rounded-3xl, .rounded-2xl { border-radius: 0.75rem !important; }

@@ -54,17 +54,10 @@ export const loader: LoaderFunction = async ({ request }) => {
     console.log(`[Reports Page] Paid Engines:`, paidEngines);
     console.log(`[Reports Page] Verified Engines:`, verifiedEngines);
 
-    // Map to report route URLs
+    // Map to report route URLs — consulting-report/$id renders the correct component per engine
     const reportRouteMap: Record<string, string> = {
-        "HCM Vendor Fit Engine": `/fit/report/HCM%20Vendor%20Fit%20Engine`,
-        "Digital Maturity Assessment": `/consulting-report/Digital%20Maturity%20Assessment`,
+        "AI Driven Maturity Engine": `/ai-maturity/dashboard`,
         "Profiling Assessment": `/consulting-report/Profiling%20Assessment`,
-        "HR Transformation Roadmap Generator": `/consulting-report/HR%20Transformation%20Roadmap%20Generator`,
-        "Shared Service Designer": `/consulting-report/Shared%20Service%20Designer`,
-        "Intelligent Change Management": `/consulting-report/Intelligent%20Change%20Management`,
-        "Change Management Readiness": `/consulting-report/Change%20Management%20Readiness`,
-        "HR Technology Maturity Analysis": `/consulting-report/HR%20Technology%20Maturity%20Analysis`,
-        "HR Tech Maturity Analysis": `/consulting-report/HR%20Tech%20Maturity%20Analysis`
     };
 
     // Process reports - ONLY include reports that are paid for or user is admin
@@ -73,10 +66,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     const reports: ReportItem[] = allAnalyses
         .map((analysis: any) => {
             const engineName = analysis.section.trim();
-            const isFreeEngine = engineName === "Profiling Assessment" ||
-                engineName === "Digital Maturity Assessment" ||
-                engineName === "HR Technology Maturity Analysis" ||
-                engineName === "HR Tech Maturity Analysis";
+            const isFreeEngine = engineName === "Profiling Assessment";
             const isVerified = verifiedEngines.includes(engineName) || isAdmin || isFreeEngine;
             const isPaid = paidEngines.includes(engineName) || isAdmin || isFreeEngine;
             const reportUrl = reportRouteMap[engineName] || `/consulting-report/${encodeURIComponent(engineName)}`;

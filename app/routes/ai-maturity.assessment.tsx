@@ -5,6 +5,8 @@ import AiMaturityApp from "~/components/assessment/AiMaturity/App";
 import { findEngineData, createOrUpdateEngineStorage } from "~/models/engine.model.server";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport } from "~/models/hti.model.server";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
+import { calculatePricing } from "~/services/pricing.server";
 
 export const meta: MetaFunction = () => {
     return [
@@ -18,7 +20,7 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!user) return json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { responses, progress, intent } = body;
+    const { responses, progress, intent, employeeCount: submittedEmployeeCount } = body;
 
     await createOrUpdateEngineStorage({
         company_id: user.organisationId,
@@ -61,10 +63,27 @@ export async function action({ request }: ActionFunctionArgs) {
         }
     }
 
-    if (progress === 100) {
+    if (progress === 100 && submittedEmployeeCount) {
+        try {
+            const employeeCount = Number(submittedEmployeeCount);
+
+            const pricing = calculatePricing({ engine: "ai-maturity", employeeCount });
+            console.log(`AI Maturity | Employees: ${employeeCount} | Price: ₹${pricing.basePrice.toLocaleString()}`);
+
+            await addOrUpdateCartItem({
+                companyId: user.organisationId,
+                productName: "AI Driven Maturity Engine",
+                price: pricing.basePrice,
+                userId: user.id || user.userId,
+                employeeCount,
+            });
+        } catch (cartError) {
+            console.warn("Failed to add to cart, proceeding:", cartError);
+        }
+
         return json({
             success: true,
-            redirect: `/intermediate?promptId=ai_maturity&engine=${encodeURIComponent("AI Driven Maturity Engine")}`
+            redirect: `/intermediate?promptId=digital_maturity&engine=${encodeURIComponent("AI Driven Maturity Engine")}`
         });
     }
 

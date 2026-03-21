@@ -126,7 +126,7 @@ export function ExecutiveAdvisory({ advisory }: ExecutiveAdvisoryProps) {
                             </div>
                             <div className="text-right">
                                 <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Confidential Report</p>
-                                <p className="text-sm font-black text-slate-900">ID: HTI-{new Date().getFullYear()}-{Math.floor(1000 + Math.random() * 9000)}</p>
+                                <p className="text-sm font-black text-slate-900">ID: HTI-{new Date().getFullYear()}-8492</p>
                             </div>
                         </div>
 

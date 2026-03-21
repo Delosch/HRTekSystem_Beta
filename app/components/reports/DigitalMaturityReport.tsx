@@ -100,23 +100,23 @@ const FlipCard = ({ dim, index }: { dim: any; index: number }) => {
                     <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${color.bg} opacity-10 rounded-full blur-2xl`}></div>
 
                     <div>
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color.bg} text-white flex items-center justify-center font-bold mb-6 shadow-lg`}>
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color.bg} text-white flex items-center justify-center font-semibold mb-6 shadow-lg`}>
                             {index + 1}
                         </div>
-                        <h3 className="font-bold text-slate-900 text-xl leading-snug mb-2 pr-4">{dim.dimension}</h3>
-                        <p className={`text-xs font-bold ${color.text} uppercase tracking-widest`}>{dim.strategic_outlook}</p>
+                        <h3 className="font-semibold text-slate-900 text-xl leading-snug mb-2 pr-4">{dim.dimension}</h3>
+                        <p className={`text-xs font-medium ${color.text} uppercase tracking-widest`}>{dim.strategic_outlook}</p>
                     </div>
 
                     <div className="space-y-3 relative z-10">
                         <div className="flex items-end gap-2">
                             <span className={`text-5xl font-black bg-gradient-to-br ${color.bg} bg-clip-text text-transparent`}>{dim.score}</span>
-                            <span className="text-sm font-semibold text-slate-500 mb-2">/100</span>
+                            <span className="text-sm font-medium text-slate-500 mb-2">/100</span>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
                             <div className={`bg-gradient-to-r ${color.bg} h-full rounded-full transition-all duration-1000`} style={{ width: `${dim.score}%` }}></div>
                         </div>
                         <div className="flex justify-center mt-4 pt-4 border-t border-slate-200">
-                            <span className={`text-xs font-bold ${color.text} flex items-center gap-2 group-hover:scale-105 transition-transform`}>
+                            <span className={`text-xs font-medium ${color.text} flex items-center gap-2 group-hover:scale-105 transition-transform`}>
                                 {isFlipped ? "Tap to hide analysis" : "Tap to reveal analysis"} <ArrowUpRight className={`w-3 h-3 ${isFlipped ? 'rotate-180' : ''} transition-transform`} />
                             </span>
                         </div>
@@ -126,26 +126,26 @@ const FlipCard = ({ dim, index }: { dim: any; index: number }) => {
                 {/* Back */}
                 <div className={`absolute w-full h-full backface-hidden ${color.light} rounded-3xl p-8 shadow-2xl rotate-y-180 overflow-hidden flex flex-col text-slate-800 border-2 ${color.border}`}>
                     <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${color.bg}`}></div>
-                    <h3 className="font-bold text-slate-900 text-md mb-6 flex items-center gap-2 border-b border-slate-300 pb-4">
+                    <h3 className="font-semibold text-slate-900 text-md mb-6 flex items-center gap-2 border-b border-slate-300 pb-4">
                         <Brain className={`w-4 h-4 ${color.text}`} /> Analysis
                     </h3>
 
                     <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
                         <div>
-                            <p className="text-[10px] font-bold text-red-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <p className="text-[10px] font-medium text-red-600 uppercase tracking-wider mb-2 flex items-center gap-2">
                                 <AlertTriangle className="w-3 h-3" /> Critical Gaps
                             </p>
                             <ul className="text-sm text-slate-700 space-y-2">
-                                {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-red-500 mt-1">•</span> {s}</li>)}
+                                {dim.current_state.map((s: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-red-500 mt-1 font-medium">•</span> {s}</li>)}
                             </ul>
                         </div>
 
                         <div>
-                            <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-2">
+                            <p className="text-[10px] font-medium text-green-600 uppercase tracking-wider mb-2 flex items-center gap-2">
                                 <Lightbulb className="w-3 h-3" /> Strategic Actions
                             </p>
                             <ul className="text-sm text-slate-700 space-y-2">
-                                {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-green-500 mt-1">•</span> {r}</li>)}
+                                {dim.recommendations.map((r: string, idx: number) => <li key={idx} className="flex gap-2 leading-relaxed"><span className="text-green-500 mt-1 font-medium">•</span> {r}</li>)}
                             </ul>
                         </div>
                     </div>
@@ -244,12 +244,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
             };
         }
 
-        if (!analysis.dimensional_scores || !Array.isArray(analysis.dimensional_scores) || analysis.dimensional_scores.length === 0) {
-            analysis.dimensional_scores = [
-                { dimension: "Process Maturity", percentage: 45, maturity_level: "Developing", critical_gaps: ["Manual processes"], key_strengths: ["Basic documentation"], gap_analysis: { improvement_potential: 55 } },
-                { dimension: "Technology Adoption", percentage: 50, maturity_level: "Developing", critical_gaps: ["Legacy systems"], key_strengths: ["Cloud readiness"], gap_analysis: { improvement_potential: 50 } },
-                { dimension: "Data & Analytics", percentage: 40, maturity_level: "Initial", critical_gaps: ["Data silos"], key_strengths: ["Data awareness"], gap_analysis: { improvement_potential: 60 } }
-            ];
+        if (!analysis.dimensional_scores || !Array.isArray(analysis.dimensional_scores)) {
+            analysis.dimensional_scores = [];
         }
 
         if (!analysis.overall_score) analysis.overall_score = { percentage: 0 };
@@ -281,7 +277,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                     ...(insights.transformation_readiness.blocking_factors || []).slice(0, 2)
                 ],
                 executive_recommendation: insights.overall_assessment || "Initiate a structured digital transformation roadmap focusing on core process automation.",
-                key_observations: ["Growing profitability", "Adequate IT budget allocation", "Resistant leadership culture", "No digital strategy"]
+                key_observations: insights?.key_findings || insights?.key_observations || []
             },
             maturity_scorecard: analysis.dimensional_scores.map((d: any) => {
                 const finalScore = normalizeScore(d.percentage || d.weighted_score || d.raw_score);
@@ -300,9 +296,9 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
             dimension_deep_dives: analysis.dimensional_scores.slice(0, 6).map((d: any) => ({
                 dimension: d.dimension,
                 score: normalizeScore(d.percentage || d.weighted_score || d.raw_score),
-                current_state: d.critical_gaps.slice(0, 3) || ["Manual processes"],
-                business_impact: d.gap_analysis.improvement_potential > 60 ? ["Significant operational leakage", "High compliance risk"] : ["Optimization opportunity", "Margin improvement potential"],
-                recommendations: d.key_strengths.length > 0 ? d.key_strengths : ["Establish standard KPIs", "Digitalize manual records"],
+                current_state: (d.critical_gaps || []).slice(0, 3),
+                business_impact: d.business_impact || [],
+                recommendations: (d.key_strengths || []),
                 strategic_outlook: d.maturity_level === 'Nascent' ? "Nascent" : d.maturity_level || "Initial"
             })),
             business_risk_opportunity: {
@@ -342,21 +338,10 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                     }
                 ].filter((p: any) => p.actions.length > 0);
 
-                if (roadmap.length === 0) {
-                    return [
-                        { phase: "IMMEDIATE", timeline: "0-3 Months", actions: ["Conduct current state diagnostic", "Establish governance framework"] },
-                        { phase: "SHORT-TERM", timeline: "3-12 Months", actions: ["Pilot core process automation", "Launch change management program"] },
-                        { phase: "MEDIUM-TERM", timeline: "12-24 Months", actions: ["Scale digital initiatives", "Integrate advance analytics"] }
-                    ];
-                }
+                if (roadmap.length === 0) return [];
                 return roadmap;
             })(),
-            investment_indication: [
-                { area: "Core Transformation", effort: "High", investment_band: "₹₹₹" },
-                { area: "Digital Infrastructure", effort: "Medium", investment_band: "₹₹" },
-                { area: "Change Management", effort: "Medium", investment_band: "₹₹" },
-                { area: "Data Governance", effort: "Low", investment_band: "₹" }
-            ]
+            investment_indication: res?.investment_indication || []
         };
     };
 
@@ -605,26 +590,26 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                 <img src="/logo_icon_final.png" alt="HRTek" className="w-full h-full object-contain" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-slate-900">{brandName}</h1>
+                                <h1 className="text-lg font-semibold text-slate-900">{brandName}</h1>
                                 <div className="flex items-center gap-2 text-xs text-slate-600">
-                                    <span className={`font-bold ${reportTheme.text} uppercase tracking-wide`}>{reportTitle}</span>
+                                    <span className={`font-medium ${reportTheme.text} uppercase tracking-wide`}>{reportTitle}</span>
                                     <span className="text-slate-400">•</span>
                                     <span className="text-slate-500">{assessmentId}</span>
                                     {!isDetailed ? (
                                         <div className="flex items-center gap-2">
-                                            <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-black rounded-lg shadow-lg">
+                                            <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-lg shadow-lg">
                                                 EXECUTIVE SUMMARY MODE
                                             </span>
                                             <span className="text-slate-400">•</span>
-                                            <span className="text-slate-500 font-bold">{assessmentId}</span>
+                                            <span className="text-slate-500 font-medium">{assessmentId}</span>
                                         </div>
                                     ) : (
                                         <div className="flex items-center gap-2">
-                                            <span className="px-3 py-1 bg-blue-600 text-white text-xs font-black rounded-lg shadow-lg animate-pulse">
+                                            <span className="px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-lg animate-pulse">
                                                 ANALYSIS MODE (DETAILED)
                                             </span>
                                             <span className="text-slate-400">•</span>
-                                            <span className="text-slate-500 font-bold">{assessmentId}</span>
+                                            <span className="text-slate-500 font-medium">{assessmentId}</span>
                                         </div>
                                     )}
                                 </div>
@@ -634,8 +619,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                         {/* Right: Actions */}
                         <div className="flex items-center gap-3 no-print">
                             <div className="flex bg-slate-100 border border-slate-200 rounded-lg p-1 mr-4">
-                                <button onClick={() => setActiveTab("overview")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "overview" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Maturity Overview</button>
-                                <button onClick={() => setActiveTab("narrative")} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === "narrative" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Strategic Analysis</button>
+                                <button onClick={() => setActiveTab("overview")} className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === "overview" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Maturity Overview</button>
+                                <button onClick={() => setActiveTab("narrative")} className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${activeTab === "narrative" ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 hover:bg-white'}`}>Strategic Analysis</button>
                             </div>
                             <button
                                 onClick={handleExportPDF}
@@ -676,7 +661,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                 </div>
                                 <h1 className="text-5xl font-black text-slate-900 mb-4 tracking-tight">{reportTitle}</h1>
                                 <div className={`h-2 w-32 bg-gradient-to-r ${reportTheme.color} rounded-full mb-8`}></div>
-                                <h2 className="text-3xl font-bold text-slate-700 mb-12">{brandName}</h2>
+                                <h2 className="text-3xl font-semibold text-slate-700 mb-12">{brandName}</h2>
 
                                 <div className="space-y-4 text-left max-w-md">
                                     <div className="flex justify-between border-b border-slate-200 pb-2">
@@ -710,7 +695,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                         <motion.section variants={itemVariants} className="space-y-8 print:break-inside-avoid">
                             <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
                                 <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">01</span>
-                                <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Executive Summary</h2>
+                                <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Executive Summary</h2>
                             </div>
 
                             {isDetailed ? (
@@ -747,23 +732,23 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                     <span className="text-8xl font-black bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                                         <AnimatedCounter value={report.executive_summary.overall_maturity_index} />
                                                     </span>
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Analytical Index</span>
+                                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-widest mt-2">Analytical Index</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="flex-1 space-y-6 relative z-10">
-                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold border border-blue-200">
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-200">
                                                 <Activity className="w-4 h-4" /> Comprehensive Maturity Status
                                             </div>
                                             <h3 className="text-4xl font-extrabold text-slate-900 leading-tight">
                                                 {report.executive_summary.maturity_category} Stage <span className="text-blue-600">Reached</span>
                                             </h3>
                                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-inner group-hover:bg-white transition-colors duration-500">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                                     <Info className="w-3 h-3 text-blue-500" /> Strategic Context
                                                 </p>
-                                                <p className="text-lg text-slate-700 leading-relaxed font-semibold italic">
+                                                <p className="text-lg text-slate-700 leading-relaxed italic">
                                                     "{report.executive_summary.executive_recommendation}"
                                                 </p>
                                                 <p className="mt-4 text-xs text-slate-500 leading-relaxed">
@@ -777,9 +762,9 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                             <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
                                                                 <CheckCircle className="w-3.5 h-3.5" />
                                                             </div>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Key Pulse</span>
+                                                            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Key Pulse</span>
                                                         </div>
-                                                        <span className="text-xs font-bold text-slate-800 leading-relaxed">{obs}</span>
+                                                        <span className="text-xs font-medium text-slate-800 leading-relaxed">{obs}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -792,12 +777,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                     <div className="bg-white rounded-3xl p-10 shadow-xl border-2 border-emerald-100 flex flex-col md:flex-row items-center gap-12">
                                         <div className="w-full md:w-1/2 space-y-8">
                                             <div>
-                                                <span className="text-sm font-bold text-emerald-600 uppercase tracking-widest mb-2 block">Current Status</span>
+                                                <span className="text-sm font-medium text-emerald-600 uppercase tracking-widest mb-2 block">Current Status</span>
                                                 <h3 className="text-5xl font-black text-slate-900">{report.executive_summary.maturity_category}</h3>
                                             </div>
 
                                             <div className="space-y-4">
-                                                <div className="flex items-center justify-between text-sm font-bold">
+                                                <div className="flex items-center justify-between text-sm font-medium">
                                                     <span className="text-slate-500 uppercase tracking-wider">Maturity Progress</span>
                                                     <span className="text-emerald-600">{report.executive_summary.overall_maturity_index}%</span>
                                                 </div>
@@ -822,8 +807,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                         <div className="w-full md:w-1/2 grid grid-cols-2 gap-4">
                                             {[
-                                                { label: 'Top Strength', icon: TrendingUp, val: report.executive_summary.key_observations[0] },
-                                                { label: 'Priority Gap', icon: AlertTriangle, val: report.executive_summary.key_observations[2] },
+                                                { label: 'Top Strength', icon: TrendingUp, val: report.executive_summary.key_observations?.[0] || '—' },
+                                                { label: 'Priority Gap', icon: AlertTriangle, val: report.executive_summary.key_observations?.[2] || '—' },
                                                 { label: 'Assessment ID', icon: FileText, val: assessmentId },
                                                 { label: 'Generation Type', icon: Zap, val: 'Executive Brief' }
                                             ].map((item, i) => (
@@ -832,8 +817,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                         <item.icon className="w-6 h-6" />
                                                     </div>
                                                     <div>
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{item.label}</span>
-                                                        <span className="text-xs font-bold text-slate-800 leading-tight">{item.val}</span>
+                                                        <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest block mb-1">{item.label}</span>
+                                                        <span className="text-xs font-medium text-slate-800 leading-tight">{item.val}</span>
                                                     </div>
                                                 </div>
                                             ))}
@@ -847,7 +832,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                         <motion.section variants={itemVariants} className="space-y-8">
                             <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
                                 <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">02</span>
-                                <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Comparative Gap Analytics</h2>
+                                <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Comparative Gap Analytics</h2>
                             </div>
 
                             {isDetailed ? (
@@ -861,21 +846,21 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             </div>
                                             <div className="space-y-2">
                                                 <h4 className="text-xl font-black uppercase tracking-tight">Delta Intelligence <span className="text-blue-400">Analysis</span></h4>
-                                                <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                                                <p className="text-sm text-slate-300 leading-relaxed font-normal">
                                                     The visualizations below map your <strong>current footprint</strong> against industry-standard benchmarks. A wider area in the radar chart indicates higher multi-dimensional capabilities, while the bar chart highlights specific functional variances that require immediate strategic intervention.
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="mt-6 flex flex-wrap gap-3 relative z-10">
-                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-blue-400">Multi-Axial Mapping</span>
-                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-purple-400">Benchmark Comparison</span>
-                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-pink-400">Variance Detection</span>
+                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-medium uppercase tracking-widest text-blue-400">Multi-Axial Mapping</span>
+                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-medium uppercase tracking-widest text-purple-400">Benchmark Comparison</span>
+                                            <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-medium uppercase tracking-widest text-pink-400">Variance Detection</span>
                                         </div>
                                     </div>
 
                                     <div className="grid lg:grid-cols-2 gap-8">
                                         <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-purple-100">
-                                            <h4 className="text-sm font-bold text-purple-600 uppercase tracking-widest mb-6 text-center">Capability Footprint</h4>
+                                            <h4 className="text-sm font-medium text-purple-600 uppercase tracking-widest mb-6 text-center">Capability Footprint</h4>
                                             <ResponsiveContainer width="100%" height={350}>
                                                 <RadarChart data={report.radar_data}>
                                                     <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
@@ -886,7 +871,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             </ResponsiveContainer>
                                         </div>
                                         <div className="bg-white rounded-3xl p-8 min-h-[450px] relative overflow-hidden shadow-2xl border-2 border-pink-100">
-                                            <h4 className="text-sm font-bold text-pink-600 uppercase tracking-widest mb-6 text-center">Benchmark Variance</h4>
+                                            <h4 className="text-sm font-medium text-pink-600 uppercase tracking-widest mb-6 text-center">Benchmark Variance</h4>
                                             <ResponsiveContainer width="100%" height={350}>
                                                 <BarChart data={comparativeData} layout="vertical">
                                                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -904,15 +889,15 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                 /* STANDARD VIEW: Simplified Performance Summary (No Charts) */
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="md:col-span-2 bg-white rounded-3xl p-8 shadow-xl border-2 border-slate-100">
-                                        <h3 className="text-xl font-bold text-slate-900 mb-8 flex items-center gap-2">
+                                        <h3 className="text-xl font-semibold text-slate-900 mb-8 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-emerald-600" /> Organizational Performance Index
                                         </h3>
                                         <div className="space-y-8">
                                             {report.maturity_scorecard.slice(0, 5).map((item: any, i: number) => (
                                                 <div key={i} className="space-y-3">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-sm font-bold text-slate-700">{item.dimension}</span>
-                                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${item.score < 50 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                        <span className="text-sm font-medium text-slate-700">{item.dimension}</span>
+                                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${item.score < 50 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
                                                             {item.score < 50 ? 'Critical' : 'Healthy'}
                                                         </span>
                                                     </div>
@@ -939,12 +924,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                             <div className="space-y-10">
                                                 <div className="relative pt-10 border-t border-white/20">
-                                                    <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-emerald-500 rounded-full text-[10px] font-bold uppercase tracking-wider">Gap Analysis</div>
+                                                    <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-emerald-500 rounded-full text-[10px] font-semibold uppercase tracking-wider">Gap Analysis</div>
                                                     <div className="text-4xl font-black text-white">{100 - report.executive_summary.overall_maturity_index}%</div>
                                                     <div className="text-xs text-emerald-300 font-medium">Capture Opportunity</div>
                                                 </div>
                                                 <div className="relative pt-10 border-t border-white/20">
-                                                    <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-blue-500 rounded-full text-[10px] font-bold uppercase tracking-wider">Benchmarking</div>
+                                                    <div className="absolute top-0 left-0 -mt-3 px-3 py-1 bg-blue-500 rounded-full text-[10px] font-semibold uppercase tracking-wider">Benchmarking</div>
                                                     <div className="text-4xl font-black text-white">+12.4%</div>
                                                     <div className="text-xs text-blue-200 font-medium">Above Sector Average</div>
                                                 </div>
@@ -967,7 +952,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className={`flex items-center gap-4 border-b-4 border-gradient-to-r ${reportTheme.color} pb-4`}>
                                     <span className="text-6xl font-black bg-gradient-to-br from-slate-200 to-slate-300 bg-clip-text text-transparent">03</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Analysis Scorecard</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Analysis Scorecard</h2>
                                 </div>
 
                                 {/* Explanatory Text */}
@@ -981,18 +966,18 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-slate-50">
                                             <tr>
-                                                <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Dimension</th>
-                                                <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Analytical Score</th>
-                                                <th className="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-wider text-center">Risk Assessment</th>
+                                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Dimension</th>
+                                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Analytical Score</th>
+                                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider text-center">Risk Assessment</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {report.maturity_scorecard.map((item: any, i: number) => (
                                                 <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-slate-800">{item.dimension}</td>
+                                                    <td className="px-6 py-4 font-medium text-slate-800">{item.dimension}</td>
                                                     <td className="px-6 py-4 text-2xl font-black text-center text-blue-600"><AnimatedCounter value={item.score} /></td>
                                                     <td className="px-6 py-4 text-center">
-                                                        <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase ${item.risk_level.includes('High') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                        <span className={`px-3 py-1 text-[10px] font-medium rounded-full uppercase ${item.risk_level.includes('High') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                                                             {item.risk_level}
                                                         </span>
                                                     </td>
@@ -1009,7 +994,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-orange-500 to-red-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-orange-200 to-red-200 bg-clip-text text-transparent">04</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Dimension Insights</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Dimension Insights</h2>
                                 </div>
 
                                 {/* Explanatory Text */}
@@ -1035,16 +1020,16 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-indigo-500 to-purple-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-indigo-200 to-purple-200 bg-clip-text text-transparent">05</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Transformation Roadmap</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Transformation Roadmap</h2>
                                 </div>
 
                                 {/* Explanatory Text */}
                                 <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border-l-4 border-indigo-500 shadow-md">
                                     <p className="text-sm text-slate-700 leading-relaxed mb-3">
-                                        <strong className="text-indigo-700">Implementation Strategy:</strong> This phased roadmap outlines a structured approach to digital transformation. Each phase builds upon the previous one, ensuring sustainable change management and minimizing operational disruption.
+                                        <strong className="text-indigo-700 font-semibold">Implementation Strategy:</strong> This phased roadmap outlines a structured approach to digital transformation. Each phase builds upon the previous one, ensuring sustainable change management and minimizing operational disruption.
                                     </p>
                                     <p className="text-sm text-slate-700 leading-relaxed">
-                                        <strong className="text-indigo-700">Timeline Guidance:</strong> Immediate actions (0-3 months) focus on quick wins and foundation building. Short-term initiatives (3-12 months) address core capabilities, while medium-term projects (12-24 months) drive strategic differentiation.
+                                        <strong className="text-indigo-700 font-semibold">Timeline Guidance:</strong> Immediate actions (0-3 months) focus on quick wins and foundation building. Short-term initiatives (3-12 months) address core capabilities, while medium-term projects (12-24 months) drive strategic differentiation.
                                     </p>
                                 </div>
 
@@ -1061,10 +1046,10 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             <div key={i} className={`bg-gradient-to-br ${color.light} p-8 rounded-3xl border-2 ${color.border} shadow-xl hover:shadow-2xl transition-all group relative overflow-hidden`}>
                                                 <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${color.bg}`}></div>
                                                 <div className="flex items-center justify-between mb-6 mt-2">
-                                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-lg bg-gradient-to-r ${color.bg} text-white shadow-md`}>{phase.timeline}</span>
+                                                    <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r ${color.bg} text-white shadow-md`}>{phase.timeline}</span>
                                                     <span className={`text-6xl font-black ${color.text} opacity-10 group-hover:opacity-20 transition-opacity`}>{i + 1}</span>
                                                 </div>
-                                                <h3 className={`text-xl font-bold ${color.text} mb-6 uppercase tracking-wider`}>{phase.phase}</h3>
+                                                <h3 className={`text-xl font-semibold ${color.text} mb-6 uppercase tracking-wider`}>{phase.phase}</h3>
                                                 <ul className="space-y-4">
                                                     {phase.actions.map((action: string, idx: number) => (
                                                         <li key={idx} className="flex items-start gap-3 text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
@@ -1084,7 +1069,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-blue-500 to-indigo-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-blue-200 to-indigo-200 bg-clip-text text-transparent">03</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Strategy Guidance</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Strategy Guidance</h2>
                                 </div>
                                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border-2 border-blue-200 shadow-xl">
                                     <p className="text-lg text-slate-700 mb-6 font-medium">To unlock the next level of digital maturity, we recommend focusing on the following core pillars:</p>
@@ -1096,9 +1081,9 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             { title: "Culture of Agility", desc: "Launch continuous learning programs to bridge Digital Literacy gaps across the workforce." }
                                         ].map((pillar, i) => (
                                             <div key={i} className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-blue-100 shadow-sm">
-                                                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold">{i + 1}</div>
+                                                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white font-semibold">{i + 1}</div>
                                                 <div>
-                                                    <h4 className="font-bold text-slate-900 mb-1">{pillar.title}</h4>
+                                                    <h4 className="font-semibold text-slate-900 mb-1">{pillar.title}</h4>
                                                     <p className="text-sm text-slate-600 leading-relaxed">{pillar.desc}</p>
                                                 </div>
                                             </div>
@@ -1113,7 +1098,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-red-500 to-rose-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-red-200 to-rose-200 bg-clip-text text-transparent">06</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Risk Assessment & Mitigation</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Risk Assessment & Mitigation</h2>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-6">
@@ -1128,19 +1113,19 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                         return (
                                             <div key={i} className={`bg-gradient-to-br ${color.light} p-6 rounded-2xl border-2 ${color.border} shadow-lg`}>
                                                 <div className="flex items-start justify-between mb-4">
-                                                    <div className={`px-3 py-1 rounded-lg bg-gradient-to-r ${color.bg} text-white text-xs font-bold shadow-md`}>
+                                                    <div className={`px-3 py-1 rounded-lg bg-gradient-to-r ${color.bg} text-white text-xs font-medium shadow-md`}>
                                                         {risk.category || `Risk ${i + 1}`}
                                                     </div>
                                                     <AlertTriangle className={`w-6 h-6 ${color.text}`} />
                                                 </div>
-                                                <h4 className={`font-bold ${color.text} text-base mb-3`}>{risk.risk || "Strategic Risk"}</h4>
+                                                <h4 className="font-semibold text-slate-900 text-base mb-3">{risk.risk || "Strategic Risk"}</h4>
                                                 <div className="space-y-3">
                                                     <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                                        <p className="text-xs font-bold text-slate-600 mb-1">Impact:</p>
+                                                        <p className="text-xs font-medium text-slate-600 mb-1">Impact:</p>
                                                         <p className="text-sm text-slate-800">{risk.impact || "High impact on transformation goals"}</p>
                                                     </div>
                                                     <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                                        <p className="text-xs font-bold text-slate-600 mb-1">Mitigation Strategy:</p>
+                                                        <p className="text-xs font-medium text-slate-600 mb-1">Mitigation Strategy:</p>
                                                         <p className="text-sm text-slate-800">{risk.mitigation || "Implement comprehensive change management"}</p>
                                                     </div>
                                                 </div>
@@ -1151,7 +1136,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Opportunity Areas */}
                                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-8 border-2 border-green-300 shadow-xl">
-                                    <h3 className="text-2xl font-bold text-green-700 mb-6 flex items-center gap-3">
+                                    <h3 className="text-2xl font-semibold text-green-700 mb-6 flex items-center gap-3">
                                         <TrendingUp className="w-7 h-7" />
                                         Strategic Opportunities
                                     </h3>
@@ -1163,8 +1148,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                         <Star className="w-4 h-4 text-white" />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <h5 className="font-bold text-slate-900 text-sm mb-1">{opp.opportunity}</h5>
-                                                        <span className="text-xs font-bold text-green-600 px-2 py-1 bg-green-100 rounded-full">{opp.value}</span>
+                                                        <h5 className="font-semibold text-slate-900 text-sm mb-1">{opp.opportunity}</h5>
+                                                        <span className="text-xs font-medium text-green-600 px-2 py-1 bg-green-100 rounded-full">{opp.value}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1179,7 +1164,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-emerald-500 to-teal-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-emerald-200 to-teal-200 bg-clip-text text-transparent">07</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Investment & Resource Allocation</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Investment & Resource Allocation</h2>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1197,11 +1182,11 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color.bg} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
                                                     <DollarSign className="w-6 h-6 text-white" />
                                                 </div>
-                                                <h4 className="font-bold text-slate-900 text-base mb-2">{inv.area}</h4>
+                                                <h4 className="font-semibold text-slate-900 text-base mb-2">{inv.area}</h4>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center justify-between text-sm">
                                                         <span className="text-slate-600">Effort Level:</span>
-                                                        <span className="font-bold text-slate-900">{inv.effort}</span>
+                                                        <span className="font-medium text-slate-900">{inv.effort}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
                                                         <span className="text-slate-600">Investment:</span>
@@ -1215,7 +1200,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Budget Breakdown Chart */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-emerald-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-emerald-700 mb-6">Recommended Budget Allocation</h3>
+                                    <h3 className="text-xl font-semibold text-emerald-700 mb-6">Recommended Budget Allocation</h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <BarChart data={report.investment_indication} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -1242,12 +1227,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             </motion.section>
                         )}
 
-                        {/* 08 Key Performance Indicators - Only in Detailed Report */}
-                        {isDetailed && (
+                        {/* 08 Key Performance Indicators - Hidden (hardcoded data) */}
+                        {false && (
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-cyan-500 to-blue-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-cyan-200 to-blue-200 bg-clip-text text-transparent">08</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Success Metrics & KPIs</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Success Metrics & KPIs</h2>
                                 </div>
 
                                 <div className="grid md:grid-cols-3 gap-6">
@@ -1268,7 +1253,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                     </div>
                                                     <TrendingUp className="w-5 h-5 text-green-500" />
                                                 </div>
-                                                <h4 className="font-bold text-slate-900 text-base mb-1">{kpi.title}</h4>
+                                                <h4 className="font-semibold text-slate-900 text-base mb-1">{kpi.title}</h4>
                                                 <p className="text-xs text-slate-600 mb-4">{kpi.metric}</p>
                                                 <div className="space-y-2">
                                                     <div className="flex items-center justify-between">
@@ -1287,7 +1272,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* KPI Progress Chart */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-cyan-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-cyan-700 mb-6">Performance Improvement Trajectory</h3>
+                                    <h3 className="text-xl font-semibold text-cyan-700 mb-6">Performance Improvement Trajectory</h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <AreaChart data={[
                                             { month: 'Month 1', current: 45, target: 85 },
@@ -1327,18 +1312,18 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-violet-500 to-fuchsia-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-violet-200 to-fuchsia-200 bg-clip-text text-transparent">09</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Capability Maturity Matrix</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Capability Maturity Matrix</h2>
                                 </div>
 
                                 {/* Heatmap Grid */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-violet-200 shadow-xl overflow-x-auto">
-                                    <h3 className="text-xl font-bold text-violet-700 mb-6">Maturity Level Assessment</h3>
+                                    <h3 className="text-xl font-semibold text-violet-700 mb-6">Maturity Level Assessment</h3>
                                     <div className="min-w-[800px]">
                                         <div className="grid grid-cols-6 gap-2">
                                             {/* Header Row */}
-                                            <div className="font-bold text-sm text-slate-700 p-3">Capability</div>
+                                            <div className="font-semibold text-sm text-slate-700 p-3">Capability</div>
                                             {['Initial', 'Developing', 'Defined', 'Managed', 'Optimizing'].map((level, i) => (
-                                                <div key={i} className="font-bold text-xs text-center text-slate-700 p-3 bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-lg">
+                                                <div key={i} className="font-semibold text-xs text-center text-slate-700 p-3 bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-lg">
                                                     {level}
                                                 </div>
                                             ))}
@@ -1346,7 +1331,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             {/* Data Rows */}
                                             {report.dimension_deep_dives.slice(0, 6).map((dim: any, rowIdx: number) => (
                                                 <>
-                                                    <div key={`label-${rowIdx}`} className="font-semibold text-sm text-slate-800 p-3 bg-slate-50 rounded-lg flex items-center">
+                                                    <div key={`label-${rowIdx}`} className="font-medium text-sm text-slate-800 p-3 bg-slate-50 rounded-lg flex items-center">
                                                         {dim.dimension}
                                                     </div>
                                                     {[1, 2, 3, 4, 5].map((level) => {
@@ -1375,7 +1360,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Maturity Distribution */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-violet-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-violet-700 mb-6">Maturity Distribution</h3>
+                                    <h3 className="text-xl font-semibold text-violet-700 mb-6">Maturity Distribution</h3>
                                     <ResponsiveContainer width="100%" height={300}>
                                         <BarChart data={report.maturity_scorecard.map((item: any) => ({
                                             name: item.dimension.substring(0, 15),
@@ -1411,7 +1396,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-sky-500 to-blue-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-sky-200 to-blue-200 bg-clip-text text-transparent">10</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Industry Benchmarking</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Industry Benchmarking</h2>
                                 </div>
 
                                 {/* Benchmark Comparison */}
@@ -1422,7 +1407,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                         { label: 'Industry Leaders', score: 88, color: 'from-green-500 to-emerald-500', light: 'from-green-50 to-emerald-50', border: 'border-green-300' }
                                     ].map((bench, i) => (
                                         <div key={i} className={`bg-gradient-to-br ${bench.light} p-8 rounded-3xl border-2 ${bench.border} shadow-xl`}>
-                                            <h4 className="font-bold text-slate-900 text-lg mb-6">{bench.label}</h4>
+                                            <h4 className="font-semibold text-slate-900 text-lg mb-6">{bench.label}</h4>
                                             <div className="relative w-40 h-40 mx-auto mb-6">
                                                 <svg className="transform -rotate-90 w-40 h-40">
                                                     <circle cx="80" cy="80" r="70" stroke="#e2e8f0" strokeWidth="12" fill="none" />
@@ -1460,7 +1445,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Radar Comparison */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-sky-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-sky-700 mb-6">Multi-Dimensional Comparison</h3>
+                                    <h3 className="text-xl font-semibold text-sky-700 mb-6">Multi-Dimensional Comparison</h3>
                                     <ResponsiveContainer width="100%" height={400}>
                                         <RadarChart data={report.radar_data.map((item: any) => ({
                                             ...item,
@@ -1484,12 +1469,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             </motion.section>
                         )}
 
-                        {/* 11 Technology Stack Analysis - Only in Detailed Report */}
-                        {isDetailed && (
+                        {/* 11 Technology Stack Analysis - Hidden (hardcoded data) */}
+                        {false && (
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-teal-500 to-cyan-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-teal-200 to-cyan-200 bg-clip-text text-transparent">11</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Technology Stack Assessment</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Technology Stack Assessment</h2>
                                 </div>
 
                                 {/* Current vs Recommended */}
@@ -1500,7 +1485,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-md">
                                                 <AlertTriangle className="w-6 h-6 text-white" />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-red-700">Current Stack</h3>
+                                            <h3 className="text-2xl font-semibold text-red-700">Current Stack</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {[
@@ -1512,8 +1497,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             ].map((tech, i) => (
                                                 <div key={i} className="bg-white p-4 rounded-xl border border-red-200 shadow-sm">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="font-bold text-slate-900 text-sm">{tech.name}</span>
-                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${tech.risk === 'High' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                        <span className="font-medium text-slate-900 text-sm">{tech.name}</span>
+                                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${tech.risk === 'High' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
                                                             {tech.risk} Risk
                                                         </span>
                                                     </div>
@@ -1529,7 +1514,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-md">
                                                 <CheckCircle className="w-6 h-6 text-white" />
                                             </div>
-                                            <h3 className="text-2xl font-bold text-green-700">Recommended Stack</h3>
+                                            <h3 className="text-2xl font-semibold text-green-700">Recommended Stack</h3>
                                         </div>
                                         <div className="space-y-3">
                                             {[
@@ -1541,8 +1526,8 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             ].map((tech, i) => (
                                                 <div key={i} className="bg-white p-4 rounded-xl border border-green-200 shadow-sm">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="font-bold text-slate-900 text-sm">{tech.name}</span>
-                                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${tech.impact === 'High' ? 'bg-green-100 text-green-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                        <span className="font-medium text-slate-900 text-sm">{tech.name}</span>
+                                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${tech.impact === 'High' ? 'bg-green-100 text-green-700' : 'bg-emerald-100 text-emerald-700'}`}>
                                                             {tech.impact} Impact
                                                         </span>
                                                     </div>
@@ -1555,7 +1540,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Technology Adoption Timeline */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-teal-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-teal-700 mb-6">Technology Adoption Roadmap</h3>
+                                    <h3 className="text-xl font-semibold text-teal-700 mb-6">Technology Adoption Roadmap</h3>
                                     <div className="space-y-4">
                                         {[
                                             { quarter: 'Q1 2026', tech: 'Cloud HRIS Migration', progress: 25 },
@@ -1566,10 +1551,10 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             <div key={i} className="space-y-2">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <span className="font-bold text-slate-900 text-sm">{item.tech}</span>
+                                                        <span className="font-semibold text-slate-900 text-sm">{item.tech}</span>
                                                         <span className="ml-3 text-xs text-slate-600">{item.quarter}</span>
                                                     </div>
-                                                    <span className="text-sm font-bold text-teal-600">{item.progress}%</span>
+                                                    <span className="text-sm font-semibold text-teal-600">{item.progress}%</span>
                                                 </div>
                                                 <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
                                                     <motion.div
@@ -1586,12 +1571,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             </motion.section>
                         )}
 
-                        {/* 12 Change Impact Assessment - Only in Detailed Report */}
-                        {isDetailed && (
+                        {/* 12 Change Impact Assessment - Hidden (hardcoded data) */}
+                        {false && (
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-amber-500 to-yellow-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-amber-200 to-yellow-200 bg-clip-text text-transparent">12</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Change Impact & Readiness</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Change Impact & Readiness</h2>
                                 </div>
 
                                 {/* Stakeholder Impact */}
@@ -1603,12 +1588,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                         { group: 'Employees', impact: 'Medium', readiness: 40, color: 'from-orange-500 to-amber-500', light: 'from-orange-50 to-amber-50', border: 'border-orange-300' }
                                     ].map((stakeholder, i) => (
                                         <div key={i} className={`bg-gradient-to-br ${stakeholder.light} p-6 rounded-2xl border-2 ${stakeholder.border} shadow-lg`}>
-                                            <h4 className="font-bold text-slate-900 text-base mb-4">{stakeholder.group}</h4>
+                                            <h4 className="font-semibold text-slate-900 text-base mb-4">{stakeholder.group}</h4>
                                             <div className="space-y-3">
                                                 <div>
                                                     <div className="flex items-center justify-between mb-1">
                                                         <span className="text-xs text-slate-600">Impact Level:</span>
-                                                        <span className="text-xs font-bold text-slate-900">{stakeholder.impact}</span>
+                                                        <span className="text-xs font-semibold text-slate-900">{stakeholder.impact}</span>
                                                     </div>
                                                 </div>
                                                 <div>
@@ -1634,7 +1619,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Change Readiness Chart */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-amber-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-amber-700 mb-6">Organizational Change Readiness</h3>
+                                    <h3 className="text-xl font-semibold text-amber-700 mb-6">Organizational Change Readiness</h3>
                                     <ResponsiveContainer width="100%" height={350}>
                                         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -1659,12 +1644,12 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                             </motion.section>
                         )}
 
-                        {/* 13 Financial ROI Projections - Only in Detailed Report */}
-                        {isDetailed && (
+                        {/* 13 Financial ROI Projections - Hidden (hardcoded data) */}
+                        {false && (
                             <motion.section variants={itemVariants} className="space-y-8">
                                 <div className="flex items-center gap-4 border-b-4 border-gradient-to-r from-lime-500 to-green-500 pb-4">
                                     <span className="text-6xl font-black bg-gradient-to-br from-lime-200 to-green-200 bg-clip-text text-transparent">13</span>
-                                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Financial Impact & ROI</h2>
+                                    <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">Financial Impact & ROI</h2>
                                 </div>
 
                                 {/* ROI Summary Cards */}
@@ -1681,7 +1666,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
                                                     <Icon className="w-6 h-6 text-white" />
                                                 </div>
-                                                <h4 className="text-xs font-bold text-slate-600 mb-2">{metric.label}</h4>
+                                                <h4 className="text-xs font-semibold text-slate-600 mb-2">{metric.label}</h4>
                                                 <p className={`text-3xl font-black bg-gradient-to-r ${metric.color} bg-clip-text text-transparent mb-1`}>
                                                     {metric.value}
                                                 </p>
@@ -1693,7 +1678,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Cost-Benefit Analysis Chart */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-lime-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-lime-700 mb-6">Cost vs Benefit Projection (36 Months)</h3>
+                                    <h3 className="text-xl font-semibold text-lime-700 mb-6">Cost vs Benefit Projection (36 Months)</h3>
                                     <ResponsiveContainer width="100%" height={350}>
                                         <AreaChart data={[
                                             { month: 'M0', cost: 0, benefit: 0, cumulative: 0 },
@@ -1731,7 +1716,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                                 {/* Savings Breakdown */}
                                 <div className="bg-white rounded-3xl p-8 border-2 border-lime-200 shadow-xl">
-                                    <h3 className="text-xl font-bold text-lime-700 mb-6">Annual Savings Breakdown</h3>
+                                    <h3 className="text-xl font-semibold text-lime-700 mb-6">Annual Savings Breakdown</h3>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         {[
                                             { category: 'Process Automation', amount: '₹28M', percentage: 36 },
@@ -1743,7 +1728,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
                                             <div key={i} className="flex items-center gap-4 p-4 bg-gradient-to-br from-lime-50 to-green-50 rounded-xl border border-lime-200">
                                                 <div className="flex-1">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="font-bold text-slate-900 text-sm">{item.category}</span>
+                                                        <span className="font-semibold text-slate-900 text-sm">{item.category}</span>
                                                         <span className="text-lg font-black text-green-600">{item.amount}</span>
                                                     </div>
                                                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -1764,7 +1749,7 @@ export default function DigitalMaturityReport({ data, brandName, assessmentId, r
 
                         {/* Footer */}
                         <div className="border-t-2 border-slate-200 pt-12 mt-12 pb-12">
-                            <p className="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Confidential Advisory Report</p>
+                            <p className="text-center text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] mb-4">Confidential Advisory Report</p>
                             <div className="flex justify-center items-center gap-2 text-slate-600">
                                 <span className="font-black text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">HR TEK SYSTEMS</span>
                                 <span>•</span>

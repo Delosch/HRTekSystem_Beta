@@ -293,13 +293,13 @@ Deterministic Scoring Model
 
     Budget band (s3_q10):
 
-        "Under $10,000/year" => "under_10k"
+        "Under ₹10 Lakhs/year" => "under_10k"
 
-        "$10,000 – $50,000/year" => "10k_50k"
+        "₹10 Lakhs – ₹50 Lakhs/year" => "10k_50k"
 
-        "$50,000 – $100,000/year" => "50k_100k"
+        "₹50 Lakhs – ₹1 Crore/year" => "50k_100k"
 
-        "$100,000+ / Custom" => "100k_plus"
+        "₹1 Crore+ / Custom" => "100k_plus"
 
     Scale factor (employee midpoint for viz):
 
@@ -1372,7 +1372,7 @@ Identify improvements in:
         },
         "roi": {
           "timeSavings": "80%",
-          "costSavings": "$50,000/year",
+          "costSavings": "₹50 Lakhs/year",
           "qualityImprovement": "95% accuracy"
         },
         "implementationComplexity": "Low | Medium | High",
@@ -1390,7 +1390,7 @@ Identify improvements in:
           "name": "Implement case management system",
           "category": "Case Management",
           "vendors": ["ServiceNow HRSD", "Freshservice", "Zendesk"],
-          "estimatedCost": "$50,000 - $150,000",
+          "estimatedCost": "₹50 Lakhs - ₹1.5 Crores",
           "expectedBenefits": ["30% faster resolution", "Better tracking"],
           "prerequisites": ["Process documentation", "Stakeholder buy-in"]
         }
@@ -1407,7 +1407,7 @@ Identify improvements in:
   },
   "kpiFramework": {
     "efficiency": [
-      {"metric": "Cost per transaction", "current": "$25", "target": "$10", "benchmark": "$15"},
+      {"metric": "Cost per transaction", "current": "₹2,500", "target": "₹1,000", "benchmark": "₹1,500"},
       {"metric": "Avg resolution time", "current": "2 days", "target": "4 hours", "benchmark": "1 day"}
     ],
     "quality": [
@@ -1431,7 +1431,7 @@ Identify improvements in:
         "deliverables": ["Deliverable 1", "Deliverable 2"],
         "milestones": ["Milestone 1", "Milestone 2"],
         "risks": ["Risk 1 and mitigation"],
-        "budget": "$100,000"
+        "budget": "₹1 Crore"
       }
     ],
     "criticalSuccessFactors": ["Factor 1", "Factor 2"],
@@ -1446,13 +1446,13 @@ Identify improvements in:
         "hrToEmployeeRatio": "1:100",
         "automationLevel": "45%",
         "selfServiceAdoption": "60%",
-        "avgCostPerEmployee": "$1,200/year"
+        "avgCostPerEmployee": "₹1,00,000/year"
       },
       "yourPosition": {
         "hrToEmployeeRatio": "1:80",
         "automationLevel": "30%",
         "selfServiceAdoption": "40%",
-        "avgCostPerEmployee": "$1,500/year"
+        "avgCostPerEmployee": "₹1,25,000/year"
       },
       "gaps": ["Gap 1 with recommendation", "Gap 2 with recommendation"]
     },
@@ -2206,7 +2206,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "Integration",
               "rationale": "Eliminate fragile point-to-point integrations and enable scalable connectivity",
               "vendors": ["MuleSoft", "Boomi", "Workato"],
-              "estimatedCost": "$100,000 - $200,000",
+              "estimatedCost": "₹1 Crore - ₹2 Crores",
               "expectedBenefits": [
                 "Reduce integration maintenance by 60%",
                 "Enable real-time data sync",
@@ -2221,7 +2221,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "Analytics",
               "rationale": "Enable data-driven decision making and self-service reporting",
               "vendors": ["Power BI", "Tableau", "Visier"],
-              "estimatedCost": "$50,000 - $150,000",
+              "estimatedCost": "₹50 Lakhs - ₹1.5 Crores",
               "expectedBenefits": [
                 "Self-service reporting for managers",
                 "Real-time dashboards",
@@ -2242,7 +2242,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "Platform",
               "rationale": "Eliminate legacy system and enable modern capabilities",
               "vendors": ["ADP Workforce Now", "Paylocity", "Workday Payroll"],
-              "estimatedCost": "$200,000 - $400,000",
+              "estimatedCost": "₹2 Crores - ₹4 Crores",
               "expectedBenefits": ["Real-time payroll data", "Better compliance", "Reduced errors"],
               "prerequisites": ["Data migration plan", "Parallel run"],
               "risks": ["Payroll accuracy", "Employee disruption"],
@@ -2253,7 +2253,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "Automation",
               "rationale": "Reduce HR service center volume and improve employee experience",
               "vendors": ["ServiceNow Virtual Agent", "Microsoft Bot Framework", "IBM Watson"],
-              "estimatedCost": "$75,000 - $150,000",
+              "estimatedCost": "₹75 Lakhs - ₹1.5 Crores",
               "expectedBenefits": ["30% reduction in tickets", "24/7 support", "Faster resolution"],
               "prerequisites": ["Knowledge base", "FAQ documentation"],
               "risks": ["User acceptance", "Answer accuracy"],
@@ -2270,7 +2270,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "Platform",
               "rationale": "Consolidate talent management and enable end-to-end talent lifecycle",
               "vendors": ["Workday Talent", "SuccessFactors", "Oracle HCM Cloud"],
-              "estimatedCost": "$300,000 - $600,000",
+              "estimatedCost": "₹3 Crores - ₹6 Crores",
               "expectedBenefits": ["Unified talent data", "Better succession planning", "Skills-based matching"],
               "prerequisites": ["Current contract renewals", "Business case"],
               "risks": ["Change fatigue", "Integration complexity"],
@@ -2281,7 +2281,7 @@ You are an expert HR technology strategist specializing in technology stack asse
               "category": "AI/ML",
               "rationale": "Enable predictive workforce insights and scenario planning",
               "vendors": ["Eightfold", "Visier", "Workday VNDLY"],
-              "estimatedCost": "$150,000 - $300,000",
+              "estimatedCost": "₹1.5 Crores - ₹3 Crores",
               "expectedBenefits": ["Predictive attrition models", "Skills gap analysis", "Scenario planning"],
               "prerequisites": ["Clean historical data", "Analytics foundation"],
               "risks": ["Data quality", "Model accuracy"],
@@ -2292,13 +2292,13 @@ You are an expert HR technology strategist specializing in technology stack asse
   },
   "investmentSummary": {
     "totalEstimatedCost": {
-      "immediate": "$150,000 - $350,000",
-        "shortTerm": "$275,000 - $550,000",
-          "longTerm": "$450,000 - $900,000",
-            "total": "$875,000 - $1,800,000"
+      "immediate": "₹1.5 Crores - ₹3.5 Crores",
+        "shortTerm": "₹2.75 Crores - ₹5.5 Crores",
+          "longTerm": "₹4.5 Crores - ₹9 Crores",
+            "total": "₹8.75 Crores - ₹18 Crores"
     },
     "expectedROI": {
-      "costSavings": "$500,000/year from automation and efficiency",
+      "costSavings": "₹5 Crores/year from automation and efficiency",
         "productivityGains": "20% improvement in HR team productivity",
           "riskReduction": "50% reduction in compliance violations",
             "employeeExperience": "+15 points in eNPS",

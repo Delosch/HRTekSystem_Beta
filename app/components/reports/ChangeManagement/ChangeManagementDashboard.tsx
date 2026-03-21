@@ -51,7 +51,7 @@ export default function ChangeManagementDashboard({
         const base = data ?? {};
         if (!responses) return base;
         const indexScores = calculateIndexScores(responses as any);
-        const pct = (key: string) => Math.round(indexScores.find((i: any) => i.indexKey === key)?.percentage ?? 65);
+        const pct = (key: string) => Math.round(indexScores.find((i: any) => i.indexKey === key)?.percentage ?? 0);
         const sfri = pct('SFRI');
         const lgi  = pct('LGI');
         const ocri = pct('OCRI');
@@ -110,7 +110,7 @@ export default function ChangeManagementDashboard({
             <div className="h-screen w-full flex items-center justify-center bg-white">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Initializing Pulse Engine...</p>
+                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest animate-pulse">Initializing Pulse Engine...</p>
                 </div>
             </div>
         );
@@ -136,13 +136,13 @@ export default function ChangeManagementDashboard({
                         >
                             <img src="/hrtek_logo.png" alt="HRTek" className="h-9 w-auto object-contain" />
                             <div className="flex flex-col">
-                                <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">Change Management</h1>
-                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mt-1">Intelligence Engine</span>
+                                <h1 className="text-xl font-bold text-slate-900 tracking-tighter uppercase leading-none italic">Change Management</h1>
+                                <span className="text-[10px] font-medium text-indigo-600 uppercase tracking-[0.3em] mt-1">Intelligence Engine</span>
                             </div>
                         </motion.div>
 
                         <div className="hidden lg:flex flex-col justify-center gap-1">
-                            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none">Transformation Target</h2>
+                            <h2 className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.3em] leading-none">Transformation Target</h2>
                             <div className="flex items-center gap-3">
                                 <span className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">
                                     {brandName}
@@ -158,8 +158,8 @@ export default function ChangeManagementDashboard({
                     <div className="flex items-center gap-12">
                         <div className="hidden md:flex flex-col items-end gap-1.5">
                             <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Capture Rate</span>
-                                <span className="text-xs font-black text-indigo-600 italic">{progress}%</span>
+                                <span className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.2em]">Capture Rate</span>
+                                <span className="text-xs font-semibold text-indigo-600 italic">{progress}%</span>
                             </div>
                             <div className="h-1.5 w-40 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200/50">
                                 <motion.div 
@@ -172,7 +172,7 @@ export default function ChangeManagementDashboard({
 
                         <button
                             onClick={onGenerateDossier}
-                            className="group relative h-12 bg-slate-900 overflow-hidden text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                            className="group relative h-12 bg-slate-900 overflow-hidden text-white font-semibold text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <span className="relative z-10 flex items-center gap-2">
@@ -218,11 +218,11 @@ export default function ChangeManagementDashboard({
                         <div className="flex items-center gap-6">
                             <img src="/hrtek_logo.png" alt="HRTek" className="h-5 brightness-0 opacity-30" />
                             <div className="w-px h-4 bg-slate-200" />
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
+                            <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] italic">
                                 Built for Strategic Transformation Leaders
                             </p>
                         </div>
-                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em]">
+                        <div className="text-[9px] font-semibold text-slate-300 uppercase tracking-[0.4em]">
                             CONFIDENTIAL // HRTEK CM-ENGINE v4.2
                         </div>
                     </footer>

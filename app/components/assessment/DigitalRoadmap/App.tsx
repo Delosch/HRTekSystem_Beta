@@ -1,10 +1,48 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useFetcher, useNavigate, useLocation } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
+import EmployeeSizeModal from "~/components/EmployeeSizeModal";
 import {
     CheckCircle2, Circle, ChevronRight, Menu, X,
-    ArrowLeft, ArrowRight, Save, Target, Sparkles, Loader2, BarChart3
+    ArrowLeft, ArrowRight, Save, Target, Sparkles, Loader2, BarChart3, Play
 } from "lucide-react";
+
+const ROADMAP_VIDEO_ID = "jXtoM_-kiNY";
+
+function VideoPreview({ videoId }: { videoId: string }) {
+    const [showVideo, setShowVideo] = useState(false);
+    return (
+        <div className="w-full rounded-xl overflow-hidden border border-slate-100">
+            {showVideo ? (
+                <iframe
+                    className="w-full aspect-video"
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                    title="Engine tutorial"
+                    style={{ border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                />
+            ) : (
+                <button
+                    onClick={() => setShowVideo(true)}
+                    className="relative w-full group cursor-pointer bg-black"
+                >
+                    <img
+                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                        alt="Watch how it works"
+                        className="w-full aspect-video object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                        <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Watch how it works</span>
+                    </div>
+                </button>
+            )}
+        </div>
+    );
+}
 import { ExecutiveAdvisory } from "~/components/SharedServicesEngine/components/ExecutiveAdvisory";
 import type { HTIAdvisoryContent } from "~/models/hti.model.server";
 import { SectionInsightPanel } from "../shared/SectionInsightPanel";
@@ -59,7 +97,7 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
 
     const hasExistingData = !!(initialData && Object.keys(initialData).length > 0);
     const modify = new URLSearchParams(location.search).get('modify') === 'true';
-    const [started, setStarted] = useState(modify || !hasExistingData);
+    const [started, setStarted] = useState(modify);
     const [assessmentData, setAssessmentData] = useState<AssessmentData>(initialData);
     const [currentStep, setCurrentStep] = useState(0);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -69,6 +107,7 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
     const [showAIReport, setShowAIReport] = useState(false);
     const [sectionCompletion, setSectionCompletion] = useState<{ [key: string]: boolean }>({});
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+    const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
     // Initialize completion and step on load
     useEffect(() => {
@@ -177,18 +216,25 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
         }
     };
 
+    const submitFinalWithEmployeeCount = (employeeCount: number) => {
+        setShowEmployeeModal(false);
+        setIsSubmitting(true);
+        fetcher.submit({
+            responses: assessmentData,
+            progress: 100,
+            params: "HR Digital Transformation Roadmap",
+            employeeCount,
+        }, { method: "POST", encType: "application/json", action: location.pathname });
+    };
+
     const handleNext = async () => {
         if (currentStep < sections.length - 1) {
             await handleSave();
             setCurrentStep(p => p + 1);
             scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         } else {
-            setIsSubmitting(true);
-            fetcher.submit({
-                responses: assessmentData,
-                progress: 100,
-                params: "HR Digital Transformation Roadmap",
-            }, { method: "POST", encType: "application/json", action: location.pathname });
+            // Show employee size modal before final submission
+            setShowEmployeeModal(true);
         }
     };
 
@@ -202,28 +248,50 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
     };
 
     if (!started) {
+        const sectionCount = sections.length;
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6 py-10">
                 <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
                     <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
-                    <h1 className="text-2xl font-black text-slate-900">Digital Roadmap Engine</h1>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                        You have a saved session with <span className="font-bold text-indigo-600">{savedProgress}%</span> progress. Would you like to continue where you left off?
-                    </p>
-                    <div className="flex flex-col gap-3 pt-2">
-                        <button
-                            onClick={() => setStarted(true)}
-                            className="w-full px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
-                        >
-                            Continue with Saved Responses ({savedProgress}%)
-                        </button>
-                        <button
-                            onClick={() => { setAssessmentData({}); setStarted(true); }}
-                            className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
-                        >
-                            Start Fresh
-                        </button>
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 leading-tight">HR Transformation Roadmap Generator</h1>
+                        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Assessment</p>
                     </div>
+                    <VideoPreview videoId={ROADMAP_VIDEO_ID} />
+                    {hasExistingData ? (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress.
+                                It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{totalQuestions} questions</span>.
+                            </p>
+                            <div className="flex flex-col gap-3 pt-2">
+                                <button
+                                    onClick={() => setStarted(true)}
+                                    className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                                >
+                                    Continue ({savedProgress}% complete) →
+                                </button>
+                                <button
+                                    onClick={() => { setAssessmentData({}); setStarted(true); }}
+                                    className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
+                                >
+                                    Start Fresh
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                This assessment will capture your HR transformation vision and generate a phased, actionable roadmap aligned to your goals. It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{totalQuestions} questions</span>.
+                            </p>
+                            <button
+                                onClick={() => setStarted(true)}
+                                className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                            >
+                                Begin Assessment →
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         );
@@ -503,6 +571,12 @@ export default function App({ initialData = {}, savedProgress = 0 }: { initialDa
                     )}
                 </div>
             </div>
+
+            <EmployeeSizeModal
+                isOpen={showEmployeeModal}
+                onClose={() => setShowEmployeeModal(false)}
+                onSelect={submitFinalWithEmployeeCount}
+            />
         </div>
     );
 }

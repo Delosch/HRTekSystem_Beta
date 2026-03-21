@@ -19,6 +19,7 @@ import { generateInvoice, submitPaymentProof, getPaymentRecord, PaymentMethod } 
 import { getCompanyProfile } from "~/models/company.model.server";
 import { uploadToS3 } from "~/lib/s3.server";
 import BillingDetailsForm, { BillingContact } from "~/components/BillingDetailsForm";
+import { calculatePricing, type EngineType } from "~/services/pricing.server";
 
 interface LoaderData {
     cartItems: any[];
@@ -51,11 +52,44 @@ export const loader: LoaderFunction = async ({ request }) => {
         return redirect('/cartDashboard');
     }
 
-    const subtotal = cartItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
-    const gst = subtotal * 0.18;
+    const employeeCount = typeof companyDetails?.employee_count === 'number'
+        ? companyDetails.employee_count
+        : parseInt(companyDetails?.employee_count || "500");
+
+    const engineTypeMap: Record<string, EngineType> = {
+        "HR Transformation Roadmap Generator": "roadmap",
+        "HCM Vendor Fit Engine": "hcm-vendor-fit",
+        "HR Technology Maturity Analysis": "ai-maturity",
+        "Digital Maturity Assessment": "ai-maturity",
+        "HR AI Based Digital Maturity": "ai-maturity",
+        "Intelligent Change Management": "icms",
+        "Shared Service Designer": "shared-services",
+        "Shared Services Designer": "shared-services",
+        "SSC/COE Shared Service Planner": "shared-services",
+        "HTI - HR Transformation Intelligence": "hti",
+    };
+
+    // Enrich cart items — use the price already stored in the cart (calculated at add-to-cart
+    // time from the employee size modal), and only recalculate if no price is stored.
+    const enrichedCartItems = cartItems.map((item: any) => {
+        const engineType = engineTypeMap[item.productName] || "roadmap";
+        const empCount = item.employeeCount && item.employeeCount > 0 ? item.employeeCount : employeeCount;
+        const duration = item.durationMonths || 1;
+        const pricing = calculatePricing({ engine: engineType, employeeCount: empCount, months: duration });
+        const basePrice = item.price && item.price > 0 ? item.price : pricing.basePrice;
+        return {
+            ...item,
+            price: basePrice,
+            basePrice,
+            durationMonths: duration,
+            displayName: `${item.productName} (${duration} Month${duration > 1 ? 's' : ''})`
+        };
+    });
+
+    const subtotal = enrichedCartItems.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
+    const gst = Math.round(subtotal * 0.18);
     const total = subtotal + gst;
 
-    // Your company's payment details (store in env variables in production)
     // Your company's payment details
     const bankDetails = {
         accountName: "Delosch Technologies Private Limited",
@@ -71,7 +105,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     };
 
     return json<LoaderData>({
-        cartItems,
+        cartItems: enrichedCartItems,
         subtotal,
         gst,
         total,
@@ -189,8 +223,8 @@ export default function PaymentCheckout() {
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Payment Checkout</h1>
-                        <p className="text-gray-600 mt-2">Complete your payment to unlock HR transformation engines</p>
+                        <h1 className="text-3xl font-bold text-gray-900">Complete Your Payment</h1>
+                        <p className="text-gray-600 mt-2">Choose your preferred payment method and submit proof for verification</p>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -333,8 +367,13 @@ export default function PaymentCheckout() {
                                 <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
                                     {data.cartItems.map((item: any, idx: number) => (
                                         <div key={idx} className="flex justify-between text-sm">
-                                            <span className="text-gray-600">{item.productName}</span>
-                                            <span className="font-medium text-gray-900">—</span>
+                                            <div className="flex-1 pr-4">
+                                                <p className="text-gray-600">{item.productName}</p>
+                                                {item.durationMonths > 1 && (
+                                                    <p className="text-[10px] text-blue-500 font-semibold uppercase">{item.durationMonths} Months Subscription</p>
+                                                )}
+                                            </div>
+                                            <span className="font-medium text-gray-900">₹{(item.price || 0).toLocaleString('en-IN')}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -343,11 +382,11 @@ export default function PaymentCheckout() {
                                 <div className="space-y-2 text-sm mb-4">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Subtotal</span>
-                                        <span className="font-medium text-gray-900">—</span>
+                                        <span className="font-medium text-gray-900">₹{data.subtotal.toLocaleString('en-IN')}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">GST (18%)</span>
-                                        <span className="font-medium text-gray-900">—</span>
+                                        <span className="font-medium text-gray-900">₹{data.gst.toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
 
@@ -355,7 +394,7 @@ export default function PaymentCheckout() {
                                 <div className="pt-4 border-t border-gray-200">
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-semibold text-gray-900">Total Amount</span>
-                                        <span className="text-2xl font-bold text-blue-600">—</span>
+                                        <span className="text-2xl font-bold text-blue-600">₹{data.total.toLocaleString('en-IN')}</span>
                                     </div>
                                 </div>
 
@@ -377,6 +416,8 @@ export default function PaymentCheckout() {
             {/* Billing Details Form Modal */}
             {showBillingForm && (
                 <BillingDetailsForm
+                    cartItems={data.cartItems}
+                    total={data.total}
                     onSubmit={(details) => {
                         setBillingDetails(details);
                         setShowBillingForm(false);

@@ -265,7 +265,14 @@ export default function AdminPaymentVerification() {
             upi: { color: "text-purple-600 bg-purple-50 border-purple-100", text: "UPI" },
             qr_code: { color: "text-emerald-600 bg-emerald-50 border-emerald-100", text: "QR Code" }
         };
-        return styles[method as keyof typeof styles] || styles.bank_transfer;
+        return styles[method as keyof typeof styles] || { color: "text-gray-400 bg-gray-50 border-gray-100", text: "No Method" };
+    };
+
+    const getStatusBadge = (status: string) => {
+        if (status === "payment_submitted") {
+            return { color: "text-indigo-600 bg-indigo-50 border-indigo-100", text: "Proof Submitted", dot: "bg-indigo-500" };
+        }
+        return { color: "text-amber-600 bg-amber-50 border-amber-100", text: "Awaiting Proof", dot: "bg-amber-400" };
     };
 
     return (
@@ -303,7 +310,7 @@ export default function AdminPaymentVerification() {
                         <InboxStackIcon className="h-8 w-8" />
                     </div>
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Awaiting Verification</p>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Pending Payments</p>
                         <p className="text-3xl font-black text-gray-900">{stats.totalPending}</p>
                     </div>
                 </div>
@@ -442,6 +449,7 @@ export default function AdminPaymentVerification() {
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instrument</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Counterparty</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Value (INR)</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Protocol</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Chronology</th>
                                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Audit Actions</th>
@@ -450,6 +458,8 @@ export default function AdminPaymentVerification() {
                         <tbody className="divide-y divide-gray-50">
                             {filteredPayments.map((payment: any, idx: number) => {
                                 const methodStyles = getPaymentMethodStyles(payment.paymentMethod);
+                                const statusBadge = getStatusBadge(payment.status);
+                                const hasProof = payment.status === "payment_submitted";
                                 return (
                                     <Fragment key={payment.invoiceId}>
                                         <motion.tr
@@ -460,7 +470,7 @@ export default function AdminPaymentVerification() {
                                         >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-xl shadow-sm border border-indigo-100">
+                                                    <div className={`h-10 w-10 flex items-center justify-center rounded-xl shadow-sm border ${hasProof ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-amber-50 text-amber-600 border-amber-100"}`}>
                                                         <DocumentTextIcon className="h-5 w-5" />
                                                     </div>
                                                     <div>
@@ -479,7 +489,15 @@ export default function AdminPaymentVerification() {
                                             </td>
                                             <td className="px-6 py-5">
                                                 <p className="text-sm font-black text-gray-900">₹{payment.totalAmount.toLocaleString()}</p>
-                                                <p className="text-[10px] font-bold text-emerald-600 uppercase">Input Inclusive</p>
+                                                <p className="text-[10px] font-bold text-emerald-600 uppercase">GST Inclusive</p>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex justify-center">
+                                                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusBadge.color}`}>
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${statusBadge.dot} ${!hasProof ? "animate-pulse" : ""}`} />
+                                                        {statusBadge.text}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex justify-center">
@@ -490,9 +508,13 @@ export default function AdminPaymentVerification() {
                                             </td>
                                             <td className="px-6 py-5">
                                                 <p className="text-xs font-bold text-gray-600">
-                                                    {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
+                                                    {payment.paymentDate
+                                                        ? new Date(payment.paymentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                                                        : new Date(payment.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </p>
-                                                <p className="text-[10px] font-bold text-gray-400 mt-0.5 italic">Synchronized</p>
+                                                <p className="text-[10px] font-bold text-gray-400 mt-0.5 italic">
+                                                    {hasProof ? "Proof Submitted" : "Invoice Created"}
+                                                </p>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center justify-end gap-2">
@@ -500,22 +522,24 @@ export default function AdminPaymentVerification() {
                                                         <button
                                                             onClick={() => viewProof(payment.signedProofUrl)}
                                                             className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
-                                                            title="Inspect Artifact"
+                                                            title="View Payment Proof"
                                                         >
                                                             <EyeIcon className="h-4 w-4" />
                                                         </button>
                                                     )}
-                                                    <button
-                                                        onClick={() => handleVerify(payment)}
-                                                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
-                                                        title="Finalize Verification"
-                                                    >
-                                                        <CheckCircleIcon className="h-4 w-4" />
-                                                    </button>
+                                                    {hasProof && (
+                                                        <button
+                                                            onClick={() => handleVerify(payment)}
+                                                            className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                                                            title="Verify Payment"
+                                                        >
+                                                            <CheckCircleIcon className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         onClick={() => handleReject(payment)}
                                                         className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-100"
-                                                        title="Revoke Transaction"
+                                                        title="Reject / Cancel"
                                                     >
                                                         <XCircleIcon className="h-4 w-4" />
                                                     </button>

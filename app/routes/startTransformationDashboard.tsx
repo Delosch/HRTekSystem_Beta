@@ -107,14 +107,17 @@ export const action: ActionFunction = async ({ request }) => {
     // Get the authoritative price from the server-side utility
     const price = getEnginePriceByName(engineName);
 
+    const durationMonths = formData.get("durationMonths") ? parseInt(formData.get("durationMonths") as string) : 1;
+
     try {
       await addOrUpdateCartItem({
         companyId: user.organisationId as string,
         productName: engineName,
         price: price,
         userId: user.userId,
+        durationMonths: durationMonths
       });
-      return json({ success: true, message: `${engineName} added to cart!` });
+      return json({ success: true, message: `${engineName} (${durationMonths} Month${durationMonths > 1 ? 's' : ''}) added to cart!` });
     } catch (error) {
       console.error("Cart error:", error);
       return json({ error: "Failed to add item to cart" }, { status: 500 });

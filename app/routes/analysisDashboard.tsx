@@ -12,6 +12,8 @@ import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
 import { getLatestAnalysis } from "~/utils/question.utils";
 import Navbar from "~/components/HomePageComponents/Navbar";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 const ENGINE = "HR Technology Maturity Analysis";
 
@@ -58,21 +60,11 @@ export const loader: LoaderFunction = async ({ request }) => {
   const completedEngines = await completedEngine(user.organisationId as string);
   const latestAnalysis = await getLatestAnalysis(user.organisationId as string, ENGINE);
 
-  // Check payment status
-  const payments = await getCompanyPayments(user.organisationId);
+  // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
-
-  // Check if any payment record for this engine is verified
-  const isPaid = isAdmin || payments.some((p: any) =>
-    (p.status === "payment_verified" || p.status === "completed") &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
-
-  // Check if any payment record for this engine is pending
-  const isPending = !isPaid && payments.some((p: any) =>
-    p.status === "payment_submitted" &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
   const hasReport = !!latestAnalysis;
 
   let recommendations = null;
@@ -93,6 +85,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
+    paymentStatus,
     isPaid,
     isPending,
     hasReport
@@ -100,12 +93,13 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function AnalysisDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<typeof loader>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -134,8 +128,10 @@ export default function AnalysisDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
+      if (isPaid) {
         navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
         navigate('/payment/checkout');
       }
@@ -585,6 +581,15 @@ export default function AnalysisDashboard() {
             <span className="font-semibold">{toastMessage}</span>
           </div>
         )}
+
+        <PaymentStatusModal 
+          isOpen={isStatusModalOpen}
+          onClose={() => setIsStatusModalOpen(false)}
+          status={paymentStatus.status}
+          engineName={ENGINE}
+          expiresAt={paymentStatus.expiresAt}
+          onProceed={paymentStatus.status === "paid" ? () => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
+        />
       </div>
     </div>
   );
