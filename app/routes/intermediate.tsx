@@ -204,6 +204,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const promptId = url.searchParams.get("promptId") || "digital_maturity";
   const engine = url.searchParams.get("engine") || "Profiling Assessment";
+  const skipQuestions = url.searchParams.get("skipQuestions") === "true";
 
   const currentStatus = getAIStatus(companyId);
 
@@ -218,14 +219,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}`);
 
-  // Trigger generation if:
-  // 1. No status OR status is 'error' OR
-  // 2. Status is 'ready' but no report exists (edge case fix) OR
-  // 3. Forced regeneration requested
-  const shouldGenerate = !currentStatus ||
+  // Trigger generation only when needed:
+  // 1) Forced regeneration requested
+  // 2) Status is error
+  // 3) Status is ready but report missing (edge case)
+  // 4) No status AND report missing
+  const forceRegeneration = url.searchParams.get("force") === "true";
+  const shouldGenerate =
+    forceRegeneration ||
     currentStatus === "error" ||
-    url.searchParams.get("force") === "true" ||
-    (currentStatus === "ready" && !existingReport);
+    (currentStatus === "ready" && !existingReport) ||
+    (!currentStatus && !existingReport);
 
   if (shouldGenerate) {
     const { generate } = await import("~/lib/processor.genAi");
@@ -247,6 +251,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     questions: recommendationQuestions,
     engine,
     promptId,
+    skipQuestions,
     initialStatus: currentStatus,
     hasExistingReport: !!existingReport
   });
@@ -303,14 +308,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Main Component
 export default function Intermediate() {
-  const { companyId, questions, engine, initialStatus, hasExistingReport } = useLoaderData<typeof loader>();
+  const { companyId, questions, engine, initialStatus, hasExistingReport, skipQuestions } = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const navigate = useNavigate();
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitted, setSubmitted] = useState(initialStatus === "ready" && hasExistingReport);
-  const [aiReady, setAiReady] = useState(initialStatus === "ready" && hasExistingReport);
+  const [submitted, setSubmitted] = useState(skipQuestions || (initialStatus === "ready" && hasExistingReport));
+  const [aiReady, setAiReady] = useState(hasExistingReport || (initialStatus === "ready" && hasExistingReport));
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -364,6 +369,27 @@ export default function Intermediate() {
         try {
           const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
 
+          // Always verify report availability directly from route before trusting status flags
+          try {
+            const reportCheckUrl = reportUrl.includes('?')
+              ? `${reportUrl}&verify=true`
+              : `${reportUrl}?verify=true`;
+
+            const reportResponse = await fetch(reportCheckUrl, {
+              method: 'HEAD'
+            });
+
+            if (reportResponse.ok || reportResponse.status === 200) {
+              console.log(`[Polling ${currentElapsed}s] ✅ Report route available`);
+              setAiReady(true);
+              if (pollRef.current) clearInterval(pollRef.current);
+              if (timerRef.current) clearInterval(timerRef.current);
+              return;
+            }
+          } catch (reportErr) {
+            console.log(`[Polling ${currentElapsed}s] Report availability check failed, retrying...`, reportErr);
+          }
+
           // Check AI status
           const statusResponse = await fetch(`/api/ai-status?companyId=${companyId}`);
           if (statusResponse.ok) {
@@ -371,7 +397,7 @@ export default function Intermediate() {
 
             console.log(`[Polling ${currentElapsed}s] AI Status: ${statusData.status}`);
 
-            // If status is 'ready', verify the report actually exists in DB
+            // If status is 'ready', verify the report route exists
             if (statusData.status === 'ready') {
               console.log(`[Polling ${currentElapsed}s] Status is 'ready', verifying report in DB...`);
 
@@ -397,22 +423,16 @@ export default function Intermediate() {
                 console.log(`[Polling ${currentElapsed}s] ⚠️ Error checking report, will retry:`, reportErr);
               }
             }
-            // Auto-redirect after 25 seconds even if still pending
-            else if (statusData.status === 'pending' && currentElapsed > 25) {
-              console.log(`⚠️ Generation slow (elapsed: ${currentElapsed}s), auto-redirecting to report`);
-              navigate(reportUrl, { replace: true });
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (timerRef.current) clearInterval(timerRef.current);
+            // Keep polling while pending; do not stop and force fallback loop
+            else if (statusData.status === 'pending' && currentElapsed > 45) {
+              console.log(`⏳ Generation still pending after ${currentElapsed}s; continuing to poll...`);
             }
             // Show error after 10 seconds if status is error or timeout
             else if (
               statusData.status === 'timeout' ||
               (statusData.status === 'error' && currentElapsed > 10)
             ) {
-              console.log(`⚠️ Generation failed (status: ${statusData.status}, elapsed: ${currentElapsed}s), showing error UI`);
-              setError('AI generation encountered an issue. You can proceed to dashboard.');
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (timerRef.current) clearInterval(timerRef.current);
+              console.log(`⚠️ Generation uncertain (status: ${statusData.status}, elapsed: ${currentElapsed}s), continuing checks`);
             }
           }
         } catch (err) {
@@ -454,13 +474,7 @@ export default function Intermediate() {
                   <span className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full animate-ping opacity-60" />
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Report Ready</h2>
-                <p className="text-slate-500 text-sm mb-8">Your personalised intelligence report has been compiled and is ready to view.</p>
-                <a
-                  href={reportUrl}
-                  className="inline-flex items-center justify-center w-full py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-indigo-300/40 hover:scale-[1.02]"
-                >
-                  View Your Intelligence Report →
-                </a>
+                <p className="text-slate-500 text-sm mb-3">Opening your dashboard automatically...</p>
               </div>
             </div>
           ) : error ? (

@@ -34,6 +34,7 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
         const user = await requireUserSession(request);
         if (!user || !user.organisationId) return redirect('/auth');
         if (!params.id) throw new Response("Assessment ID Required", { status: 404 });
+        const url = new URL(request.url);
 
         console.log(`[Consulting Report Loader] User: ${user.organisationId}, Engine: ${params.id}`);
 
@@ -83,18 +84,40 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         if (!data) {
             console.error(`[Consulting Report Loader] No assessment data found for ${params.id}`);
-            throw new Response("No assessment data found", { status: 404 });
+            if (url.searchParams.get("verify") === "true") {
+                throw new Response("No assessment data found", { status: 404 });
+            }
+
+            const promptMap: Record<string, string> = {
+                "Profiling Assessment": "digital_maturity",
+                "Digital Maturity Assessment": "digital_maturity",
+                "HR Technology Maturity Analysis": "digital_maturity",
+                "HR Tech Maturity Analysis": "digital_maturity",
+                "Shared Service Designer": "shared_services",
+                "Intelligent Change Management": "change_management",
+                "Change Management Readiness": "change_management",
+                "HCM Vendor Fit Engine": "vendor_fit",
+                "HR Transformation Roadmap Generator": "digital_roadmap"
+            };
+
+            const promptId = promptMap[params.id || ""] || "digital_maturity";
+            return redirect(`/intermediate?engine=${encodeURIComponent(params.id || "Profiling Assessment")}&promptId=${encodeURIComponent(promptId)}&skipQuestions=true`);
         }
 
         const company_info = await getCompanyProfile(user.organisationId);
         const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client";
 
-        // Also fetch raw responses and questions
-        const responses = await getAnswerSheetByAssessmentName(user.organisationId, params.id || "");
-        const questions = await getLatestQuestion(params.id || "");
+        // Also fetch raw responses and questions (best-effort; should not fail report rendering)
+        let responses = null;
+        let questions = null;
+        try {
+            responses = await getAnswerSheetByAssessmentName(user.organisationId, params.id || "");
+            questions = await getLatestQuestion(params.id || "");
+        } catch (auxError) {
+            console.error("[Consulting Report Loader] Failed to fetch responses/questions:", auxError);
+        }
 
         // Check URL for report type (detailed vs standard)
-        const url = new URL(request.url);
         const reportType = url.searchParams.get('type') as 'detailed' | 'standard' || 'detailed';
 
         return json({
@@ -108,7 +131,9 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
         });
     } catch (e) {
         console.error("REPORT_LOADER_ERROR:", e);
-        // Provide more context in the error response if possible
+        if (e instanceof Response) {
+            throw e;
+        }
         const errorMessage = e instanceof Error ? e.message : "Unknown error";
         throw new Response(`Internal Server Error: ${errorMessage}`, { status: 500 });
     }

@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { QuestionSchema } from "./questionSchema";
 import { useLocation, useNavigate, useFetcher } from "@remix-run/react";
 import { useAutoSaveForm } from "~/hooks/useAutoSaveForm";
+import { useFormValidation } from "../../hooks/useFormValidation";
 import { AnimatePresence, motion, Reorder } from "framer-motion";
 
 function DragHandleIcon() {
@@ -25,12 +26,12 @@ function RankingQuestion({ question, value, onChange }: {
 }) {
   // The 'value' from the form state is the source of truth.
   // We initialize our local state with it, or with the default options if no value exists yet.
-  const [orderedItems, setOrderedItems] = useState(value || question.options || []);
+  const [orderedItems, setOrderedItems] = useState(value ?? question.options ?? []);
 
   // This effect ensures that if the form data is loaded asynchronously (e.g., from auto-save),
   // our component's state reflects the latest value from the parent.
   useEffect(() => {
-    setOrderedItems(value || question.options || []);
+    setOrderedItems(value ?? question.options ?? []);
   }, [value, question.options]);
 
   const handleReorder = (newOrder: string[]) => {
@@ -45,7 +46,7 @@ function RankingQuestion({ question, value, onChange }: {
       <Reorder.Group axis="y" values={orderedItems} onReorder={handleReorder}>
         {orderedItems.map((item: string, index: number) => (
           <Reorder.Item
-            key={item}
+            key={`${item}-${index}`}
             value={item}
             className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-4"
             // Add some visual feedback while dragging
@@ -66,10 +67,10 @@ function RankingQuestion({ question, value, onChange }: {
 export default function EngineFormRender({
   data, engineName, existingResponses, savedProgress = 0
 }: { data: QuestionSchema, engineName: string, existingResponses?: any, savedProgress?: number }) {
+  const [startFresh, setStartFresh] = useState(false);
   const navigate = useNavigate()
   const [started, setStarted] = useState(false);
-  const path = useLocation()
-  console.log(path)
+  const { pathname } = useLocation()
 
   // Safety check: If data is undefined or doesn't have parts
   if (!data || !data.parts || !Array.isArray(data.parts) || data.parts.length === 0) {
@@ -116,7 +117,7 @@ export default function EngineFormRender({
     fetcher.submit(payload, {
       method: 'POST',
       encType: 'application/json',
-      action: path.pathname
+      action: pathname
     });
   };
 
@@ -133,7 +134,7 @@ export default function EngineFormRender({
     fetcher.submit(payload, {
       method: "POST",
       encType: "application/json",
-      action: path.pathname
+      action: pathname
     });
   };
 
@@ -152,13 +153,13 @@ export default function EngineFormRender({
               </p>
               <div className="flex flex-col gap-3 pt-2">
                 <button
-                  onClick={() => setStarted(true)}
+                  onClick={() => { setStartFresh(false); setStarted(true);}}
                   className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
                 >
                   Continue with Saved Responses ({savedProgress}%)
                 </button>
                 <button
-                  onClick={() => setStarted(true)}
+                  onClick={() => { setStartFresh(true); setStarted(true);}}
                   className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
                 >
                   Start Fresh
@@ -171,7 +172,7 @@ export default function EngineFormRender({
                 Welcome! This assessment will help us understand your HR landscape. Answer all sections and save your progress at any time.
               </p>
               <button
-                onClick={() => setStarted(true)}
+                onClick={() => { setStartFresh(false); setStarted(true);}}
                 className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
               >
                 Begin Assessment →
@@ -183,11 +184,14 @@ export default function EngineFormRender({
     )
   }
 
+  
+
   return <FormSheet
+    key={startFresh ? "fresh" : "resume"}
     steps={data.parts}
     assessmentId={data.pk}
     title={`${engineName} Assessment`}
-    initialFormData={existingResponses || {}}
+    initialFormData={startFresh ? {} : (existingResponses || {})}
     autoSaveKey={`assessment_${engineName}`}
     autoSaveDebounce={5000}
     onStepSave={handleStepSave}
@@ -200,6 +204,19 @@ export default function EngineFormRender({
       }
     }
   />;
+}
+
+function ProgressBar({ progress }: { progress: number }) {
+  return (
+    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-5">
+      <motion.div
+        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-in-out"
+        initial={{ width: 0 }}
+        animate={{ width: `${progress}%` }}
+        transition={{ duration: 0.5 }}
+      />
+    </div>
+  );
 }
 
 const FormSheet = ({
@@ -391,11 +408,7 @@ const FormSheet = ({
 
         {showProgressBar && <ProgressBar progress={progress} />}
 
-        {showAutoSaveIndicator && false && (
-          <div className="text-center text-xs text-gray-500 mb-3 animate-pulse">
-            Auto-saving draft...
-          </div>
-        )}
+    
 
         {/* Current Step Content */}
         <AnimatePresence mode="wait">
@@ -406,9 +419,18 @@ const FormSheet = ({
             transition={{ duration: 0.3 }}
             key={currentStepData.part}
           >
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-1.5">{currentStepData.part}</h2>
-              <p className="text-sm text-gray-600">{currentStepData.intro}</p>
+            <div className="mb-6 space-y-1">
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">
+                Section {currentStep + 1}
+              </span>
+
+              <h2 className="text-2xl font-bold text-gray-900">
+                {currentStepData.part}
+              </h2>
+
+              <p className="text-sm text-gray-600">
+                {currentStepData.intro}
+              </p>
             </div>
 
             <div className="space-y-6">
@@ -430,6 +452,7 @@ const FormSheet = ({
         {/* Navigation Buttons */}
         <div className="flex justify-between mt-6 pt-3 border-t border-gray-200">
           <button
+            type="button"
             onClick={handlePrevious}
             disabled={isSubmitting}
             className="px-5 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
@@ -437,6 +460,7 @@ const FormSheet = ({
             Previous
           </button>
           <button
+            type="button"
             onClick={handleNext}
             disabled={isSubmitting}
             className="px-7 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -494,76 +518,8 @@ interface QuestionnaireEngineProps {
   showAutoSaveIndicator?: boolean;
 }
 
-// Custom validation hook
-const useFormValidation = (steps: QuestionnaireStep[], formData: any, currentStep: number) => {
-  const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const validateCurrentStep = useCallback(() => {
-    const currentStepErrors: ValidationErrors = {};
-    let isValid = true;
-    const step = steps[currentStep];
 
-    if (!step) return true;
-
-    step.questions.forEach(q => {
-      const qId = q.id;
-      const value = formData[qId];
-      const otherValue = formData[`${qId}_other`];
-
-      delete currentStepErrors[qId];
-      delete currentStepErrors[`${qId}_other`];
-
-      if (q.required) {
-        if (q.type === "checkbox") {
-          if (!Array.isArray(value) || value.length === 0) {
-            currentStepErrors[qId] = `${q.title} is required. Please select at least one option.`;
-            isValid = false;
-          } else if (value.includes("Other") && (!otherValue || String(otherValue).trim() === "")) {
-            currentStepErrors[`${qId}_other`] = `Please specify for "Other" option.`;
-            isValid = false;
-          }
-        } else if (q.type === "radio" || q.type === "dropdown" || q.type === "scale") {
-          if (!value) {
-            currentStepErrors[qId] = `${q.title} is required. Please select an option.`;
-            isValid = false;
-          } else if (value === "Other" && (!otherValue || String(otherValue).trim() === "")) {
-            currentStepErrors[`${qId}_other`] = `Please specify for "Other" option.`;
-            isValid = false;
-          }
-        } else if (q.type === "textarea" || q.type === "text") {
-          if (!value || String(value).trim() === "") {
-            currentStepErrors[qId] = `${q.title} is required.`;
-            isValid = false;
-          }
-        }
-      }
-
-      if ((q.type === "textarea" || q.type === "text") && q.maxLength && value && String(value).length > q.maxLength) {
-        currentStepErrors[qId] = `${q.title} exceeds maximum length of ${q.maxLength} characters.`;
-        isValid = false;
-      }
-    });
-
-    setErrors(prev => ({ ...prev, ...currentStepErrors }));
-    return isValid;
-  }, [steps, formData, currentStep]);
-
-  return { errors, validateCurrentStep, setErrors };
-};
-
-// Progress Bar Component
-function ProgressBar({ progress }: { progress: number }) {
-  return (
-    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-5">
-      <motion.div
-        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-in-out"
-        initial={{ width: 0 }}
-        animate={{ width: `${progress}%` }}
-        transition={{ duration: 0.5 }}
-      />
-    </div>
-  );
-}
 
 // Question Renderer Component
 function QuestionRenderer({
@@ -584,7 +540,6 @@ function QuestionRenderer({
 
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
-  const otherInputValue = otherValue;
 
   const getMaxSelections = (q: any) => {
     // 1️⃣ Explicit backend config always wins
@@ -607,17 +562,24 @@ function QuestionRenderer({
   const maxSelections = getMaxSelections(question);
 
   return (
-    <div className="question-item bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
-      <p className="font-semibold text-base text-gray-800 mb-1.5">
+    <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4 shadow-sm">
+      <p className="text-sm font-semibold text-blue-600 tracking-wide">
         {question.number}. {question.title} {question.required && <span className="text-red-500">*</span>}
       </p>
-      <p className="text-sm text-gray-700 mb-3">{question.question}</p>
+      <p className="text-base font-medium text-gray-900">{question.question}</p>
 
       {/* Checkbox Input Type */}
       {question.type === "checkbox" && (
         <div className="checkbox-group grid grid-cols-1 sm:grid-cols-2 gap-2">
           {question.options?.map((opt, idx) => (
-            <label key={idx} className="flex items-center space-x-2 text-gray-700 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150">
+            <label
+              key={idx}
+              className={`flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition-all
+  ${checkboxValue.includes(opt)
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-blue-300"
+                }`}
+            >
               <input
                 type="checkbox"
                 checked={checkboxValue.includes(opt)}
@@ -652,16 +614,28 @@ function QuestionRenderer({
 
       {/* Radio Input Type */}
       {question.type === "radio" && (
-        <div className="radio-group grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-4">
           {question.options?.map((opt, idx) => (
-            <label key={idx} className="flex items-center space-x-2 text-gray-700 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150">
+            <label
+  key={idx}
+  className={`flex items-center gap-3 border rounded-xl p-4 cursor-pointer transition-all
+  ${
+    value === opt
+      ? "border-blue-500 bg-blue-50"
+      : "border-gray-200 hover:border-blue-300"
+  }`}
+>
               <input
                 type="radio"
                 name={qId}
-                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                className="hidden"
                 checked={value === opt}
                 onChange={() => onChange(qId, opt)}
               />
+
+              <span className="text-xs font-semibold text-gray-500">
+  {String.fromCharCode(65 + idx)}
+</span>
               <span className="text-sm">{opt}</span>
             </label>
           ))}
@@ -691,7 +665,7 @@ function QuestionRenderer({
       {question.type === "dropdown" && (
         <div className="dropdown-group relative">
           <select
-            value={value || ""}
+            value={value ?? ""}
             onChange={(e) => onChange(qId, e.target.value)}
             className="w-full px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm pr-8"
           >
@@ -711,7 +685,7 @@ function QuestionRenderer({
       {/* Textarea Input Type */}
       {question.type === "textarea" && (
         <textarea
-          value={value || ""}
+          value={value ?? ""}
           onChange={(e) => onChange(qId, e.target.value)}
           placeholder="Your answer..."
           rows={3}
@@ -723,7 +697,7 @@ function QuestionRenderer({
       {question.type === "text" && (
         <input
           type="text"
-          value={value || ""}
+          value={value ?? ""}
           onChange={(e) => onChange(qId, e.target.value)}
           placeholder="Your answer..."
           className="w-full px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
@@ -742,7 +716,7 @@ function QuestionRenderer({
               name={`${qId}_other`}
               placeholder="Please specify..."
               className="w-full px-3 py-1.5 mt-2 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              value={otherValue || ""}
+              value={otherValue ?? ""}
               onChange={(e) => onChange(`${qId}_other`, e.target.value)}
             />
           )
