@@ -1,7 +1,10 @@
 // components/QuestionnaireEngine.tsx
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAutoSaveForm } from "~/hooks/useAutoSaveForm";
+import AssessmentSidebar from "./AssessmentSidebar";
+import SectionInsights from "./SectionInsights";
+import { calculateAssessmentScore } from "~/utils/assessmentScoring";
 
 // Types
 interface Question {
@@ -49,68 +52,61 @@ interface QuestionnaireEngineProps {
 }
 
 // Custom validation hook
-const useFormValidation = (steps: QuestionnaireStep[], formData: any, currentStep: number) => {
+const useFormValidation = (steps: QuestionnaireStep[], formData: any) => {
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const validateCurrentStep = useCallback(() => {
-    const currentStepErrors: ValidationErrors = {};
-    let isValid = true;
-    const step = steps[currentStep];
+  const validateAll = () => {
+    const newErrors: ValidationErrors = {};
 
-    if (!step) return true;
+    steps.forEach(section => {
+      section.questions.forEach(q => {
+        const value = formData[q.id];
 
-    step.questions.forEach(q => {
-      const qId = q.id;
-      const value = formData[qId];
-      const otherValue = formData[`${qId}_other`];
-
-      delete currentStepErrors[qId];
-      delete currentStepErrors[`${qId}_other`];
-
-      if (q.required) {
-        if (q.type === "checkbox") {
-          if (!Array.isArray(value) || value.length === 0) {
-            currentStepErrors[qId] = `${q.title} is required. Please select at least one option.`;
-            isValid = false;
-          } else if (value.includes("Other") && (!otherValue || String(otherValue).trim() === "")) {
-            currentStepErrors[`${qId}_other`] = `Please specify for "Other" option.`;
-            isValid = false;
-          }
-        } else if (q.type === "radio" || q.type === "dropdown" || q.type === "scale") {
-          if (!value) {
-            currentStepErrors[qId] = `${q.title} is required. Please select an option.`;
-            isValid = false;
-          } else if (value === "Other" && (!otherValue || String(otherValue).trim() === "")) {
-            currentStepErrors[`${qId}_other`] = `Please specify for "Other" option.`;
-            isValid = false;
-          }
-        } else if (q.type === "textarea" || q.type === "text") {
-          if (!value || String(value).trim() === "") {
-            currentStepErrors[qId] = `${q.title} is required.`;
-            isValid = false;
-          }
+        // ✅ NORMAL REQUIRED VALIDATION
+        if (
+          q.required &&
+          (
+            value === undefined ||
+            value === "" ||
+            (Array.isArray(value) && value.length === 0)
+          )
+        ) {
+          newErrors[q.id] = "This field is required";
         }
-      }
 
-      if ((q.type === "textarea" || q.type === "text") && q.maxLength && value && String(value).length > q.maxLength) {
-        currentStepErrors[qId] = `${q.title} exceeds maximum length of ${q.maxLength} characters.`;
-        isValid = false;
-      }
+    
+        
+
+        // ✅ "OTHER" FIELD VALIDATION
+        if (
+          q.required &&
+          q.hasOther &&
+          (
+            value === "Other" ||
+            (Array.isArray(value) && value.includes("Other"))
+          ) &&
+          !formData[`${q.id}_other`]
+        ) {
+          newErrors[`${q.id}_other`] = "Please specify";
+        }
+      });
     });
 
-    setErrors(prev => ({ ...prev, ...currentStepErrors }));
-    return isValid;
-  }, [steps, formData, currentStep]);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  return { errors, validateCurrentStep, setErrors };
+  return { errors, setErrors, validateAll };
 };
+
+
 
 // Progress Bar Component
 function ProgressBar({ progress }: { progress: number }) {
   return (
-    <div className="w-full bg-gray-200 rounded-full h-1.5 mb-5">
+    <div className="w-full bg-slate-200 rounded-full h-1.5 mb-8">
       <motion.div
-        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300 ease-in-out"
+        className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300 ease-in-out"
         initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}
         transition={{ duration: 0.5 }}
@@ -137,23 +133,71 @@ function QuestionRenderer({
 }) {
   const qId = question.id;
   const checkboxValue = Array.isArray(value) ? value : [];
-  // const otherInputValue = value?.otherValue;
 
   return (
-    <div className="question-item bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
-      <p className="font-semibold text-base text-gray-800 mb-1.5">
-        {question.number}. {question.title} {question.required && <span className="text-red-500">*</span>}
-      </p>
-      <p className="text-sm text-gray-700 mb-3">{question.question}</p>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <span className="text-sm text-indigo-600 shrink-0 font-bold">{question.number}.</span>
+        <div>
+          {question.title && (
+            <p className="text-sm text-indigo-500 font-bold uppercase tracking-wider mb-1">
+              {question.title}
+            </p>
+          )}
+          <p className="text-base text-slate-800 font-semibold leading-relaxed">{question.question}</p>
+        </div>
+      </div>
+
+      {/* Radio Input Type - TILE GRID LAYOUT */}
+      {question.type === "radio" && (
+        <div className="grid gap-3 ml-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          {question.options?.map((opt, idx) => {
+            const selected = value === opt;
+            const label = String.fromCharCode(65 + idx); // A, B, C, D...
+
+            return (
+              <div
+                key={idx}
+                onClick={() => onChange(qId, opt)}
+                className={`relative flex flex-col justify-center px-4 py-3 rounded-lg border-2 transition-all duration-200 min-h-[80px] cursor-pointer ${
+                  selected
+                    ? "border-indigo-500 bg-indigo-50 shadow-sm"
+                    : "border-slate-100 bg-slate-50 hover:border-indigo-200 hover:bg-white"
+                }`}
+              >
+                <div className="flex items-start gap-3 mb-1">
+                  <div className={`h-4 w-4 border flex-shrink-0 flex items-center justify-center transition-colors mt-0.5 rounded-full ${
+                    selected ? "border-indigo-500 bg-indigo-500" : "border-slate-300 bg-white"
+                  }`}>
+                    {selected && (
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs font-bold ${selected ? "text-indigo-700" : "text-slate-400"}`}>
+                    {label}
+                  </span>
+                </div>
+                <span className={`text-xs font-medium leading-snug ml-7 ${
+                  selected ? "text-indigo-900" : "text-slate-600"
+                }`}>
+                  {opt}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Checkbox Input Type */}
       {question.type === "checkbox" && (
-        <div className="checkbox-group grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="checkbox-group grid grid-cols-1 sm:grid-cols-2 gap-2 ml-5">
           {question.options?.map((opt, idx) => (
             <label key={idx} className="flex items-center space-x-2 text-gray-700 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150">
               <input
                 type="checkbox"
-                className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="form-checkbox h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                 checked={checkboxValue.includes(opt)}
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -169,30 +213,12 @@ function QuestionRenderer({
         </div>
       )}
 
-      {/* Radio Input Type */}
-      {question.type === "radio" && (
-        <div className="radio-group grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {question.options?.map((opt, idx) => (
-            <label key={idx} className="flex items-center space-x-2 text-gray-700 cursor-pointer p-1.5 rounded-md hover:bg-gray-100 transition-colors duration-150">
-              <input
-                type="radio"
-                name={qId}
-                className="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                checked={value === opt}
-                onChange={() => onChange(qId, opt)}
-              />
-              <span className="text-sm">{opt}</span>
-            </label>
-          ))}
-        </div>
-      )}
-
       {/* Scale Input Type */}
       {question.type === "scale" && (
-        <div className="scale-group flex flex-wrap justify-center sm:justify-start gap-2">
+        <div className="scale-group flex flex-wrap justify-center sm:justify-start gap-2 ml-5">
           {question.options?.map((opt, idx) => (
             <label key={idx} className={`flex flex-col items-center justify-center w-10 h-10 rounded-full border-2 text-sm font-semibold cursor-pointer transition-all duration-200
-                                      ${value === opt ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'border-gray-300 text-gray-700 bg-white hover:bg-blue-50 hover:border-blue-400'}`}>
+                                      ${value === opt ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'border-slate-300 text-slate-700 bg-white hover:bg-indigo-50 hover:border-indigo-400'}`}>
               <input
                 type="radio"
                 name={qId}
@@ -208,18 +234,18 @@ function QuestionRenderer({
 
       {/* Dropdown Input Type */}
       {question.type === "dropdown" && (
-        <div className="dropdown-group relative">
+        <div className="dropdown-group relative ml-5">
           <select
-            value={value || ""}
+            value={value ?? ""}
             onChange={(e) => onChange(qId, e.target.value)}
-            className="w-full px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm pr-8"
+            className="w-full px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-800 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm pr-8"
           >
             <option disabled value="">Please select an option...</option>
             {question.options?.map((opt, idx) => (
               <option key={idx} value={opt}>{opt}</option>
             ))}
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-gray-500">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-500">
             <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
             </svg>
@@ -230,11 +256,11 @@ function QuestionRenderer({
       {/* Textarea Input Type */}
       {question.type === "textarea" && (
         <textarea
-          value={value || ""}
+          value={value ?? ""}
           onChange={(e) => onChange(qId, e.target.value)}
           placeholder="Your answer..."
           rows={3}
-          className="w-full px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+          className="w-full px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm ml-5"
         />
       )}
 
@@ -242,24 +268,24 @@ function QuestionRenderer({
       {question.type === "text" && (
         <input
           type="text"
-          value={value || ""}
+          value={value ?? ""}
           onChange={(e) => onChange(qId, e.target.value)}
           placeholder="Your answer..."
-          className="w-full px-3 py-1.5 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+          className="w-full px-3 py-1.5 rounded-md border border-slate-300 bg-white text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm ml-5"
         />
       )}
 
       {/* Ranking Input Type (Placeholder - implements as select for now) */}
       {question.type === "ranking" && (
-        <div className="ranking-group">
+        <div className="ranking-group ml-5">
           {question.options?.map((opt, idx) => (
-            <div key={idx} className="flex items-center space-x-2 mb-2 p-2 bg-white rounded border border-gray-200">
-              <span className="text-xs font-bold text-gray-400 w-4">{idx + 1}.</span>
+            <div key={idx} className="flex items-center space-x-2 mb-2 p-2 bg-white rounded border border-slate-200">
+              <span className="text-xs font-bold text-slate-400 w-4">{idx + 1}.</span>
               <span className="text-sm flex-1">{opt}</span>
               <select
-                value={value?.[opt] || ""}
+                value={value?.[opt] ?? ""}
                 onChange={(e) => {
-                  const newValue = { ...(value || {}) };
+                  const newValue = { ...(value ?? {}) };
                   newValue[opt] = e.target.value;
                   onChange(qId, newValue);
                 }}
@@ -290,8 +316,8 @@ function QuestionRenderer({
               transition={{ duration: 0.2 }}
               type="text"
               placeholder="Please specify..."
-              className="w-full px-3 py-1.5 mt-2 rounded-md border border-gray-300 bg-white text-gray-800 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              value={otherValue || ""} // <--- 4. Use the new prop here
+              className="w-full px-3 py-1.5 mt-2 ml-5 rounded-md border border-slate-300 bg-white text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              value={otherValue ?? ""}
               onChange={(e) => onChange(`${qId}_other`, e.target.value)}
             />
           )
@@ -303,7 +329,7 @@ function QuestionRenderer({
         <motion.p
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-red-600 text-xs mt-1.5 error-message"
+          className="text-red-600 text-xs mt-1.5 ml-5 error-message"
         >
           {error}
         </motion.p>
@@ -312,7 +338,7 @@ function QuestionRenderer({
         <motion.p
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-red-600 text-xs mt-1.5 error-message"
+          className="text-red-600 text-xs mt-1.5 ml-5 error-message"
         >
           {otherError}
         </motion.p>
@@ -339,22 +365,18 @@ export default function QuestionnaireEngine({
   showAutoSaveIndicator = true,
 }: QuestionnaireEngineProps) {
 
-  // 🔥 DEBUG LOGS (STEP 2)
-  console.log("🔥 Steps received:", steps);
-  console.log("🔥 Current step:", steps?.[initialStep]);
 
 
-  const [currentStep, setCurrentStep] = useState(initialStep);
+
   const [showToast, setShowToast] = useState(false);
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentStepData = steps[currentStep];
-  const progress = Math.min(100, Math.round((currentStep / steps.length) * 100));
+
 
   // Auto-save form hook
   const effectiveKey = autoSaveKey || `draft_${assessmentId}`;
-  const { formData, setFormData, saveToServer, isSaving, clearData } = useAutoSaveForm<any>(
+  const { formData, setFormData, saveToServer } = useAutoSaveForm<any>(
     effectiveKey,
     initialFormData,
     {
@@ -370,10 +392,29 @@ export default function QuestionnaireEngine({
         setTimeout(() => setShowErrorToast(false), 3000);
       }
     }
+  )
+  const totalQuestions = steps.reduce(
+    (acc, s) => acc + s.questions.length,
+    0
   );
 
+  const answeredQuestions = Object.entries(formData).filter(
+    ([key, val]) => !key.endsWith("_other") && val !== undefined && val !== ""
+  ).length;
+
+  const progress =
+    totalQuestions === 0
+      ? 0
+      : Math.min(
+        100,
+        Math.round((answeredQuestions / totalQuestions) * 100)
+      );
+
+  // Calculate current score
+  const currentScore = calculateAssessmentScore(formData, steps);
+
   // Validation hook
-  const { errors, validateCurrentStep, setErrors } = useFormValidation(steps, formData, currentStep);
+  const { errors, setErrors, validateAll } = useFormValidation(steps, formData);
 
   const handleChange = (questionId: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [questionId]: value }));
@@ -389,43 +430,59 @@ export default function QuestionnaireEngine({
     });
   };
 
-  const handleSaveCurrentStep = async () => {
+  const handleSaveAll = async () => {
     if (!onStepSave) return;
 
-    setIsSubmitting(true);
-    const sectionAnswers: Record<string, any> = {};
+    if (!validateAll()) {
+      return;
+    }
 
-    for (const q of currentStepData.questions) {
-      const qId = q.id;
-      if (formData[qId] !== undefined) {
-        let answer = formData[qId];
-        if (q.hasOther && (answer === "Other" || (Array.isArray(answer) && answer.includes("Other")))) {
-          const otherText = formData[`${qId}_other`];
-          if (otherText) {
-            if (Array.isArray(answer)) {
-              answer = answer.map(item => item === "Other" ? `Other (${otherText})` : item);
-            } else {
-              answer = `Other (${otherText})`;
+    setIsSubmitting(true);
+
+    const allAnswers: Record<string, any> = {};
+
+    for (const section of steps) {
+      for (const q of section.questions) {
+        const qId = q.id;
+
+        if (formData[qId] !== undefined) {
+          let answer = formData[qId];
+
+          if (
+            q.hasOther &&
+            (answer === "Other" ||
+              (Array.isArray(answer) && answer.includes("Other")))
+          ) {
+            const otherText = formData[`${qId}_other`];
+            if (otherText) {
+              if (Array.isArray(answer)) {
+                answer = answer.map(item =>
+                  item === "Other" ? `Other (${otherText})` : item
+                );
+              } else {
+                answer = `Other (${otherText})`;
+              }
             }
           }
+
+          allAnswers[qId] = answer;
         }
-        sectionAnswers[qId] = answer;
       }
     }
 
     try {
       await onStepSave({
-        stepIndex: currentStep,
-        stepName: currentStepData.part,
-        answers: sectionAnswers,
+        stepIndex: 0,
+        stepName: "All Sections",
+        answers: allAnswers,
         progress,
       });
 
       setShowToast(true);
       setTimeout(() => setShowToast(false), 1500);
     } catch (error: any) {
-      console.error("Failed to save current step:", error);
-      onError?.(error, "step-save");
+      console.error("Save failed:", error);
+      onError?.(error, "save");
       setShowErrorToast(true);
       setTimeout(() => setShowErrorToast(false), 3000);
     } finally {
@@ -433,198 +490,145 @@ export default function QuestionnaireEngine({
     }
   };
 
-  const handleNext = async () => {
-    const isValid = validateCurrentStep();
-    if (!isValid) {
-      const firstErrorElement = document.querySelector('.error-message');
-      if (firstErrorElement) {
-        firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
-
-    if (onStepSave) {
-      await handleSaveCurrentStep();
-    }
-
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((p) => p + 1);
-      setErrors({});
-    } else {
-      // Final completion
-      if (onComplete) {
-        try {
-          await onComplete(formData);
-        } catch (error: any) {
-          onError?.(error, "completion");
-        }
-      }
-      if (saveToServer) {
-        await saveToServer(formData);
-      }
-      clearData();
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep((p) => p - 1);
-      setErrors({});
-    } else if (onNavigateBack) {
-      onNavigateBack();
-    }
-  };
 
   return (
-    <div className={`min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased relative overflow-hidden ${className}`}>
-      {/* Premium Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-blue-100/50 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-indigo-100/40 blur-[120px]" />
-      </div>
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
 
-      {/* Success Toast */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-            className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 border border-slate-800 text-white px-8 py-4 rounded-3xl shadow-2xl text-xs font-black uppercase tracking-[0.2em] z-50 flex items-center gap-3"
-          >
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Intelligence Synced
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Sidebar */}
+      <AssessmentSidebar
+        sections={steps}
+        formData={formData}
+        totalQuestions={totalQuestions}
+        currentScore={currentScore}
+        title={title}
+      />
 
-      {/* Error Toast */}
-      <AnimatePresence>
-        {showErrorToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-rose-600 text-white px-8 py-4 rounded-3xl shadow-2xl text-xs font-black uppercase tracking-[0.2em] z-50 flex items-center gap-3"
-          >
-            <div className="w-2 h-2 rounded-full bg-white animate-ping" />
-            Sync Interrupted
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className="flex-1 overflow-y-auto scroll-smooth">
+          <div className="max-w-5xl mx-auto px-6 py-12">
 
-      {/* Main Form Container - Glassmorphic */}
-      <div className="relative z-10 max-w-3xl w-full bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] p-8 sm:p-12 space-y-10 border border-white">
-        <header className="space-y-6">
-          <div className="flex justify-between items-center">
-             <img src="/hrtek_logo.png" alt="HRTek Logo" className="h-6 w-auto opacity-70" />
-             <div className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">
-               Step {currentStep + 1} of {steps.length}
-             </div>
-          </div>
-          
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-            {title}
-          </h1>
-
-          {showProgressBar && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assessment Progress</span>
-                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{progress}% Complete</span>
-              </div>
-              <ProgressBar progress={progress} />
-            </div>
+        {/* Toasts */}
+        <AnimatePresence>
+          {showToast && (
+            <motion.div className="fixed top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md text-sm z-50">
+              ✅ Progress Saved!
+            </motion.div>
           )}
-
-          {showAutoSaveIndicator && isSaving && (
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Auto-saving session...</span>
-            </div>
-          )}
-        </header>
-
-        {/* Current Step Content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            key={currentStepData.part}
-            className="space-y-10"
-          >
-            <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700" />
-              <div className="relative z-10">
-                <h2 className="text-xl font-bold mb-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-sm font-black">
-                    {currentStep + 1}
-                  </div>
-                  {currentStepData.part}
-                </h2>
-                <p className="text-slate-400 text-sm leading-relaxed max-w-xl font-medium">{currentStepData.intro}</p>
-              </div>
-            </div>
-
-            <div className="space-y-12">
-              {currentStepData.questions.map((question) => (
-                <QuestionRenderer
-                  key={question.id}
-                  question={question}
-                  value={formData[question.id]}
-                  otherValue={formData[`${question.id}_other`]}
-                  onChange={handleChange}
-                  error={errors[question.id]}
-                  otherError={errors[`${question.id}_other`]}
-                />
-              ))}
-            </div>
-          </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Buttons */}
-        <footer className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-10 border-t border-slate-100">
+        <AnimatePresence>
+          {showErrorToast && (
+            <motion.div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md text-sm z-50">
+              ❌ Error saving progress.
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+          <div>
+            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+              {title}
+            </h1>
+            <p className="text-lg text-slate-600 max-w-2xl leading-relaxed">
+              Complete the assessment sections below to generate your profile.
+            </p>
+          </div>
+        </div>
+
+        {showProgressBar && <ProgressBar progress={progress} />}
+
+        {/* Form Sections */}
+        <div className="space-y-6">
+          {steps.map((section, sectionIndex) => {
+            const questionsInSection = section.questions;
+            const answeredInSection = questionsInSection.filter(
+              q => formData[q.id] !== undefined && formData[q.id] !== ""
+            ).length;
+            const completionPercent = questionsInSection.length > 0
+              ? (answeredInSection / questionsInSection.length) * 100
+              : 0;
+
+            return (
+              <section
+                key={`${section.part}-${sectionIndex}`}
+                id={`section-${sectionIndex}`}
+                className="scroll-mt-4 rounded-xl overflow-hidden mb-10 border bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="p-8">
+                  <div className="mb-8 pb-6 border-b border-slate-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold tracking-wide uppercase text-[#06B6D4]">
+                        Section {sectionIndex + 1}
+                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-500 font-medium">
+                          {answeredInSection}/{questionsInSection.length} Completed
+                        </span>
+                        <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-[#06B6D4] to-[#1E40AF] transition-all duration-500 ease-out"
+                            style={{ width: `${completionPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <h2 className="text-3xl font-bold mb-2 text-slate-900">{section.part}</h2>
+                    <p className="text-slate-600 text-lg leading-relaxed">{section.intro}</p>
+                  </div>
+
+                  <div className="space-y-10">
+                  {section.questions.map((question) => (
+                    <QuestionRenderer
+                      key={question.id}
+                      question={question}
+                      value={formData[question.id]}
+                      otherValue={formData[`${question.id}_other`]}
+                      onChange={handleChange}
+                      error={errors[question.id]}
+                      otherError={errors[`${question.id}_other`]}
+                    />
+                  ))}
+                  </div>
+
+                  {/* Section Insights - Show charts when questions are answered */}
+                  {answeredInSection > 0 && (
+                    <SectionInsights
+                      questions={section.questions}
+                      formData={formData}
+                      sectionName={section.part}
+                    />
+                  )}
+
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        {/* Save Button */}
+        <div className="mt-12">
           <button
-            onClick={handlePrevious}
+            type="button"
+            onClick={handleSaveAll}
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-slate-900 font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs uppercase tracking-widest flex items-center justify-center h-16"
+            className="w-full max-w-md mx-auto block py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
           >
-            Back
+            {isSubmitting ? "Saving..." : "Save Assessment"}
           </button>
-          
-          <button
-            onClick={handleNext}
-            disabled={isSubmitting}
-            className={`w-full sm:w-auto px-16 py-5 rounded-2xl font-bold transition-all shadow-xl text-xs uppercase tracking-widest flex items-center justify-center h-16 group ${
-              currentStep === steps.length - 1 
-              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200' 
-              : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'
-            }`}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                Processing
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                {currentStep === steps.length - 1 ? "Complete Analysis" : "Continue"}
-                <motion.span 
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  &rarr;
-                </motion.span>
-              </div>
-            )}
-          </button>
-        </footer>
+        </div>
+
+        <div className="mt-20 pt-10 border-t border-slate-200 text-center text-slate-400 text-sm">
+          <p>&copy; 2026 Assessment Engine. All rights reserved.</p>
+        </div>
+
       </div>
     </div>
+  </div>
+</div>
   );
 }
 
-// Export types for use in other components
+
 export type { Question, QuestionnaireStep, QuestionnaireEngineProps };

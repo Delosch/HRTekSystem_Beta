@@ -27,7 +27,11 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
       );
     }
 
-    return json(questions); // Ensure we return structured JSON
+    const draftScope = session.organisationId || session.userId || "anonymous";
+    return json({
+      ...questions,
+      draftScope,
+    });
   }
   return redirect('/auth');
 };
@@ -58,7 +62,7 @@ export const action: ActionFunction = async ({ request }) => {
       await createOrUpdateEngineStorage({
         company_id: companyId,
         user_id: user.userId,
-        engine_name: "Profiling Assessment",
+        engine_name: "HR Technology Maturity Analysis",
         country: user.country_iso,
         progress: 100
       });
@@ -126,16 +130,18 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function ProfilingAssessment() {
-  const LoaderData = useLoaderData() as QuestionSchema;
+  const LoaderData = useLoaderData() as QuestionSchema & { draftScope?: string };
   const navigate = useNavigate();
   const fetcher = useFetcher();
+  const scopedDraftKey = `draft_${LoaderData.pk}_${LoaderData.draftScope || "default"}`;
 
   // Redirection handling from fetcher
   useEffect(() => {
     if (fetcher.data && (fetcher.data as any).redirect) {
+      localStorage.removeItem(scopedDraftKey);
       window.location.href = (fetcher.data as any).redirect;
     }
-  }, [fetcher.data]);
+  }, [fetcher.data, scopedDraftKey]);
 
   const handleStepSave = async (stepData: any) => {
     fetcher.submit(
@@ -173,6 +179,7 @@ export default function ProfilingAssessment() {
       <QuestionnaireEngine
         steps={LoaderData.parts}
         assessmentId={LoaderData.pk}
+        autoSaveKey={scopedDraftKey}
         title="Company Assessment Form"
         onStepSave={handleStepSave}
         onComplete={handleComplete}

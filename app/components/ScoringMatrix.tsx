@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpDown, Download } from "lucide-react";
 
 interface ScoringMatrixProps {
@@ -29,6 +29,10 @@ export default function ScoringMatrix({
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
     const [sortedParams, setSortedParams] = useState(parameters);
 
+    useEffect(() => {
+        setSortedParams(parameters);
+    }, [parameters]);
+
     const handleSort = (column: string) => {
         let newDirection: "asc" | "desc" = "desc";
 
@@ -55,13 +59,13 @@ export default function ScoringMatrix({
         const rows = sortedParams.map(param => [
             param.name,
             `${param.weight}%`,
-            ...vendors.map(v => `${param.scores[v]}/10`),
+            ...vendors.map(v => `${param.scores[v] ?? 0}/10`),
             param.impact
         ]);
 
         const csvContent = [
             headers.join(","),
-            ...rows.map(row => row.join(","))
+            ...rows.map(row => row.map(val => `"${val}"`).join(","))
         ].join("\n");
 
         // Download CSV
@@ -135,9 +139,9 @@ export default function ScoringMatrix({
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedParams.map((param, index) => (
+                        {sortedParams.map((param) => (
                             <tr
-                                key={index}
+                                key={param.name}
                                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                             >
                                 <td className="py-4 px-4 text-sm font-medium text-gray-900">
@@ -148,14 +152,16 @@ export default function ScoringMatrix({
                                 </td>
                                 {vendors.map((vendor) => {
                                     const score = param.scores[vendor];
-                                    const isHighest = score === Math.max(...vendors.map(v => param.scores[v]));
+                                    const isHighest = score === Math.max(
+  ...vendors.map(v => param.scores[v] ?? 0)
+);
                                     return (
                                         <td
                                             key={vendor}
                                             className={`py-4 px-4 text-center text-sm font-bold ${isHighest ? 'text-green-600' : 'text-gray-900'
                                                 }`}
                                         >
-                                            {score}/10
+                                            {(score ?? 0)}/10
                                         </td>
                                     );
                                 })}
@@ -178,7 +184,7 @@ export default function ScoringMatrix({
                 <div className="grid grid-cols-4 gap-4">
                     {vendors.map((vendor) => {
                         const totalScore = sortedParams.reduce((sum, param) => {
-                            return sum + (param.scores[vendor] * param.weight / 100);
+                            return sum + ((param.scores[vendor] ?? 0) * param.weight / 100);
                         }, 0);
                         return (
                             <div key={vendor} className="text-center p-4 bg-gray-50 rounded-lg">

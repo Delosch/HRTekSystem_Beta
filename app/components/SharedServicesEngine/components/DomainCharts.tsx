@@ -4,8 +4,13 @@ import {
 } from 'recharts';
 import { Activity, Brain, ArrowRight, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 
+interface Question {
+  id: number;
+  text: string;
+}
+
 interface DomainChartsProps {
-  questions: any[];
+  questions: Question[];
   answers: Record<number, number>;
   domainId?: number;
   domainWeight?: number;
@@ -22,13 +27,13 @@ const MATURITY_LABELS = ['Ad-hoc', 'Developing', 'Defined', 'Managed', 'Optimize
 export function DomainCharts({ questions, answers, domainWeight }: DomainChartsProps) {
   const barData = questions.map((q, index) => ({
     name: `Q${index + 1}`,
-    val: answers[q.id] || 0,
-    color: scoreColor(answers[q.id] || 0),
+    val: answers[q.id] ?? 0,
+    color: scoreColor(answers[q.id] ?? 0),
   }));
 
   const distribution = [0, 0, 0, 0, 0];
   questions.forEach(q => {
-    const s = answers[q.id];
+    const s = answers[q.id] ?? 0;
     if (s >= 1 && s <= 5) distribution[s - 1]++;
   });
 
@@ -37,11 +42,17 @@ export function DomainCharts({ questions, answers, domainWeight }: DomainChartsP
   })).filter(d => d.val > 0);
 
   const totalScore = barData.reduce((acc, d) => acc + d.val, 0);
-  const answeredQs = questions.filter(q => answers[q.id] > 0);
-  const performance = Math.round((totalScore / (questions.length * 5)) * 100) || 0;
+  const answeredQs = questions.filter(q => (answers[q.id] ?? 0) > 0);
+  const performance =
+  questions.length === 0
+    ? 0
+    : Math.round((totalScore / (questions.length * 5)) * 100);
   const indexScore = answeredQs.length > 0
-    ? (answeredQs.reduce((s, q) => s + answers[q.id], 0) / answeredQs.length).toFixed(1)
-    : '—';
+  ? (
+      answeredQs.reduce((s, q) => s + (answers[q.id] ?? 0), 0) /
+      answeredQs.length
+    ).toFixed(1)
+  : '—';
 
   const weightPercent = domainWeight ? Math.round(domainWeight * 100) : null;
 
@@ -51,10 +62,13 @@ export function DomainCharts({ questions, answers, domainWeight }: DomainChartsP
 
   const topQ = answeredQs.length > 0 ? answeredQs.reduce((b, q) => answers[q.id] > answers[b.id] ? q : b) : null;
   const gapQ = answeredQs.length > 0 ? answeredQs.reduce((w, q) => answers[q.id] < answers[w.id] ? q : w) : null;
-  const hasGap = gapQ !== null && answers[gapQ.id] <= 3;
+  const hasGap = gapQ !== null && (answers[gapQ.id] ?? 0) <= 3;
 
-  const strongCount = questions.filter(q => answers[q.id] >= 4).length;
-  const gapCount = questions.filter(q => answers[q.id] > 0 && answers[q.id] <= 2).length;
+  const strongCount = questions.filter(q => (answers[q.id] ?? 0) >= 4).length;
+  const gapCount = questions.filter(q => {
+  const val = answers[q.id] ?? 0;
+  return val > 0 && val <= 2;
+}).length;
 
   // Band pip thresholds
   const bandThresholds = [0, 20, 40, 60, 80];
