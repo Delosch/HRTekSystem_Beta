@@ -1,5 +1,5 @@
 import { Card } from './ui/card';
-import { Sparkles, DollarSign, Clock, TrendingUp } from 'lucide-react';
+import { Sparkles, IndianRupee, Clock, TrendingUp } from 'lucide-react';
 
 interface BudgetTimelineSectionProps {
   scenario: 'conservative' | 'balanced' | 'aggressive';
@@ -102,7 +102,7 @@ export function BudgetTimelineSection({ scenario, data }: BudgetTimelineSectionP
           <div className="p-6 bg-white rounded-lg border border-slate-200">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-blue-50 rounded">
-                <DollarSign className="w-5 h-5 text-blue-700" />
+                <IndianRupee className="w-5 h-5 text-blue-700" />
               </div>
               <div>
                 <p className="text-xs text-slate-500">Total Investment</p>

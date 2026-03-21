@@ -37,36 +37,36 @@ export function SummaryHero({ data }: { data: any }) {
                             <div className={`p-3.5 rounded-2xl ${item.bg} ${item.color} group-hover:scale-110 transition-transform duration-500`}>
                                 <item.icon className="w-5 h-5" />
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">{item.label}</span>
+                            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.15em]">{item.label}</span>
                         </div>
-                        <span className={`text-2xl font-black ${item.color} italic tracking-tighter`}>{item.val}</span>
+                        <span className={`text-2xl font-semibold ${item.color} italic tracking-tighter`}>{item.val}</span>
                     </motion.div>
                 ))}
             </div>
 
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200">
                 <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-semibold uppercase tracking-widest">
                         <Zap className="w-3 h-3 text-blue-400" />
                         Executive Insight
                     </div>
-                    <h1 className="text-7xl font-black text-slate-900 uppercase tracking-tighter italic leading-none">
+                    <h1 className="text-7xl font-semibold text-slate-900 uppercase tracking-tighter italic leading-none">
                         Strategic <span className="text-blue-600">Pulse</span>
                     </h1>
-                    <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em]">Global Shared Services Architecture & Readiness Blueprint</p>
+                    <p className="text-slate-500 font-medium uppercase text-[10px] tracking-[0.2em]">Global Shared Services Architecture & Readiness Blueprint</p>
                 </div>
                 <div className="flex items-center gap-10">
                     <div className="text-right">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Audit Status</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-1">Audit Status</span>
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                            <span className="text-sm font-black text-slate-900 uppercase italic">Active Validation</span>
+                            <span className="text-sm font-semibold text-slate-900 uppercase italic">Active Validation</span>
                         </div>
                     </div>
                     <div className="h-12 w-px bg-slate-200 hidden md:block" />
                     <div className="text-right">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Efficiency Gain</span>
-                        <span className="text-3xl font-black text-blue-600 italic tracking-tighter">{effGain}</span>
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block mb-1">Efficiency Gain</span>
+                        <span className="text-3xl font-semibold text-blue-600 italic tracking-tighter">{effGain}</span>
                     </div>
                 </div>
             </div>
@@ -102,33 +102,33 @@ export function SummaryHero({ data }: { data: any }) {
                                 <motion.span
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     whileInView={{ opacity: 1, scale: 1 }}
-                                    className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-600 tracking-tighter italic"
+                                    className="text-8xl font-semibold text-transparent bg-clip-text bg-gradient-to-br from-slate-900 to-slate-600 tracking-tighter italic"
                                 >
                                     {overallScore}<span className="text-4xl text-blue-600 align-top mt-4 ml-1 italic">%</span>
                                 </motion.span>
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">Maturity Fit</span>
+                                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-[0.3em] mt-1">Maturity Fit</span>
                             </div>
                         </div>
 
                         <div className="space-y-10">
                             <div className="space-y-4">
-                                <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter leading-[0.85] italic">
+                                <h2 className="text-5xl font-semibold text-slate-900 uppercase tracking-tighter leading-[0.85] italic">
                                     Service Model <br />
                                     <span className="text-blue-600">Integrity</span>
                                 </h2>
-                                <p className="text-base font-bold text-slate-500 leading-relaxed italic uppercase max-w-sm">
+                                <p className="text-base font-medium text-slate-500 leading-relaxed italic uppercase max-w-sm">
                                     Structural alignment indicates a high-velocity transition capability, contingent on unified governance framework adoption.
                                 </p>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="p-8 bg-slate-50 rounded-[40px] border border-slate-100 flex flex-col gap-1">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Industry Avg</span>
-                                    <span className="text-2xl font-black text-slate-900 italic tracking-tighter">65%</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Industry Avg</span>
+                                    <span className="text-2xl font-semibold text-slate-900 italic tracking-tighter">65%</span>
                                 </div>
                                 <div className="p-8 bg-emerald-50 rounded-[40px] border border-emerald-100 flex flex-col gap-1">
-                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Efficiency Delta</span>
-                                    <span className="text-2xl font-black text-emerald-600 italic tracking-tighter">{effGain}</span>
+                                    <span className="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest">Efficiency Delta</span>
+                                    <span className="text-2xl font-semibold text-emerald-600 italic tracking-tighter">{effGain}</span>
                                 </div>
                             </div>
                         </div>
@@ -145,13 +145,13 @@ export function SummaryHero({ data }: { data: any }) {
                                     <Activity className="w-7 h-7 text-emerald-400" />
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-4xl font-black italic text-emerald-400 tracking-tighter">{processScore}%</span>
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Status: Stable</span>
+                                    <span className="text-4xl font-semibold italic text-emerald-400 tracking-tighter">{processScore}%</span>
+                                    <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Status: Stable</span>
                                 </div>
                             </div>
                             <div className="mt-16">
-                                <h3 className="text-2xl font-black uppercase tracking-tighter italic leading-tight mb-2">Process Maturity</h3>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Global Standardization Index</p>
+                                <h3 className="text-2xl font-semibold uppercase tracking-tighter italic leading-tight mb-2">Process Maturity</h3>
+                                <p className="text-[10px] font-medium text-slate-500 uppercase tracking-[0.2em]">Global Standardization Index</p>
                             </div>
                         </div>
                     </Card>
@@ -164,13 +164,13 @@ export function SummaryHero({ data }: { data: any }) {
                                     <Award className="w-7 h-7 text-white" />
                                 </div>
                                 <div className="flex flex-col items-end">
-                                    <span className="text-4xl font-black italic text-white tracking-tighter">{changeStatus}</span>
-                                    <span className="text-[9px] font-black text-blue-200 uppercase tracking-widest mt-1">{changeScore}% Score</span>
+                                    <span className="text-4xl font-semibold italic text-white tracking-tighter">{changeStatus}</span>
+                                    <span className="text-[9px] font-semibold text-blue-200 uppercase tracking-widest mt-1">{changeScore}% Score</span>
                                 </div>
                             </div>
                             <div className="mt-16">
-                                <h3 className="text-2xl font-black uppercase tracking-tighter italic leading-tight mb-2">Change Readiness</h3>
-                                <p className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em]">Internal Culture Alignment</p>
+                                <h3 className="text-2xl font-semibold uppercase tracking-tighter italic leading-tight mb-2">Change Readiness</h3>
+                                <p className="text-[10px] font-medium text-blue-200 uppercase tracking-[0.2em]">Internal Culture Alignment</p>
                             </div>
                         </div>
                     </Card>

@@ -476,17 +476,24 @@ export default function QuestionnaireEngine({
   };
 
   return (
-    <div className={`min-h-screen bg-gray-100 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8 font-inter ${className}`}>
+    <div className={`min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased relative overflow-hidden ${className}`}>
+      {/* Premium Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] rounded-full bg-blue-100/50 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-indigo-100/40 blur-[120px]" />
+      </div>
+
       {/* Success Toast */}
       <AnimatePresence>
         {showToast && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md text-sm z-50 transition-all duration-300"
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 border border-slate-800 text-white px-8 py-4 rounded-3xl shadow-2xl text-xs font-black uppercase tracking-[0.2em] z-50 flex items-center gap-3"
           >
-            ✅ Progress Saved!
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Intelligence Synced
           </motion.div>
         )}
       </AnimatePresence>
@@ -495,45 +502,73 @@ export default function QuestionnaireEngine({
       <AnimatePresence>
         {showErrorToast && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md text-sm z-50 transition-all duration-300"
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-8 left-1/2 transform -translate-x-1/2 bg-rose-600 text-white px-8 py-4 rounded-3xl shadow-2xl text-xs font-black uppercase tracking-[0.2em] z-50 flex items-center gap-3"
           >
-            ❌ Error saving progress. Please try again.
+            <div className="w-2 h-2 rounded-full bg-white animate-ping" />
+            Sync Interrupted
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Form Container */}
-      <div className="max-w-3xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-8 space-y-6 border border-gray-200">
-        <h1 className="text-2xl font-extrabold text-gray-900 text-center mb-4">
-          {title}
-        </h1>
-
-        {showProgressBar && <ProgressBar progress={progress} />}
-
-        {showAutoSaveIndicator && isSaving && (
-          <div className="text-center text-xs text-gray-500 mb-3 animate-pulse">
-            Auto-saving draft...
+      {/* Main Form Container - Glassmorphic */}
+      <div className="relative z-10 max-w-3xl w-full bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.08)] p-8 sm:p-12 space-y-10 border border-white">
+        <header className="space-y-6">
+          <div className="flex justify-between items-center">
+             <img src="/hrtek_logo.png" alt="HRTek Logo" className="h-6 w-auto opacity-70" />
+             <div className="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">
+               Step {currentStep + 1} of {steps.length}
+             </div>
           </div>
-        )}
+          
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+            {title}
+          </h1>
+
+          {showProgressBar && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assessment Progress</span>
+                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{progress}% Complete</span>
+              </div>
+              <ProgressBar progress={progress} />
+            </div>
+          )}
+
+          {showAutoSaveIndicator && isSaving && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Auto-saving session...</span>
+            </div>
+          )}
+        </header>
 
         {/* Current Step Content */}
         <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
             key={currentStepData.part}
+            className="space-y-10"
           >
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-1.5">{currentStepData.part}</h2>
-              <p className="text-sm text-gray-600">{currentStepData.intro}</p>
+            <div className="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-700" />
+              <div className="relative z-10">
+                <h2 className="text-xl font-bold mb-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-sm font-black">
+                    {currentStep + 1}
+                  </div>
+                  {currentStepData.part}
+                </h2>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xl font-medium">{currentStepData.intro}</p>
+              </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-12">
               {currentStepData.questions.map((question) => (
                 <QuestionRenderer
                   key={question.id}
@@ -550,22 +585,42 @@ export default function QuestionnaireEngine({
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-6 pt-3 border-t border-gray-200">
+        <footer className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-10 border-t border-slate-100">
           <button
             onClick={handlePrevious}
             disabled={isSubmitting}
-            className="px-5 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400"
+            className="w-full sm:w-auto px-10 py-5 rounded-2xl bg-white text-slate-900 font-bold border border-slate-200 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs uppercase tracking-widest flex items-center justify-center h-16"
           >
-            Previous
+            Back
           </button>
+          
           <button
             onClick={handleNext}
             disabled={isSubmitting}
-            className="px-7 py-2.5 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full sm:w-auto px-16 py-5 rounded-2xl font-bold transition-all shadow-xl text-xs uppercase tracking-widest flex items-center justify-center h-16 group ${
+              currentStep === steps.length - 1 
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200' 
+              : 'bg-slate-900 text-white hover:bg-black shadow-slate-200'
+            }`}
           >
-            {isSubmitting ? "Saving..." : (currentStep === steps.length - 1 ? "Finish" : "Next")}
+            {isSubmitting ? (
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Processing
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                {currentStep === steps.length - 1 ? "Complete Analysis" : "Continue"}
+                <motion.span 
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  &rarr;
+                </motion.span>
+              </div>
+            )}
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

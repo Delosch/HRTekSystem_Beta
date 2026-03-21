@@ -119,10 +119,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     // Check if this is a free assessment (onboarding)
     const engineName = engineId.trim();
-    const isFreeEngine = engineName === "Profiling Assessment" ||
-      engineName === "Digital Maturity Assessment" ||
-      engineName === "HR Technology Maturity Analysis" ||
-      engineName === "HR Tech Maturity Analysis";
+    const isFreeEngine = engineName === "Profiling Assessment";
 
     // Check if any payment record for this engine is verified
     const isPaid = isAdmin || isFreeEngine || allPayments.some((p: any) =>
@@ -531,10 +528,10 @@ function labelizeDeployment(d: HcmAnalysis["fitVector"]["deployment"]) {
 
 function labelizeBudget(b: HcmAnalysis["fitVector"]["budgetBand"]) {
   const labels = {
-    under_10k: "Under $10,000/year",
-    "10k_50k": "$10k – $50k/year",
-    "50k_100k": "$50k – $100k/year",
-    "100k_plus": "$100,000+ / Custom",
+    under_10k: "Under ₹10 Lakhs/year",
+    "10k_50k": "₹10L – ₹50L/year",
+    "50k_100k": "₹50L – ₹1Cr/year",
+    "100k_plus": "₹1 Crore+ / Custom",
   };
   return b ? labels[b] : "—";
 }

@@ -273,21 +273,21 @@ export function StrategicReportPreview({
                         className="bg-white w-full max-w-5xl h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border border-slate-200"
                     >
                         {/* Header */}
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                        <div className="px-8 py-5 flex items-center justify-between bg-slate-900 border-b-2 border-indigo-600">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-100">
-                                    <FileText className="w-6 h-6 text-white" />
+                                <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-900/40">
+                                    <FileText className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-slate-900 tracking-tight italic uppercase">Report Preview</h2>
-                                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">{engineTitle}</p>
+                                    <h2 className="text-base font-black text-white tracking-tight italic uppercase leading-tight">Report Preview</h2>
+                                    <p className="text-[11px] text-indigo-400 font-bold uppercase tracking-widest leading-tight">{engineTitle}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
                                 {reportData && !isGenerating && (
                                     <button
                                         onClick={handleDownload}
-                                        className="flex items-center gap-2 px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+                                        className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/30"
                                     >
                                         <Download className="w-4 h-4" />
                                         Download PDF
@@ -295,9 +295,9 @@ export function StrategicReportPreview({
                                 )}
                                 <button
                                     onClick={onClose}
-                                    className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+                                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
                                 >
-                                    <X className="w-6 h-6 text-slate-400" />
+                                    <X className="w-5 h-5 text-slate-400 hover:text-white transition-colors" />
                                 </button>
                             </div>
                         </div>
@@ -324,7 +324,7 @@ export function StrategicReportPreview({
                                             Architecting Your
                                             <span className="block italic text-indigo-600">Strategic Advisory</span>
                                         </h3>
-                                        <p className="text-slate-400 text-sm font-medium">
+                                        <p className="text-slate-400 text-sm font-normal">
                                             Synthesizing assessment data into a board-level transformation brief.
                                         </p>
                                     </div>
@@ -455,6 +455,7 @@ export function StrategicReportPreview({
                                             line-height: 1.6;
                                             border-right: 1px solid #e2e8f0;
                                             border-bottom: 1px solid #e2e8f0;
+                                            font-weight: 500;
                                         }
                                         #report-content-to-export td:last-child {
                                             border-right: none;
@@ -520,12 +521,12 @@ export function StrategicReportPreview({
                                     {/* AI Content - Rendered from HTML */}
                                     <div
                                         className="prose prose-slate max-w-none
-                                            prose-headings:font-black prose-headings:uppercase prose-headings:italic prose-headings:tracking-tight
+                                            prose-headings:font-bold prose-headings:uppercase prose-headings:italic prose-headings:tracking-tight
                                             prose-h2:text-3xl prose-h2:text-slate-900 prose-h2:border-b-4 prose-h2:border-indigo-600 prose-h2:pb-4 prose-h2:mt-16 prose-h2:mb-8
                                             prose-h3:text-xl prose-h3:text-indigo-600 prose-h3:mt-10 prose-h3:mb-6
                                             prose-h4:text-base prose-h4:text-slate-800 prose-h4:mt-8 prose-h4:mb-3
-                                            prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-base prose-p:mb-8
-                                            prose-ul:my-8 prose-li:text-slate-600 prose-li:text-base prose-li:my-3"
+                                            prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-base prose-p:mb-8 prose-p:font-medium
+                                            prose-ul:my-8 prose-li:text-slate-600 prose-li:text-base prose-li:my-3 prose-li:font-medium"
                                     >
                                         <div dangerouslySetInnerHTML={{ __html: reportData.executiveSummary }} />
 
@@ -552,8 +553,8 @@ export function StrategicReportPreview({
                                                 <ul className="space-y-5">
                                                     {reportData.riskFlags.map((risk, i) => (
                                                         <li key={i} className="text-sm border-b border-red-100 pb-4 last:border-0 last:pb-0">
-                                                            <p className="font-bold text-red-900 mb-1.5">{risk.risk}</p>
-                                                            <p className="text-red-700/70 text-xs leading-relaxed">{risk.mitigation}</p>
+                                                            <p className="font-medium text-red-900 mb-1.5">{risk.risk}</p>
+                                                            <p className="text-red-700/70 text-xs leading-relaxed font-normal">{risk.mitigation}</p>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -564,8 +565,8 @@ export function StrategicReportPreview({
                                                 </h4>
                                                 <ul className="space-y-4">
                                                     {reportData.currentState.keyGaps.map((gap, i) => (
-                                                        <li key={i} className="flex gap-3 text-sm text-emerald-800 font-semibold leading-snug">
-                                                            <span className="shrink-0 text-emerald-500 mt-0.5">▸</span>
+                                                        <li key={i} className="flex gap-3 text-sm text-emerald-800 font-medium leading-snug">
+                                                            <span className="shrink-0 text-emerald-500 mt-0.5 font-bold">▸</span>
                                                             {gap}
                                                         </li>
                                                     ))}

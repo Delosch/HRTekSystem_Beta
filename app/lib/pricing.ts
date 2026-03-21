@@ -57,11 +57,11 @@ const SIZE_FACTOR_MAPPING: Record<string, number> = {
 };
 
 const REVENUE_FACTOR_MAPPING: Record<string, number> = {
-    "Less than $1M": 1.0,
-    "$1M - $10M": 1.20,
-    "$10M - $100M": 1.40,
-    "$100M - $1B": 1.40,
-    "More than $1B": 1.60,
+    "Less than ₹10 Crores": 1.0,
+    "₹10 Crores - ₹100 Crores": 1.20,
+    "₹100 Crores - ₹1,000 Crores": 1.40,
+    "₹1,000 Crores - ₹10,000 Crores": 1.40,
+    "More than ₹10,000 Crores": 1.60,
     "Prefer not to disclose": 1.0,
 };
 

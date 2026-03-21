@@ -1,7 +1,7 @@
 import React from 'react';
 import { SectionHeader, QuestionCard, QuestionTitle } from '../AssessmentComponents';
 import { Slider } from '../ui/slider';
-import { DollarSign, TrendingUp, Target, Users2 } from 'lucide-react';
+import { IndianRupee, TrendingUp, Target, Users2 } from 'lucide-react';
 
 interface BudgetVisionSectionProps {
   data: any;
@@ -12,7 +12,7 @@ interface BudgetVisionSectionProps {
 const mindsets = [
   { id: 'conservative', label: 'Conservative', desc: 'Risk-averse, incremental', icon: <Target className="w-6 h-6" /> },
   { id: 'balanced', label: 'Balanced', desc: 'Measured investment', icon: <TrendingUp className="w-6 h-6" /> },
-  { id: 'aggressive', label: 'Aggressive', desc: 'Bold transformation', icon: <DollarSign className="w-6 h-6" /> },
+  { id: 'aggressive', label: 'Aggressive', desc: 'Bold transformation', icon: <IndianRupee className="w-6 h-6" /> },
 ];
 
 const visionLevels = [
@@ -69,7 +69,7 @@ export function BudgetVisionSection({ data, updateData, onComplete }: BudgetVisi
                     : 'border-slate-200 bg-slate-50'
                 }`}
               >
-                <DollarSign className={`w-6 h-6 mx-auto mb-1 ${budgetReadiness >= threshold ? `text-${color}-600` : 'text-slate-400'}`} />
+                <IndianRupee className={`w-6 h-6 mx-auto mb-1 ${budgetReadiness >= threshold ? `text-${color}-600` : 'text-slate-400'}`} />
                 <p className="text-xs font-semibold text-slate-900">{label}</p>
               </div>
             ))}

@@ -222,7 +222,7 @@ export async function store_analysis(
                 assessment_id: assessment_id,
                 section: question_section,
                 result: sanitizeDynamoDBItem(res), // Storing the object directly
-                status: "approved", // Auto-approved - reports dispatched directly to dashboard after payment verification
+                status: question_section === "HR Transformation Roadmap Generator" ? "pending" : "approved", 
                 createdAt: new Date().toISOString() // This is now redundant but still a good practice
             }
         });

@@ -433,14 +433,13 @@ export default function HRTechAdvisoryServicePage() {
                                 <div className="mb-8">
                                     <h3 className="text-xl font-bold text-gray-700 uppercase tracking-wider">Essentials</h3>
                                     <div className="mt-6 flex items-baseline gap-1">
-                                        <span className="text-5xl font-black text-gray-900 tracking-tight">₹12-18L</span>
-                                        <span className="text-gray-500 font-medium">/year</span>
+                                        <span className="text-4xl font-black text-gray-900 tracking-tight">Contact Us</span>
                                     </div>
                                     <p className="text-blue-600 font-medium text-sm mt-3 bg-blue-50 inline-block px-3 py-1 rounded-full">For mid-size growth companies</p>
                                 </div>
-                                <Link to="/auth" className="block w-full py-4 text-center rounded-xl border-2 border-slate-900 text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all">
-                                    Get Started
-                                </Link>
+                                <a href="#contact" className="block w-full py-4 text-center rounded-xl border-2 border-slate-900 text-slate-900 font-bold hover:bg-slate-900 hover:text-white transition-all">
+                                    Contact Sales
+                                </a>
                                 <div className="mt-8 space-y-4">
                                     <div className="text-sm font-semibold text-gray-900">Core Capabilities:</div>
                                     <ul className="space-y-3 text-sm text-gray-600">
@@ -460,14 +459,13 @@ export default function HRTechAdvisoryServicePage() {
                                 <div className="mb-8 relative z-10">
                                     <h3 className="text-xl font-bold text-blue-100 uppercase tracking-wider">Transformation</h3>
                                     <div className="mt-6 flex items-baseline gap-1 text-white">
-                                        <span className="text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 drop-shadow-lg">₹28-40L</span>
-                                        <span className="text-blue-300 font-medium">/year</span>
+                                        <span className="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-blue-200 drop-shadow-lg">Contact Us</span>
                                     </div>
                                     <p className="text-white font-medium text-sm mt-3 bg-white/10 inline-block px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">For enterprise-grade transformation</p>
                                 </div>
-                                <Link to="/auth" className="block w-full py-4 text-center rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold hover:from-blue-400 hover:to-blue-500 transition-all shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1">
-                                    Start Transformation
-                                </Link>
+                                <a href="#contact" className="block w-full py-4 text-center rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold hover:from-blue-400 hover:to-blue-500 transition-all shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1">
+                                    Contact Sales
+                                </a>
                                 <div className="mt-8 space-y-4 relative z-10">
                                     <div className="text-sm font-bold text-white uppercase tracking-wide">Everything in Essentials +</div>
                                     <ul className="space-y-4 text-sm text-blue-50">
@@ -538,6 +536,27 @@ export default function HRTechAdvisoryServicePage() {
                         </div>
                     </div>
                 </section>
+
+                {/* Video Tutorial Section */}
+                <section className="py-20 bg-white">
+                    <div className="max-w-5xl mx-auto px-6">
+                        <div className="text-center mb-10">
+                            <span className="inline-block px-4 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-widest rounded-full mb-4">Video Tutorial</span>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-3">See HR Tech Advisory Layer In Action</h2>
+                            <p className="text-gray-500 max-w-xl mx-auto text-sm">Watch how the HR Tech Advisory Layer delivers executive-grade strategic intelligence and vendor-agnostic guidance for your transformation.</p>
+                        </div>
+                        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-slate-900" style={{ aspectRatio: '16/9' }}>
+                            <iframe
+                                src="https://www.youtube.com/embed/3_mEgGnjFXc"
+                                title="HR Tech Advisory Layer Tutorial"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className="absolute inset-0 w-full h-full"
+                            />
+                        </div>
+                    </div>
+                </section>
+
                 <Footer />
             </div>
         </>

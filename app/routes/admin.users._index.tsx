@@ -94,7 +94,7 @@ export default function AdminUsers() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-bold text-gray-900">Registration Velocity</h2>
+                        <h2 className="text-lg font-bold text-gray-900">Monthly Sign-ups</h2>
                         <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
                             New Users/Month
                         </div>
@@ -129,7 +129,7 @@ export default function AdminUsers() {
                     </div>
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Organic Leads</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Verified Users</p>
                             <p className="text-3xl font-extrabold text-emerald-500">{verifiedEmails}</p>
                         </div>
                         <AtSymbolIcon className="h-10 w-10 text-emerald-50" />
@@ -139,14 +139,14 @@ export default function AdminUsers() {
                 <div className="grid grid-cols-1 shrink-0 gap-4">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Affiliated</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Company Users</p>
                             <p className="text-3xl font-extrabold text-purple-600">{withOrg}</p>
                         </div>
                         <BuildingOfficeIcon className="h-10 w-10 text-purple-50" />
                     </div>
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">SMS Verified</p>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Phone Verified</p>
                             <p className="text-3xl font-extrabold text-orange-500">{verifiedPhones}</p>
                         </div>
                         <DevicePhoneMobileIcon className="h-10 w-10 text-orange-50" />
@@ -177,10 +177,10 @@ export default function AdminUsers() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50/50">
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Identity</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Organization</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">User Account</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Company</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Security</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Onboarding</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
@@ -197,8 +197,8 @@ export default function AdminUsers() {
                                         <td className="px-6 py-5">
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 border border-white shadow-sm flex items-center justify-center text-gray-600 font-bold text-sm overflow-hidden">
-                                                    {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+                                                    {user.photoUrl ? (
+                                                        <img src={user.photoUrl} alt="" className="h-full w-full object-cover" />
                                                     ) : (
                                                         <span>{(user.first_name || "U")[0]}</span>
                                                     )}
@@ -272,10 +272,10 @@ export default function AdminUsers() {
                 {users.length === 0 && (
                     <div className="p-32 text-center">
                         <UsersIcon className="h-20 w-20 text-gray-100 mx-auto mb-6" />
-                        <h3 className="text-xl font-bold text-gray-900">No users identified</h3>
-                        <p className="text-gray-500 font-medium mb-8">Ready to grow? Add the first user to your ecosystem.</p>
+                        <h3 className="text-xl font-bold text-gray-900">No users found</h3>
+                        <p className="text-gray-500 font-medium mb-8">Ready to grow? Add the first user to your system.</p>
                         <Link to="new" className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-xl shadow-indigo-600/20 active:scale-95 transition-all">
-                            Onboard User
+                            Add User
                         </Link>
                     </div>
                 )}

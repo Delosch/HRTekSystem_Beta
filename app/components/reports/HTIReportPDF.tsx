@@ -1,14 +1,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
-// Register a font (optional, using standard fonts for now)
-Font.register({
-    family: 'Helvetica',
-    fonts: [
-        { src: 'https://fonts.gstatic.com/s/helveticaneue/v70/1Ptsg8zYS_SKggPNyC0IT4ttDfA.ttf' }, // Fallback to standard
-        { src: 'https://fonts.gstatic.com/s/helveticaneue/v70/1Ptsg8zYS_SKggPNyC0IT4ttDfA.ttf', fontWeight: 'bold' }
-    ]
-});
+
 
 const styles = StyleSheet.create({
     page: {

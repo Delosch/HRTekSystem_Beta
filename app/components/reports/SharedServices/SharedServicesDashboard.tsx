@@ -70,7 +70,7 @@ export default function SharedServicesDashboard({
         });
         const sstiResult = calculateSSTI(answersMap);
         const ds = sstiResult.domainScores;
-        const score = (idx: number) => ds[idx]?.score ?? 65;
+        const score = (idx: number) => ds[idx]?.score ?? 0;
         return {
             ...base,
             computed: {
@@ -189,13 +189,13 @@ export default function SharedServicesDashboard({
                         >
                             <img src="/hrtek_logo.png" alt="HRTek" className="h-9 w-auto object-contain" />
                             <div className="flex flex-col">
-                                <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">Shared Services</h1>
-                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mt-1">Intelligence Engine</span>
+                                <h1 className="text-xl font-bold text-slate-900 tracking-tighter uppercase leading-none italic">Shared Services</h1>
+                                <span className="text-[10px] font-medium text-blue-600 uppercase tracking-[0.3em] mt-1">Intelligence Engine</span>
                             </div>
                         </motion.div>
 
                         <div className="hidden lg:block">
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] flex items-center gap-2.5">
+                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-[0.2em] flex items-center gap-2.5">
                                 <span className="relative flex h-2 w-2">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -208,8 +208,8 @@ export default function SharedServicesDashboard({
                     <div className="flex items-center gap-12">
                         <div className="hidden md:flex flex-col items-end gap-1.5">
                             <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Capture Rate</span>
-                                <span className="text-xs font-black text-blue-600 italic">{progress}%</span>
+                                <span className="text-[9px] font-medium text-slate-400 uppercase tracking-[0.2em]">Capture Rate</span>
+                                <span className="text-xs font-semibold text-blue-600 italic">{progress}%</span>
                             </div>
                             <div className="h-1.5 w-40 bg-slate-100 rounded-full overflow-hidden p-[1px] border border-slate-200/50">
                                 <motion.div 
@@ -221,7 +221,7 @@ export default function SharedServicesDashboard({
                         </div>
                         <button
                             onClick={onGenerateDossier}
-                            className="group relative h-12 bg-slate-900 overflow-hidden text-white font-black text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                            className="group relative h-12 bg-slate-900 overflow-hidden text-white font-semibold text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                             <span className="relative z-10 flex items-center gap-2">
@@ -280,10 +280,10 @@ export default function SharedServicesDashboard({
                     <footer className="pt-32 pb-16 flex flex-col items-center gap-8 border-t border-slate-100 mt-64 text-center">
                         <img src="/hrtek_logo.png" alt="HRTek" className="h-10 opacity-20 brightness-0" />
                         <div className="space-y-2">
-                            <p className="text-sm font-black text-slate-300 uppercase tracking-[0.3em]">
+                            <p className="text-sm font-semibold text-slate-300 uppercase tracking-[0.3em]">
                                 HR TEK SYSTEMS GLOBAL AUDIT © 2026
                             </p>
-                            <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em]">
+                            <p className="text-[10px] text-slate-300 font-medium uppercase tracking-[0.2em]">
                                 Confidential Intelligence Blueprint • Private & Sensitive
                             </p>
                         </div>

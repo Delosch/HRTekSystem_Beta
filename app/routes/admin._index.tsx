@@ -136,7 +136,7 @@ export default function AdminDashboardIndex() {
                         <RefreshCw className="h-4 w-4" strokeWidth={2.5} /> Refresh Data
                     </button>
                     <Link to="/admin/hti" className="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-sm font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
-                        Generate Audit
+                        Review Reports
                     </Link>
                 </div>
             </div>
@@ -378,7 +378,7 @@ export default function AdminDashboardIndex() {
                                 <h3 className="font-black text-[#000033] leading-none mb-2">User Approvals</h3>
                                 <p className="text-xs font-medium text-slate-500 mb-6">12 users awaiting verification</p>
                                 <Link to="/admin/users?status=pending" className="text-[11px] font-black uppercase tracking-widest text-indigo-600 flex items-center gap-2 hover:gap-3 transition-all">
-                                    Verify Now <ChevronRight className="h-4 w-4" />
+                                    Approve Users <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
 
@@ -387,7 +387,7 @@ export default function AdminDashboardIndex() {
                                 <h3 className="font-black text-[#000033] leading-none mb-2">Revenue Check</h3>
                                 <p className="text-xs font-medium text-slate-500 mb-6">Latest subscription payouts</p>
                                 <Link to="/admin/payments/verification" className="text-[11px] font-black uppercase tracking-widest text-emerald-600 flex items-center gap-2 hover:gap-3 transition-all">
-                                    Analyze <ChevronRight className="h-4 w-4" />
+                                    Check Payments <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
 
@@ -396,7 +396,7 @@ export default function AdminDashboardIndex() {
                                 <h3 className="font-black text-[#000033] leading-none mb-2">AI Insights</h3>
                                 <p className="text-xs font-medium text-slate-500 mb-6">5 new client suggestions</p>
                                 <Link to="/admin/hti" className="text-[11px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2 hover:gap-3 transition-all">
-                                    Review AI <ChevronRight className="h-4 w-4" />
+                                    See Reports <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
 

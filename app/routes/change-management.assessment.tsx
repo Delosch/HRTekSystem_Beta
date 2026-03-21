@@ -6,6 +6,9 @@ import { findEngineData, createOrUpdateEngineStorage } from "~/models/engine.mod
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport } from "~/models/hti.model.server";
 import { calculateCompositeScore, getCompletionPercentage } from "~/components/assessment/ChangeManagement/utils/scoringEngine";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { calculatePricing } from "~/services/pricing.server";
+import { addOrUpdateCartItem } from "~/models/cart.model.server";
 
 export const meta: MetaFunction = () => {
     return [
@@ -51,8 +54,17 @@ export async function action({ request }: ActionFunctionArgs) {
         responses: responses
     });
 
-    // Full submission (no specific intent) — redirect to intermediate/dashboard
+    // Full submission (no specific intent) — add to cart then redirect to intermediate
     if (!intent) {
+        const company = await getCompanyProfile(user.organisationId);
+        const employeeCount = company?.employee_count || 100;
+        const pricingResult = calculatePricing({ engine: 'icms', employeeCount });
+        await addOrUpdateCartItem({
+            companyId: user.organisationId,
+            productName: "Intelligent Change Management",
+            price: pricingResult.totalPrice,
+            userId: user.id || user.userId,
+        });
         return json({
             success: true,
             redirect: `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}`
@@ -111,7 +123,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function ChangeManagementAssessmentRoute() {
-    const { user, initialAnswers, savedProgress } = useLoaderData<typeof loader>();
+    const { initialAnswers, savedProgress } = useLoaderData<typeof loader>();
 
     return (
         <ChangeManagementAssessment initialResponses={initialAnswers} savedProgress={savedProgress} />

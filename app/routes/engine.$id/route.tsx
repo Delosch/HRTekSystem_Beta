@@ -7,10 +7,9 @@ import EngineFormRender from "./RenderEngineForm"
 import VendorFitAssessmentWrapper from "~/components/assessment/VendorFitAssessmentWrapper"
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport } from "~/models/hti.model.server";
-import { createOrUpdateEngineStorage, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server"
+import { createOrUpdateEngineStorage, findEngineData } from "~/models/engine.model.server"
 import { createLog } from "~/models/companylogs.model.server"
 import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server"
-import { calculateFinalPrice } from "~/lib/pricing"
 
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
     const slug = params.id ? decodeURIComponent(params.id) : undefined;
@@ -165,33 +164,52 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
             }
         }
 
-        if (body.progress === 100) {
-            // ... (rest of completion logic remains same)
-            console.log("__________________________")
-            const recommendation = await fetchEngineRecomendations(companyId);
-            const rankings = recommendation && recommendation.allRankings ? recommendation.allRankings : [];
-
-            //need profiling assessment response sheet
-            const responseSheet = await getAnswerSheetByAssessmentName(companyId, 'Profiling Assessment')
-            console.log("Response Sheerrrr \n", responseSheet)
-
-            const orgOverview = responseSheet ? responseSheet["Section 1: Organization Overview"] : {};
-
-            const price = calculateFinalPrice(body.params, orgOverview, user.country_iso, new Map(rankings));
-            const items: CartItem = {
-                companyId,
-                productName: body.params,
-                price,
-                userId: user.userId
-            }
-            const isFreeEngine = body.params === "Profiling Assessment" ||
-                body.params === "Digital Maturity Assessment" ||
-                body.params === "HR Technology Maturity Analysis" ||
-                body.params === "HR Tech Maturity Analysis";
+        if (body.progress === 100 && body.section === "Completion") {
+            const isFreeEngine = body.params === "Profiling Assessment";
 
             if (!isFreeEngine) {
-                console.log("@@@@@@ Net Price is :", price)
-                await addOrUpdateCartItem(items)
+                // Get employee count for correct per-employee pricing
+                const { getCompanyProfile } = await import("~/models/company.model.server");
+                const { calculatePricing } = await import("~/services/pricing.server");
+
+                let employeeCount = body.employeeCount ? Number(body.employeeCount) : null;
+                if (!employeeCount) {
+                    const companyProfile = await getCompanyProfile(companyId);
+                    employeeCount = typeof companyProfile?.employee_count === 'number'
+                        ? companyProfile.employee_count
+                        : parseInt(companyProfile?.employee_count || "500");
+                }
+
+                const engineTypeMap: Record<string, string> = {
+                    "HCM Vendor Fit Engine": "hcm-vendor-fit",
+                    "HR Technology Maturity Analysis": "ai-maturity",
+                    "Digital Maturity Assessment": "ai-maturity",
+                    "HR AI Based Digital Maturity": "ai-maturity",
+                    "AI Driven Maturity Engine": "ai-maturity",
+                    "HR Transformation Roadmap Generator": "roadmap",
+                    "Intelligent Change Management": "icms",
+                    "Shared Service Designer": "shared-services",
+                    "Shared Services Designer": "shared-services",
+                    "SSC/COE Shared Service Planner": "shared-services",
+                    "HTI - HR Transformation Intelligence": "hti",
+                };
+
+                const enginePricingType = engineTypeMap[body.params] || "roadmap";
+                const months = Number(body.months) || 1;
+
+                const pricing = calculatePricing({ engine: enginePricingType as any, employeeCount, months });
+                const price = pricing.basePrice;
+
+                const items: CartItem = {
+                    companyId,
+                    productName: body.params,
+                    price,
+                    userId: user.userId,
+                    employeeCount,
+                };
+
+                console.log(`@@@@@@ Engine: ${body.params} | Employees: ${employeeCount} | Months: ${months} | Price: ₹${price.toLocaleString()}`);
+                await addOrUpdateCartItem(items);
             } else {
                 console.log("✅ Skipping cart addition for free engine:", body.params);
             }
@@ -201,22 +219,8 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
             const eligibilityResult = await autoCheckEligibility(companyId);
             console.log("🎯 Eligibility Check:", eligibilityResult.message);
 
-            // Redirect to appropriate dashboard based on engine name
-            const dashboardMap: Record<string, string> = {
-                "HR Transformation Roadmap Generator": `/intermediate?promptId=digital_transformation&engine=${encodeURIComponent("HR Transformation Roadmap Generator")}`,
-                "HCM Vendor Fit Engine": `/intermediate?promptId=vendor_fit&engine=${encodeURIComponent("HCM Vendor Fit Engine")}`,
-                "Shared Service Designer": `/intermediate?promptId=shared_service&engine=${encodeURIComponent("Shared Service Designer")}`,
-                "Intelligent Change Management": `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}`,
-                "Change Management Readiness": `/intermediate?promptId=change_management&engine=${encodeURIComponent("Change Management Readiness")}`,
-                "HR Technology Maturity Analysis": `/intermediate?promptId=tech_maturity&engine=${encodeURIComponent("HR Technology Maturity Analysis")}`,
-                "HR Tech Maturity Analysis": `/intermediate?promptId=tech_maturity&engine=${encodeURIComponent("HR Tech Maturity Analysis")}`,
-                "Digital Maturity Assessment": `/intermediate?promptId=digital_maturity&engine=${encodeURIComponent("Digital Maturity Assessment")}`
-            };
-
-            const dashboardUrl = dashboardMap[body.params] || "/dashboard";
-
-            // For fetcher-based submissions, we return the URL so the client can navigate if needed
-            return json({ success: true, redirect: dashboardUrl });
+            // All engines redirect to cart after completion
+            return json({ success: true, redirect: "/cartDashboard" });
         }
         return json({ message: "Received!" });
     }

@@ -9,6 +9,8 @@ import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target,
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 export const meta: MetaFunction = () => [
   { title: "AI Maturity Dashboard | HRTek System" },
@@ -40,17 +42,11 @@ export const loader: LoaderFunction = async ({ request }) => {
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
 
-  const payments = await getCompanyPayments(user.organisationId);
+  // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
-
-  const isPaid = isAdmin || payments.some((p: any) =>
-    (p.status === "payment_verified" || p.status === "completed") &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
-  const isPending = !isPaid && payments.some((p: any) =>
-    p.status === "payment_submitted" &&
-    p.items?.some((i: any) => i.engineName.trim() === ENGINE.trim())
-  );
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
 
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
   const hasReport = !!report;
@@ -62,18 +58,19 @@ export const loader: LoaderFunction = async ({ request }) => {
     currentEngine: { name: ENGINE, status: currentEngineData?.usage_status || "Draft", progress: currentEngineData?.progress || 0, data: currentEngineData },
     completedEngines,
     recommendations: recommendations?.allRankings || [],
-    user, isPaid, isPending, hasReport, companyLogo,
+    user, paymentStatus, isPaid, isPending, hasReport, companyLogo,
   });
 };
 
 export default function AiMaturityDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsSidebarCollapsed(window.innerWidth < 768);
@@ -97,8 +94,10 @@ export default function AiMaturityDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
+      if (isPaid) {
         navigate(`/ai-maturity/report`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
         navigate('/payment/checkout');
       }
@@ -371,12 +370,20 @@ export default function AiMaturityDashboard() {
           </div>
         )}
 
-        {/* Toast */}
         {showToast && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-semibold animate-slide-up">
             {toastMessage}
           </div>
         )}
+
+        <PaymentStatusModal 
+          isOpen={isStatusModalOpen}
+          onClose={() => setIsStatusModalOpen(false)}
+          status={paymentStatus.status}
+          engineName={ENGINE}
+          expiresAt={paymentStatus.expiresAt}
+          onProceed={paymentStatus.status === "paid" ? () => navigate(`/ai-maturity/report`) : () => navigate('/payment/checkout')}
+        />
       </main>
     </div>
   );

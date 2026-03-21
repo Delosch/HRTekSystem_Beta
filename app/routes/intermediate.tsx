@@ -1,11 +1,10 @@
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useLoaderData, useNavigation, useActionData, useNavigate } from "@remix-run/react";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { ClockIcon, CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
-import { setAIStatus, hasAIStatus, getAIStatus } from "~/services/ai-status.server";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircleIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { setAIStatus, getAIStatus } from "~/services/ai-status.server";
 import { requireUserSession } from "~/lib/session.server";
-import { generate } from "~/lib/digitalMaturity.genAi";
 import { engineRecommendationList } from "~/models/engine.model.server";
 
 // Types
@@ -25,140 +24,52 @@ interface ActionData {
   error?: string;
 }
 
-// Recommendation Questions Data (Keep as is)
+// Recommendation Questions Data
 const recommendationQuestions: Question[] = [
-  // ... your questions data ...
   {
     id: "primary_focus",
     question: "What is your organization's primary HR transformation focus for the next 12 months?",
     options: [
-      {
-        value: "change_management",
-        text: "Building organizational change capability and readiness",
-        engines: ["Intelligent Change Management"],
-        points: 5
-      },
-      {
-        value: "digital_maturity",
-        text: "Assessing and improving HR technology maturity",
-        engines: ["HR Technology Maturity Analysis"],
-        points: 5
-      },
-      {
-        value: "vendor_selection",
-        text: "Evaluating and selecting HR technology vendors",
-        engines: ["HCM Vendor Fit Engine"],
-        points: 5
-      },
-      {
-        value: "service_design",
-        text: "Designing efficient HR shared service models",
-        engines: ["Shared Service Designer"],
-        points: 5
-      },
-      {
-        value: "strategic_roadmap",
-        text: "Creating comprehensive transformation roadmaps",
-        engines: ["HR Transformation Roadmap Generator"],
-        points: 5
-      }
+      { value: "change_management", text: "Building organizational change capability and readiness", engines: ["Intelligent Change Management"], points: 5 },
+      { value: "digital_maturity", text: "Assessing and improving HR technology maturity", engines: ["HR Technology Maturity Analysis"], points: 5 },
+      { value: "vendor_selection", text: "Evaluating and selecting HR technology vendors", engines: ["HCM Vendor Fit Engine"], points: 5 },
+      { value: "service_design", text: "Designing efficient HR shared service models", engines: ["Shared Service Designer"], points: 5 },
+      { value: "strategic_roadmap", text: "Creating comprehensive transformation roadmaps", engines: ["HR Transformation Roadmap Generator"], points: 5 }
     ]
   },
   {
     id: "transformation_stage",
     question: "At what stage is your organization's HR digital transformation?",
     options: [
-      {
-        value: "early_planning",
-        text: "Early planning - defining strategy and approach",
-        engines: ["HR Technology Maturity Analysis", "HR Transformation Roadmap Generator"],
-        points: 4
-      },
-      {
-        value: "vendor_evaluation",
-        text: "Actively evaluating technology solutions",
-        engines: ["HCM Vendor Fit Engine", "HR Technology Maturity Analysis"],
-        points: 4
-      },
-      {
-        value: "implementation",
-        text: "Currently implementing new systems or processes",
-        engines: ["Intelligent Change Management", "Shared Service Designer"],
-        points: 4
-      },
-      {
-        value: "optimization",
-        text: "Optimizing existing digital HR capabilities",
-        engines: ["Shared Service Designer", "HR Technology Maturity Analysis"],
-        points: 3
-      }
+      { value: "early_planning", text: "Early planning - defining strategy and approach", engines: ["HR Technology Maturity Analysis", "HR Transformation Roadmap Generator"], points: 4 },
+      { value: "vendor_evaluation", text: "Actively evaluating technology solutions", engines: ["HCM Vendor Fit Engine", "HR Technology Maturity Analysis"], points: 4 },
+      { value: "implementation", text: "Currently implementing new systems or processes", engines: ["Intelligent Change Management", "Shared Service Designer"], points: 4 },
+      { value: "optimization", text: "Optimizing existing digital HR capabilities", engines: ["Shared Service Designer", "HR Technology Maturity Analysis"], points: 3 }
     ]
   },
   {
     id: "organizational_priority",
     question: "Which organizational capability needs the most attention?",
     options: [
-      {
-        value: "change_readiness",
-        text: "Employee and leadership change readiness",
-        engines: ["Intelligent Change Management"],
-        points: 4
-      },
-      {
-        value: "service_efficiency",
-        text: "HR service delivery efficiency and standardization",
-        engines: ["Shared Service Designer"],
-        points: 4
-      },
-      {
-        value: "technology_alignment",
-        text: "Technology-business alignment and vendor management",
-        engines: ["HCM Vendor Fit Engine"],
-        points: 4
-      },
-      {
-        value: "strategic_planning",
-        text: "Long-term strategic planning and roadmapping",
-        engines: ["HR Transformation Roadmap Generator"],
-        points: 4
-      }
+      { value: "change_readiness", text: "Employee and leadership change readiness", engines: ["Intelligent Change Management"], points: 4 },
+      { value: "service_efficiency", text: "HR service delivery efficiency and standardization", engines: ["Shared Service Designer"], points: 4 },
+      { value: "technology_alignment", text: "Technology-business alignment and vendor management", engines: ["HCM Vendor Fit Engine"], points: 4 },
+      { value: "strategic_planning", text: "Long-term strategic planning and roadmapping", engines: ["HR Transformation Roadmap Generator"], points: 4 }
     ]
   },
   {
     id: "consulting_preference",
     question: "What type of diagnostic approach would be most valuable?",
     options: [
-      {
-        value: "analytical_assessment",
-        text: "Data-driven maturity assessments with benchmarking",
-        engines: ["HR Technology Maturity Analysis"],
-        points: 3
-      },
-      {
-        value: "vendor_analysis",
-        text: "Detailed vendor fit analysis and selection support",
-        engines: ["HCM Vendor Fit Engine"],
-        points: 3
-      },
-      {
-        value: "process_design",
-        text: "Service design frameworks and implementation guidance",
-        engines: ["Shared Service Designer"],
-        points: 3
-      },
-      {
-        value: "change_strategy",
-        text: "Change management strategy and readiness planning",
-        engines: ["Intelligent Change Management"],
-        points: 3
-      }
+      { value: "analytical_assessment", text: "Data-driven maturity assessments with benchmarking", engines: ["HR Technology Maturity Analysis"], points: 3 },
+      { value: "vendor_analysis", text: "Detailed vendor fit analysis and selection support", engines: ["HCM Vendor Fit Engine"], points: 3 },
+      { value: "process_design", text: "Service design frameworks and implementation guidance", engines: ["Shared Service Designer"], points: 3 },
+      { value: "change_strategy", text: "Change management strategy and readiness planning", engines: ["Intelligent Change Management"], points: 3 }
     ]
   }
 ];
 
-// Engine List (Keep as is)
 const engineList = [
-  // ... your engine list ...
   "HR Transformation Roadmap Generator",
   "HCM Vendor Fit Engine",
   "Shared Service Designer",
@@ -167,80 +78,82 @@ const engineList = [
   "HR Digital Transformation"
 ];
 
-// Backend scoring function (Keep as is)
 function calculateScores(answers: Record<string, string>): Record<string, number> {
-  // ... your calculateScores logic ...
   const scores: Record<string, number> = {};
-
-  // Initialize scores
-  engineList.forEach(engine => {
-    scores[engine] = 0;
-  });
-
-  // Calculate scores based on answers
-  (recommendationQuestions || []).forEach(question => {
+  engineList.forEach(engine => { scores[engine] = 0; });
+  recommendationQuestions.forEach(question => {
     const answer = answers[question.id];
     if (!answer) return;
-
-    const selectedOption = (question.options || []).find(opt => opt.value === answer);
+    const selectedOption = question.options.find(opt => opt.value === answer);
     if (!selectedOption) return;
-
-    (selectedOption.engines || []).forEach(engine => {
-      if (scores[engine] !== undefined) {
-        scores[engine] += selectedOption.points;
-      }
+    selectedOption.engines.forEach(engine => {
+      if (scores[engine] !== undefined) scores[engine] += selectedOption.points;
     });
   });
-
   return scores;
 }
 
-// Loader: Start AI report process
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await requireUserSession(request);
   if (!user) throw redirect('/auth');
   const companyId = user.organisationId || "";
-
   const url = new URL(request.url);
-  const promptId = url.searchParams.get("promptId") || "digital_maturity";
+  const promptIdRaw = url.searchParams.get("promptId") || "digital_maturity";
+  const promptIdMap: Record<string, string> = {
+    ai_maturity: "digital_maturity",
+    hr_maturity: "digital_maturity",
+    tech_maturity_assessment: "tech_maturity",
+  };
+  const promptId = promptIdMap[promptIdRaw] ?? promptIdRaw;
   const engine = url.searchParams.get("engine") || "Profiling Assessment";
 
   const currentStatus = getAIStatus(companyId);
-
-  console.log(`[Intermediate Loader] Company: ${companyId}`);
-  console.log(`[Intermediate Loader] Engine: ${engine}`);
-  console.log(`[Intermediate Loader] Prompt: ${promptId}`);
-  console.log(`[Intermediate Loader] Current AI Status: ${currentStatus}`);
-
-  // Check if report already exists in DB
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
+  const { getCompanyProfile } = await import("~/models/company.model.server");
+
   const existingReport = await getLatestAnalysis(companyId, engine);
+  const companyProfile = await getCompanyProfile(companyId);
+  const employeeCount = typeof companyProfile?.employee_count === 'number' ? companyProfile.employee_count : parseInt(companyProfile?.employee_count || "500");
 
-  console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}`);
-
-  // Trigger generation if:
-  // 1. No status OR status is 'error' OR
-  // 2. Status is 'ready' but no report exists (edge case fix) OR
-  // 3. Forced regeneration requested
-  const shouldGenerate = !currentStatus ||
-    currentStatus === "error" ||
-    url.searchParams.get("force") === "true" ||
-    (currentStatus === "ready" && !existingReport);
+  const shouldGenerate = !currentStatus || currentStatus === "error" || url.searchParams.get("force") === "true" || (currentStatus === "ready" && !existingReport);
 
   if (shouldGenerate) {
     const { generate } = await import("~/lib/processor.genAi");
     setAIStatus(companyId, "pending");
-
-    console.log(`[Intermediate Loader] 🚀 Triggering AI generation for ${engine}`);
-
-    // Fire and forget - generation happens in background
     generate(promptId, engine, companyId).catch((err) => {
       console.error("[Intermediate Loader] ❌ AI generation failed:", err);
       setAIStatus(companyId, "error");
     });
-  } else {
-    console.log(`[Intermediate Loader] ⏭️ Skipping generation (Status: ${currentStatus}, Report exists: ${!!existingReport})`);
   }
+
+  const roadmapPricing = [
+    { min: 0, max: 500, price: 275000 },
+    { min: 501, max: 1000, price: 550000 },
+    { min: 1001, max: 2000, price: 1100000 },
+    { min: 2001, max: 3000, price: 1950000 },
+    { min: 3001, max: 4000, price: 2600000 },
+    { min: 4001, max: 5000, price: 3250000 },
+    { min: 5001, max: 7500, price: 4875000 },
+    { min: 7501, max: 10000, price: 7500000 },
+    { min: 10001, max: 15000, price: 11250000 },
+    { min: 15001, max: 20000, price: 15000000 },
+    { min: 20001, max: 30000, price: 25500000 },
+    { min: 30001, max: 40000, price: 34000000 },
+    { min: 40001, max: 50000, price: 42500000 },
+    { min: 50001, max: 70000, price: 66500000 },
+    { min: 70001, max: 100000, price: 95000000 },
+    { min: 100001, max: 150000, price: 142500000 },
+    { min: 150001, max: 1000000000, price: 190000000 },
+  ];
+
+  const pricingMatch = roadmapPricing.find(p => employeeCount >= p.min && employeeCount <= p.max) || roadmapPricing[0];
+  const calculatedPrice = pricingMatch.price;
+
+  const { getEnginePaymentStatus } = await import("~/models/payment.model.server");
+  const isFreeEngine = engine === "Profiling Assessment";
+  const paymentStatus = isFreeEngine ? { status: "paid" } : await getEnginePaymentStatus(companyId, engine);
+  const isAdminUser = user.isAdmin || (user as any).role === 'ADMIN';
+  const hasPaid = isAdminUser || isFreeEngine || paymentStatus.status === "paid";
 
   return json({
     companyId,
@@ -248,60 +161,43 @@ export async function loader({ request }: LoaderFunctionArgs) {
     engine,
     promptId,
     initialStatus: currentStatus,
-    hasExistingReport: !!existingReport
+    hasExistingReport: !!existingReport,
+    hasPaid,
+    paymentStatus,
+    isAdmin: user.isAdmin || (user as any).role === "ADMIN" || false,
+    calculatedPrice,
+    employeeCount
   });
 }
 
-// Action: Process form submission and calculate scores (Keep as is)
 export async function action({ request }: ActionFunctionArgs) {
   try {
     const formData = await request.formData();
     const user = await requireUserSession(request);
-
-    if (!user) {
-      // This will redirect to your login page if the user is not authenticated
-      // requireUserSession should handle this, but it's good practice to check
-      return json<ActionData>({ success: false, error: "User not authenticated" });
-    }
     const answers: Record<string, string> = {};
-    (recommendationQuestions || []).forEach(question => {
+    recommendationQuestions.forEach(question => {
       const value = formData.get(question.id);
-      if (value && typeof value === "string") {
-        answers[question.id] = value;
-      }
+      if (value && typeof value === "string") answers[question.id] = value;
     });
-
-    if (Object.keys(answers).length !== recommendationQuestions.length) {
-      return json<ActionData>({ success: false, error: "Please answer all questions" });
-    }
-
+    if (Object.keys(answers).length !== recommendationQuestions.length) return json<ActionData>({ success: false, error: "Please answer all questions" });
     const scores = calculateScores(answers);
-
-    const sortedEngines = Object.entries(scores)
-      .filter(([engine]) => engine !== "HR Digital Transformation")
-      .sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
-
-    const topRecommendation = sortedEngines[0]?.[0] || "HR Transformation Roadmap Generator";
-
-    console.log("=== RECOMMENDATION ANALYSIS ===");
-    console.log("Company ID:", user.organisationId);
-    console.log("User Responses:", answers);
-    console.log("Engine Scores:", scores);
-    console.log("Top Recommendation:", topRecommendation);
-    console.log("All Rankings:", sortedEngines);
-    console.log("Timestamp:", new Date().toISOString());
-    console.log("================================");
-    // lets save the all ranking
-    await engineRecommendationList({ user_id: user.userId, company_id: user.organisationId || "", sortedEngines })
+    const sortedEngines = Object.entries(scores).filter(([engine]) => engine !== "HR Digital Transformation").sort(([, a], [, b]) => b - a);
+    await engineRecommendationList({ user_id: user.userId, company_id: user.organisationId || "", sortedEngines });
     return json<ActionData>({ success: true });
-
   } catch (error) {
-    console.error("Action error:", error);
     return json<ActionData>({ success: false, error: "Failed to process recommendation" });
   }
 }
 
-// Main Component
+const statusMessages = [
+  "Gathering Organizational Data...",
+  "Running Neural Pattern Recognition...",
+  "Analyzing Technology Maturity Scores...",
+  "Mapping Strategic Benchmarking...",
+  "Synthesizing Transformation Roadmap...",
+  "Finalizing Intelligent Insights..."
+];
+
 export default function Intermediate() {
   const { companyId, questions, engine, initialStatus, hasExistingReport } = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
@@ -313,466 +209,422 @@ export default function Intermediate() {
   const [aiReady, setAiReady] = useState(initialStatus === "ready" && hasExistingReport);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [messageIndex, setMessageIndex] = useState(0);
 
   const pollRef = useRef<NodeJS.Timeout>();
   const timerRef = useRef<NodeJS.Timeout>();
+  const startTimeRef = useRef<number>(0);
 
-  const allAnswered = questions.every(q => answers[q.id]);
-  const isSubmitting = navigation.state === "submitting";
+  // Advance pipeline steps tied to actual progress rather than a fixed 4s interval
+  useEffect(() => {
+    if (submitted && !aiReady) {
+      const logProg = elapsed > 0 ? Math.log(elapsed + 1) / Math.log(76) : 0;
+      const pct = Math.min(99, Math.round(5 + logProg * 94));
+      const stepAt = [0, 20, 40, 58, 75, 90]; // % thresholds to activate each step
+      const newIndex = stepAt.filter(t => pct >= t).length - 1;
+      setMessageIndex(Math.min(newIndex, statusMessages.length - 1));
+    }
+  }, [submitted, aiReady, elapsed]);
 
   useEffect(() => {
-    if (actionData?.success) {
-      setSubmitted(true);
-      setError(null);
-    } else if (actionData?.error) {
-      setError(actionData.error);
-      setSubmitted(false);
-    }
+    if (actionData?.success) setSubmitted(true);
+    else if (actionData?.error) setError(actionData.error);
   }, [actionData]);
 
-  const reportRouteMap: Record<string, string> = {
-    "HCM Vendor Fit Engine": `/fit/report/${encodeURIComponent("HCM Vendor Fit Engine")}`,
-    "Digital Maturity Assessment": `/consulting-report/${encodeURIComponent("Digital Maturity Assessment")}`,
-    "Profiling Assessment": `/consulting-report/${encodeURIComponent("Profiling Assessment")}`,
-    "HR Transformation Roadmap Generator": `/digital-roadmap/dashboard`,
-    "Shared Service Designer": `/consulting-report/${encodeURIComponent("Shared Service Designer")}`,
-    "Intelligent Change Management": `/consulting-report/${encodeURIComponent("Intelligent Change Management")}`,
-    "Change Management Readiness": `/consulting-report/${encodeURIComponent("Change Management Readiness")}`,
-    "HR Technology Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Technology Maturity Analysis")}`,
-    "HR Tech Maturity Analysis": `/consulting-report/${encodeURIComponent("HR Tech Maturity Analysis")}`,
-    "AI Driven Maturity Engine": `/ai-maturity/report`
-  };
-
-  const reportUrl = reportRouteMap[engine] || `/consulting-report/${encodeURIComponent(engine)}`;
-
   useEffect(() => {
-    if (submitted && aiReady) {
-      console.log("starting to navigate to report:", reportUrl);
-      navigate(reportUrl, { replace: true });
-    }
-  }, [submitted, aiReady, navigate, reportUrl]);
+    if (submitted && aiReady) navigate("/cartDashboard", { replace: true });
+  }, [submitted, aiReady, navigate]);
 
   useEffect(() => {
     if (submitted && !aiReady) {
-      const startTime = Date.now();
-
-      timerRef.current = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - startTime) / 1000));
-      }, 1000);
-
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000);
       const poll = async () => {
         try {
-          const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
-
-          // Check AI status
-          const statusResponse = await fetch(`/api/ai-status?companyId=${companyId}`);
-          if (statusResponse.ok) {
-            const statusData = await statusResponse.json();
-
-            console.log(`[Polling ${currentElapsed}s] AI Status: ${statusData.status}`);
-
-            // If status is 'ready', verify the report actually exists in DB
-            if (statusData.status === 'ready') {
-              console.log(`[Polling ${currentElapsed}s] Status is 'ready', verifying report in DB...`);
-
-              try {
-                // Try to fetch the actual report to confirm it exists
-                const reportCheckUrl = reportUrl.includes('?')
-                  ? `${reportUrl}&verify=true`
-                  : `${reportUrl}?verify=true`;
-
-                const reportResponse = await fetch(reportCheckUrl, {
-                  method: 'HEAD' // Just check if it exists, don't load full content
-                });
-
-                if (reportResponse.ok || reportResponse.status === 200) {
-                  console.log(`[Polling ${currentElapsed}s] ✅ Report confirmed in database!`);
-                  setAiReady(true);
-                  if (pollRef.current) clearInterval(pollRef.current);
-                  if (timerRef.current) clearInterval(timerRef.current);
-                } else {
-                  console.log(`[Polling ${currentElapsed}s] ⚠️ Status 'ready' but report not found (${reportResponse.status}), continuing to poll...`);
-                }
-              } catch (reportErr) {
-                console.log(`[Polling ${currentElapsed}s] ⚠️ Error checking report, will retry:`, reportErr);
-              }
-            }
-            // Auto-redirect after 25 seconds even if still pending
-            else if (statusData.status === 'pending' && currentElapsed > 25) {
-              console.log(`⚠️ Generation slow (elapsed: ${currentElapsed}s), auto-redirecting to report`);
-              navigate(reportUrl, { replace: true });
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (timerRef.current) clearInterval(timerRef.current);
-            }
-            // Show error after 10 seconds if status is error or timeout
-            else if (
-              statusData.status === 'timeout' ||
-              (statusData.status === 'error' && currentElapsed > 10)
-            ) {
-              console.log(`⚠️ Generation failed (status: ${statusData.status}, elapsed: ${currentElapsed}s), showing error UI`);
-              setError('AI generation encountered an issue. You can proceed to dashboard.');
-              if (pollRef.current) clearInterval(pollRef.current);
-              if (timerRef.current) clearInterval(timerRef.current);
-            }
+          const res = await fetch(`/api/ai-status?companyId=${companyId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'ready') setAiReady(true);
+            else if (data.status === 'error' || Math.floor((Date.now() - startTimeRef.current) / 1000) > 120) setError("Processing delayed.");
           }
-        } catch (err) {
-          console.error('Polling error:', err);
-        }
+        } catch (e) {}
       };
-
-      // Poll immediately and then set interval
-      poll();
-      pollRef.current = setInterval(poll, 2000);
+      pollRef.current = setInterval(poll, 3000);
     }
-
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [submitted, aiReady, companyId, reportUrl, navigate]);
+  }, [submitted, aiReady, companyId]);
 
-  const handleAnswer = (questionId: string, value: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
-    setError(null);
-  };
+  // Logarithmic curve: jumps to ~20% in the first second, then gradually reaches 99% at 75s
+  // This makes the loading feel fast and responsive rather than trickling at 1%/s
+  const logProgress = elapsed > 0 ? Math.log(elapsed + 1) / Math.log(76) : 0;
+  const loadingPct = Math.min(99, Math.round(5 + logProgress * 94));
+  const loadingRemaining = Math.max(0, 75 - elapsed);
+  const loadingInsightIndex = Math.floor(elapsed / 8) % 4;
+  const loadingInsights = [
+    "Our AI cross-references 200+ HR transformation frameworks to build your report.",
+    "Benchmarking your data against industry peers across 40+ dimensions.",
+    "Identifying your highest-impact transformation levers automatically.",
+    "Generating executive-ready insights tailored to your organization size.",
+  ];
 
-  // Loading/Success State
   if (submitted) {
-    // ... your submitted UI ...
     return (
-      <div className="min-h-screen flex items-center justify-center py-12 px-4" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)' }}>
-        <div className="max-w-lg w-full">
+      <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #080818 0%, #0f0c2b 35%, #0d1440 65%, #0a0820 100%)' }}>
+
+        {/* Grid background */}
+        <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
+
+        {/* Animated glow orbs */}
+        <motion.div
+          animate={{ opacity: [0.4, 0.8, 0.4], scale: [1, 1.15, 1] }}
+          transition={{ repeat: Infinity, duration: 5 }}
+          className="absolute pointer-events-none"
+          style={{ top: '30%', left: '30%', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 65%)', filter: 'blur(70px)', transform: 'translate(-50%,-50%)' }}
+        />
+        <motion.div
+          animate={{ opacity: [0.3, 0.6, 0.3], scale: [1.1, 1, 1.1] }}
+          transition={{ repeat: Infinity, duration: 6, delay: 1.5 }}
+          className="absolute pointer-events-none"
+          style={{ top: '70%', right: '20%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 65%)', filter: 'blur(70px)', transform: 'translate(50%,-50%)' }}
+        />
+
+        <AnimatePresence mode="wait">
           {aiReady ? (
-            /* ─── READY STATE ─── */
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-              <div className="h-2 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400" />
-              <div className="p-10 text-center">
-                <div className="relative inline-flex mb-6">
-                  <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center">
-                    <CheckCircleIcon className="h-10 w-10 text-emerald-500" />
-                  </div>
-                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full animate-ping opacity-60" />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Report Ready</h2>
-                <p className="text-slate-500 text-sm mb-8">Your personalised intelligence report has been compiled and is ready to view.</p>
-                <a
-                  href={reportUrl}
-                  className="inline-flex items-center justify-center w-full py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-indigo-300/40 hover:scale-[1.02]"
+            /* ── DONE STATE ── */
+            <motion.div
+              key="done"
+              className="flex-1 flex flex-col items-center justify-center gap-8 px-4 relative z-10"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            >
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0 }} animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 180 }}
+                  className="w-28 h-28 rounded-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 0 60px rgba(16,185,129,0.4)' }}
                 >
-                  View Your Intelligence Report →
-                </a>
-              </div>
-            </div>
-          ) : error ? (
-            /* ─── ERROR/TIMEOUT FALLBACK STATE ─── */
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-              <div className="h-2 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-              <div className="p-10 text-center">
-                <div className="relative inline-flex mb-8">
-                  <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center shadow-inner">
-                    <SparklesIcon className="h-10 w-10 text-indigo-500" />
-                  </div>
-                  <motion.div 
-                    animate={{ scale: [1, 1.2, 1] }} 
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="absolute -top-1 -right-1 w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center border-4 border-white shadow-lg"
-                  >
-                    <div className="w-2 h-2 bg-white rounded-full" />
-                  </motion.div>
-                </div>
-                
-                <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-3">Report Synthesis Complete</h2>
-                <p className="text-slate-500 text-base mb-6 max-w-sm mx-auto">
-                  Your transformation brief has been compiled and is ready for your review.
-                </p>
-                
-                <div className="bg-indigo-50 rounded-2xl p-5 mb-8 border border-indigo-100/50 flex items-center gap-4 text-left">
-                  <div className="p-2 bg-white rounded-xl shadow-sm">
-                    <CheckCircleIcon className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <p className="text-xs text-indigo-900 font-semibold leading-relaxed">
-                    Data verified. Baseline established. Ready for strategic exploration.
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <motion.a
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    href={reportUrl}
-                    className="flex items-center justify-center w-full py-4 px-8 bg-gradient-to-br from-indigo-600 to-blue-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-200 transition-all text-lg"
-                  >
-                    Access Your Dashboard →
-                  </motion.a>
-                  
-                  <button
-                    onClick={() => { setError(null); setSubmitted(false); }}
-                    className="w-full py-3 text-slate-500 font-semibold hover:text-indigo-600 transition-colors"
-                  >
-                    ↩ Review Responses
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* ─── PREMIUM GENERATING STATE ─── */
-            <div className="animate-in fade-in duration-1000">
-              {/* Header */}
-              <div className="text-center mb-10">
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl mb-6 shadow-lg shadow-black/20"
-                >
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                  </span>
-                  <span className="text-white/90 text-[10px] font-black tracking-[0.2em] uppercase">Transformation Engine Active</span>
+                  <CheckCircleIcon className="w-14 h-14 text-white" />
                 </motion.div>
-                
-                <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none mb-4">
-                  Compiling Your
-                  <span className="block italic text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-cyan-200 to-blue-300">
-                    Strategic Report
-                  </span>
-                </h2>
-                <p className="text-white/40 text-sm font-medium max-w-xs mx-auto leading-relaxed">
-                  Synthesizing your assessment data into an enterprise-wide transformation brief.
-                </p>
+                <motion.div animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0, 0.4] }} transition={{ repeat: Infinity, duration: 2.5 }} className="absolute -inset-5 rounded-full border border-emerald-400/40" />
+                <motion.div animate={{ scale: [1, 2.2, 1], opacity: [0.2, 0, 0.2] }} transition={{ repeat: Infinity, duration: 2.5, delay: 0.6 }} className="absolute -inset-5 rounded-full border border-emerald-400/20" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-5xl font-black text-white uppercase tracking-tight mb-3">Analysis Complete</h2>
+                <p className="text-white/40 text-lg">Your strategic report is ready. Redirecting...</p>
+              </div>
+              <motion.button
+                onClick={() => navigate("/cartDashboard")}
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                className="px-10 py-4 font-black text-lg uppercase tracking-widest rounded-2xl text-white"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 20px 60px rgba(16,185,129,0.25)' }}
+              >
+                View Report →
+              </motion.button>
+            </motion.div>
+          ) : (
+            /* ── LOADING STATE ── */
+            <motion.div
+              key="loading"
+              className="flex-1 flex flex-col relative z-10"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-8 py-5">
+                <div className="flex items-center gap-3">
+                  <img src="/logo_icon_final.png" alt="HRTek" className="w-7 h-7 object-contain opacity-70" />
+                  <span className="text-white/40 text-xs font-black uppercase tracking-[0.3em]">HR TEK SYSTEMS</span>
+                </div>
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' }}>
+                  <motion.div
+                    animate={{ opacity: [1, 0.15, 1], scale: [1, 1.6, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.1 }}
+                    className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                    style={{ boxShadow: '0 0 6px rgba(52,211,153,0.9)' }}
+                  />
+                  <span className="text-emerald-400 text-[10px] font-black uppercase tracking-widest">AI Active</span>
+                </div>
               </div>
 
-              {/* Main Card */}
-              <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl shadow-black/40 overflow-hidden relative">
-                {/* Visual Accent */}
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 blur-[80px] rounded-full" />
-                <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-cyan-500/20 blur-[80px] rounded-full" />
-                
-                {/* Center Visualizer */}
-                <div className="flex justify-center mb-12">
-                  <div className="relative group">
-                    <div className="w-28 h-28 rounded-full border border-indigo-500/20 flex items-center justify-center p-2">
-                      <div className="w-full h-full rounded-full border border-dashed border-indigo-400/30 animate-[spin_10s_linear_infinite]" />
-                    </div>
-                    
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <motion.div 
-                        animate={{ 
-                          scale: [1, 1.05, 1],
-                          rotate: [0, 5, -5, 0]
-                        }}
-                        transition={{ repeat: Infinity, duration: 4 }}
-                        className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-blue-600 flex items-center justify-center shadow-2xl shadow-indigo-500/50 relative z-10"
-                      >
-                        <SparklesIcon className="w-8 h-8 text-white" />
-                      </motion.div>
-                    </div>
-                    
-                    {/* Orbiting Elements */}
-                    <motion.div 
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
-                      className="absolute inset-0 z-0 pointer-events-none"
-                    >
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
-                    </motion.div>
-                    <motion.div 
-                      animate={{ rotate: -360 }}
-                      transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
-                      className="absolute inset-0 z-0 pointer-events-none"
-                    >
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-indigo-400 rounded-full shadow-[0_0_12px_rgba(129,140,248,0.8)]" />
-                    </motion.div>
-                  </div>
-                </div>
+              {/* Engine name */}
+              <motion.div
+                initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                className="text-center pt-4 pb-8"
+              >
+                <p className="text-indigo-400/50 text-[10px] font-black uppercase tracking-[0.4em] mb-2">Processing Engine</p>
+                <h1 className="text-4xl md:text-5xl font-black text-white">{engine}</h1>
+              </motion.div>
 
-                {/* Progress Tracker */}
-                <div className="space-y-4 mb-10 relative z-10">
-                  {[
-                    { label: 'Ingesting assessment responses', from: 0, to: 6 },
-                    { label: 'Mapping operational patterns', from: 6, to: 13 },
-                    { label: 'Synthesizing strategic insights', from: 13, to: 22 },
-                    { label: 'Finalizing transformation brief', from: 22, to: 30 },
-                  ].map((stage) => {
-                    const isActive = elapsed >= stage.from && elapsed < stage.to;
-                    const isDone   = elapsed >= stage.to;
+              {/* Three-column layout */}
+              <div className="flex-1 flex items-center justify-center px-8 gap-10 max-w-5xl mx-auto w-full">
+
+                {/* LEFT: Analysis Pipeline */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+                  className="w-52 space-y-1 hidden lg:block"
+                >
+                  <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-4">Analysis Pipeline</p>
+                  {statusMessages.map((msg, i) => {
+                    const isDone = i < messageIndex;
+                    const isActive = i === messageIndex;
                     return (
-                      <div key={stage.label} className={`flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-700 ${
-                        isActive ? 'bg-indigo-500/15 border border-indigo-400/20 shadow-lg shadow-indigo-500/5' :
-                        isDone   ? 'bg-white/5 border border-white/5 opacity-60' :
-                                   'border border-transparent opacity-20'
-                      }`}>
-                        <div className={`w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center transition-all duration-700 ${
-                          isDone   ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]' :
-                          isActive ? 'bg-indigo-500 border border-indigo-400 animate-pulse' :
-                                     'bg-white/10'
-                        }`}>
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: isDone ? 0.3 : isActive ? 1 : 0.18 }}
+                        className="flex items-center gap-3 py-2 px-3 rounded-xl"
+                        style={isActive ? { background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' } : {}}
+                      >
+                        <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center">
                           {isDone ? (
-                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                              <circle cx="10" cy="10" r="9" stroke="#10b981" strokeWidth="1.5" />
+                              <path d="M6 10l3 3 5-5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           ) : isActive ? (
-                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                          ) : null}
+                            <motion.div
+                              animate={{ scale: [1, 1.5, 1] }}
+                              transition={{ repeat: Infinity, duration: 0.9 }}
+                              className="w-2 h-2 rounded-full bg-indigo-400"
+                              style={{ boxShadow: '0 0 6px rgba(99,102,241,0.8)' }}
+                            />
+                          ) : (
+                            <div className="w-1.5 h-1.5 rounded-full bg-white/15" />
+                          )}
                         </div>
-                        <span className={`text-[13px] font-bold tracking-tight uppercase ${
-                          isActive ? 'text-indigo-100' : isDone ? 'text-white' : 'text-white'
-                        }`}>{stage.label}</span>
-                        {isActive && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-auto text-[9px] text-indigo-300 font-black uppercase tracking-widest px-2 py-0.5 bg-indigo-500/20 rounded-md">processing</motion.span>}
-                      </div>
+                        <span className={`text-xs font-semibold leading-tight ${isActive ? 'text-white' : isDone ? 'text-white/30 line-through' : 'text-white/20'}`}>
+                          {msg.replace("...", "")}
+                        </span>
+                      </motion.div>
                     );
                   })}
-                </div>
+                </motion.div>
 
-                {/* Global Progress Bar */}
-                <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/5">
-                  <div className="flex justify-between items-end mb-3">
-                    <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em]">Overall Progress</span>
-                    <span className="text-xl font-black text-white">{Math.min(Math.round((elapsed / 25) * 100), 95)}%</span>
-                  </div>
-                  <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden shadow-inner p-0.5">
+                {/* CENTER: Circular progress */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}
+                  className="relative flex-shrink-0"
+                >
+                  {/* Glow behind circle */}
+                  <div className="absolute inset-0 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)', filter: 'blur(40px)', transform: 'scale(1.5)' }} />
+
+                  <div className="relative w-72 h-72">
+                    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 240 240">
+                      {/* Decorative outer ring */}
+                      <circle cx="120" cy="120" r="112" fill="none" stroke="rgba(99,102,241,0.06)" strokeWidth="1" strokeDasharray="3 9" />
+                      {/* Track */}
+                      <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="14" />
+                      {/* Inner ring */}
+                      <circle cx="120" cy="120" r="82" fill="none" stroke="rgba(99,102,241,0.04)" strokeWidth="1" />
+                      <defs>
+                        <linearGradient id="pGrad" gradientUnits="userSpaceOnUse" x1="20" y1="120" x2="220" y2="120">
+                          <stop offset="0%" stopColor="#6366f1" />
+                          <stop offset="50%" stopColor="#a855f7" />
+                          <stop offset="100%" stopColor="#ec4899" />
+                        </linearGradient>
+                      </defs>
+                      <motion.circle
+                        cx="120" cy="120" r="100"
+                        fill="none"
+                        stroke="url(#pGrad)"
+                        strokeWidth="14"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 100}`}
+                        initial={{ strokeDashoffset: 2 * Math.PI * 100 }}
+                        animate={{ strokeDashoffset: 2 * Math.PI * 100 * (1 - loadingPct / 100) }}
+                        transition={{ duration: 0.8, ease: "easeInOut" }}
+                        style={{ filter: 'drop-shadow(0 0 12px rgba(99,102,241,0.8))' }}
+                      />
+                    </svg>
+
+                    {/* Orbiting dot */}
                     <motion.div
-                      className="h-full rounded-full transition-all duration-1000 ease-out shadow-lg"
-                      style={{
-                        width: `${Math.min((elapsed / 25) * 100, 95)}%`,
-                        background: 'linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4)'
-                      }}
+                      className="absolute inset-0"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    >
+                      <div
+                        className="absolute w-4 h-4 rounded-full"
+                        style={{
+                          top: '50%', left: '50%',
+                          transform: 'translate(-50%, -120px)',
+                          background: 'radial-gradient(circle, #fff 20%, #a855f7 80%)',
+                          boxShadow: '0 0 18px rgba(168,85,247,0.9), 0 0 6px rgba(255,255,255,0.8)'
+                        }}
+                      />
+                    </motion.div>
+
+                    {/* Center content */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <motion.div
+                        key={loadingPct}
+                        initial={{ scale: 0.9, opacity: 0.6 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="flex items-baseline gap-1"
+                      >
+                        <span
+                          className="text-8xl font-black text-white tabular-nums leading-none"
+                          style={{ textShadow: '0 0 50px rgba(99,102,241,0.6)' }}
+                        >
+                          {loadingPct}
+                        </span>
+                        <span className="text-3xl font-black text-white/25 mb-1">%</span>
+                      </motion.div>
+                      <motion.p
+                        animate={{ opacity: [0.3, 0.7, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className="text-[9px] font-black uppercase tracking-[0.35em] text-indigo-300/50 mt-1"
+                      >
+                        Processing
+                      </motion.p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* RIGHT: Stats */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+                  className="w-48 space-y-4 hidden lg:flex flex-col justify-center"
+                >
+                  <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25 mb-2">Elapsed Time</p>
+                    <p className="text-3xl font-black text-white tabular-nums">
+                      {String(Math.floor(elapsed / 60)).padStart(2, "0")}
+                      <motion.span animate={{ opacity: [1, 0.1, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="text-white/20">:</motion.span>
+                      {String(elapsed % 60).padStart(2, "0")}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl p-5" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.15)' }}>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-300/40 mb-2">Est. Remaining</p>
+                    <p className="text-3xl font-black text-indigo-400 tabular-nums">~{loadingRemaining}s</p>
+                  </div>
+
+                  <div className="rounded-2xl p-5 space-y-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/25">Progress Steps</p>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {statusMessages.map((_, i) => (
+                        <div
+                          key={i}
+                          className="rounded-full transition-all duration-500"
+                          style={{
+                            width: i === messageIndex ? '20px' : '7px',
+                            height: '7px',
+                            background: i < messageIndex ? '#10b981' : i === messageIndex ? 'linear-gradient(90deg, #6366f1, #a855f7)' : 'rgba(255,255,255,0.10)',
+                            boxShadow: i === messageIndex ? '0 0 8px rgba(99,102,241,0.7)' : 'none'
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Bottom section */}
+              <div className="px-8 pb-6 max-w-3xl mx-auto w-full space-y-4 mt-6">
+
+                {/* Current step name */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={messageIndex}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                    className="flex items-center gap-2 justify-center"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.6, 1] }}
+                      transition={{ repeat: Infinity, duration: 0.9 }}
+                      className="w-1.5 h-1.5 rounded-full bg-indigo-400"
+                      style={{ boxShadow: '0 0 6px rgba(99,102,241,0.8)' }}
                     />
-                  </div>
+                    <span className="text-sm font-bold text-white/70">{statusMessages[messageIndex].replace("...", "")}</span>
+                    <motion.span
+                      animate={{ opacity: [0.4, 1, 0.4] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="text-[9px] font-black uppercase tracking-widest text-emerald-500 ml-1"
+                    >
+                      ● Live
+                    </motion.span>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Thin glowing progress bar */}
+                <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <motion.div
+                    initial={{ width: "5%" }}
+                    animate={{ width: `${loadingPct}%` }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    className="h-full rounded-full relative overflow-hidden"
+                    style={{ background: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899)', boxShadow: '0 0 8px rgba(99,102,241,0.6)' }}
+                  >
+                    <motion.div
+                      animate={{ x: ["0%", "100%"] }}
+                      transition={{ repeat: Infinity, duration: 1.6, ease: "linear" }}
+                      className="absolute inset-0"
+                      style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }}
+                    />
+                  </motion.div>
                 </div>
 
-                {/* Secure Tip */}
-                <div className="flex items-start gap-4 bg-gradient-to-br from-indigo-500/10 to-transparent border border-white/10 rounded-2xl px-5 py-4">
-                  <div className="p-1.5 bg-white/10 rounded-lg">
-                    <ClockIcon className="w-4 h-4 text-white/60" />
-                  </div>
-                  <p className="text-white/40 text-[11px] leading-relaxed font-medium">
-                    Your assessment responses are securely encrypted and saved. Safe to exit this tab; synthesis will complete in the background.
-                  </p>
+                {/* Rotating insight */}
+                <div className="flex items-start gap-2 justify-center">
+                  <SparklesIcon className="w-3 h-3 flex-shrink-0 mt-0.5 text-indigo-400/40" />
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={loadingInsightIndex}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6 }}
+                      className="text-[11px] font-medium text-white/25 leading-relaxed text-center max-w-md"
+                    >
+                      {loadingInsights[loadingInsightIndex]}
+                    </motion.p>
+                  </AnimatePresence>
                 </div>
               </div>
 
-              {/* Status footer */}
-              <div className="mt-8 flex items-center justify-center gap-4 text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">
-                {elapsed}s elapsed
-                <div className="w-1 h-1 bg-white/10 rounded-full" />
-                HTI Strategy Stack v4.0
+              {/* Footer */}
+              <div className="pb-5 text-center">
+                <p className="text-[10px] font-medium text-white/15 uppercase tracking-[0.25em]">Secure · AI-Synthesized · Confidential</p>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     );
   }
 
-  // Main Form
+  const allAnswered = questions.every(q => answers[q.id]);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-          {/* Header */}
-          <div className="px-8 py-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <SparklesIcon className="h-8 w-8 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Engine Recommendation Assessment
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Help us identify the most relevant diagnostic tools for your organization
-                </p>
-              </div>
-            </div>
+        <Form method="post" className="bg-white rounded-xl shadow-lg border border-gray-200">
+          <div className="px-8 py-6 border-b">
+            <h1 className="text-2xl font-bold italic uppercase">Engine Recommendation</h1>
           </div>
-
-          {/* Progress Bar */}
-          <div className="px-8 py-4 bg-gray-50">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-              <span>Progress</span>
-              <span>{Object.keys(answers).length} of {questions.length} questions</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${questions.length > 0 ? (Object.keys(answers).length / questions.length) * 100 : 0}%`
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Error Display */}
-          {actionData?.error && (
-            <div className="mx-8 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm font-medium">{actionData.error}</p>
-            </div>
-          )}
-
-          {/* Form */}
-          <Form method="post" className="px-8 py-6">
-            <div className="space-y-8">
-              {questions.map((question, index) => (
-                <div key={question.id} className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-semibold text-blue-600">
-                        {index + 1}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-medium text-gray-900 mb-4">
-                        {question.question}
-                      </h3>
-                      <div className="space-y-3">
-                        {question.options.map((option) => (
-                          <label
-                            key={option.value}
-                            className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${answers[question.id] === option.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                              }`}
-                          >
-                            <input
-                              type="radio"
-                              name={question.id}
-                              value={option.value}
-                              checked={answers[question.id] === option.value}
-                              onChange={(e) => handleAnswer(question.id, e.target.value)}
-                              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                              required
-                            />
-                            <span className="text-gray-700 leading-relaxed">
-                              {option.text}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+          <div className="p-8 space-y-10">
+            {questions.map(q => (
+              <div key={q.id}>
+                <h3 className="text-lg font-bold mb-4">{q.question}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {q.options.map(o => (
+                    <label key={o.value} className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer ${answers[q.id] === o.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                      <input type="radio" name={q.id} value={o.value} checked={answers[q.id] === o.value} onChange={e => setAnswers(p => ({...p, [q.id]: e.target.value}))} className="mt-1" required />
+                      <span>{o.text}</span>
+                    </label>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* Submit Button */}
-            <div className="mt-12 pt-6 border-t border-gray-200">
-              <button
-                type="submit"
-                disabled={!allAnswered || isSubmitting}
-                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 ${allAnswered && !isSubmitting
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Processing Your Assessment...
-                  </div>
-                ) : (
-                  'Submit and Personalize Dashboard'
-                )}
-              </button>
-            </div>
-          </Form>
-        </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-8 border-t">
+            <button type="submit" disabled={!allAnswered || navigation.state === "submitting"} className={`w-full py-4 rounded-lg font-bold text-lg ${allAnswered ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-500'}`}>
+              {navigation.state === "submitting" ? 'Analyzing...' : 'Complete Assessment'}
+            </button>
+          </div>
+        </Form>
       </div>
     </div>
   );

@@ -46,6 +46,7 @@ export interface PaymentRecord {
         engineName: string;
         price: number;
         description: string;
+        durationMonths?: number;
     }>;
 
     // Billing contact details
@@ -145,9 +146,10 @@ export async function generateInvoice(
         invoiceDate,
         dueDate,
         items: cartItems.map(item => ({
-            engineName: item.productName,
+            engineName: item.displayName || item.productName || item.engineName,
             price: item.price,
-            description: `HR Digital Transformation - ${item.productName}`
+            durationMonths: item.durationMonths || 1,
+            description: `HR Digital Transformation - ${item.displayName || item.productName || item.engineName}`
         })),
         billingContact,
         cgst,
@@ -423,6 +425,7 @@ export async function getCompanyPayments(orgId: string): Promise<PaymentRecord[]
 
 /**
  * Get all pending payment verifications (for admin)
+ * Includes both payment_submitted (proof uploaded) and pending_payment (invoice created, awaiting proof)
  */
 export async function getPendingPaymentVerifications(): Promise<PaymentRecord[]> {
     // TODO: Create GSI on status field for better performance
@@ -430,12 +433,13 @@ export async function getPendingPaymentVerifications(): Promise<PaymentRecord[]>
 
     const command = new ScanCommand({
         TableName: USERS_TABLE,
-        FilterExpression: "#status = :status AND begins_with(sk, :skPrefix)",
+        FilterExpression: "(#status = :status1 OR #status = :status2) AND begins_with(sk, :skPrefix)",
         ExpressionAttributeNames: {
             "#status": "status"
         },
         ExpressionAttributeValues: {
-            ":status": "payment_submitted",
+            ":status1": "payment_submitted",
+            ":status2": "pending_payment",
             ":skPrefix": "PAYMENT#"
         }
     });
@@ -458,6 +462,7 @@ export async function getPendingPaymentVerifications(): Promise<PaymentRecord[]>
 
 /**
  * Check if company has verified payments for specific engines
+ * Includes a 30-day expiration check
  */
 export async function hasVerifiedPaymentForEngines(
     orgId: string,
@@ -465,12 +470,24 @@ export async function hasVerifiedPaymentForEngines(
 ): Promise<boolean> {
     const payments = await getCompanyPayments(orgId);
 
-    const verifiedPayments = payments.filter(p => p.status === "payment_verified");
-    const paidEngines = new Set(
-        verifiedPayments.flatMap(p => p.items.map(item => item.engineName))
-    );
+    const paidEngines = new Set<string>();
+    
+    payments.forEach(p => {
+        if (p.status !== "payment_verified" && p.status !== "completed") return;
+        
+        p.items?.forEach(item => {
+            const duration = item.durationMonths || 1;
+            const verifiedAt = new Date(p.verifiedAt || p.updatedAt);
+            const expiresAt = new Date(verifiedAt);
+            expiresAt.setMonth(expiresAt.getMonth() + duration);
+            
+            if (new Date() < expiresAt) {
+                paidEngines.add(item.engineName.trim());
+            }
+        });
+    });
 
-    return engineNames.every(engine => paidEngines.has(engine));
+    return engineNames.every(engine => paidEngines.has(engine.trim()));
 }
 
 /**
@@ -515,6 +532,66 @@ export async function isEligibleForTransformation(orgId: string): Promise<{
         requiredCount,
         paidEngines
     };
+}
+
+/**
+ * Get the detailed payment status for a specific engine
+ */
+export async function getEnginePaymentStatus(orgId: string, engineName: string) {
+    const payments = await getCompanyPayments(orgId);
+    
+    // Check for verified and active payment
+    let activePayment = null;
+    let maxExpiresAt = 0;
+
+    for (const p of payments) {
+        if (p.status !== "payment_verified" && p.status !== "completed") continue;
+        
+        const engineItem = p.items?.find(i => i.engineName.trim() === engineName.trim());
+        if (!engineItem) continue;
+
+        const duration = engineItem.durationMonths || 1;
+        const verifiedAt = new Date(p.verifiedAt || p.updatedAt);
+        const expiresAt = new Date(verifiedAt);
+        expiresAt.setMonth(expiresAt.getMonth() + duration);
+
+        if (new Date() < expiresAt) {
+            if (expiresAt.getTime() > maxExpiresAt) {
+                maxExpiresAt = expiresAt.getTime();
+                activePayment = p;
+            }
+        }
+    }
+
+    if (activePayment) {
+        return { 
+            status: "paid", 
+            record: activePayment, 
+            expiresAt: new Date(maxExpiresAt).toISOString() 
+        };
+    }
+
+    // Check for pending verification
+    const pendingPayment = payments.find(p => 
+        p.status === "payment_submitted" && 
+        p.items?.some(i => i.engineName.trim() === engineName.trim())
+    );
+
+    if (pendingPayment) {
+        return { status: "pending", record: pendingPayment };
+    }
+
+    // Check for rejected payment (so they can try again)
+    const rejectedPayment = payments.find(p => 
+        p.status === "payment_rejected" && 
+        p.items?.some(i => i.engineName.trim() === engineName.trim())
+    );
+
+    if (rejectedPayment) {
+        return { status: "rejected", record: rejectedPayment };
+    }
+
+    return { status: "unpaid", record: null };
 }
 
 

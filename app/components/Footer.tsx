@@ -9,7 +9,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#0B2A57] text-white py-10">
-      <div className="mx-auto px-6 grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+      <div className="max-w-[1400px] mx-auto px-6 grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1.4fr_0.9fr_1.3fr_1.1fr_0.9fr_auto]">
         {/* Company Info */}
         <div className="flex flex-col items-start gap-4">
           <Logo orientation="stacked" />
@@ -150,7 +150,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        <div className="justify-self-start lg:justify-self-end">
+        <div>
           <h3 className="text-lg font-semibold mb-6">Follow Us</h3>
           <div className="flex gap-4">
             <a
@@ -181,11 +181,60 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mt-10 border-t border-white/10 pt-6 text-sm text-gray-400">
-        <div className="flex justify-between items-center">
-          <span className="text-left ml-6">© {isMounted ? new Date().getFullYear() : '2026'} HR-Tek System. All rights reserved.</span>
-          <span className="text-center">This website comes under the GDPR Laws</span>
-          <span className="text-right mr-6">CIN - U62010UP2025PTC219986</span>
+      {/* Accreditations */}
+      <div className="mt-10 border-t border-white/10 pt-8 max-w-[1400px] mx-auto px-6">
+        <p className="text-center text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Recognized & Accredited By</p>
+        <div className="flex flex-wrap items-center justify-center gap-6">
+          {/* AIC IIT Delhi */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/homepageAssets/accreditations.png"
+              alt="AIC IIT Delhi"
+              className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">AIC IIT Delhi</div>
+              <div className="text-[9px] text-white/40 leading-tight">Sonipat Innovation Foundation</div>
+            </div>
+          </div>
+
+          <div className="w-px h-8 bg-white/10 hidden sm:block" />
+
+          {/* Startup India */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/certificates/startup_india_logo.png"
+              alt="Startup India"
+              className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">Startup India</div>
+              <div className="text-[9px] text-white/40 leading-tight">DPIIT Recognized</div>
+            </div>
+          </div>
+
+          <div className="w-px h-8 bg-white/10 hidden sm:block" />
+
+          {/* Start In UP */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/certificates/start_in_up_cert.jpg"
+              alt="Start In UP"
+              className="h-7 w-auto object-contain rounded opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">Start In UP</div>
+              <div className="text-[9px] text-white/40 leading-tight">UP Startup Policy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 border-t border-white/10 pt-6 text-sm text-gray-400">
+        <div className="max-w-[1400px] mx-auto px-6 flex flex-wrap justify-between items-center gap-2">
+          <span>© {isMounted ? new Date().getFullYear() : '2026'} HR-Tek System. All rights reserved.</span>
+          <span>This website comes under the GDPR Laws</span>
+          <span>CIN - U62010UP2025PTC219986</span>
         </div>
       </div>
     </footer >

@@ -283,6 +283,26 @@ export default function HRSharedServicesPage() {
 
 
 
+      {/* Video Tutorial Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <span className="inline-block px-4 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-widest rounded-full mb-4">Video Tutorial</span>
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">See Shared Service Designer In Action</h2>
+            <p className="text-gray-500 max-w-xl mx-auto text-sm">Watch how the Shared Service Designer helps you model, benchmark, and optimise your HR shared services operating model.</p>
+          </div>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-slate-900" style={{ aspectRatio: '16/9' }}>
+            <iframe
+              src="https://www.youtube.com/embed/YOVD_7wszU4"
+              title="Shared Service Designer Tutorial"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="bg-blue-700 text-white py-16">
         <div className="max-w-3xl mx-auto text-center px-6">

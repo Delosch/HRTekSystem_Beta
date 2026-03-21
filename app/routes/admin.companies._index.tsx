@@ -73,8 +73,8 @@ export default function AdminCompanies() {
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Company Management</h1>
-                    <p className="text-gray-500 font-medium">Manage corporate accounts, status, and industry classifications.</p>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Company List</h1>
+                    <p className="text-gray-500 font-medium">Manage accounts, status, and industries.</p>
                 </div>
                 <Link
                     to="/admin/companies/new"
@@ -93,7 +93,7 @@ export default function AdminCompanies() {
                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600">
                                 <ArrowTrendingUpIcon className="h-6 w-6" />
                             </div>
-                            <h2 className="text-lg font-bold text-gray-900">Onboarding Trend</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Growth Trend</h2>
                         </div>
                         <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">+14% MoM</span>
                     </div>
@@ -166,7 +166,7 @@ export default function AdminCompanies() {
                         <thead>
                             <tr className="bg-gray-50/50">
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Company Profile</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Operational Info</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Location</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>

@@ -18,9 +18,9 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
         id: "essentials",
         name: "Advisory Essentials",
         description: "For mid-size enterprises (< 500 employees)",
-        priceINR: "₹12-18L",
-        priceUSD: "USD 18,000 - 25,000",
-        period: "per year",
+        priceINR: "Contact Us",
+        priceUSD: "for pricing",
+        period: "",
         features: [
             "Aggregation from all HR-Tek modules",
             "Interpretation Layer (maturity, gaps, readiness)",
@@ -28,17 +28,17 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
             "CXO summary dashboard",
             "Confidence & explainability indicators"
         ],
-        cta: "Get Started",
-        ctaLink: "/auth",
+        cta: "Contact Sales",
+        ctaLink: "/contact",
         basePrice: 1200000
     },
     TRANSFORMATION: {
         id: "transformation",
         name: "Transformation Intelligence",
         description: "For enterprises (500-5,000 employees)",
-        priceINR: "₹28-40L",
-        priceUSD: "USD 40,000 - 60,000",
-        period: "per year",
+        priceINR: "Contact Us",
+        priceUSD: "for pricing",
+        period: "",
         features: [
             "Everything in Essentials",
             "Transformation Mapping Layer",
@@ -49,8 +49,8 @@ export const PRICING_TIERS: Record<string, PricingTier> = {
             "Operating model implications",
             "Quarterly transformation intelligence refresh"
         ],
-        cta: "Start Transformation",
-        ctaLink: "/auth",
+        cta: "Contact Sales",
+        ctaLink: "/contact",
         recommended: true,
         basePrice: 2800000
     },

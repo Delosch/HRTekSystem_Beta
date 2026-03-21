@@ -20,6 +20,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/roadmapDashboard");
     }
 
+    // Payment gating
+    const { hasVerifiedPaymentForEngines } = await import("~/models/payment.model.server");
+    const hasPaid = user.isAdmin || await hasVerifiedPaymentForEngines(user.organisationId, ["HR Transformation Roadmap Generator"]);
+    
+    if (!hasPaid) {
+        return redirect("/roadmapDashboard");
+    }
+
     const { getCompanyAdvisories } = await import("~/models/hti.model.server");
     const advisories = await getCompanyAdvisories(user.organisationId);
     const latestReportId = advisories.length > 0 ? advisories[0].reportId : null;

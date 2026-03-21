@@ -3,8 +3,45 @@ import { useFetcher, useNavigate, useSearchParams } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
     CheckCircle2, Circle, ChevronRight, Menu, X,
-    ArrowLeft, ArrowRight, Save, BarChart3, Target
+    ArrowLeft, ArrowRight, Save, BarChart3, Target, Play
 } from "lucide-react";
+
+const CM_VIDEO_ID = "pNXK9mVIqpc";
+
+function VideoPreview({ videoId }: { videoId: string }) {
+    const [showVideo, setShowVideo] = useState(false);
+    return (
+        <div className="w-full rounded-xl overflow-hidden border border-slate-100">
+            {showVideo ? (
+                <iframe
+                    className="w-full aspect-video"
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                    title="Engine tutorial"
+                    style={{ border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                />
+            ) : (
+                <button
+                    onClick={() => setShowVideo(true)}
+                    className="relative w-full group cursor-pointer bg-black"
+                >
+                    <img
+                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                        alt="Watch how it works"
+                        className="w-full aspect-video object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                        <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Watch how it works</span>
+                    </div>
+                </button>
+            )}
+        </div>
+    );
+}
 import { assessmentSections } from "./data/assessmentData";
 import { SectionInsightsCMS } from "./components/SectionInsightsCMS";
 import {
@@ -31,7 +68,7 @@ export function ChangeManagementAssessment({ initialResponses, savedProgress = 0
     const modify = searchParams.get('modify') === 'true';
 
     const hasExistingData = !!(initialResponses && Object.keys(initialResponses).length > 0);
-    const [started, setStarted] = useState(modify || !hasExistingData);
+    const [started, setStarted] = useState(modify);
     const [responses, setResponses] = useState<Response>(initialResponses || {});
     const [currentStep, setCurrentStep] = useState(0);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -158,28 +195,50 @@ export function ChangeManagementAssessment({ initialResponses, savedProgress = 0
     const currentSectionTotal = currentSection.questions.length;
 
     if (!started) {
+        const sectionCount = sections.length;
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6 py-10">
                 <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
                     <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
-                    <h1 className="text-2xl font-black text-slate-900">Intelligent Change Management Assessment</h1>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                        You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress. Would you like to continue where you left off?
-                    </p>
-                    <div className="flex flex-col gap-3 pt-2">
-                        <button
-                            onClick={() => setStarted(true)}
-                            className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
-                        >
-                            Continue with Saved Responses ({savedProgress}%)
-                        </button>
-                        <button
-                            onClick={() => { setResponses({} as Response); setStarted(true); }}
-                            className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
-                        >
-                            Start Fresh
-                        </button>
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 leading-tight">Intelligent Change Management</h1>
+                        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Assessment</p>
                     </div>
+                    <VideoPreview videoId={CM_VIDEO_ID} />
+                    {hasExistingData ? (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress.
+                                It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{totalQuestions} questions</span>.
+                            </p>
+                            <div className="flex flex-col gap-3 pt-2">
+                                <button
+                                    onClick={() => setStarted(true)}
+                                    className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                                >
+                                    Continue ({savedProgress}% complete) →
+                                </button>
+                                <button
+                                    onClick={() => { setResponses({} as Response); setStarted(true); }}
+                                    className="w-full px-8 py-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-semibold text-base transition-all"
+                                >
+                                    Start Fresh
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                This assessment will evaluate your organisation's change readiness and help design a tailored change management strategy. It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{totalQuestions} questions</span>.
+                            </p>
+                            <button
+                                onClick={() => setStarted(true)}
+                                className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                            >
+                                Begin Assessment →
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         );

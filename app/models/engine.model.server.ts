@@ -114,7 +114,9 @@ export const completedEngine = async (company_id: string) => {
             ProjectionExpression: "sk",
         })
         const response = await ddbDocClient.send(command);
-        return response.Items?.map((item) => item.sk) || [];
+        const engineNames = response.Items?.map((item) => item.sk) || [];
+        // Filter out non-transformation engines like "Profiling Assessment"
+        return engineNames.filter(name => name !== "Profiling Assessment");
     } catch (error) {
         console.error("Error fetching completed engines:", error);
         return [];

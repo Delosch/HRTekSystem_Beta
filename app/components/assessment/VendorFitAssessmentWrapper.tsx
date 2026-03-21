@@ -1,11 +1,53 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useFetcher, useLocation, useNavigate } from "@remix-run/react";
 import { AnimatePresence, motion } from "framer-motion";
+import EmployeeSizeModal from "~/components/EmployeeSizeModal";
 import {
     CheckCircle2, Circle, ChevronRight, Menu, X,
     ArrowLeft, ArrowRight, Save, BarChart3, Target,
-    Brain, Activity, TrendingUp, TrendingDown, AlertTriangle
+    Brain, Activity, TrendingUp, TrendingDown, AlertTriangle, Play,
+    Calendar, ShoppingCart
 } from "lucide-react";
+
+const ENGINE_VIDEO_IDS: Record<string, string> = {
+    "HCM Vendor Fit Engine": "yTvgbv1Z1RU",
+    "Shared Service Designer": "YOVD_7wszU4",
+};
+
+function VideoPreview({ videoId }: { videoId: string }) {
+    const [showVideo, setShowVideo] = useState(false);
+    return (
+        <div className="w-full rounded-xl overflow-hidden border border-slate-100">
+            {showVideo ? (
+                <iframe
+                    className="w-full aspect-video"
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                    title="Engine tutorial"
+                    style={{ border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                />
+            ) : (
+                <button
+                    onClick={() => setShowVideo(true)}
+                    className="relative w-full group cursor-pointer bg-black"
+                >
+                    <img
+                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                        alt="Watch how it works"
+                        className="w-full aspect-video object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                        <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Watch how it works</span>
+                    </div>
+                </button>
+            )}
+        </div>
+    );
+}
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { QuestionSchema } from "~/routes/engine.$id/questionSchema";
 import { ExecutiveAdvisory } from "~/components/SharedServicesEngine/components/ExecutiveAdvisory";
@@ -459,6 +501,9 @@ export default function VendorFitAssessmentWrapper({
     const [showErrorToast, setShowErrorToast] = useState(false);
     const [showAIReport, setShowAIReport] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [showMonthsModal, setShowMonthsModal] = useState(false);
+    const [selectedMonths, setSelectedMonths] = useState(3);
+    const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
     const steps = data.parts;
     const currentStepData = steps[currentStep];
@@ -547,6 +592,37 @@ export default function VendorFitAssessmentWrapper({
         }
     };
 
+    const submitWithMonths = (months: number) => {
+        const payload = {
+            assessment_id: data.pk,
+            progress: 100,
+            section: "Completion",
+            answers: formData,
+            params: engineName,
+            months
+        };
+        fetcher.submit(payload, {
+            method: "POST", encType: "application/json", action: path.pathname
+        });
+        setShowMonthsModal(false);
+    };
+
+    const submitWithEmployeeCount = (employeeCount: number) => {
+        const payload = {
+            assessment_id: data.pk,
+            progress: 100,
+            section: "Completion",
+            answers: formData,
+            params: engineName,
+            months: 1,
+            employeeCount
+        };
+        fetcher.submit(payload, {
+            method: "POST", encType: "application/json", action: path.pathname
+        });
+        setShowEmployeeModal(false);
+    };
+
     const handleNext = async () => {
         const isValid = validateCurrentStep();
         if (!isValid) return;
@@ -556,14 +632,14 @@ export default function VendorFitAssessmentWrapper({
             setErrors({});
             scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         } else {
-            // Final completion
-            const payload = {
-                assessment_id: data.pk, progress: 100,
-                section: "Completion", answers: formData, params: engineName
-            };
-            fetcher.submit(payload, {
-                method: "POST", encType: "application/json", action: path.pathname
-            });
+            // Final completion — show appropriate modal
+            if (engineName === "Shared Service Designer") {
+                setSelectedMonths(3);
+                setShowMonthsModal(true);
+                return;
+            }
+            // HCM and other employee-based engines → ask for employee size
+            setShowEmployeeModal(true);
         }
     };
 
@@ -586,11 +662,13 @@ export default function VendorFitAssessmentWrapper({
 
     if (!started) {
         const displayProgress = savedProgress > 0 ? savedProgress : 0;
+        const videoId = ENGINE_VIDEO_IDS[engineName];
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
                 <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
                     <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
                     <h1 className="text-2xl font-black text-slate-900">{engineName} Assessment</h1>
+                    {videoId && <VideoPreview videoId={videoId} />}
                     {hasExistingData ? (
                         <>
                             <p className="text-slate-600 text-sm leading-relaxed">
@@ -1058,6 +1136,66 @@ export default function VendorFitAssessmentWrapper({
                 )}
                 </div>
             </div>
+
+            {/* Months selection modal for Shared Service Designer */}
+            {showMonthsModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-indigo-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900">Select Report Duration</h3>
+                                <p className="text-xs text-slate-500">How many months of report do you need?</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            {[1, 3, 6, 12].map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => setSelectedMonths(m)}
+                                    className={`py-4 rounded-xl font-bold text-sm border-2 transition-all ${
+                                        selectedMonths === m
+                                            ? "border-indigo-600 bg-indigo-600 text-white shadow-md"
+                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300"
+                                    }`}
+                                >
+                                    {m} {m === 1 ? "Month" : "Months"}
+                                </button>
+                            ))}
+                        </div>
+
+                        <p className="text-xs text-slate-500 text-center">
+                            Your price will be calculated based on your employee count × {selectedMonths} {selectedMonths === 1 ? "month" : "months"}.
+                        </p>
+
+                        <button
+                            onClick={() => submitWithMonths(selectedMonths)}
+                            disabled={fetcher.state === "submitting"}
+                            className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 disabled:opacity-60 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg"
+                        >
+                            <ShoppingCart className="w-4 h-4" />
+                            {fetcher.state === "submitting" ? "Adding to cart…" : "Confirm & Add to Cart"}
+                        </button>
+
+                        <button
+                            onClick={() => setShowMonthsModal(false)}
+                            className="w-full py-2 text-slate-500 text-sm hover:text-slate-700"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Employee size modal for HCM and other employee-based engines */}
+            <EmployeeSizeModal
+                isOpen={showEmployeeModal}
+                onClose={() => setShowEmployeeModal(false)}
+                onSelect={submitWithEmployeeCount}
+            />
         </div>
     );
 }

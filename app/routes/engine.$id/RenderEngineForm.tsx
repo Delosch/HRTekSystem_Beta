@@ -1,8 +1,51 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QuestionSchema } from "./questionSchema";
 import { useLocation, useNavigate, useFetcher } from "@remix-run/react";
 import { useAutoSaveForm } from "~/hooks/useAutoSaveForm";
 import { AnimatePresence, motion, Reorder } from "framer-motion";
+import { Play, Calendar, ShoppingCart } from "lucide-react";
+import EmployeeSizeModal from "~/components/EmployeeSizeModal";
+
+const ENGINE_VIDEO_IDS: Record<string, string> = {
+  "Intelligent Change Management": "pNXK9mVIqpc",
+  "HCM Vendor Fit Engine": "yTvgbv1Z1RU",
+  "Shared Service Designer": "YOVD_7wszU4",
+};
+
+function VideoPreview({ videoId }: { videoId: string }) {
+  const [showVideo, setShowVideo] = useState(false);
+  return (
+    <div className="w-full rounded-xl overflow-hidden border border-slate-100">
+      {showVideo ? (
+        <iframe
+          className="w-full aspect-video"
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+          title="Engine tutorial"
+          style={{ border: "none" }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        <button
+          onClick={() => setShowVideo(true)}
+          className="relative w-full group cursor-pointer bg-black"
+        >
+          <img
+            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+            alt="Watch how it works"
+            className="w-full aspect-video object-cover opacity-80 group-hover:opacity-90 transition-opacity"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+            </div>
+            <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">Watch how it works</span>
+          </div>
+        </button>
+      )}
+    </div>
+  );
+}
 
 function DragHandleIcon() {
   return (
@@ -95,6 +138,17 @@ export default function EngineFormRender({
   }
 
   const fetcher = useFetcher();
+  const [showMonthsModal, setShowMonthsModal] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState(3);
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const pendingDataRef = useRef<any>(null);
+
+  const EMPLOYEE_BASED_ENGINES = [
+    "HCM Vendor Fit Engine",
+    "HR Technology Maturity Analysis",
+    "AI Driven Maturity Engine",
+    "HR Transformation Roadmap Generator",
+  ];
 
   // Handle completion redirect or state updates
   useEffect(() => {
@@ -102,6 +156,24 @@ export default function EngineFormRender({
       window.location.href = (fetcher.data as any).redirect;
     }
   }, [fetcher.data]);
+
+  const submitWithMonths = (months: number) => {
+    const allData = pendingDataRef.current;
+    const payload = {
+      assessment_id: data.pk,
+      progress: 100,
+      section: "Completion",
+      answers: allData,
+      params: engineName,
+      months
+    };
+    fetcher.submit(payload, {
+      method: "POST",
+      encType: "application/json",
+      action: path.pathname
+    });
+    setShowMonthsModal(false);
+  };
 
   const handleStepSave = async (stepData: any) => {
     const payload = {
@@ -120,14 +192,49 @@ export default function EngineFormRender({
     });
   };
 
+  const submitWithEmployeeCount = (employeeCount: number) => {
+    const allData = pendingDataRef.current;
+    const payload = {
+      assessment_id: data.pk,
+      progress: 100,
+      section: "Completion",
+      answers: allData,
+      params: engineName,
+      months: 1,
+      employeeCount
+    };
+    fetcher.submit(payload, {
+      method: "POST",
+      encType: "application/json",
+      action: path.pathname
+    });
+    setShowEmployeeModal(false);
+  };
+
   const handleComplete = async (allData: any) => {
+    const isMonthsBased = engineName === "Intelligent Change Management";
+    if (isMonthsBased) {
+      pendingDataRef.current = allData;
+      setSelectedMonths(3);
+      setShowMonthsModal(true);
+      return;
+    }
+
+    const isEmployeeBased = EMPLOYEE_BASED_ENGINES.includes(engineName);
+    if (isEmployeeBased) {
+      pendingDataRef.current = allData;
+      setShowEmployeeModal(true);
+      return;
+    }
+
     // Final progress save with 100%
     const payload = {
       assessment_id: data.pk,
       progress: 100,
       section: "Completion",
       answers: allData,
-      params: engineName
+      params: engineName,
+      months: 1
     };
 
     fetcher.submit(payload, {
@@ -139,23 +246,47 @@ export default function EngineFormRender({
 
   if (!started) {
     const hasExistingData = !!(existingResponses && Object.keys(existingResponses).length > 0);
+    const videoId = ENGINE_VIDEO_IDS[engineName];
+    const sectionCount = data.parts.length;
+    const questionCount = data.parts.reduce((sum: number, p: any) => sum + (p.questions?.length || 0), 0);
+
+    const ENGINE_DESCRIPTIONS: Record<string, string> = {
+      "HCM Vendor Fit Engine": "This assessment will help us understand your HCM requirements and recommend the best-fit vendor. Answer all sections to receive your personalised vendor fit report.",
+      "Shared Service Designer": "This assessment will map your shared services landscape and design the optimal delivery model for your organisation.",
+      "Intelligent Change Management": "This assessment will evaluate your organisation's change readiness and help design a tailored change management strategy.",
+      "HR Transformation Roadmap Generator": "This assessment will capture your HR transformation vision and generate a phased, actionable roadmap aligned to your goals.",
+      "HR Technology Maturity Analysis": "This assessment benchmarks your HR technology maturity and identifies gaps and opportunities for digital improvement.",
+      "Digital Maturity Engine": "This assessment evaluates your organisation's digital maturity across key dimensions and maps your transformation journey.",
+      "AI Driven Maturity Engine": "This assessment measures your enterprise AI readiness and designs a strategic roadmap for intelligent transformation.",
+    };
+
+    const description = ENGINE_DESCRIPTIONS[engineName] ||
+      "This assessment will help us understand your requirements and recommend the best fit for your organisation.";
 
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-white px-6 py-10">
         <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center space-y-6 border border-slate-100">
           <img src="/hrtek_logo.png" alt="HRTek" className="h-10 mx-auto object-contain" />
-          <h1 className="text-2xl font-black text-slate-900">{engineName} Assessment</h1>
+
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 leading-tight">{engineName}</h1>
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Assessment</p>
+          </div>
+
+          {videoId && <VideoPreview videoId={videoId} />}
+
           {hasExistingData ? (
             <>
               <p className="text-slate-600 text-sm leading-relaxed">
-                You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress. Would you like to continue where you left off?
+                You have a saved session with <span className="font-bold text-blue-600">{savedProgress}%</span> progress.
+                It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{questionCount} questions</span>.
               </p>
               <div className="flex flex-col gap-3 pt-2">
                 <button
                   onClick={() => setStarted(true)}
                   className="w-full px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
                 >
-                  Continue with Saved Responses ({savedProgress}%)
+                  Continue ({savedProgress}% complete) →
                 </button>
                 <button
                   onClick={() => setStarted(true)}
@@ -168,7 +299,7 @@ export default function EngineFormRender({
           ) : (
             <>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Welcome! This assessment will help us understand your HR landscape. Answer all sections and save your progress at any time.
+                {description} It covers <span className="font-semibold text-slate-800">{sectionCount} sections</span> with <span className="font-semibold text-slate-800">{questionCount} questions</span>.
               </p>
               <button
                 onClick={() => setStarted(true)}
@@ -183,23 +314,87 @@ export default function EngineFormRender({
     )
   }
 
-  return <FormSheet
-    steps={data.parts}
-    assessmentId={data.pk}
-    title={`${engineName} Assessment`}
-    initialFormData={existingResponses || {}}
-    autoSaveKey={`assessment_${engineName}`}
-    autoSaveDebounce={5000}
-    onStepSave={handleStepSave}
-    onComplete={handleComplete}
-    onNavigateBack={() => { navigate(-1) }}
-    onAutoSaveToServer={handleStepSave}
-    onError={
-      (error: Error, context: string) => {
-        console.error(`Error in ${context}: `, error)
-      }
-    }
-  />;
+  return (
+    <>
+      <FormSheet
+        steps={data.parts}
+        assessmentId={data.pk}
+        title={`${engineName} Assessment`}
+        initialFormData={existingResponses || {}}
+        autoSaveKey={`assessment_${engineName}`}
+        autoSaveDebounce={5000}
+        onStepSave={handleStepSave}
+        onComplete={handleComplete}
+        onNavigateBack={() => { navigate(-1) }}
+        onAutoSaveToServer={handleStepSave}
+        onError={
+          (error: Error, context: string) => {
+            console.error(`Error in ${context}: `, error)
+          }
+        }
+      />
+
+      {/* Months selection modal for ICMS */}
+      {showMonthsModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Select Report Duration</h3>
+                <p className="text-xs text-slate-500">How many months of report do you need?</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 3, 6, 12].map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSelectedMonths(m)}
+                  className={`py-4 rounded-xl font-bold text-sm border-2 transition-all ${
+                    selectedMonths === m
+                      ? "border-blue-600 bg-blue-600 text-white shadow-md"
+                      : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300"
+                  }`}
+                >
+                  {m} {m === 1 ? "Month" : "Months"}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-xs text-slate-500 text-center">
+              Your price will be calculated based on your employee count × {selectedMonths} {selectedMonths === 1 ? "month" : "months"}.
+            </p>
+
+            <button
+              onClick={() => submitWithMonths(selectedMonths)}
+              disabled={fetcher.state === "submitting"}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {fetcher.state === "submitting" ? "Adding to cart…" : "Confirm & Add to Cart"}
+            </button>
+
+            <button
+              onClick={() => setShowMonthsModal(false)}
+              className="w-full py-2 text-slate-500 text-sm hover:text-slate-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Employee size modal for HCM / AI Maturity / Roadmap engines */}
+      <EmployeeSizeModal
+        isOpen={showEmployeeModal}
+        onClose={() => setShowEmployeeModal(false)}
+        onSelect={submitWithEmployeeCount}
+      />
+    </>
+  );
 }
 
 const FormSheet = ({

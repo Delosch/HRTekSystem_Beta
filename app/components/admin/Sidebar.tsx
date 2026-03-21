@@ -33,13 +33,13 @@ const adminSidebarItems: SidebarItem[] = [
   { label: "Companies", href: "/admin/companies", icon: Building2 },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Assessments", href: "/admin/assessments", icon: CheckSquare },
-  { label: "AI Analysis", href: "/admin/reports", icon: Sparkles },
+  { label: "Reports", href: "/admin/reports", icon: Sparkles },
   { label: "Payments", href: "/admin/payments/verification", icon: CreditCard },
-  { label: "HTI Approvals", href: "/admin/hti", icon: ShieldCheck },
-  { label: "System Logs", href: "/admin/activity-logs", icon: ListTodo },
-  { label: "Website Analytics", href: "/admin/website/analytics", icon: BarChart3 },
-  { label: "Website Content", href: "/admin/website/home", icon: Globe },
-  { label: "Roles & Security", href: "/admin/roles", icon: ShieldCheck },
+  { label: "Review Reports", href: "/admin/hti", icon: ShieldCheck },
+  { label: "Activity", href: "/admin/activity-logs", icon: ListTodo },
+  { label: "Analytics", href: "/admin/website/analytics", icon: BarChart3 },
+  { label: "Website", href: "/admin/website/home", icon: Globe },
+  { label: "Permissions", href: "/admin/roles", icon: ShieldCheck },
 ];
 
 export default function Sidebar({ isExpanded }: SidebarProps) {
