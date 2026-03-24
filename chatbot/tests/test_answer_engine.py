@@ -67,3 +67,82 @@ def test_answer_engine_returns_router_fallback_message_for_low_signal():
     assert resp.get("answer")  # non-empty
     # Router fallback message usually contains options or a clarification prompt
     assert ("What would you like to do?" in resp["answer"]) or ("Quick check" in resp["answer"])
+
+
+def test_answer_engine_lead_capture_ignores_numeric_menu():
+    """
+    If active_module is LEAD_CAPTURE, typing '1'/'2'/'3' should NOT switch to ROADMAP/ASSESSMENT/FAQ.
+    """
+    from core.session_store import put_session
+    # Force the session into LEAD_CAPTURE mode
+    put_session("t_lc_numeric", {"active_module": "LEAD_CAPTURE", "answers": {}, "current_index": 0})
+
+    resp = generate(
+        message="1",
+        page_context="landing",
+        report_json=None,
+        session_id="t_lc_numeric"
+    )
+    # the active module should have remained LEAD_CAPTURE and answer generated for it
+    assert resp["module"] == "LEAD_CAPTURE"
+
+
+def test_answer_engine_menu_text_commands_routing():
+    """
+    Text commands 'roadmap', 'assessment', 'faq' should trigger corresponding routing.
+    """
+    resp1 = generate(
+        message="roadmap",
+        page_context="landing",
+        report_json=None,
+        session_id="t_txt_1"
+    )
+    assert resp1["module"] == "ROADMAP"
+
+    resp2 = generate(
+        message="assessment",
+        page_context="landing",
+        report_json=None,
+        session_id="t_txt_2"
+    )
+    assert resp2["module"] == "ASSESSMENT"
+
+    resp3 = generate(
+        message="faq",
+        page_context="landing",
+        report_json=None,
+        session_id="t_txt_3"
+    )
+    assert resp3["module"] == "FAQ"
+
+
+def test_answer_engine_menu_text_commands_routing_explain_assessment():
+    """
+    Text command 'explain assessment' should trigger ASSESSMENT routing.
+    """
+    resp4 = generate(
+        message="explain assessment",
+        page_context="landing",
+        report_json=None,
+        session_id="t_txt_4"
+    )
+    assert resp4["module"] == "ASSESSMENT"
+
+
+def test_answer_engine_lead_capture_ignores_text_commands():
+    """
+    If active_module is LEAD_CAPTURE, typing 'roadmap', 'assessment', 'explain assessment', 'faq' should NOT switch modules.
+    """
+    from core.session_store import put_session
+
+    for word in ["roadmap", "assessment", "explain assessment", "faq"]:
+        sid = f"t_lc_{word.replace(' ', '_')}"
+        put_session(sid, {"active_module": "LEAD_CAPTURE", "answers": {}, "current_index": 0})
+        
+        resp = generate(
+            message=word,
+            page_context="landing",
+            report_json=None,
+            session_id=sid
+        )
+        assert resp["module"] == "LEAD_CAPTURE"

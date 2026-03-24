@@ -54,9 +54,9 @@ def _clear_active_module(sid: str) -> None:
 def _main_menu_text() -> str:
     return (
         "What would you like to do?\n"
-        "1) Explain my Roadmap\n"
-        "2) Explain my Assessment/Maturity results\n"
-        "3) FAQ (Pricing, billing, refunds, modules)"
+        "- roadmap (Explain my Roadmap)\n"
+        "- assessment (Explain my Assessment/Maturity results)\n"
+        "- faq (Pricing, billing, refunds, modules)"
     )
 
 def _no_kb_info_response(prompt_version: str = "v1") -> dict:
@@ -144,12 +144,13 @@ def generate(
             "sources_used": []
         }
 
-    # 1) If user types 1/2/3 anytime, switch active module immediately
-    choice = interpret_menu_choice(msg)
-    if choice is not None:
-        _set_active_module(sid, choice.value)
-
     active = _get_active_module(sid)
+
+    # 1) If user types menu commands anytime, switch active module immediately (unless in lead capture)
+    choice = interpret_menu_choice(msg)
+    if choice is not None and active != RouteModule.LEAD_CAPTURE.value:
+        _set_active_module(sid, choice.value)
+        active = choice.value
 
     # 2) Build routing decision (forced by active module or normal routing)
     if active in {"FAQ", "ROADMAP", "ASSESSMENT", "LEAD_CAPTURE"}:
@@ -184,16 +185,16 @@ def generate(
         # --- FAQ ---
     if decision.module == RouteModule.FAQ:
 
-        # If user just selected FAQ option, show FAQ intro and don't retrieve on "3"
-        if msg == "3":
+        # If user just selected FAQ option, show FAQ intro and don't retrieve on "3" or "faq"
+        if msg.lower() in {"faq", "pricing", "plans"}:
             _set_active_module(sid, RouteModule.FAQ.value)
             return postprocess_response({
                 "answer": (
                     "Sure — FAQ mode.\n\n"
                     "Ask me anything from these areas:\n"
-                    "1) Pricing & plans (GST, tiers, refunds, billing)\n"
-                    "2) Modules (what each module does)\n"
-                    "3) General FAQs (how the platform works)\n\n"
+                    "- Pricing & plans (GST, tiers, refunds, billing)\n"
+                    "- Modules (what each module does)\n"
+                    "- General FAQs (how the platform works)\n\n"
                     "Example questions:\n"
                     "- Is GST included?\n"
                     "- Can I buy a report without subscribing?"

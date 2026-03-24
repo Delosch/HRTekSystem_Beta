@@ -88,11 +88,6 @@ def _clean_model_text(text: str) -> str:
     # 1) Remove <think>...</think>
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
 
-    # 2) If the model repeats sections, keep only the last "### Summary" block (most stable)
-    marker = "### Summary"
-    if marker in text:
-        text = text[text.rfind(marker):]
-
     # 3) Normalize whitespace
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     return text

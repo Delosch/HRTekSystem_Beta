@@ -1,0 +1,7 @@
+{
+  "venvPath": "./chatbot",
+  "venv": "myvenv",
+  "extraPaths": [
+    "chatbot"
+  ]
+}

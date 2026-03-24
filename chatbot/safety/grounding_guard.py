@@ -18,7 +18,7 @@ def refuse_missing_report(module: RouteModule, prompt_version: str) -> Dict[str,
 def refuse_missing_kb(module: RouteModule, prompt_version: str) -> Dict[str, Any]:
     return {
         "answer": (
-            "This is not present in the approved knowledge.\n\n"
+            "I don't have approved info for that yet.\n\n"
             "I can only answer FAQs using approved KB chunks. Try rephrasing your question or ask about:\n"
             "- Pricing & plans (tiers, subscriptions)\n"
             "- GST, billing, refunds\n"
@@ -27,6 +27,7 @@ def refuse_missing_kb(module: RouteModule, prompt_version: str) -> Dict[str, Any
         "module": module.value,
         "prompt_version": prompt_version,
         "sources_used": [],
+        "no_sources_ok": True,
     }
 
 #returns a safe refusal responce in dict if grounding is missing, returns none if it's OKAY to proceed
@@ -46,6 +47,6 @@ def grounding_guard(
     #KB
     if module==RouteModule.FAQ:
         if not kb_chunks:
-            refuse_missing_kb(module,prompt_version)
+            return refuse_missing_kb(module,prompt_version)
 
     return None

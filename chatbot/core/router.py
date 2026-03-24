@@ -133,13 +133,13 @@ REPORT_TYPE_TO_MODULE = {
 def interpret_menu_choice(message: str) -> RouteModule | None:
     t = (message or "").strip().lower()
 
-    if t in {"1", "roadmap"}:
+    if t in {"roadmap"}:
         return RouteModule.ROADMAP
 
-    if t in {"2", "assessment", "maturity"}:
+    if t in {"assessment", "maturity", "explain assessment", "explain assesment"}:
         return RouteModule.ASSESSMENT
 
-    if t in {"3", "faq", "pricing", "plans"}:
+    if t in {"faq", "pricing", "plans"}:
         return RouteModule.FAQ
 
 
@@ -436,7 +436,7 @@ def _build_fallback_message(action: FallbackAction) -> str:
     if action == FallbackAction.ASK_CLARIFYING_QUESTION:
         return "Quick check — do you want help with your Roadmap or your Assessment/Maturity results?"
     if action == FallbackAction.PRESENT_TWO_OPTIONS:
-        return "What would you like to do?\n1) Explain my Roadmap\n2) Explain my Assessment/Maturity results\n3) FAQ (Pricing, billing, refunds, modules)"
+        return "What would you like to do?\n- roadmap (Explain my Roadmap)\n- assessment (Explain my Assessment/Maturity results)\n- faq (Pricing, billing, refunds, modules)"
     return "Could you clarify what you want help with?"
 
 
