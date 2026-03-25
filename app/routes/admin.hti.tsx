@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Form, useNavigation, useFetcher, Link } from "@remix-run/react";
+import { useLoaderData, Form, useNavigation, useFetcher, Link, useActionData } from "@remix-run/react";
 import { requireAdminSession } from "~/lib/session.server";
 import { useState, Fragment } from "react";
 import {
@@ -123,6 +123,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function AdminHTIApprovals() {
     const { pendingApprovals, approvedReports } = useLoaderData<typeof loader>();
+    const actionData = useActionData<{ success?: boolean; error?: string }>();
     const navigation = useNavigation();
     const fetcher = useFetcher();
 
@@ -177,6 +178,18 @@ export default function AdminHTIApprovals() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-12 p-4 animate-in fade-in duration-700">
+            {actionData?.error && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+                    <XCircleIcon className="h-6 w-6" />
+                    <span className="font-bold">{actionData.error}</span>
+                </div>
+            )}
+            {actionData?.success && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+                    <CheckBadgeIcon className="h-6 w-6" />
+                    <span className="font-bold">Action completed successfully.</span>
+                </div>
+            )}
             {/* Intel Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
@@ -188,10 +201,10 @@ export default function AdminHTIApprovals() {
                         >
                             <CpuChipIcon className="h-5 w-5" />
                         </motion.div>
-                        <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em]">Neural Intelligence Subsystem</span>
+                        <span className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em]">Report Management System</span>
                     </div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">HTI Advisory <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Governance</span></h1>
-                    <p className="text-gray-500 font-medium mt-1">Review, refine, and authenticate AI-driven transformation roadmaps.</p>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">HTI Advisory <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Review</span></h1>
+                    <p className="text-gray-500 font-medium mt-1">Review, edit, and approve AI-generated transformation plans.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
@@ -207,27 +220,27 @@ export default function AdminHTIApprovals() {
                     <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-110 transition-transform duration-700">
                         <SparklesIcon className="h-32 w-32 text-white" />
                     </div>
-                    <h3 className="text-white/60 text-xs font-black uppercase tracking-[0.2em] mb-4">Pending Authorization</h3>
+                    <h3 className="text-white/60 text-xs font-black uppercase tracking-[0.2em] mb-4">Awaiting Approval</h3>
                     <p className="text-5xl font-black text-white mb-6 leading-none">{pendingApprovals.length}</p>
                     <div className="flex items-center gap-2 text-indigo-100 text-sm font-bold">
                         <ClockIcon className="h-4 w-4" />
-                        Awaiting recursive sanity audit
+                        Ready for final check
                     </div>
                 </div>
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Authored Reports</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Finished Reports</p>
                     <div>
                         <p className="text-4xl font-black text-gray-900">{approvedReports.length}</p>
                         <p className="text-xs font-bold text-emerald-600 mt-2 flex items-center gap-1">
-                            <CheckBadgeIcon className="h-3.5 w-3.5" /> High Fidelity
+                            <CheckBadgeIcon className="h-3.5 w-3.5" /> High Quality
                         </p>
                     </div>
                 </div>
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Model Precision</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Accuracy Level</p>
                     <div>
                         <p className="text-4xl font-black text-gray-900 uppercase">99.4<span className="text-lg">%</span></p>
-                        <p className="text-xs font-bold text-indigo-400 mt-2">v4.2-Turbo-Audit</p>
+                        <p className="text-xs font-bold text-indigo-400 mt-2">v4.2-Verified</p>
                     </div>
                 </div>
             </div>
@@ -237,9 +250,9 @@ export default function AdminHTIApprovals() {
                 <div className="flex items-center justify-between px-4">
                     <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                         <ArrowPathIcon className="h-5 w-5 text-indigo-500 animate-spin-slow" />
-                        Validation Queue
+                        Report Queue
                     </h2>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">FIFO Processing</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">List View</span>
                 </div>
 
                 {pendingApprovals.length === 0 ? (
@@ -249,8 +262,8 @@ export default function AdminHTIApprovals() {
                         className="bg-white border-2 border-dashed border-gray-100 rounded-[3rem] p-20 text-center"
                     >
                         <CheckBadgeIcon className="h-16 w-16 text-emerald-100 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-900">Consistency Buffer Empty</h3>
-                        <p className="text-sm text-gray-400 font-medium">No advisory reports are currently awaiting manual vetting.</p>
+                        <h3 className="text-lg font-bold text-gray-900">Queue is Empty</h3>
+                        <p className="text-sm text-gray-400 font-medium">No reports are currently waiting for review.</p>
                     </motion.div>
                 ) : (
                     <div className="grid grid-cols-1 gap-8">
@@ -279,7 +292,7 @@ export default function AdminHTIApprovals() {
                                                     <CommandLineIcon className="h-4 w-4" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Generator Source</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Created By</p>
                                                     <p className="text-xs font-bold text-gray-700">{report.generatedBy}</p>
                                                 </div>
                                             </div>
@@ -288,14 +301,14 @@ export default function AdminHTIApprovals() {
                                                     <ClockIcon className="h-4 w-4" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ingress Timestamp</p>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date Created</p>
                                                     <p className="text-xs font-bold text-gray-700">{new Date(report.generatedAt).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <Link to={`/admin/companies/${report.companyId}`} className="flex items-center justify-between p-4 bg-indigo-50/50 rounded-2xl hover:bg-indigo-50 transition-colors group/link">
-                                            <span className="text-xs font-bold text-indigo-700">Observe Context</span>
+                                            <span className="text-xs font-bold text-indigo-700">View Details</span>
                                             <ArrowTopRightOnSquareIcon className="h-4 w-4 text-indigo-400 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
                                         </Link>
                                     </div>
@@ -307,18 +320,18 @@ export default function AdminHTIApprovals() {
                                                 <SparklesIcon className="h-3 w-3 text-indigo-400" /> Intelligence Summary
                                             </h4>
                                             <div className="p-6 bg-slate-50/50 rounded-3xl border border-gray-100 relative overflow-hidden">
-                                                <div className="prose prose-sm font-medium text-gray-600 leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: report.executiveSummary }} />
+                                                <div className="prose prose-sm font-normal text-gray-600 leading-relaxed max-w-none" dangerouslySetInnerHTML={{ __html: report.executiveSummary }} />
                                             </div>
                                         </div>
 
                                         {/* Dynamic Controls */}
                                         <div className="flex flex-wrap items-center gap-4">
-                                            <button
+                                                <button
                                                 onClick={() => setSelectedReportId(selectedReportId === report.reportId ? null : report.reportId)}
                                                 className="px-6 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:border-indigo-400 hover:text-indigo-600 transition-all flex items-center gap-2 shadow-sm"
                                             >
                                                 <EyeIcon className="h-4 w-4" />
-                                                {selectedReportId === report.reportId ? 'Hide Introspection' : 'Deep Introspect'}
+                                                {selectedReportId === report.reportId ? 'Hide Report' : 'View Report'}
                                             </button>
 
                                             {editMode !== report.reportId ? (
@@ -327,7 +340,7 @@ export default function AdminHTIApprovals() {
                                                     className="px-6 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 shadow-sm border border-indigo-100"
                                                 >
                                                     <PencilSquareIcon className="h-4 w-4" />
-                                                    Refine advisory data
+                                                    Edit report
                                                 </button>
                                             ) : (
                                                 <button
@@ -335,16 +348,16 @@ export default function AdminHTIApprovals() {
                                                     className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 flex items-center gap-2"
                                                 >
                                                     <DocumentCheckIcon className="h-4 w-4" />
-                                                    Commit Refinement
+                                                    Save edits
                                                 </button>
                                             )}
 
-                                            <button
+                                                <button
                                                 onClick={() => handlePreviewPDF(report)}
                                                 className="px-6 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-sm"
                                             >
                                                 <ScaleIcon className="h-4 w-4" />
-                                                Render Validation PDF
+                                                Preview PDF
                                             </button>
                                         </div>
 
@@ -389,7 +402,7 @@ export default function AdminHTIApprovals() {
                                                     <textarea
                                                         value={adminNotes}
                                                         onChange={(e) => setAdminNotes(e.target.value)}
-                                                        placeholder="Append audit consensus notes (stored in governance log)..."
+                                                        placeholder="Add notes for the team..."
                                                         className="w-full bg-gray-50 border-none rounded-2xl px-6 py-3 text-xs font-medium focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
                                                         rows={2}
                                                     />
@@ -404,12 +417,12 @@ export default function AdminHTIApprovals() {
                                                             name="action" value="approve"
                                                             className="h-12 px-8 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all"
                                                         >
-                                                            Authorize
+                                                            Approve
                                                         </button>
                                                         <button
                                                             name="action" value="reject"
                                                             className="h-12 w-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"
-                                                            title="Reject Advisory"
+                                                            title="Reject Report"
                                                         >
                                                             <XCircleIcon className="h-6 w-6" />
                                                         </button>
@@ -431,7 +444,7 @@ export default function AdminHTIApprovals() {
                     <div className="flex items-center justify-between px-4">
                         <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
                             <DocumentCheckIcon className="h-5 w-5 text-emerald-500" />
-                            Validated Intelligence Repository
+                            Approved Reports
                         </h2>
                     </div>
 
@@ -441,7 +454,7 @@ export default function AdminHTIApprovals() {
                                 <div className="flex items-center justify-between mb-6">
                                     <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${report.isLocked ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
                                         {report.isLocked ? <LockClosedIcon className="h-3 w-3" /> : <LockOpenIcon className="h-3 w-3" />}
-                                        {report.isLocked ? 'Synchronized' : 'Drafting'}
+                                        {report.isLocked ? 'Finalized' : 'Draft'}
                                     </div>
                                     <span className="text-[10px] font-bold text-gray-400">{new Date(report.approvedAt).toLocaleDateString()}</span>
                                 </div>
@@ -453,7 +466,7 @@ export default function AdminHTIApprovals() {
                                         onClick={() => handlePreviewPDF(report)}
                                         className="flex-1 px-4 py-2 bg-gray-50 text-gray-600 rounded-xl text-[10px] font-black uppercase hover:bg-gray-900 hover:text-white transition-all"
                                     >
-                                        Inspect PDF
+                                        View PDF
                                     </button>
                                     <button
                                         onClick={() => report.isLocked ? handleUnlockReport(report.reportId, report.companyId) : handleLockReport(report.reportId, report.companyId)}

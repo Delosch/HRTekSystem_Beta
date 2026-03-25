@@ -1,6 +1,7 @@
 import { LoaderFunction, json } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
 import { getAnswerSheetByAssessmentName } from "~/utils/question.utils";
+import { hasVerifiedPaymentForEngines } from "~/models/payment.model.server";
 
 export const loader: LoaderFunction = async ({ request }) => {
     try {
@@ -18,6 +19,21 @@ export const loader: LoaderFunction = async ({ request }) => {
 
         if (!engineName) {
             return json({ error: "Engine name is required" }, { status: 400 });
+        }
+
+        // --- Payment Verification ---
+        // 'Profiling Assessment' is free, others require payment
+        const isFreeEngine = engineName === "Profiling Assessment";
+        const isAdmin = (user as any).role === "ADMIN";
+
+        if (!isFreeEngine && !isAdmin) {
+            const isPaid = await hasVerifiedPaymentForEngines(user.organisationId, [engineName]);
+            if (!isPaid) {
+                return json({
+                    error: "Payment required",
+                    message: "You must complete payment for this engine before downloading the report."
+                }, { status: 403 });
+            }
         }
 
         // Fetch the assessment response data

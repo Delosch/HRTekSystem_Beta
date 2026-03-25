@@ -5,17 +5,19 @@ import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/rea
 import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
-import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
+import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users, Menu, X } from "lucide-react";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 const ENGINE = "Intelligent Change Management";
 
 const engineDetails: Record<string, { name: string; description: string; icon: string }> = {
   "Intelligent Change Management": {
-    name: "Intelligent Change Management",
+    name: "Change Management Intelligence Engine",
     description: "Build organizational readiness and drive successful adoption",
     icon: "🔄"
   },
@@ -39,6 +41,11 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     description: "Select the right HCM vendors for your business",
     icon: "🎯"
   },
+  "AI Driven Maturity Engine": {
+    name: "AI Driven Maturity Engine",
+    description: "Assess your AI transformation maturity and digital readiness",
+    icon: "🤖"
+  },
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -50,16 +57,19 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { getCompanyPayments } = await import("~/models/payment.model.server");
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
+  const { getCompanyProfile } = await import("~/models/company.model.server");
+
+  const company = await getCompanyProfile(user.organisationId);
+  const companyLogo = company?.logo_url || null;
 
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
 
-  // Check payment status
-  const payments = await getCompanyPayments(user.organisationId);
-  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
-
-  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
-  const isPending = paymentRecord?.status === "payment_submitted";
+  // Check detailed payment status
+  const isAdmin = (user as any).role === "ADMIN";
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -82,19 +92,23 @@ export const loader: LoaderFunction = async ({ request }) => {
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
+    paymentStatus,
     isPaid,
     isPending,
-    hasReport
+    hasReport,
+    companyLogo
   });
 };
 
 export default function ChangeDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -121,8 +135,10 @@ export default function ChangeDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
+      if (isPaid) {
         navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
         navigate('/payment/checkout');
       }
@@ -130,32 +146,75 @@ export default function ChangeDashboard() {
       if (currentEngine.progress === 100) {
         navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
       } else {
-        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+        navigate(`/change-management/assessment`);
       }
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 relative overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-blue-50/20 relative overflow-hidden">
       {/* Animated Background Orbs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar user={user} />}
+      {!isSidebarCollapsed && (
+        <div className="hidden md:block">
+          <Sidebar user={user} />
+        </div>
+      )}
 
-      <main className={`flex-1 p-4 md:p-8 transition-all duration-300 relative z-10 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}`}>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="w-64 h-full bg-white relative animate-slide-in-left" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full z-10"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+            <Sidebar user={user} onLinkClick={() => setIsMobileMenuOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <main className={`flex-1 p-4 md:p-8 transition-all duration-300 relative z-10 ${isSidebarCollapsed ? "" : "md:ml-64"}`}>
+        {/* Mobile Header Toggle */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-sm">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 hover:bg-white rounded-xl transition-colors">
+            <Menu className="w-6 h-6 text-slate-600" />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/hrtek_logo.png" alt="HRTek" className="h-7 w-auto" />
+            {companyLogo && (
+              <>
+                <div className="h-5 w-[1px] bg-slate-200"></div>
+                <img src={companyLogo} alt="Company" className="h-7 w-auto object-contain rounded" />
+              </>
+            )}
+            <div className="font-bold text-slate-900 border-l border-slate-200 pl-2">Change Management</div>
+          </div>
+          <div className="w-10"></div>
+        </div>
         {/* Header */}
         <div className="flex justify-between items-center mb-8 animate-fade-in-down">
-          <div>
-            <h1 className="text-3xl font-extrabold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent flex items-center gap-3">
-              {engineDetails[ENGINE].icon} {engineDetails[ENGINE].name}
-              {isPaid && hasReport && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full border border-green-200">Unlocked</span>}
-              {isPending && hasReport && <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full border border-yellow-200">Pending Verification</span>}
-            </h1>
-            <p className="text-gray-500 font-medium mt-1 ml-11">
-              {engineDetails[ENGINE].description}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <img src="/hrtek_logo.png" alt="HRTek" className="h-10 w-auto" />
+              {companyLogo && (
+                <>
+                  <div className="h-8 w-[1px] bg-slate-200"></div>
+                  <img src={companyLogo} alt="Company" className="h-9 w-auto object-contain rounded" />
+                </>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase whitespace-nowrap">Change Management Dashboard</h1>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+                Adoption Intelligence • Generated for {user.organisationName || "Your Organization"}
+              </p>
+            </div>
           </div>
           <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
             <Clock className="w-4 h-4 text-blue-600" />
@@ -183,7 +242,7 @@ export default function ChangeDashboard() {
           <div className="lg:col-span-1 animate-slide-up" style={{ animationDelay: "400ms" }}>
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 h-full hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 group">
               <div className="flex justify-between items-start mb-6">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Analysis Progress</h2>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">Analysis Progress</h2>
                 <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl group-hover:rotate-12 transition-transform duration-500">
                   <Activity className="w-6 h-6 text-blue-600" />
                 </div>
@@ -197,17 +256,17 @@ export default function ChangeDashboard() {
                 </div>
 
                 <div className="mt-8 w-full space-y-3">
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
                     <span className="text-sm font-semibold text-gray-700">Sections Completed</span>
-                    <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                      {Math.floor((currentEngine.progress / 100) * 10)}/10
+                    <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-700 bg-clip-text text-transparent">
+                      {Math.floor((currentEngine.progress / 100) * 12)}/12
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                    <span className="text-sm font-semibold text-gray-700">Time Spent</span>
-                    <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">
-                      {currentEngine.progress > 0 ? Math.floor(currentEngine.progress * 0.5) : 0} min
+                  <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
+                    <span className="text-sm font-semibold text-gray-700">Readiness Score</span>
+                    <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                      {currentEngine.progress > 0 ? Math.floor(currentEngine.progress * 0.85) : '—'}
                     </span>
                   </div>
                 </div>
@@ -249,7 +308,7 @@ export default function ChangeDashboard() {
                     </>
                   ) : (
                     <>
-                      <span className="relative z-10">{currentEngine.progress === 100 ? "Generate Report" : "Continue Assessment"}</span>
+                      <span className="relative z-10">{currentEngine.progress === 100 ? "Generate Report" : currentEngine.progress > 0 ? "Continue Assessment" : "Start Assessment"}</span>
                     </>
                   )}
 
@@ -258,6 +317,14 @@ export default function ChangeDashboard() {
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
                   {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
+                {currentEngine.progress > 0 && (
+                  <button
+                    onClick={() => navigate('/change-management/assessment?modify=true')}
+                    className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    ✏️ Modify Responses
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -265,7 +332,7 @@ export default function ChangeDashboard() {
           {/* Enhanced Assessment Breakdown with Animated Bars */}
           <div className="lg:col-span-2 animate-slide-up" style={{ animationDelay: "500ms" }}>
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 p-6 h-full hover:shadow-3xl transition-all duration-500 hover:-translate-y-1">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-6">
                 Assessment Breakdown
               </h2>
 
@@ -314,7 +381,7 @@ export default function ChangeDashboard() {
                       : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                     }`}
                 >
-                  {isPaid && hasReport ? "View Detailed Report" : isPending && hasReport ? "Verification Pending" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : "Continue"}
+                  {isPaid && hasReport ? "View Detailed Report" : isPending && hasReport ? "Verification Pending" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : currentEngine.progress > 0 ? "Continue Assessment" : "Open Assessment"}
                 </button>
               </div>
             </div>
@@ -469,6 +536,15 @@ export default function ChangeDashboard() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
-    </div >
+
+      <PaymentStatusModal 
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        status={paymentStatus.status}
+        engineName={ENGINE}
+        expiresAt={paymentStatus.expiresAt}
+        onProceed={paymentStatus.status === "paid" ? () => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
+      />
+    </div>
   );
 }

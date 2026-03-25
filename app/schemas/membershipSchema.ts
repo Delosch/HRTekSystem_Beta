@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 // Define common fields for reusability
 const baseMembershipSchema = z.object({
-    userId: z.uuidv4("Invalid user ID format."), // Use z.string().uuid() as uuidv4() is a function call
-    companyId: z.uuidv4("Invalid company ID format."),
+    userId: z.string().uuid("Invalid user ID format."),
+    companyId: z.string().uuid("Invalid company ID format."),
     isCreator: z.boolean().default(false),
     role: z.string().min(1, "Role cannot be empty.").max(30, "Role too long."),
-    permissions: z.array(z.string().min(1, "Permission cannot be empty string.")).min(0, "Permissions must be an array."), // Use min(0) if empty array is allowed
+    permissions: z.array(z.string().min(1, "Permission cannot be empty string.")).min(0, "Permissions must be an array."),
     invited: z.boolean().default(false),
-    invitedBy: z.uuidv4("Invalid invitedBy ID format.").optional(), // Assuming invitedBy is a UUID
+    invitedBy: z.string().uuid("Invalid invitedBy ID format.").optional(),
 });
 
 // Refine the base schema with conditional logic using .check()

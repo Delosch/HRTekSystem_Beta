@@ -5,6 +5,7 @@ import { signupUser, loginUser } from "~/models/user.model.server";
 import { createAuthSession } from "~/lib/session.server";
 import { validateSubmissionHash } from "~/lib/auth.server";
 import AuthForm from "~/components/AuthCards";
+import Navbar from "~/components/HomePageComponents/Navbar";
 import { ToastContainer, toast } from "react-toastify";
 import { AnimatedCircles } from "~/components/AnimatedCircles";
 import { z } from "zod";
@@ -35,54 +36,7 @@ interface FormSecurityData {
 }
 
 // Enhanced hCaptcha verification with better error handling
-const verifyHCaptcha = async (token: string): Promise<boolean> => {
-    try {
-        const secret = process.env.HCAPTCHA_SECRET_KEY;
-        if (!secret) {
-            console.error("HCAPTCHA_SECRET_KEY not configured");
-            return false;
-        }
-
-        const params = new URLSearchParams({
-            secret,
-            response: token,
-        });
-
-        const response = await fetch("https://api.hcaptcha.com/siteverify", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: params.toString(),
-        });
-
-        if (!response.ok) {
-            console.error(`hCaptcha API error: ${response.status}`);
-            return false;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            const challengeTimestamp = new Date(data.challenge_ts).getTime();
-            const now = Date.now();
-            const ageMinutes = (now - challengeTimestamp) / (1000 * 60);
-
-            if (ageMinutes > SECURITY_CONFIG.ALLOWED_CAPTCHA_AGE_MINUTES) {
-                console.warn("hCaptcha token expired");
-                return false;
-            }
-
-            return true;
-        }
-
-        console.warn("hCaptcha validation failed:", data["error-codes"]);
-        return false;
-    } catch (error) {
-        console.error("hCaptcha verification error:", error);
-        return false;
-    }
-};
+import { verifyHCaptcha } from "~/utils/captcha.server";
 
 
 
@@ -260,7 +214,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
             const url = new URL(request.url);
             const redirectTo = url.searchParams.get("redirectTo") || "/auth/drx";
 
-            return await createAuthSession({
+            return await createAuthSession(request, {
                 userId: user.userId,
                 first_name: user.first_name,
                 last_name: user.last_name,
@@ -283,7 +237,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 const url = new URL(request.url);
                 const redirectTo = url.searchParams.get("redirectTo") || "/auth/drx";
 
-                return await createAuthSession({
+                return await createAuthSession(request, {
                     userId: user.userId,
                     first_name: user.first_name,
                     last_name: user.last_name,
@@ -331,12 +285,15 @@ export default function Auth() {
     }, [actionData]);
 
     return (
-        <section className="relative w-full h-screen bg-white flex items-center justify-center p-4">
-            <AnimatedCircles />
-            <div className="relative z-10">
-                <AuthForm />
-            </div>
-            <ToastContainer position="bottom-right" />
-        </section>
+        <div className="min-h-screen flex flex-col bg-white">
+            <Navbar />
+            <section className="relative flex-1 flex items-center justify-center p-4 pt-20">
+                <AnimatedCircles />
+                <div className="relative z-10">
+                    <AuthForm initialIsLogin={searchParams.get("mode") !== "signup"} />
+                </div>
+                <ToastContainer position="bottom-right" />
+            </section>
+        </div>
     );
 }

@@ -66,6 +66,11 @@ body {
   transform-origin: center;
 }
 
+@keyframes progress-bar-stripes {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 0; }
+}
+
 .hcaptcha-container-reshaped:hover {
   border-color: #9ca3af;
   transition: border-color 0.2s ease;

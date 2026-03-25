@@ -11,7 +11,7 @@ export default function HomePageContent() {
   const [heroTitle, setHeroTitle] = useState("Empowering B2B Growth with AI-Driven Insights");
   const [heroSubtitle, setHeroSubtitle] = useState("Unlock unparalleled efficiency and strategic clarity with our advanced platform.");
   const [ctaText, setCtaText] = useState("Book a Free Demo");
-  const [ctaLink, setCtaLink] = useState("/contact/demo");
+  const [ctaLink, setCtaLink] = useState("/contact");
   const [videoEmbedCode, setVideoEmbedCode] = useState('<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=..." title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>');
 
   const [sectionToggles, setSectionToggles] = useState({
@@ -96,7 +96,7 @@ export default function HomePageContent() {
               value={ctaLink}
               onChange={(e) => setCtaLink(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="/contact/demo"
+              placeholder="/contact"
             />
           </div>
         </div>

@@ -10,28 +10,38 @@ const SMS_API_URL = "https://api.bulksmsadmin.com/BulkSMSapi/keyApiSendSMS/SendS
 // Fallback to the values you provided if env vars aren't set yet
 const SMS_API_KEY = process.env.SMS_API_KEY || "JHs9zb2GhUMtOCb";
 const SMS_SENDER_ID = process.env.SMS_SENDER_ID || "DELOSC";
-const SMS_TEMPLATE_NAME = process.env.SMS_TEMPLATE_NAME || "Login ID- HR-Tek System";
+const SMS_TEMPLATE_NAME = process.env.SMS_TEMPLATE_NAME || "Login ID- Delosch";
 
-/**
- * Sends a Login OTP SMS using the configured template
- * @param mobileNo - The recipient's mobile number (without +91 if strictly Indian, but API docs say no country code needed if 10 digits, usually safer to strip +91 if present)
- * @param otp - The dynamic value to send (e.g., the OTP code)
- */
 export async function sendLoginOTP(mobileNo: string, otp: string) {
     try {
-        // 1. Prepare the payload based on documentation
+        // 1. Prepare and clean the mobile number
+        // Strip any non-digits
+        let cleanMobile = mobileNo.replace(/\D/g, "");
+
+        // If it starts with 91 and is 12 digits, strip the 91 (for domestic Indian SMS)
+        if (cleanMobile.length === 12 && cleanMobile.startsWith("91")) {
+            cleanMobile = cleanMobile.substring(2);
+        }
+
+        // If it's less than 10 digits, it's definitely wrong
+        if (cleanMobile.length < 10) {
+            console.error("❌ Invalid mobile number length:", cleanMobile);
+            return { success: false, error: "Invalid mobile number" };
+        }
+
         const payload = {
             sender: SMS_SENDER_ID,
             templateName: SMS_TEMPLATE_NAME,
             smsReciever: [
                 {
-                    mobileNo: mobileNo,
-                    templateParams: otp, // The "22" in your example
+                    mobileNo: cleanMobile,
+                    templateParams: otp,
                 },
             ],
         };
 
-        console.log("📨 Sending SMS via PRP API...", JSON.stringify(payload, null, 2));
+        console.log(`📨 API Request: POST ${SMS_API_URL}`);
+        console.log(`📨 Recipient: ${cleanMobile}, OTP: ${otp}`);
 
         // 2. Make the API Request
         const response = await fetch(SMS_API_URL, {
@@ -43,19 +53,39 @@ export async function sendLoginOTP(mobileNo: string, otp: string) {
             body: JSON.stringify(payload),
         });
 
-        const data = await response.json();
+        let data: any;
+        const responseText = await response.text();
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("❌ SMS API returned non-JSON response:", responseText);
+            return { success: false, error: "Invalid API response format" };
+        }
 
         // 3. Log and Return Result
-        // API returns isSuccess: true on success
-        if (response.ok && (data.status === "success" || data.isSuccess === true)) {
-            console.log("✅ SMS Sent Successfully:", data);
+        // Be more permissive with success checks as different APIs/versions might return different formats
+        const isSuccess =
+            response.ok &&
+            (data.status === "success" ||
+                data.isSuccess === true ||
+                data.isSuccess === "true" ||
+                data.ResponseStatus === "Success" ||
+                data.status === "1");
+
+        if (isSuccess) {
+            console.log("✅ SMS Sent Successfully to:", cleanMobile);
             return { success: true, data };
         } else {
-            console.error("❌ SMS Failed:", data);
-            return { success: false, error: data.message || data.returnMessage || "Unknown error", data };
+            console.error("❌ SMS Failed for:", cleanMobile);
+            console.error("❌ API Response:", data || responseText);
+            return {
+                success: false,
+                error: data.message || data.returnMessage || data.reason || "Provider error",
+                data
+            };
         }
     } catch (error) {
-        console.error("❌ SMS API Error:", error);
+        console.error("❌ SMS API Error (Exception):", error);
         return { success: false, error: "Network or Server Error" };
     }
 }

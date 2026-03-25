@@ -127,7 +127,7 @@ export async function createMembershipCompanyToUser(data: MembershipInput) {
  */
 export async function getUserCompanyMemberships(userId: string) {
     try {
-        z.uuidv4("Invalid user ID format.").parse(userId); // Validate input userId
+        z.string().uuid("Invalid user ID format.").parse(userId); // Validate input userId
 
         const queryCommand = new QueryCommand({
             TableName: USERS_TABLE,

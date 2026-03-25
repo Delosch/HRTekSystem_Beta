@@ -10,6 +10,8 @@ import { getEnhancedUser } from "~/utils/user.server";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 const ENGINE = "HR Transformation Roadmap Generator";
 
@@ -39,6 +41,11 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     description: "Select the right HCM vendors for your business",
     icon: "🎯"
   },
+  "AI Driven Maturity Engine": {
+    name: "AI Driven Maturity Engine",
+    description: "Assess your AI transformation maturity and digital readiness",
+    icon: "🤖"
+  }
 };
 
 
@@ -55,12 +62,11 @@ export const loader: LoaderFunction = async ({ request }) => {
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
 
-  // Check payment status
-  const payments = await getCompanyPayments(user.organisationId);
-  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
-
-  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
-  const isPending = paymentRecord?.status === "payment_submitted";
+  // Check detailed payment status
+  const isAdmin = (user as any).role === "ADMIN";
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -84,6 +90,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
+    paymentStatus,
     isPaid,
     isPending,
     hasReport
@@ -91,12 +98,13 @@ export const loader: LoaderFunction = async ({ request }) => {
 };
 
 export default function RoadmapDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -123,17 +131,18 @@ export default function RoadmapDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
-        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      if (isPaid) {
+        navigate(`/digital-roadmap/dashboard`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
         navigate('/payment/checkout');
       }
     } else {
-      // If 100%, trigger generation (should be handled by intermediate, so redirect there)
       if (currentEngine.progress === 100) {
         navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
       } else {
-        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+        navigate(`/digital-roadmap/assessment`);
       }
     }
   };
@@ -307,6 +316,14 @@ export default function RoadmapDashboard() {
                   {isPaid && hasReport ? "View Detailed Report" : hasReport ? "Unlock Report" : currentEngine.progress === 100 ? "Generate Report" : "Continue"}
                 </button>
               </div>
+              {currentEngine.progress > 0 && (
+                <button
+                  onClick={() => navigate('/digital-roadmap/assessment?modify=true')}
+                  className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-teal-200 text-teal-700 bg-teal-50 hover:bg-teal-100 transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  ✏️ Modify Responses
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -441,6 +458,15 @@ export default function RoadmapDashboard() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
+
+      <PaymentStatusModal 
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        status={paymentStatus.status}
+        engineName={ENGINE}
+        expiresAt={paymentStatus.expiresAt}
+        onProceed={paymentStatus.status === "paid" ? () => navigate(`/digital-roadmap/dashboard`) : () => navigate('/payment/checkout')}
+      />
     </div>
   );
 }

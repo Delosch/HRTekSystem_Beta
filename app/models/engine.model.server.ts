@@ -10,11 +10,10 @@ let ddbDocClient: ReturnType<typeof getDynamoDBDocumentClient>;
 try {
     ddbDocClient = getDynamoDBDocumentClient();
 } catch (error: unknown) {
-    console.error("CRITICAL ERROR: Failed to initialize DynamoDB Document Client.");
+    console.warn("⚠️ WARNING: Failed to initialize DynamoDB Document Client.");
     if (error instanceof Error) {
-        console.error(`Details: ${error.message}`);
+        console.warn(`Details: ${error.message}`);
     }
-    process.exit(1);
 }
 export interface Engine {
     pk: string//"ENGINE#company_id",
@@ -42,7 +41,8 @@ export async function createOrUpdateEngineStorage(data: any) {
             user_id,
             engine_name,
             country,
-            progress
+            progress,
+            responses
         } = validatedData;
         let usage_status
         if (progress === 100) { usage_status = "Completed" }
@@ -58,6 +58,7 @@ export async function createOrUpdateEngineStorage(data: any) {
             created_by: user_id,
             progress,
             usage_status,
+            responses,
             createdAt: new Date().toISOString(),
         };
 
@@ -113,7 +114,9 @@ export const completedEngine = async (company_id: string) => {
             ProjectionExpression: "sk",
         })
         const response = await ddbDocClient.send(command);
-        return response.Items?.map((item) => item.sk) || [];
+        const engineNames = response.Items?.map((item) => item.sk) || [];
+        // Filter out non-transformation engines like "Profiling Assessment"
+        return engineNames.filter(name => name !== "Profiling Assessment");
     } catch (error) {
         console.error("Error fetching completed engines:", error);
         return [];

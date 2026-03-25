@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import EngineStatusActions from "../components/DashboardComponents/EngineStatusActions";
-import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
+import { useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
-import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
-import { json, LoaderFunction } from "@remix-run/node";
+import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users, Menu, X } from "lucide-react";
+import { json, LoaderFunction, redirect } from "@remix-run/node";
 import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
+import PaymentStatusModal from "~/components/PaymentStatusModal";
+import SharedServicesMonthModal from "~/components/SharedServicesMonthModal";
+import { getEnginePaymentStatus } from "~/models/payment.model.server";
 
 const ENGINE = "Shared Service Designer";
 
@@ -51,16 +54,19 @@ export const loader: LoaderFunction = async ({ request }) => {
 
   const { getCompanyPayments } = await import("~/models/payment.model.server");
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
+  const { getCompanyProfile } = await import("~/models/company.model.server");
+
+  const company = await getCompanyProfile(user.organisationId);
+  const companyLogo = company?.logo_url || null;
 
   const currentEngineData = await findEngineData(user.organisationId as string, ENGINE);
   const completedEngines = await completedEngine(user.organisationId as string);
 
-  // Check payment status
-  const payments = await getCompanyPayments(user.organisationId);
-  const paymentRecord = payments.find(p => p.items?.some((i: any) => i.engineName === ENGINE));
-
-  const isPaid = (paymentRecord?.status === "payment_verified" || paymentRecord?.status === "completed") || (user as any).role === "ADMIN";
-  const isPending = paymentRecord?.status === "payment_submitted";
+  // Check detailed payment status
+  const isAdmin = (user as any).role === "ADMIN";
+  const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
+  const isPaid = isAdmin || paymentStatus.status === "paid";
+  const isPending = !isAdmin && paymentStatus.status === "pending";
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -83,19 +89,24 @@ export const loader: LoaderFunction = async ({ request }) => {
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
+    paymentStatus,
     isPaid,
     isPending,
-    hasReport
+    hasReport,
+    companyLogo
   });
 };
 
 export default function SharedDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, isPaid, isPending, hasReport } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -118,23 +129,39 @@ export default function SharedDashboard() {
 
   const recommendedEngines = recommendations
     .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
-    .filter(([engineName]: [string, number]) => !completedEngines.includes(engineName))
     .slice(0, 3);
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid || isPending) {
+      if (isPaid) {
         navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+      } else if (isPending || paymentStatus.status === "rejected") {
+        setIsStatusModalOpen(true);
       } else {
-        navigate('/payment/checkout');
+        setIsMonthModalOpen(true);
       }
     } else {
       if (currentEngine.progress === 100) {
         navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
       } else {
-        navigate(`/engine/${encodeURIComponent(ENGINE)}`);
+        navigate(`/shared-services/assessment`);
       }
     }
+  };
+
+  const handleMonthSelect = (months: number) => {
+    setIsMonthModalOpen(false);
+    // Add to cart with months context
+    fetcher.submit(
+      { 
+        intent: "addToCart", 
+        engineName: ENGINE,
+        durationMonths: months.toString()
+      },
+      { method: "post", action: "/startTransformationDashboard" }
+    );
+    // Redirect to checkout after a short delay
+    setTimeout(() => navigate('/payment/checkout'), 500);
   };
 
   return (
@@ -144,16 +171,62 @@ export default function SharedDashboard() {
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-3xl animate-pulse delay-500" />
 
-      {!isSidebarCollapsed && <Sidebar user={user} />}
+      {!isSidebarCollapsed && (
+        <div className="hidden md:block">
+          <Sidebar user={user} />
+        </div>
+      )}
 
-      <main className="flex-1 md:ml-64 p-6 relative z-10">
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent mb-3 tracking-tight">
-            {currentEngine.name}
-          </h1>
-          <p className="text-gray-600 text-lg font-medium">
-            Design efficient HR shared service models
-          </p>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="w-64 h-full bg-white relative animate-slide-in-left" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full z-10"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+            <Sidebar user={user} onLinkClick={() => setIsMobileMenuOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 md:ml-64 p-4 md:p-8 transition-all duration-300 relative z-10">
+        {/* Mobile Header Toggle */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-sm">
+          <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 hover:bg-white rounded-xl transition-colors">
+            <Menu className="w-6 h-6 text-slate-600" />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src="/hrtek_logo.png" alt="HRTek" className="h-7 w-auto" />
+            {companyLogo && (
+              <>
+                <div className="h-5 w-[1px] bg-slate-200"></div>
+                <img src={companyLogo} alt="Company" className="h-7 w-auto object-contain rounded" />
+              </>
+            )}
+            <div className="font-bold text-slate-900 border-l border-slate-200 pl-2">Shared Services</div>
+          </div>
+          <div className="w-10"></div>
+        </div>
+
+        <div className="mb-8 animate-fade-in flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <img src="/hrtek_logo.png" alt="HRTek" className="h-10 w-auto" />
+            {companyLogo && (
+              <>
+                <div className="h-8 w-[1px] bg-slate-200"></div>
+                <img src={companyLogo} alt="Company" className="h-9 w-auto object-contain rounded" />
+              </>
+            )}
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase whitespace-nowrap">Shared Services Dashboard</h1>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+              Service Delivery Optimization • Generated for {user.organisationName || "Your Organization"}
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -221,7 +294,7 @@ export default function SharedDashboard() {
                       <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
-                      <span className="relative z-10">View Detailed Dashboard</span>
+                      <span className="relative z-10">View Strategic Report</span>
                     </>
                   ) : isPending && hasReport ? (
                     <>
@@ -246,6 +319,14 @@ export default function SharedDashboard() {
                 <p className="text-xs text-gray-500 text-center mt-3 font-medium">
                   {isPaid && hasReport ? "✨ Access advanced analytics, insights, and visualizations" : isPending && hasReport ? "⏳ Your payment is detailed verification" : hasReport ? "🔒 Unlock full strategic insights" : "📝 Complete assessment to generate insights"}
                 </p>
+                {currentEngine.progress > 0 && (
+                  <button
+                    onClick={() => navigate('/shared-services/assessment?modify=true')}
+                    className="w-full mt-3 py-3 px-6 font-semibold rounded-2xl border-2 border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    ✏️ Modify Responses
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -291,7 +372,7 @@ export default function SharedDashboard() {
                   onClick={() => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`)}
                   className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
                 >
-                  View Detailed Report
+                  View Consulting Report
                 </button>
               </div>
             </div>
@@ -428,6 +509,21 @@ export default function SharedDashboard() {
           <span className="font-semibold">{toastMessage}</span>
         </div>
       )}
+
+      <PaymentStatusModal 
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        status={paymentStatus.status}
+        engineName={ENGINE}
+        expiresAt={paymentStatus.expiresAt}
+        onProceed={paymentStatus.status === "paid" ? () => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
+      />
+
+      <SharedServicesMonthModal 
+        isOpen={isMonthModalOpen}
+        onClose={() => setIsMonthModalOpen(false)}
+        onSelect={handleMonthSelect}
+      />
     </div>
   );
 }

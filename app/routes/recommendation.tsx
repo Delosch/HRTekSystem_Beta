@@ -17,8 +17,8 @@ export const meta: MetaFunction = () => {
     title: "Personalized Recommendations - HRTek System",
     description: "Discover your personalized path to HR transformation. Based on your assessment, we recommend the best tools and engines to optimize your HR operations.",
     keywords: "HR recommendation, personalized HR tools, HR transformation path, HR assessment results, custom HR strategy",
-    url: "https://hrteksystem.com/recommendation",
-    image: "https://hrteksystem.com/og-recommendation.jpg",
+    url: "https://www.hrteksystem.com/recommendation",
+    image: "https://www.hrteksystem.com/og-recommendation.jpg",
   });
 };
 
@@ -159,7 +159,7 @@ export default function RecommendationPage() {
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/recommendation" />
+      <link rel="canonical" href="https://www.hrteksystem.com/recommendation" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

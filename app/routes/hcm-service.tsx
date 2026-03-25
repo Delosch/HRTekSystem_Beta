@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
-import { Link, useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData, Link } from "@remix-run/react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
 import BookingModal from "~/components/HomePageComponents/BookingModal";
@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "HCM Vendor Fit Engine - AI-Powered Selection Tool",
     description: "Choose the right HCM provider with our AI-powered Vendor Fit Engine. Eliminate bias and find the perfect partner for your unique HR requirements.",
     keywords: "HCM vendor selection, HR software fit, HCM matching engine, vendor evaluation, HR tech procurement, best HCM platform",
-    url: "https://hrteksystem.com/hcm-service",
-    image: "https://hrteksystem.com/og-hcm.jpg",
+    url: "https://www.hrteksystem.com/hcm-service",
+    image: "https://www.hrteksystem.com/og-hcm.jpg",
   });
 };
 
@@ -46,12 +46,12 @@ export default function HCMVendorFitPage() {
     description: "AI-powered tool for selecting the most compatible HCM vendor based on organizational needs",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/hcm-service"
+    url: "https://www.hrteksystem.com/hcm-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/hcm-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/hcm-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -105,21 +105,18 @@ export default function HCMVendorFitPage() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Link
-                    to="/engine/hcm-vendor-fit"
-                    className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
-                  >
-                    Start Assessment
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
                   <button
                     onClick={() => setShowPopup(true)}
                     className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
                   >
                     Talk to Expert
                   </button>
+                  <Link
+                    to="/engine/hcm-vendor-fit"
+                    className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center justify-center"
+                  >
+                    Start Selection Engine
+                  </Link>
                 </div>
 
                 {/* Stats */}
@@ -204,6 +201,26 @@ export default function HCMVendorFitPage() {
           </div>
         </section>
 
+        {/* Video Tutorial Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <span className="inline-block px-4 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-widest rounded-full mb-4">Video Tutorial</span>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">See HCM Vendor Fit Engine In Action</h2>
+              <p className="text-gray-500 max-w-xl mx-auto text-sm">Watch how the HCM Vendor Fit Engine helps your organisation identify and select the best-fit vendors through AI-driven analysis.</p>
+            </div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-slate-900" style={{ aspectRatio: '16/9' }}>
+              <iframe
+                src="https://www.youtube.com/embed/yTvgbv1Z1RU"
+                title="HCM Vendor Fit Engine Tutorial"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Call to Action Section */}
         <section className="py-20 bg-[#1A56DB]">
           <div className="max-w-4xl mx-auto px-6 text-center">
@@ -211,7 +228,7 @@ export default function HCMVendorFitPage() {
               Ready to Begin Your Transformation Journey
             </h2>
             <p className="text-lg text-white mb-10">
-              Take the assessment today and let HR-Tek System show you a smarter path forward.
+              Connect with our HR experts to discover how HR-Tek can accelerate your transformation.
             </p>
 
             <div className="flex flex-col items-center gap-4">
@@ -221,12 +238,6 @@ export default function HCMVendorFitPage() {
               >
                 Talk to a Consultant
               </button>
-              <Link
-                to="/engine/hcm-vendor-fit"
-                className="px-8 py-3 bg-white text-[#1A56DB] rounded-lg font-bold text-base hover:bg-gray-100 transition-colors min-w-[240px] shadow-sm flex items-center justify-center"
-              >
-                Take the Assessment
-              </Link>
             </div>
           </div>
         </section>

@@ -10,6 +10,7 @@ interface SEOConfig {
     author?: string;
     publishedTime?: string;
     modifiedTime?: string;
+    robots?: string;
 }
 
 export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
@@ -17,8 +18,8 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
         title,
         description,
         keywords,
-        image = "https://hrteksystem.com/logo_icon_final.png",
-        url = "https://hrteksystem.com",
+        image = "https://www.hrteksystem.com/logo_icon_final.png",
+        url = "https://www.hrteksystem.com",
         type = "website",
         author = "HRTek System",
         publishedTime,
@@ -33,8 +34,8 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
         { name: "description", content: description },
         { name: "keywords", content: keywords || "HR transformation, HCM, digital maturity, HR technology, workforce management" },
         { name: "author", content: author },
-        { name: "robots", content: "index, follow" },
-        { name: "googlebot", content: "index, follow" },
+        { name: "robots", content: config.robots || "index, follow" },
+        { name: "googlebot", content: config.robots || "index, follow" },
         { name: "language", content: "English" },
         { name: "revisit-after", content: "7 days" },
 
@@ -63,7 +64,7 @@ export function generateMeta(config: SEOConfig): ReturnType<MetaFunction> {
 
         // Additional SEO
         { name: "theme-color", content: "#000033" },
-        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "mobile-web-app-capable", content: "yes" },
         { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ];
 }
@@ -76,7 +77,7 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
             "@type": "ListItem",
             "position": index + 1,
             "name": item.name,
-            "item": `https://hrteksystem.com${item.url}`
+            "item": `https://www.hrteksystem.com${item.url}`
         }))
     };
 }
@@ -120,7 +121,7 @@ export function generateBlogPostSchema(post: {
             "name": "HRTek System",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://hrteksystem.com/logo_icon_final.png"
+                "url": "https://www.hrteksystem.com/logo_icon_final.png"
             }
         },
         "datePublished": post.datePublished,

@@ -22,8 +22,26 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         throw new Response("Report not found", { status: 404 });
     }
 
+    // Payment gating
+    const { getCompanyPayments } = await import("~/models/payment.model.server");
+    const payments = await getCompanyPayments(user.organisationId);
+    const isAdmin = (user as any).role === "ADMIN";
+    const hasPaid = isAdmin || payments.some((p: any) =>
+        (p.status === "payment_verified" || p.status === "completed") &&
+        p.items?.some((i: any) => i.engineName.startsWith("HTI Advisory:"))
+    );
+
+    if (!hasPaid) {
+        throw new Response("Payment required to download HTI reports", { status: 403 });
+    }
+
+    // Fetch company name for branding
+    const { getCompanyProfile } = await import("~/models/company.model.server");
+    const company = await getCompanyProfile(user.organisationId);
+    const brandName = company?.brand_name || user.organisationId;
+
     // Render PDF to stream
-    const stream = await renderToStream(<HTIReportPDF report={report} />);
+    const stream = await renderToStream(<HTIReportPDF report={report} brandName={brandName} />);
 
     // Convert stream to readable stream (if needed by platform, but standard Response accepts standard streams usually)
     // Remix node adapter handles node streams well.

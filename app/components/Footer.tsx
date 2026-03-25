@@ -1,28 +1,18 @@
 import React from "react";
 import { Link } from "@remix-run/react";
+import Logo from "./ui/Logo";
+import { Linkedin, Twitter, Facebook, ArrowRight, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => setIsMounted(true), []);
+
   return (
     <footer className="bg-[#0B2A57] text-white py-10">
-      <div className="mx-auto px-6 grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
+      <div className="max-w-[1400px] mx-auto px-6 grid gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1.4fr_0.9fr_1.3fr_1.1fr_0.9fr_auto]">
         {/* Company Info */}
         <div className="flex flex-col items-start gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-16 h-16 overflow-hidden flex items-center justify-center">
-              <img
-                src="/logo_icon_final.png"
-                alt="HR-Tek"
-                className="h-full w-auto object-contain transform group-hover:scale-110 transition-transform"
-              />
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-2xl font-black tracking-tighter leading-none">
-                <span className="text-white">HR-TEK</span>{" "}
-                <span className="text-[#00B5E2]">SYSTEM</span>
-              </h1>
-
-            </div>
-          </Link>
+          <Logo orientation="stacked" />
           <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
             Empowering HR transformation through intelligent software solutions
             tailored for growth.
@@ -52,49 +42,20 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/blog" className="hover:text-white">
-                Blogs
+              <Link to="/articles" className="hover:text-white">
+                Articles
               </Link>
             </li>
             <li>
-              <Link to="/pricing" className="hover:text-white">
-                Pricing
+              <Link to="/contact" className="hover:text-white">
+                Contact Us
               </Link>
             </li>
             <li>
-              <Link to="/testimonials" className="hover:text-white">
-                Testimonials
+              <Link to="/discover-more" className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5 mt-2 transition-all group">
+                Discover More
+                <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
               </Link>
-            </li>
-            <li>
-              <Link to="/video-tutorials" className="hover:text-white">
-                Video Tutorials
-              </Link>
-            </li>
-            <li>
-              <Link to="/recommendation" className="hover:text-white">
-                Recommendations
-              </Link>
-            </li>
-            <li>
-              <a href="/legal/term" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Terms & Conditions
-              </a>
-            </li>
-            <li>
-              <a href="/legal/privacy" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Privacy Policy
-              </a>
-            </li>
-            <li>
-              <a href="/legal/cookie" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                Cookie Policy
-              </a>
-            </li>
-            <li>
-              <a href="/legal/gdpr" className="hover:text-white" target="_blank" rel="noopener noreferrer">
-                GDPR Compliance
-              </a>
             </li>
           </ul>
         </div>
@@ -138,107 +99,142 @@ export default function Footer() {
 
         {/* Contact */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Contact</h3>
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>Email: support@hrteksystem.com</li>
-            <li>Phone: +91 9335870619, 0522-3195292</li>
-            <li>Address: Lucknow, Uttar Pradesh, India</li>
+          <h3 className="text-lg font-semibold mb-6">Contact</h3>
+          <ul className="space-y-4 text-sm text-gray-300">
+            <li className="flex items-center gap-3">
+              <Mail className="w-4 h-4 text-cyan-400" />
+              <a href="mailto:support@hrteksystem.com" className="hover:text-white transition-colors">support@hrteksystem.com</a>
+            </li>
+            <li className="flex items-center gap-3">
+              <Phone className="w-4 h-4 text-cyan-400" />
+              <span className="hover:text-white transition-colors">+91 9335870619, 0522-3195292</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <MapPin className="w-4 h-4 text-cyan-400 mt-1" />
+              <span className="hover:text-white transition-colors">Lucknow, Uttar Pradesh, India</span>
+            </li>
           </ul>
         </div>
 
-        {/* Accreditations */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Accreditations</h3>
-          <div className="space-y-4">
-            {/* Startup India */}
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
-              <div className="w-12 h-12 bg-white rounded flex items-center justify-center p-1">
-                <img
-                  src="/assets/certificates/startup_india_logo.png"
-                  alt="Startup India Recognized"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Startup India</p>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-500 uppercase">Certificate No.</span>
-                  <span className="text-[10px] text-gray-300 font-mono font-medium">DIPP202318</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Start In UP */}
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10 group hover:bg-white/10 transition-colors cursor-default">
-              <div className="w-12 h-12 bg-white rounded flex items-center justify-center overflow-hidden border border-gray-100">
-                <img
-                  src="/assets/certificates/start_in_up_cert.jpg"
-                  alt="Start In UP Registered"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white uppercase tracking-wider mb-0.5">Start In UP</p>
-                <div className="flex flex-col">
-                  <span className="text-[9px] text-gray-500 uppercase">Registration No.</span>
-                  <span className="text-[10px] text-gray-300 font-mono font-medium leading-tight max-w-[120px] break-all">
-                    R/STARTUP/UP/LKO/ 2025/000038500
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Legal & Privacy */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Legal</h3>
+          <ul className="space-y-2 text-sm text-gray-300">
+            <li>
+              <Link to="/legal/privacy" className="hover:text-white flex items-center gap-2">
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/legal/cookie" className="hover:text-white flex items-center gap-2">
+                Cookie Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/legal/gdpr" className="hover:text-white flex items-center gap-2">
+                GDPR Compliance
+              </Link>
+            </li>
+            <li className="pt-2">
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("open-cookie-settings"));
+                }}
+                className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" /><path d="M8.5 8.5v.01" /><path d="M16 15.5v.01" /><path d="M12 12v.01" /><path d="M11 17v.01" /><path d="M7 14v.01" /></svg>
+                Cookie Settings
+              </button>
+            </li>
+          </ul>
         </div>
 
-        <div className="justify-self-end">
-          {/* <-- only change: justify-self-end so this column sits at the right */}
-          <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-          <div className="flex space-x-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-6">Follow Us</h3>
+          <div className="flex gap-4">
             <a
               href="https://in.linkedin.com/company/hr-tek-system"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-cyan-500 hover:border-cyan-400 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/linkInSite.png"
-                alt="LinkedIn"
-                className="w-5 h-5 object-contain"
-              />
+              <Linkedin className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
             <a
               href="https://twitter.com/hrtek_system"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-black hover:border-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/xSite.png"
-                alt="X (Twitter)"
-                className="w-5 h-5 object-contain"
-              />
+              <Twitter className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
             <a
               href="https://facebook.com/hrteksystem"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition"
+              className="w-10 h-10 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-blue-600 hover:border-blue-500 hover:shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all duration-300 group"
             >
-              <img
-                src="/assets/homepageAssets/fbSite.png"
-                alt="Facebook"
-                className="w-5 h-5 object-contain"
-              />
+              <Facebook className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
             </a>
           </div>
         </div>
       </div>
 
-      <div className="mt-10 border-t border-white/10 pt-6 text-sm text-gray-400">
-        <div className="flex justify-between items-center">
-          <span className="text-left ml-6">© {new Date().getFullYear()} HR-Tek System. All rights reserved.</span>
-          <span className="text-center">This website comes under the GDPR Laws</span>
-          <span className="text-right mr-6">CIN - U62010UP2025PTC219986</span>
+      {/* Accreditations */}
+      <div className="mt-10 border-t border-white/10 pt-8 max-w-[1400px] mx-auto px-6">
+        <p className="text-center text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Recognized & Accredited By</p>
+        <div className="flex flex-wrap items-center justify-center gap-6">
+          {/* AIC IIT Delhi */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/homepageAssets/accreditations.png"
+              alt="AIC IIT Delhi"
+              className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">AIC IIT Delhi</div>
+              <div className="text-[9px] text-white/40 leading-tight">Sonipat Innovation Foundation</div>
+            </div>
+          </div>
+
+          <div className="w-px h-8 bg-white/10 hidden sm:block" />
+
+          {/* Startup India */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/certificates/startup_india_logo.png"
+              alt="Startup India"
+              className="h-7 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">Startup India</div>
+              <div className="text-[9px] text-white/40 leading-tight">DPIIT Recognized</div>
+            </div>
+          </div>
+
+          <div className="w-px h-8 bg-white/10 hidden sm:block" />
+
+          {/* Start In UP */}
+          <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 hover:bg-white/10 transition-colors group">
+            <img
+              src="/assets/certificates/start_in_up_cert.jpg"
+              alt="Start In UP"
+              className="h-7 w-auto object-contain rounded opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div>
+              <div className="text-[10px] font-black text-white/80 uppercase tracking-wider leading-tight">Start In UP</div>
+              <div className="text-[9px] text-white/40 leading-tight">UP Startup Policy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 border-t border-white/10 pt-6 text-sm text-gray-400">
+        <div className="max-w-[1400px] mx-auto px-6 flex flex-wrap justify-between items-center gap-2">
+          <span>© {isMounted ? new Date().getFullYear() : '2026'} HR-Tek System. All rights reserved.</span>
+          <span>This website comes under the GDPR Laws</span>
+          <span>CIN - U62010UP2025PTC219986</span>
         </div>
       </div>
     </footer >

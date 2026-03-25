@@ -256,7 +256,7 @@ export default function SeoSettingsPage() {
                       value={pageSeo.ogImage}
                       onChange={(e) => setPageSeo({ ...pageSeo, ogImage: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                      placeholder="https://hrteksystem.com/og-image.jpg"
+                      placeholder="https://www.hrteksystem.com/og-image.jpg"
                     />
                     <Link to="/admin/website/branding" className="px-3 py-2 bg-gray-100 border rounded hover:bg-gray-200 text-xs flex items-center">Media</Link>
                   </div>
@@ -271,7 +271,7 @@ export default function SeoSettingsPage() {
                     value={pageSeo.canonical}
                     onChange={(e) => setPageSeo({ ...pageSeo, canonical: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                    placeholder="Leave blank to use default (https://hrteksystem.com{page})"
+                    placeholder="Leave blank to use default (https://www.hrteksystem.com{page})"
                   />
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { Brain, CheckCircle, Clock, XCircle, AlertCircle, Sparkles, TrendingUp, 
 import { motion } from "framer-motion";
 import { getPricingForCompany, PRICING_TIERS } from "~/utils/pricing.server";
 import { getCompanyProfile } from "~/models/company.model.server";
+import Navbar from "~/components/HomePageComponents/Navbar";
 
 /**
  * HTI Dashboard - Ultra-Attractive Design with Pricing
@@ -14,7 +15,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await requireUserSession(request);
 
     if (!user.organisationId) {
-        return json({ error: "Organization ID required" }, { status: 400 });
+        const { redirect } = await import("@remix-run/node");
+        return redirect("/auth/drx");
     }
 
     // Fetch completed engines
@@ -22,17 +24,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const completedEngines = await completedEngine(user.organisationId);
 
     // Fetch company's advisories
-    const reportsResponse = await fetch(`${new URL(request.url).origin}/api/hti/reports`, {
-        headers: {
-            Cookie: request.headers.get("Cookie") || ""
-        }
-    });
+    const { getCompanyAdvisories } = await import("~/models/hti.model.server");
+    const rawReports = await getCompanyAdvisories(user.organisationId);
 
-    let reports = [];
-    if (reportsResponse.ok) {
-        const data = await reportsResponse.json();
-        reports = data.reports || [];
-    }
+    const reports = rawReports.map(report => ({
+        reportId: report.reportId,
+        status: report.status,
+        generatedAt: report.generatedAt,
+        approvedAt: report.approvedAt,
+        approvedBy: report.approvedBy,
+        executiveSummary: report.advisory?.executiveSummary
+            ? (report.advisory.executiveSummary.substring(0, 200) + "...")
+            : "No summary available",
+        completedEngines: report.inputData.completedEnginesCount || 0,
+        totalEngines: report.inputData.totalEngines || 5
+    }));
 
     // Get pricing tier
     let pricingTier = PRICING_TIERS.TRANSFORMATION;
@@ -45,12 +51,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
         console.log("Could not fetch pricing:", error);
     }
 
+    // Check payment status for HTI
+    const { getCompanyPayments } = await import("~/models/payment.model.server");
+    const payments = await getCompanyPayments(user.organisationId);
+    const isAdmin = (user as any).role === "ADMIN";
+    const hasPaid = isAdmin || payments.some((p: any) =>
+        (p.status === "payment_verified" || p.status === "completed") &&
+        p.items?.some((i: any) => i.engineName.startsWith("HTI Advisory:"))
+    );
+
     return json({
         user,
         companyId: user.organisationId,
         reports,
         completedEngines,
-        pricingTier
+        pricingTier,
+        hasPaid
     });
 }
 
@@ -159,6 +175,7 @@ export default function HTIDashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+            <Navbar />
             {/* Ultra-Attractive Header */}
             <div className="relative bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900 text-white py-16 overflow-hidden">
                 {/* Animated background */}
@@ -245,6 +262,7 @@ export default function HTIDashboard() {
 
                 {/* Comprehensive Pricing Section - All Tiers */}
                 <motion.div
+                    id="pricing-section"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8"
@@ -280,11 +298,10 @@ export default function HTIDashboard() {
                                 </div>
                                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Advisory Essentials</h3>
                                 <p className="text-gray-600 text-sm mb-4">For mid-size enterprises</p>
-                                <div className="text-5xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
-                                    ₹12-18L
+                                <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">
+                                    Contact Us
                                 </div>
-                                <p className="text-gray-500 text-sm">per year</p>
-                                <p className="text-gray-400 text-xs mt-1">USD 18,000 - 25,000</p>
+                                <p className="text-gray-500 text-sm">for custom pricing</p>
                             </div>
 
                             <div className="space-y-3 mb-6">
@@ -303,12 +320,11 @@ export default function HTIDashboard() {
                                     </div>
                                 ))}
                             </div>
-
                             <Form method="post">
-                                <input type="hidden" name="intent" value="add_to_cart" />
+                                <input type="hidden" name="intent" value="contact_sales" />
                                 <input type="hidden" name="tierId" value="essentials" />
                                 <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-lg">
-                                    Get Started
+                                    Contact Sales
                                 </button>
                             </Form>
                         </motion.div>
@@ -333,14 +349,13 @@ export default function HTIDashboard() {
                                     <Sparkles className="w-12 h-12 text-white" />
                                 </div>
                                 <h3 className="text-2xl font-bold mb-2">Transformation Intelligence</h3>
-                                <p className="text-purple-100 text-sm mb-4">For enterprises (500-5,000 employees)</p>
-                                <div className="text-5xl font-black text-white mb-2">
-                                    ₹28-40L
+                                <p className="text-purple-100 text-sm mb-4">For enterprise-grade transformation</p>
+                                <div className="text-4xl font-black text-white mb-2">
+                                    Contact Us
                                 </div>
-                                <p className="text-purple-100 text-sm">per year</p>
-                                <p className="text-purple-200 text-xs mt-1">USD 40,000 - 60,000</p>
+                                <p className="text-purple-100 text-sm">for custom pricing</p>
                                 <div className="mt-3 inline-block bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-xs font-bold">
-                                    70% of clients choose this
+                                    Most Popular Choice
                                 </div>
                             </div>
 
@@ -365,12 +380,11 @@ export default function HTIDashboard() {
                                     </div>
                                 ))}
                             </div>
-
                             <Form method="post">
-                                <input type="hidden" name="intent" value="add_to_cart" />
+                                <input type="hidden" name="intent" value="contact_sales" />
                                 <input type="hidden" name="tierId" value="transformation" />
                                 <button type="submit" className="w-full py-3 bg-yellow-400 text-gray-900 rounded-xl font-bold hover:bg-yellow-300 transition-all shadow-xl">
-                                    Start Transformation
+                                    Contact Sales
                                 </button>
                             </Form>
                         </motion.div>
@@ -576,28 +590,58 @@ export default function HTIDashboard() {
                     {/* Generation Progress */}
                     {isGenerating && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="mb-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6 text-white"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-10 bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl"
                         >
-                            <div className="flex items-center gap-4 mb-4">
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                                >
-                                    <Brain className="w-8 h-8" />
-                                </motion.div>
-                                <div>
-                                    <h4 className="font-bold text-lg">AI Analysis in Progress...</h4>
-                                    <p className="text-blue-100 text-sm">Generating strategic insights</p>
+                            {/* Decorative scanline effect */}
+                            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+                            
+                            <div className="relative z-10 flex flex-col items-center text-center">
+                                <div className="mb-8 relative">
+                                    <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-2xl animate-pulse" />
+                                    <motion.div
+                                        animate={{ 
+                                            rotate: [0, 360],
+                                            scale: [1, 1.1, 1]
+                                        }}
+                                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                        className="w-24 h-24 rounded-full border border-blue-500/30 flex items-center justify-center relative"
+                                    >
+                                        <div className="absolute inset-0 rounded-full border-t-2 border-blue-400/60 animate-spin" />
+                                        <Brain className="w-12 h-12 text-blue-400" />
+                                    </motion.div>
                                 </div>
-                            </div>
-                            <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                                <motion.div
-                                    className="bg-white h-2 rounded-full"
-                                    animate={{ width: ["0%", "85%"] }}
-                                    transition={{ duration: 30, ease: "easeInOut" }}
-                                />
+                                
+                                <h4 className="text-2xl font-black mb-3 tracking-tight">Synthesizing Advisory Logic</h4>
+                                <p className="text-slate-400 text-sm mb-8 max-w-sm font-medium leading-relaxed">
+                                    Our strategic engines are processing across all 5 assessment dimensions to generate your transformation roadmap.
+                                </p>
+
+                                <div className="w-full max-w-md space-y-3">
+                                    <div className="flex justify-between items-center px-1">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Process Thread Status</span>
+                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Generating Insights...</span>
+                                    </div>
+                                    <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/10 p-0.5">
+                                        <motion.div
+                                            className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)]"
+                                            animate={{ width: ["0%", "92%"] }}
+                                            transition={{ duration: 45, ease: "easeInOut" }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 flex gap-2">
+                                    {[0, 1, 2].map((i) => (
+                                        <motion.div 
+                                            key={i}
+                                            animate={{ opacity: [0.3, 1, 0.3] }}
+                                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                            className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -712,14 +756,24 @@ export default function HTIDashboard() {
                                         </div>
 
                                         {report.status === "approved" && (
-                                            <a
-                                                href={`/api/hti/reports/${report.reportId}/pdf`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-                                            >
-                                                View Full Report
-                                            </a>
+                                            loaderData.hasPaid ? (
+                                                <a
+                                                    href={`/api/hti/reports/${report.reportId}/pdf`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                                                >
+                                                    View Full Report
+                                                </a>
+                                            ) : (
+                                                <button
+                                                    onClick={() => document.getElementById('pricing-section')?.scrollIntoView({ behavior: 'smooth' })}
+                                                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                                                >
+                                                    <DollarSign className="w-4 h-4" />
+                                                    Unlock Full Report
+                                                </button>
+                                            )
                                         )}
                                     </div>
                                 </motion.div>

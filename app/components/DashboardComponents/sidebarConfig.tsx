@@ -53,9 +53,9 @@ export const sidebarSections: SidebarSection[] = [
     items: [
       { label: "Auto-generated HR Digital Roadmap & ROI", path: "/roadmapDashboard", icon: Map },
       { label: "Cognitive HCM Vendor Fit Engine", path: "/vendorDashboard", icon: Puzzle },
-      { label: "AI-driven HR Tech Diagnostics", path: "/analysisDashboard", icon: FileChartColumn },
+      { label: "AI-driven HR Tech Diagnostics", path: "/ai-maturity/dashboard", icon: FileChartColumn },
       { label: "Shared Services Operating Model Planner", path: "/sharedDashboard", icon: DraftingCompass },
-      { label: "Intelligent Change Management Systems to Enhance Execution", path: "/changeDashboard", icon: Shapes },
+      { label: "Change Management Intelligence Engine", path: "/changeDashboard", icon: Shapes },
     ],
   },
   {

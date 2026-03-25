@@ -21,6 +21,8 @@ export interface CartItem {
     productName: string;
     price: number;
     userId: string;
+    durationMonths?: number;
+    employeeCount?: number;
 }
 
 // Normalization helper for consistent product comparison
@@ -65,12 +67,14 @@ export const addOrUpdateCartItem = async (item: CartItem) => {
                     pk: mainMatch.pk,
                     sk: mainMatch.sk,
                 },
-                UpdateExpression: "SET price = :price, productName = :productName, addedBy = :addedBy, addedAt = :addedAt",
+                UpdateExpression: "SET price = :price, productName = :productName, addedBy = :addedBy, addedAt = :addedAt, durationMonths = :durationMonths, employeeCount = :employeeCount",
                 ExpressionAttributeValues: {
                     ":price": item.price,
-                    ":productName": item.productName, // Keep the latest name variation
+                    ":productName": item.productName,
                     ":addedBy": item.userId,
                     ":addedAt": new Date().toISOString(),
+                    ":durationMonths": item.durationMonths || 1,
+                    ":employeeCount": item.employeeCount || 0,
                 },
             });
             await ddbDocClient.send(updateCommand);
@@ -100,6 +104,8 @@ export const addOrUpdateCartItem = async (item: CartItem) => {
                 addedBy: item.userId,
                 addedAt: new Date().toISOString(),
                 itemId: uniqueId,
+                durationMonths: item.durationMonths || 1,
+                employeeCount: item.employeeCount || 0,
             },
         });
 

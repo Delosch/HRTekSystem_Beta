@@ -14,6 +14,28 @@ try {
     process.exit(1);
 }
 
+/**
+ * Get a specific analysis report by PK and SK
+ */
+export const getAnalysisById = async (pk: string, sk: string) => {
+    const command = new QueryCommand({
+        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+        KeyConditionExpression: "pk = :pk AND sk = :sk",
+        ExpressionAttributeValues: {
+            ":pk": pk,
+            ":sk": sk
+        }
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        return Items || [];
+    } catch (error) {
+        console.error("Error querying DynamoDB for analysis by ID:", error);
+        return [];
+    }
+}
+
 export const getLatestAnalysis = async (companyPk: string, section: string) => {
     const command = new QueryCommand({
         TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",

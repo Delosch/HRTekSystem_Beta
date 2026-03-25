@@ -4,7 +4,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 
 import { postProcessAiResponse } from "~/utils/ai_post_processing";
-import { prompt_processed } from "~/utils/prompt";
+import { prompt_processed, getPromptById } from "~/utils/prompt";
 import { getAnswerSheet, store_analysis } from "~/utils/question.utils";
 import { setAIStatus } from "~/services/ai-status.server";
 
@@ -49,24 +49,48 @@ export async function generate(
       company_id
     );
 
-    if (!result) {
-      console.error("❌ prompt_processed returned undefined");
-      setAIStatus(company_id, 'error');
-      return false;
-    }
+    let assessment_id: string;
+    let base_prompt: string;
 
-    const [assessment_id, base_prompt] = result as [string, string];
+    if (!result) {
+      // Fallback for engines without a Questions table entry (e.g. AI Driven Maturity Engine)
+      // Use the prompt directly and derive assessment_id from the engine name
+      console.warn(`⚠️ prompt_processed returned undefined for "${question_section}", trying direct prompt fallback`);
+      const promptObj = getPromptById(prompt_id);
+      if (!promptObj) {
+        console.error("❌ Prompt not found for id:", prompt_id);
+        setAIStatus(company_id, 'error');
+        return false;
+      }
+      assessment_id = `${company_id}#${question_section}`;
+      base_prompt = promptObj.basePrompt;
+    } else {
+      [assessment_id, base_prompt] = result as [string, string];
+    }
 
     /**
      * 2. Fetch completed answer sheet
+     * We attempt to find it via:
+     * a) ASSESSMENT#{id} (from save_answers)
+     * b) {engineName} (from createOrUpdateEngineStorage)
      */
-    const answer = (await getAnswerSheet(
+    let answer = (await getAnswerSheet(
       company_id,
       assessment_id
     )) as AnswerSheet;
 
     if (!answer) {
-      console.error("❌ No answer sheet found");
+      console.log(`⚠️ Answer sheet not found with ID ${assessment_id}, trying engine name: ${question_section}`);
+      const { findEngineData } = await import("~/models/engine.model.server");
+      const engineRecord = await findEngineData(company_id, question_section);
+      if (engineRecord && engineRecord.responses) {
+        answer = engineRecord.responses as unknown as AnswerSheet;
+        console.log(`✅ Found answer sheet using engine name: ${question_section}`);
+      }
+    }
+
+    if (!answer) {
+      console.error("❌ No answer sheet found via ID or engine name");
       setAIStatus(company_id, 'error');
       return false;
     }
@@ -87,6 +111,18 @@ export async function generate(
         const finalPrompt = `
 ${base_prompt}
 
+🚨 ASSESSMENT INPUT DATA:
+Below is the user's assessment data. Use this to perform your analysis.
+Note: Data is provided in a structured format compatible with both "submission.answers" and "responses_json" requirements.
+
+{
+  "submission": {
+    "answers": ${JSON.stringify(answer, null, 2)}
+  },
+  "responses_json": ${JSON.stringify(answer, null, 2)},
+  "organization_context": ${JSON.stringify(answer, null, 2)}
+}
+
 🚨 STRICT JSON RULES (MANDATORY):
 - Return ONLY valid JSON
 - No markdown, no comments
@@ -94,9 +130,6 @@ ${base_prompt}
 - Start with { and end with }
 - Use double quotes only
 - No trailing commas
-
-ASSESSMENT ANSWERS:
-${JSON.stringify(answer, null, 2)}
         `.trim();
 
         /**

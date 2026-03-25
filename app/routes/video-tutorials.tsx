@@ -1,4 +1,5 @@
 import { MetaFunction } from "@remix-run/node";
+import { useState } from "react";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import Footer from "~/components/Footer";
 import { motion } from "framer-motion";
@@ -10,8 +11,8 @@ export const meta: MetaFunction = () => {
         title: "Video Tutorials - Learn HRTek System",
         description: "Watch our comprehensive video tutorials to master HRTek System. Step-by-step guides for HR transformation, assessment tools, and platform features.",
         keywords: "HRTek tutorials, HR software training, video guides, how to use HRTek, platform tutorials, HR transformation training",
-        url: "https://hrteksystem.com/video-tutorials",
-        image: "https://hrteksystem.com/og-tutorials.jpg",
+        url: "https://www.hrteksystem.com/video-tutorials",
+        image: "https://www.hrteksystem.com/og-tutorials.jpg",
     });
 };
 
@@ -19,55 +20,66 @@ export const meta: MetaFunction = () => {
 const videos = [
     {
         id: 1,
-        title: "Getting Started with HRTek",
-        description: "A comprehensive overview of the dashboard and key features. Start here to get up and running quickly.",
-        duration: "5:30",
-        category: "Onboarding",
-        thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "HR Transformation Intelligence (HTI)",
+        description: "Explore the cognitive advisory layer that delivers decision intelligence, moving beyond basic dashboards and reports.",
+        duration: "Engine Guide",
+        category: "HTI",
+        videoId: "3_mEgGnjFXc"
     },
     {
         id: 2,
-        title: "Generating Your Transformation Roadmap",
-        description: "Learn how to use our AI engine to create a tailored 12-month transformation plan for your organization.",
-        duration: "8:45",
-        category: "Strategy",
-        thumbnail: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "What is HRTek?",
+        description: "An introduction to the HRTek platform and its capabilities for transforming your HR operations.",
+        duration: "Overview",
+        category: "Platform",
+        videoId: "pK8XCrflcdc"
     },
     {
         id: 3,
-        title: "HCM Vendor Fit Analysis Deep Dive",
-        description: "Master the art of selecting the right tech stack. We walk you through the vendor matching algorithm inputs.",
-        duration: "12:20",
-        category: "Procurement",
-        thumbnail: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "Intelligent Change Management (ICMS)",
+        description: "Manage the people side of transformation with HR-Tek’s strategic ICMS capability, ensuring successful adoption.",
+        duration: "Engine Guide",
+        category: "ICMS",
+        videoId: "pNXK9mVIqpc"
     },
     {
         id: 4,
-        title: "Designing HR Shared Services",
-        description: "Step-by-step guide to modeling your new service delivery center using our interactive design tools.",
-        duration: "10:15",
-        category: "Operations",
-        thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "HR Transformation Roadmap Generator",
+        description: "Step-by-step guide to generating a comprehensive, actionable transformation roadmap for your organization.",
+        duration: "Engine Guide",
+        category: "Roadmap",
+        videoId: "jXtoM_-kiNY"
     },
     {
         id: 5,
-        title: "Change Management Best Practices",
-        description: "Expert tips on using our change module to drive adoption and minimize resistance during rollout.",
-        duration: "6:50",
-        category: "Change Mgmt",
-        thumbnail: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "HR Technology Maturity Analysis",
+        description: "Learn how to assess your current HR technology landscape and identify gaps with our Maturity Engine.",
+        duration: "Engine Guide",
+        category: "Maturity",
+        videoId: "bsW0rYwrBbQ"
     },
     {
         id: 6,
-        title: "Understanding Digital Maturity Scores",
-        description: "How to interpret your maturity analysis report and use it to benchmark against industry standards.",
-        duration: "7:10",
-        category: "Analytics",
-        thumbnail: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+        title: "HCM Vendor Fit & Selection",
+        description: "Discover how to find the perfect HCM vendor match based on your unique organizational requirements.",
+        duration: "Engine Guide",
+        category: "Vendor Fit",
+        videoId: "yTvgbv1Z1RU"
+    },
+    {
+        id: 7,
+        title: "Shared Services Designer",
+        description: "A tutorial on designing and optimizing your HR Shared Services model for maximum efficiency.",
+        duration: "Engine Guide",
+        category: "Shared Services",
+        videoId: "YOVD_7wszU4"
     }
 ];
 
 export default function VideoTutorialsPage() {
+
+    const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
     const breadcrumbSchema = generateBreadcrumbSchema([
         { name: "Home", url: "/" },
         { name: "Video Tutorials", url: "/video-tutorials" }
@@ -75,7 +87,7 @@ export default function VideoTutorialsPage() {
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/video-tutorials" />
+            <link rel="canonical" href="https://www.hrteksystem.com/video-tutorials" />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -83,7 +95,7 @@ export default function VideoTutorialsPage() {
             <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-outfit">
                 <Navbar />
 
-                <main className="flex-grow">
+                <main className="flex-grow relative">
                     {/* Hero Section */}
                     <div className="relative bg-[#001845] py-20 lg:py-32 overflow-hidden">
                         {/* Background Effects */}
@@ -122,11 +134,12 @@ export default function VideoTutorialsPage() {
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
                                     viewport={{ once: true }}
                                     className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-blue-900/5 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 border border-slate-100 group cursor-pointer"
+                                    onClick={() => setSelectedVideo(video.videoId)}
                                 >
                                     {/* Thumbnail Container */}
-                                    <div className="relative h-48 overflow-hidden">
+                                    <div className="relative h-48 overflow-hidden bg-slate-200">
                                         <img
-                                            src={video.thumbnail}
+                                            src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
                                             alt={video.title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
@@ -163,6 +176,38 @@ export default function VideoTutorialsPage() {
                         </div>
                     </div>
                 </main>
+
+                {/* Video Modal Popup */}
+                {selectedVideo && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        onClick={() => setSelectedVideo(null)}
+                    >
+                        <div
+                            className="bg-black relative w-full max-w-4xl aspect-video rounded-xl overflow-hidden shadow-2xl"
+                            onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside player
+                        >
+                            <iframe
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${selectedVideo}?autoplay=1`}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                            ></iframe>
+                            <button
+                                onClick={() => setSelectedVideo(null)}
+                                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <Footer />
             </div>
         </>

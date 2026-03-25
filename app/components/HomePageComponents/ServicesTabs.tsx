@@ -121,9 +121,9 @@ export default function ServicesTabs() {
     <section className="bg-gray-50 py-10 px-4">
       {/* Section Heading */}
       <div className="text-center mb-16 max-w-7xl mx-auto px-4">
-        <h3 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
+        <h2 className="font-roboto font-bold text-[22px] md:text-[32px] lg:text-[38px] leading-tight tracking-tight text-slate-800">
           HR Cognitive Autopilot Engines that Diagnose, Predict, Execute
-        </h3>
+        </h2>
       </div>
 
       {/* Tab Icons */}
@@ -147,15 +147,15 @@ export default function ServicesTabs() {
 
       {/* Service Card Display */}
       <div className="flex justify-center">
-        <div className="w-full max-w-7xl bg-white rounded-3xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl border border-gray-100 hover:border-blue-200 hover:-translate-y-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="w-full max-w-7xl bg-white rounded-3xl shadow-xl p-6 md:p-10 transform transition-all duration-500 hover:shadow-2xl border border-gray-100 hover:border-blue-200 hover:-translate-y-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left Side */}
             <div className="space-y-8">
               <div className="space-y-6">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+                <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
                   {current!.title}
-                </h1>
-                <p className="text-gray-700 text-lg">{current!.description}</p>
+                </h3>
+                <p className="text-gray-700 text-base sm:text-lg">{current!.description}</p>
                 <Link
                   to={current!.link}
                   className="inline-block border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-md"
@@ -163,11 +163,11 @@ export default function ServicesTabs() {
                   {current!.cta}
                 </Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-10 pt-20">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-10 mt-6 pt-6 border-t border-gray-100">
                 {current!.features.map((feature, idx) => (
                   <div className="flex items-center gap-2" key={idx}>
-                    <span className="text-xl">✔</span>
-                    <p className="text-lg text-gray-900 font-medium">
+                    <span className="text-blue-500 font-bold">✔</span>
+                    <p className="text-sm md:text-lg text-gray-900 font-medium">
                       {feature}
                     </p>
                   </div>

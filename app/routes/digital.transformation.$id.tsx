@@ -1,7 +1,8 @@
 //digital/transformation/digital_transformation
 import type { LoaderFunction, LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
+import Logo from "../components/ui/Logo";
 import { useMemo, useState } from "react";
 import { requireUserSession } from "~/lib/session.server";
 import { getCompanyProfile } from "~/models/company.model.server";
@@ -443,7 +444,23 @@ const mock = {
 
 // ---------- Loader ----------
 export const loader: LoaderFunction = async ({ request, params }) => {
-  return mock
+  const session = await requireUserSession(request);
+
+  if (!session.organisationId) {
+    throw redirect("/onboarding");
+  }
+
+  const analysis = await getLatestAnalysis(session.organisationId, "HR Digital Transformation");
+
+  if (!analysis) {
+    // Return mock for development if no analysis exists, or throw error in production
+    if (process.env.NODE_ENV === "development") {
+      return mock;
+    }
+    throw new Response("Analysis Not Found", { status: 404 });
+  }
+
+  return analysis;
 };
 // ---------- Small UI helpers ----------
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -455,11 +472,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string | number }) {
+function StatTile({ label, value, desc }: { label: string; value: string | number; desc?: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-gray-900">{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</div>
+      <div className="text-3xl font-black text-slate-900">{value}</div>
+      {desc && <div className="mt-2 text-[10px] text-slate-500 font-medium leading-tight">{desc}</div>}
     </div>
   );
 }
@@ -614,16 +632,13 @@ export default function ReportSingleFile() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="mx-auto max-w-7xl px-6 py-5 flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="flex-shrink-0">
-              <img src="/hrtek_logo.png" alt="HRTEK Logo" className="h-12 w-auto object-contain" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
-                HRTEK <span className="text-blue-600">SYSTEM</span>
-                <span className="text-gray-400 font-normal ml-2">— Executive Report</span>
+          <div className="flex items-center gap-6">
+            <Logo showText={true} className="scale-100" />
+            <div className="border-l border-gray-200 pl-6">
+              <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase mb-0.5">
+                Executive Report
               </h1>
-              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-1">
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">
                 Company: <span className="text-gray-800">{result.meta.companyPk}</span> • Generated:{" "}
                 {new Date(result.meta.generatedAt).toLocaleString()}
               </p>
@@ -640,13 +655,18 @@ export default function ReportSingleFile() {
       {/* Body */}
       <main className="mx-auto max-w-7xl px-6 py-6 space-y-8">
         {/* At-a-Glance */}
-        <Section title="At-a-Glance">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <StatTile label="Total Initiatives" value={totals.n} />
-            <StatTile label="Quick Wins" value={result.quickWins.length} />
-            <StatTile label="Long-Term Bets" value={result.longTermBets.length} />
-            <StatTile label="Avg Readiness" value={totals.avgR} />
-            <StatTile label="Avg Impact" value={totals.avgI} />
+        <Section title="Ecosystem Snapshot">
+          <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm mb-8">
+            <p className="text-sm text-slate-500 mb-8 max-w-2xl leading-relaxed">
+              This dashboard provides a high-level overview of your <strong>Digital Transformation Portfolio</strong>. We have synthesized multi-engine data to categorize initiatives based on their immediate impact and resource readiness. Use this snapshot to verify alignment with board-level mandates.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+              <StatTile label="Total Initiatives" value={totals.n} desc="Total projects identified" />
+              <StatTile label="Quick Wins" value={result.quickWins.length} desc="High impact, low effort" />
+              <StatTile label="Long-Term Bets" value={result.longTermBets.length} desc="Strategic multi-year value" />
+              <StatTile label="Avg Readiness" value={totals.avgR} desc="Organizational capability" />
+              <StatTile label="Avg Impact" value={totals.avgI} desc="Value delivery index" />
+            </div>
           </div>
         </Section>
 
@@ -742,12 +762,36 @@ export default function ReportSingleFile() {
         </Section>
 
         {/* Readiness × Impact */}
-        <Section title="Readiness × Impact">
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <ScatterFallback points={points} />
-            <p className="text-xs text-gray-500 mt-2">
-              Top-right quadrant indicates high-priority candidates.
-            </p>
+        <Section title="Strategic Prioritization Matrix">
+          <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm">
+            <div className="flex flex-col md:flex-row gap-10 items-start">
+              <div className="flex-1 w-full overflow-hidden">
+                <ScatterFallback points={points} />
+              </div>
+              <div className="md:w-80 space-y-6">
+                <div className="p-6 bg-slate-900 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-2xl rounded-full -mt-16 -mr-16" />
+                  <h4 className="text-xs font-black uppercase tracking-widest text-indigo-400 mb-4">Quadrant Guide</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+                      <p className="text-[11px] leading-relaxed"><span className="font-black text-white">Top Right:</span> Strategic Imperatives. High impact and high readiness. Execute immediately.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0" />
+                      <p className="text-[11px] leading-relaxed"><span className="font-black text-white">Top Left:</span> Big Bets. High impact but low readiness. Requires resourcing first.</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                      <p className="text-[11px] leading-relaxed"><span className="font-black text-white">Bottom Right:</span> Tactical Gains. Low impact but high readiness. Good for momentum.</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 italic leading-relaxed">
+                  * Each point represents a distinct transformation initiative. Hover over points (on desktop) or check the "Top Priorities" list for detailed rationale.
+                </p>
+              </div>
+            </div>
           </div>
         </Section>
 

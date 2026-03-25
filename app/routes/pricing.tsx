@@ -1,8 +1,7 @@
-import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { Map, Puzzle, FileBarChart2, DraftingCompass, Shapes, Check, Zap } from "lucide-react";
 import { SUBSCRIPTION_TIERS, ENGINE_PRICING, BUNDLE_PRICING } from "~/config/pricing.config";
-import { formatCurrency } from "~/services/pricing.calculator";
 import { getUserSession } from "~/lib/session.server";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
 
@@ -11,18 +10,22 @@ export const meta: MetaFunction = () => {
         title: "Pricing Plans - Affordable HR Transformation Solutions",
         description: "Explore HRTek System's flexible pricing plans for HR transformation. Choose from Starter, Professional, or Enterprise packages. Transparent pricing with no hidden fees.",
         keywords: "HR software pricing, HCM pricing, HR transformation cost, affordable HR solutions, enterprise HR pricing",
-        url: "https://hrteksystem.com/pricing",
-        image: "https://hrteksystem.com/og-pricing.jpg",
+        url: "https://www.hrteksystem.com/pricing",
+        image: "https://www.hrteksystem.com/logo_icon_final.png",
+        robots: "noindex, nofollow", 
     });
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const user = await getUserSession(request);
+    if (!user) {
+        return redirect("/auth?redirectTo=/pricing");
+    }
     return json({
         tiers: SUBSCRIPTION_TIERS,
         engines: ENGINE_PRICING,
         bundle: BUNDLE_PRICING.allEngines,
-        isLoggedIn: !!user
+        isLoggedIn: true
     });
 }
 
@@ -30,7 +33,7 @@ import Navbar from "~/components/HomePageComponents/Navbar";
 import Footer from "~/components/Footer";
 
 export default function PricingPage() {
-    const { tiers, engines, bundle, isLoggedIn } = useLoaderData<typeof loader>();
+    const { tiers, engines, isLoggedIn } = useLoaderData<typeof loader>();
 
     // Breadcrumb Schema
     const breadcrumbSchema = generateBreadcrumbSchema([
@@ -58,7 +61,7 @@ export default function PricingPage() {
 
     return (
         <>
-            <link rel="canonical" href="https://hrteksystem.com/pricing" />
+            <link rel="canonical" href="https://www.hrteksystem.com/pricing" />
 
             {/* Breadcrumb Schema */}
             <script
@@ -87,7 +90,7 @@ export default function PricingPage() {
                         </div>
 
                         {/* Main Heading */}
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8">
+                        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8">
                             The Intelligence Layer
                             <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                                 For HR Transformation
@@ -121,7 +124,7 @@ export default function PricingPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mb-16">
-                            {engines.map((engine, index) => (
+                            {engines.map((engine) => (
                                 <Link
                                     key={engine.id}
                                     to={isLoggedIn ? `/engine/${engine.id}` : `/auth?redirectTo=/engine/${engine.id}`}
@@ -135,10 +138,7 @@ export default function PricingPage() {
                                                 {getEngineIcon(engine.id, "w-10 h-10 text-[#023e8a] group-hover:text-white transition-colors duration-500")}
                                             </div>
                                             <div className="text-right">
-                                                <div className="text-3xl font-bold text-gray-900 tracking-tight">
-                                                    {formatCurrency(engine.basePrice, "INR")}
-                                                </div>
-                                                <div className="text-xs font-semibold text-blue-600 uppercase tracking-widest mt-1">Single Access</div>
+                                                <div className="text-sm font-semibold text-blue-600 uppercase tracking-widest">Contact Us</div>
                                             </div>
                                         </div>
 
@@ -170,7 +170,7 @@ export default function PricingPage() {
                                             <span className="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-widest">
                                                 Infinite Value Bundle
                                             </span>
-                                            <span className="text-green-600 font-bold text-lg">Save {formatCurrency(bundle.savings, "INR")}</span>
+                                            <span className="text-green-600 font-bold text-lg">Best Value Bundle</span>
                                         </div>
                                         <h3 className="text-4xl font-bold text-gray-900">The Complete Cognitive Suite</h3>
                                         <p className="text-xl text-gray-600 leading-relaxed">
@@ -179,11 +179,8 @@ export default function PricingPage() {
                                     </div>
                                     <div className="text-center lg:text-right space-y-6">
                                         <div>
-                                            <div className="text-gray-400 line-through text-2xl font-bold">
-                                                {formatCurrency(bundle.regularPrice, "INR")}
-                                            </div>
-                                            <div className="text-6xl font-bold text-green-600 tracking-tighter">
-                                                {formatCurrency(bundle.bundlePrice, "INR")}
+                                            <div className="text-2xl font-bold text-green-600 tracking-tighter">
+                                                Custom Pricing
                                             </div>
                                         </div>
                                         <Link
@@ -220,8 +217,8 @@ export default function PricingPage() {
                             {tiers.map((tier) => (
                                 <div
                                     key={tier.id}
-                                    className={`relative rounded-[2.5rem] p-10 flex flex-col transition-all duration-500 group border-2 ${tier.id === "enterprise"
-                                        ? "bg-gradient-to-br from-blue-900 via-[#000814] to-indigo-950 border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.3)] scale-110 z-20"
+                                    className={`relative rounded-[2.5rem] p-8 sm:p-10 flex flex-col transition-all duration-500 group border-2 ${tier.id === "enterprise"
+                                        ? "bg-gradient-to-br from-blue-900 via-[#000814] to-indigo-950 border-blue-500 shadow-[0_0_50px_rgba(59,130,246,0.3)] lg:scale-110 z-20"
                                         : "bg-[#0b132b] border-[#1c2a4a] hover:border-blue-400/50 hover:bg-[#121f3d]"
                                         }`}
                                 >
@@ -239,8 +236,7 @@ export default function PricingPage() {
                                             {tier.employeeMin.toLocaleString()} - {tier.employeeMax ? tier.employeeMax.toLocaleString() : "Unlimited"} EMPLOYEES
                                         </div>
                                         <div className="flex items-baseline justify-center gap-2">
-                                            <span className="text-3xl lg:text-4xl font-bold text-white">{formatCurrency(tier.annualFee, "INR")}</span>
-                                            <span className="text-blue-200/50 font-bold uppercase text-sm">/year</span>
+                                            <span className="text-2xl lg:text-3xl font-bold text-white">Custom Pricing</span>
                                         </div>
                                     </div>
 

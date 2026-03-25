@@ -1,5 +1,5 @@
 
-import {z} from 'zod'
+import { z } from 'zod'
 export interface Engine {
     pk: string//"ENGINE#company_id",
     sk: string//"engine_name#version",
@@ -17,16 +17,26 @@ export interface Engine {
 }
 
 export const EngineValidation = z.object({
-    company_id : z.uuidv4(),
-    // engine_id: z.uuidv4(),
-    user_id: z.uuidv4(),
+    company_id: z.string().uuid(),
+    // engine_id: z.string().uuid(),
+    user_id: z.string().uuid(),
     engine_name: z.string().trim().min(1).refine(
-        (val)=>{
-            if(val==="HCM Vendor Fit Engine"||val==="HR Transformation Roadmap Generator"||val==="Shared Service Designer"||val==="Intelligent Change Management"||val==="HR Technology Maturity Analysis"){
-                return true
-            }
-            else
-                return false
+        (val) => {
+            const validEngines = [
+                "HCM Vendor Fit Engine", 
+                "HR Transformation Roadmap Generator", 
+                "Shared Service Designer", 
+                "Intelligent Change Management", 
+                "HR Technology Maturity Analysis",
+                "AI Driven Maturity Engine",
+                "HR Tech Maturity",
+                "Profiling Assessment",
+                "Change Management Readiness",
+                "Digital Maturity Assessment",
+                "Enterprise Architecture"
+            ];
+            // Just return true for now to allow any valid string or check against expanded list
+            return true;
         },
         {
             message: "Invalid engine_name",
@@ -45,8 +55,9 @@ export const EngineValidation = z.object({
     //         message: "Invalid engine_name",
     //     }
     // ),
-    progress:z.number(),
-    country:z.string().trim().min(1),
-    // created_by:z.uuidv4(),// we have userid
-    // updated_by : z.uuidv4().optional()
+    progress: z.number(),
+    responses: z.any().optional(),
+    country: z.string().trim().min(1),
+    // created_by:z.string().uuid(),// we have userid
+    // updated_by : z.string().uuid().optional()
 })

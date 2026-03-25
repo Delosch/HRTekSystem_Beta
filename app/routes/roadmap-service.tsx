@@ -1,6 +1,6 @@
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
-import { Link, useRouteLoaderData } from "@remix-run/react";
+import { useRouteLoaderData, Link } from "@remix-run/react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import React, { useState } from "react";
 import BookingModal from "~/components/HomePageComponents/BookingModal";
@@ -12,8 +12,8 @@ export const meta: MetaFunction = () => {
     title: "HR Transformation Roadmap Generator - Strategic Planning",
     description: "Generate AI-powered HR transformation roadmaps tailored to your organization. Strategic planning with ROI focus, timeline optimization, and actionable milestones.",
     keywords: "HR roadmap, transformation planning, HR strategy, digital roadmap, HR transformation timeline, strategic HR planning",
-    url: "https://hrteksystem.com/roadmap-service",
-    image: "https://hrteksystem.com/og-roadmap.jpg",
+    url: "https://www.hrteksystem.com/roadmap-service",
+    image: "https://www.hrteksystem.com/og-roadmap.jpg",
   });
 };
 
@@ -45,12 +45,12 @@ export default function RoadmapGenServicePage() {
     description: "AI-powered strategic roadmap generation for HR digital transformation",
     provider: "HRTek System",
     areaServed: "Global",
-    url: "https://hrteksystem.com/roadmap-service"
+    url: "https://www.hrteksystem.com/roadmap-service"
   });
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/roadmap-service" />
+      <link rel="canonical" href="https://www.hrteksystem.com/roadmap-service" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -104,21 +104,18 @@ export default function RoadmapGenServicePage() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Link
-                    to="/engine/digital-roadmap"
-                    className="group px-8 py-4 bg-white text-[#023e8a] rounded-xl font-bold text-lg shadow-2xl hover:shadow-cyan-500/50 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex items-center justify-center gap-2"
-                  >
-                    Start Assessment
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
                   <button
                     onClick={() => setShowPopup(true)}
                     className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl font-bold text-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105"
                   >
                     Talk to Expert
                   </button>
+                  <Link
+                    to="/digital-roadmap/assessment"
+                    className="px-8 py-4 bg-white text-blue-900 rounded-xl font-bold text-lg hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center justify-center"
+                  >
+                    Start Roadmap Diagnostic
+                  </Link>
                 </div>
 
                 {/* Stats */}
@@ -299,6 +296,26 @@ export default function RoadmapGenServicePage() {
         </section>
 
 
+        {/* Video Tutorial Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-10">
+              <span className="inline-block px-4 py-1 bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-widest rounded-full mb-4">Video Tutorial</span>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">See HR Transformation Roadmap Generator In Action</h2>
+              <p className="text-gray-500 max-w-xl mx-auto text-sm">Watch how the Roadmap Generator turns your assessment data into a structured, AI-powered HR transformation plan.</p>
+            </div>
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-slate-900" style={{ aspectRatio: '16/9' }}>
+              <iframe
+                src="https://www.youtube.com/embed/jXtoM_-kiNY"
+                title="HR Transformation Roadmap Generator Tutorial"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Call to Action */}
         <section className="bg-blue-700 text-white py-16">
           <div className="max-w-3xl mx-auto text-center px-6">
@@ -306,8 +323,7 @@ export default function RoadmapGenServicePage() {
               Ready to Begin Your Transformation Journey
             </h2>
             <p className="text-lg mb-8">
-              Take the assessment today and let HR-Tek System show you a smarter
-              path forward.
+              Connect with our HR experts to discover how HR-Tek can accelerate your transformation.
             </p>
 
             <div className="flex flex-col gap-4 items-center">
@@ -317,7 +333,6 @@ export default function RoadmapGenServicePage() {
               >
                 Talk to a Consultant
               </button>
-              <Link to="/engine/digital-roadmap" className="bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold shadow-md hover:bg-gray-100 transition-all duration-300 text-center">Take the Assessment</Link>
             </div>
           </div>
         </section>

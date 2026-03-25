@@ -21,6 +21,23 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   }
 
   const questions = await getLatestQuestion(engineName);
+  
+  // Redirect logic for consistency
+  const normalizedEngineName = engineName.toLowerCase().replace(/ assessment$/i, "").trim();
+  
+  if (normalizedEngineName.includes("hr technology maturity") || normalizedEngineName.includes("ai maturity") || normalizedEngineName.includes("hr-tech-maturity")) {
+    return redirect("/ai-maturity/assessment");
+  }
+  if (normalizedEngineName.includes("digital roadmap") || normalizedEngineName.includes("hr transformation roadmap")) {
+    return redirect("/digital-roadmap/assessment");
+  }
+  if (normalizedEngineName.includes("change management")) {
+    return redirect("/change-management/assessment");
+  }
+  if (normalizedEngineName.includes("shared service")) {
+    return redirect("/shared-services/assessment");
+  }
+
   return json({ questions, engineName });
 };
 

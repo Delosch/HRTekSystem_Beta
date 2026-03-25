@@ -9,8 +9,8 @@ export const meta: MetaFunction = () => {
     title: "Careers at HRTek System - Join Our Team",
     description: "Explore exciting career opportunities at HRTek System. Join our innovative team transforming HR technology. We're hiring talented professionals passionate about HR innovation.",
     keywords: "HRTek careers, HR tech jobs, join HRTek, HR technology careers, work at HRTek, HR transformation jobs",
-    url: "https://hrteksystem.com/careers",
-    image: "https://hrteksystem.com/og-careers.jpg",
+    url: "https://www.hrteksystem.com/careers",
+    image: "https://www.hrteksystem.com/og-careers.jpg",
   });
 };
 
@@ -35,7 +35,7 @@ export default function CareerPage() {
 
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/careers" />
+      <link rel="canonical" href="https://www.hrteksystem.com/careers" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -50,13 +50,13 @@ export default function CareerPage() {
                 {/* Left Side: Text and CTA */}
                 <div className="space-y-8">
                   <div>
-                    <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
+                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
                       <span className="text-6xl md:text-7xl lg:text-9xl text-white whitespace-nowrap">Careers</span>
                       <br />
                       <span className="font-light text-[#D4E1F4] text-xl md:text-3xl">
                         Find Your Place with HR-Tek
                       </span>
-                    </h2>
+                    </h1>
                   </div>
                   <p className="text-lg italic text-[#C5D5EC] max-w-xl">
                     At the heart of our success is our people. We believe in

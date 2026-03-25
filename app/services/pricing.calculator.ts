@@ -230,22 +230,13 @@ export function calculateUpgradeCost(
 /**
  * Format currency
  */
-export function formatCurrency(amount: number, currency: string): string {
-    const symbols: { [key: string]: string } = {
-        INR: "₹",
-        USD: "$",
-        EUR: "€",
-        GBP: "£",
-        AED: "AED "
-    };
-
-    const symbol = symbols[currency] || currency;
-    const formatted = amount.toLocaleString("en-IN", {
-        minimumFractionDigits: 0,
+export function formatCurrency(amount: number, currency: string = "INR"): string {
+    const locale = currency === "INR" ? "en-IN" : "en-US";
+    return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: currency,
         maximumFractionDigits: 0
-    });
-
-    return `${symbol}${formatted}`;
+    }).format(amount);
 }
 
 /**

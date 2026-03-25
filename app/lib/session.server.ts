@@ -21,25 +21,25 @@ try {
     ddbDocClient = getDynamoDBDocumentClient();
 } catch (e: unknown) {
     if (e instanceof Error) {
-        console.error(`CRITICAL ERROR: Application cannot start due to DynamoDB client error: ${e.message}`);
+        console.error(`⚠️ WARNING: DynamoDB client initialization failed: ${e.message}`);
     } else {
-        console.error("CRITICAL ERROR: Application cannot start due to an unknown DynamoDB client error.");
+        console.error("⚠️ WARNING: DynamoDB client initialization failed with an unknown error.");
     }
-    process.exit(1);
+    // Removed process.exit(1) to prevent dev server crashes on temporary network issues
 }
 
 // Define the name of your DynamoDB table.
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
-const USERS_TABLE = process.env.DYNAMODB_TABLE_NAME;
 const SESSIONS_TABLE = "sessions";
-const expiryTime = 60 * 60 * 60 * 24
+// Session duration: 24 hours
+const expiryTime = 60 * 60 * 24;
 
 // Create a cookie to store the session ID on the client.
 const session_cookie = createCookie("__session", {
-    // These secrets are used to sign and encrypt the cookie's value, which is just the session ID.
-    secrets: ["4d186321c1a7f0f354b297e8914ab240", "5d41402abc4b2a76b9719d911017c592", "16e2d966d4ab046e2442bc008b4da566", "608333adc72f545078ede3aad71bfe74", "c0e89a293bd36c7a768e4e9d2c5475a8"],
+    // Use environment secret if available, with fallbacks for local security
+    secrets: process.env.SESSION_SECRET ? [process.env.SESSION_SECRET] : ["4d186321c1a7f0f354b297e8914ab240", "5d41402abc4b2a76b9719d911017c592", "16e2d966d4ab046e2442bc008b4da566"],
     httpOnly: true,
-    maxAge: expiryTime, // 1 hour
+    maxAge: expiryTime,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: '/',
@@ -58,7 +58,9 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         const sessionId = uuidv4();
         // DynamoDB uses epoch time for TTL.
         // It's important to have a TTL attribute enabled on the DynamoDB table for this to work.
-        const expiresAt = expires ? Math.floor(Date.now() / 1000) + expiryTime : undefined;
+        // If Remix provides an 'expires' date (from cookie maxAge), use it.
+        // Otherwise, default to Date.now() + expiryTime.
+        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : Math.floor(Date.now() / 1000) + expiryTime;
 
         // Use the PutCommand to store the session data.
         const command = new PutCommand({
@@ -71,6 +73,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`✅ [SESSION STORAGE] Created session: ${sessionId}`);
         return sessionId;
     },
 
@@ -83,31 +86,46 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         if (!sessionId) {
             return null;
         }
-        const command = new GetCommand({
-            TableName: SESSIONS_TABLE,
-            Key: { sessionId },
-        });
 
-        const { Item } = await ddbDocClient.send(command);
-
-        if (!Item) {
-            return null;
-        }
-
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        // Check if the session has expired based on the TTL.
-        if (Item.expires && Item.expires < nowInSeconds) {
-            // If expired, delete the session and return null.
-            const command = new DeleteCommand({
+        // Add retry logic to prevent race conditions during session creation
+        // DynamoDB writes are eventually consistent by default, so a slight delay
+        // might occur before the item is readable.
+        for (let i = 0; i < 2; i++) {
+            const command = new GetCommand({
                 TableName: SESSIONS_TABLE,
                 Key: { sessionId },
             });
-            await ddbDocClient.send(command);
-            return null;
+
+            const { Item } = await ddbDocClient.send(command);
+
+            if (Item) {
+                console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Found`);
+
+                const nowInSeconds = Math.floor(Date.now() / 1000);
+                // Check if the session has expired based on the TTL.
+                if (Item.expiresAt && Item.expiresAt < nowInSeconds) {
+                    // If expired, delete the session and return null.
+                    const command = new DeleteCommand({
+                        TableName: SESSIONS_TABLE,
+                        Key: { sessionId },
+                    });
+                    await ddbDocClient.send(command);
+                    return null;
+                }
+
+                // Return the session data if it's valid.
+                return Item.data;
+            }
+
+            // If not found, wait slightly before retrying
+            if (i === 0) {
+                console.warn(`⏳ [SESSION STORAGE] Session ${sessionId} not found on first attempt, retrying in 50ms...`);
+                await new Promise(r => setTimeout(r, 50));
+            }
         }
 
-        // Return the session data if it's valid.
-        return Item.data;
+        console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Not Found`);
+        return null;
     },
 
     /**
@@ -120,7 +138,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         if (!sessionId) {
             return;
         }
-        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : undefined;
+        const expiresAt = expires ? Math.floor(expires.getTime() / 1000) : Math.floor(Date.now() / 1000) + expiryTime;
 
         const command = new PutCommand({
             TableName: SESSIONS_TABLE,
@@ -132,6 +150,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`update [SESSION STORAGE] Updated session: ${sessionId}`);
     },
 
     /**
@@ -148,6 +167,7 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
+        console.log(`🗑️ [SESSION STORAGE] Deleted session: ${sessionId}`);
     }
 });
 
@@ -161,18 +181,23 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
  * @throws {Response} A Remix Response object with an error status if validation or session commitment fails.
  */
 export async function createAuthSession(
-    data: z.infer<typeof authSessionSchema>,
+    request: Request,
+    data: any,
     redirectTo: string = '/auth/drx' // Default redirect path
 ): Promise<Response> {
     let validatedData: z.infer<typeof authSessionSchema>;
     try {
         validatedData = authSessionSchema.parse(data);
     } catch (error) {
-        console.error("Session login failed: Invalid data");
-        return json({ error: "Invalid session data provided." }, { status: 400 });
+        if (error instanceof z.ZodError) {
+            console.error("❌ Session Data Validation Failed:", JSON.stringify(error.flatten().fieldErrors, null, 2));
+        } else {
+            console.error("❌ Session login failed: Unknown validation error");
+        }
+        return json({ error: "Authentication successful, but session initialization failed. Please contact support." }, { status: 400 });
     }
 
-    const session = await getSession();
+    const session = await getSession(request.headers.get("Cookie"));
 
     // Set all validated user data into the session
     Object.entries(validatedData).forEach(([key, value]) => {
@@ -219,9 +244,10 @@ export async function getUserSession(request: Request): Promise<SessionData | nu
             onboardingStatus: session.get("onboardingStatus"),
             organisationId: session.get("organisationId"),
             country_iso: session.get("country_iso"),
-            photoUrl: session.get("photoUrl"),
-            username: session.get("username"),
-            isAdmin: session.get("isAdmin")
+            two_fa_enabled: session.get("two_fa_enabled") ?? false,
+            photoUrl: session.get("photoUrl") ?? null,
+            username: session.get("username") ?? null,
+            isAdmin: session.get("isAdmin") ?? false
         };
 
         // Ensure all required fields are present and valid according to sessionDataSchema

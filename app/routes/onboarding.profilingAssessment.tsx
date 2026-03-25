@@ -1,18 +1,18 @@
+import { useEffect } from "react";
 import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { commitSession, getSession, requireUserSession } from "~/lib/session.server";
 import { getLatestQuestion, save_answers } from "~/utils/question.utils";
 import QuestionnaireEngine from "~/components/QuestionnaireEngine";
 import type { QuestionSchema } from "./engine.$id/questionSchema";
 import { updateUser } from "~/models/user.model.server";
-import { generate } from "~/lib/processor.genAi";
 import { createOrUpdateEngineStorage, fetchEngineRecomendations } from "~/models/engine.model.server";
 import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server";
 import { calculateFinalPrice } from "~/lib/pricing";
 
 // let's keep a single variable just now to manage assessment form
 const variable = "Profiling Assessment"
-const prompt_id = "digital_maturity"
+
 export const loader: LoaderFunction = async ({ request }: { request: Request }) => {
   const session = await requireUserSession(request)
   if (session) {
@@ -27,7 +27,11 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
       );
     }
 
-    return json(questions); // Ensure we return structured JSON
+    const draftScope = session.organisationId || session.userId || "anonymous";
+    return json({
+      ...questions,
+      draftScope,
+    });
   }
   return redirect('/auth');
 };
@@ -35,27 +39,30 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 export const action: ActionFunction = async ({ request }) => {
   const user = await requireUserSession(request);
   const body = await request.json();
-  // we were working here first check complete status
-  console.log(body.progress)
 
+  console.log(`[Assessment Action] Progress status: ${body.progress}`);
 
   const companyId = user.organisationId;
-  if (!companyId || !body.assessment_id) {
+  const assessmentId = body.assessment_id?.replace("QUESTION#", "");
+
+  if (!companyId || !assessmentId) {
+    console.error("[Assessment Action] Missing companyId or assessmentId");
     return json({ error: "Missing required data" }, { status: 400 });
   }
-  await save_answers(companyId, body.assessment_id.replace("QUESTION#", ""), user.userId, body);
-  if (body.progress)
-    if (body.progress == 100.00) {
-      console.log("completed answers")
+
+  try {
+    await save_answers(companyId, assessmentId, user.userId, body);
+
+    if (body.progress === 100 || body.progress === "100.00") {
       const session = await getSession(request.headers.get("Cookie"));
       session.set("onboardingStatus", "Completed");
-      await updateUser(user.userId, { onboardingStatus: "Completed" })
+      await updateUser(user.userId, { onboardingStatus: "Completed" });
 
       // Mark engine complete in storage
       await createOrUpdateEngineStorage({
         company_id: companyId,
         user_id: user.userId,
-        engine_name: variable,
+        engine_name: "HR Technology Maturity Analysis",
         country: user.country_iso,
         progress: 100
       });
@@ -74,13 +81,16 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to notify admin about assessment:", notifierError);
       }
 
+      /**
+       * REMOVED: Automatic payment requirement for Profiling Assessment
+       * The user requested this assessment to be free.
+       * 
       // Add to cart logic
       try {
         const recommendation = await fetchEngineRecomendations(companyId);
         const rankings = recommendation && recommendation.allRankings ? recommendation.allRankings : [];
         const orgOverview = body.answers ? body.answers["Section 1: Organization Overview"] : {};
 
-        // Use "Digital Maturity Assessment" as the product name for pricing since that's what's generated
         const productName = "Digital Maturity Assessment";
         const price = calculateFinalPrice(productName, orgOverview, user.country_iso, new Map(rankings));
 
@@ -95,6 +105,7 @@ export const action: ActionFunction = async ({ request }) => {
       } catch (cartError) {
         console.warn("Failed to add profiling assessment to cart:", cartError);
       }
+      */
 
       // Sync eligibility record
       try {
@@ -104,79 +115,83 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);
       }
 
-      // Commit the session and redirect
-      return redirect("/intermediate", {
+      return json({ success: true, redirect: "/intermediate" }, {
         headers: {
           "Set-Cookie": await commitSession(session),
         },
       });
     }
 
-  return json({ message: "Received!" });
+    return json({ success: true, message: "Received!" });
+  } catch (error) {
+    console.error("[Assessment Action] Error:", error);
+    return json({ error: "Failed to save assessment data" }, { status: 500 });
+  }
 };
 
 export default function ProfilingAssessment() {
-  const LoaderData = useLoaderData() as QuestionSchema;
+  const LoaderData = useLoaderData() as QuestionSchema & { draftScope?: string };
   const navigate = useNavigate();
+  const fetcher = useFetcher();
+  const scopedDraftKey = `draft_${LoaderData.pk}_${LoaderData.draftScope || "default"}`;
+
+  // Redirection handling from fetcher
+  useEffect(() => {
+    if (fetcher.data && (fetcher.data as any).redirect) {
+      localStorage.removeItem(scopedDraftKey);
+      window.location.href = (fetcher.data as any).redirect;
+    }
+  }, [fetcher.data, scopedDraftKey]);
 
   const handleStepSave = async (stepData: any) => {
-    console.log("Saving step:", stepData);
-    const response = await fetch('/onboarding/profilingAssessment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    fetcher.submit(
+      {
         assessment_id: LoaderData.pk,
         progress: stepData.progress,
         section: stepData.stepName,
         answers: stepData.answers,
         currentStepIndex: stepData.stepIndex,
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Failed to save step:", errorData);
-      throw new Error(errorData.error || 'Failed to save step');
-    }
+      },
+      {
+        method: "POST",
+        encType: "application/json"
+      }
+    );
   };
 
   const handleComplete = async (allData: any) => {
-    // Handle final completion
-    console.log('Assessment completed! Submitting final results...', allData);
-
-    const response = await fetch('/onboarding/profilingAssessment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    fetcher.submit(
+      {
         assessment_id: LoaderData.pk,
         progress: 100,
         section: "Completion",
         answers: allData,
-      })
-    });
-
-    if (response.ok) {
-      const result = await response.json();
-      if (result.redirect) {
-        window.location.href = result.redirect;
-      } else {
-        navigate('/intermediate');
+      },
+      {
+        method: "POST",
+        encType: "application/json"
       }
-    } else {
-      console.error("Failed to submit final assessment");
-      alert("Failed to submit final assessment. Please try again.");
-    }
+    );
   };
 
   return (
-    <QuestionnaireEngine
-      steps={LoaderData.parts}
-      assessmentId={LoaderData.pk}
-      title="Company Assessment Form"
-      onStepSave={handleStepSave}
-      onComplete={handleComplete}
-      onNavigateBack={() => navigate('/onboarding/company')}
-      onError={(error, context) => console.error(`Error in ${context}:`, error)}
-    />
+    <>
+      <QuestionnaireEngine
+        steps={LoaderData.parts}
+        assessmentId={LoaderData.pk}
+        autoSaveKey={scopedDraftKey}
+        title="Company Assessment Form"
+        onStepSave={handleStepSave}
+        onComplete={handleComplete}
+        onNavigateBack={() => navigate('/onboarding/company')}
+        onError={(error, context) => console.error(`Error in ${context}:`, error)}
+      />
+      {/* Optional: Show error if submission fails */}
+      {fetcher.data && (fetcher.data as any).error && (
+        <div className="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-lg z-50">
+          {(fetcher.data as any).error}
+        </div>
+      )}
+    </>
   );
 }

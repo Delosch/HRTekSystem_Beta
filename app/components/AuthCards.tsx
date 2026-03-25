@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "@remix-run/react";
 import {
   motion,
   AnimatePresence,
   useMotionValue,
   useMotionTemplate,
 } from "framer-motion";
-import { Form, Link } from "@remix-run/react";
+import { Form, Link, useActionData } from "@remix-run/react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 import countryCode from "app/data/country_code_order.json";
 import {
@@ -18,9 +19,9 @@ import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
   XMarkIcon,
-  CpuChipIcon,
 } from "@heroicons/react/24/outline";
 import { getUserCountryFromIP } from "~/utils/ip.detector";
+import Logo from "./ui/Logo";
 
 export interface Country {
   iso2: string;
@@ -134,10 +135,15 @@ const createEnhancedCountryMappings = (countries: Country[]) => {
   };
 };
 
-export default function AuthForm() {
+export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: boolean }) {
   // FIXED: Add proper hydration control
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
+  useEffect(() => {
+    setIsLogin(initialIsLogin);
+  }, [initialIsLogin]);
+
+  const actionData = useActionData<{ error?: string; success?: string }>();
 
   // Country and phone control with enhanced mapping
   const [selectedCountryIso, setSelectedCountryIso] = useState("IN");
@@ -178,6 +184,21 @@ export default function AuthForm() {
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
   const [siteKey, setSiteKey] = useState<string | null>(null);
+
+  // Reset Captcha on Error
+  useEffect(() => {
+    if (actionData?.error) {
+      showToast(actionData.error, "error");
+      resetCaptchaUi();
+      // Force regeneration of submission hash on error to ensure freshness
+      const regenerateHash = async () => {
+        const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
+        setSubmissionHash(freshHash);
+        setFormTimestamp(freshTimestamp);
+      };
+      regenerateHash();
+    }
+  }, [actionData]);
 
   // FIXED: Ensure client-side only operations
   useEffect(() => {
@@ -274,13 +295,14 @@ export default function AuthForm() {
       const hashHex = hashArray
         .map((b) => b.toString(16).padStart(2, "0"))
         .join("");
-      return hashHex.slice(0, 16);
+      return { hash: hashHex.slice(0, 16), timestamp };
     } catch (error) {
       console.warn(
         "Failed to generate secure hash, falling back to simple hash:",
         error
       );
-      return generateSimpleSubmissionHash();
+      const timestamp = Date.now();
+      return { hash: generateSimpleSubmissionHash(), timestamp };
     }
   };
 
@@ -314,41 +336,9 @@ export default function AuthForm() {
   useEffect(() => {
     if (isHydrated && (password || confirmPassword)) {
       const generateHash = async () => {
-        const timestamp = Date.now();
-
-        // Set timestamp in form field
+        const { hash, timestamp } = await generateSecureSubmissionHash();
+        setSubmissionHash(hash);
         setFormTimestamp(timestamp);
-
-        const formData = {
-          action: isLogin ? "sign_in" : "sign_up",
-          password: password,
-          confirmPassword: confirmPassword,
-          timestamp: timestamp,
-          countryComposite: `${selectedCountryIso}_${selectedDialCode}`,
-          email: email || "",
-        };
-
-        const dataString = Object.values(formData).join("|");
-
-        try {
-          const encoder = new TextEncoder();
-          const data = encoder.encode(dataString);
-          const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const hashHex = hashArray
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          setSubmissionHash(hashHex.slice(0, 16));
-        } catch (error) {
-          // Fallback to simple hash
-          let hash = 0;
-          for (let i = 0; i < dataString.length; i++) {
-            const char = dataString.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash;
-          }
-          setSubmissionHash(Math.abs(hash).toString(36));
-        }
       };
 
       const timeoutId = setTimeout(generateHash, 500);
@@ -509,8 +499,9 @@ export default function AuthForm() {
     }
 
     // Generate fresh hash right before submission
-    const freshHash = await generateSecureSubmissionHash();
+    const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
     setSubmissionHash(freshHash);
+    setFormTimestamp(freshTimestamp);
 
     // Enhanced password validation before submission
     if (!isLogin) {
@@ -538,9 +529,11 @@ export default function AuthForm() {
       return;
     }
   };
+  const navigate = useNavigate();
 
   const handleFormSwitch = () => {
-    setIsLogin(!isLogin);
+    const nextMode = isLogin ? "signup" : "login";
+    navigate(`/auth?mode=${nextMode}`, { replace: true });
     resetCaptchaUi();
     setPassword("");
     setConfirmPassword("");
@@ -631,18 +624,7 @@ export default function AuthForm() {
           {/* Left Column: AI HR Images/Features */}
           <div className="hidden md:flex flex-col justify-between p-10 bg-gradient-to-br from-gray-900 to-black text-white relative overflow-hidden">
             {/* Top Section: Logo and Brand Name */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center overflow-hidden">
-                <img
-                  src="/logo_icon_final.png"
-                  alt="HR-Tek Logo"
-                  className="h-full w-auto object-contain"
-                />
-              </div>
-              <span className="font-black text-xl tracking-tighter uppercase">
-                HR-TEK <span className="text-[#00B5E2]">SYSTEM</span>
-              </span>
-            </div>
+            <Logo />
 
             {/* Middle Section: Main Headline */}
             <div className="my-12">
@@ -941,81 +923,91 @@ export default function AuthForm() {
                     />
                   </motion.div>
 
-                  <div className="pt-2">
-                    <GradientButton
-                      text={isLogin ? "Sign in →" : "Sign up →"}
-                    />
-                    <input
-                      type="hidden"
-                      name="action"
-                      value={isLogin ? "sign_in" : "sign_up"}
-                    />
-                    <input
-                      type="hidden"
-                      name="hcaptcha_token"
-                      value={captchaToken}
-                    />
-                    <input
-                      type="hidden"
-                      name="country_iso2"
-                      value={selectedCountryIso}
-                    />
-                    <input
-                      type="hidden"
-                      name="phone_country_code"
-                      value={selectedDialCode}
-                    />
-                    <input type="hidden" name="phone" value={phone} />
-                    <input
-                      type="hidden"
-                      name="country_dial_composite"
-                      value={`${selectedCountryIso}_${selectedDialCode}`}
-                    />
-
-                    {/* Enhanced security fields */}
-                    <input type="hidden" name="password" value={password} />
-                    <input
-                      type="hidden"
-                      name="confirmed_password"
-                      value={isLogin ? "" : confirmPassword}
-                    />
-                    <input
-                      type="hidden"
-                      name="passwords_match_verified"
-                      value={
-                        isLogin
-                          ? "true"
-                          : password === confirmPassword
-                            ? "true"
-                            : "false"
-                      }
-                    />
-
-                    {!isLogin && (
-                      <input
-                        type="hidden"
-                        name="password_strength_score"
-                        value={passwordStrength.score}
+                  <div className="pt-2 flex gap-3">
+                    <div className="flex-[2]">
+                      <GradientButton
+                        text={isLogin ? "Sign in →" : "Sign up →"}
                       />
-                    )}
-
-                    {/* FIXED: Use the dynamically generated submission hash */}
-                    <input
-                      type="hidden"
-                      name="submission_hash"
-                      value={submissionHash}
-                    />
-                    <input
-                      type="hidden"
-                      name="form_timestamp"
-                      value={formTimestamp}
-                    />
-                    <input
-                      type="hidden"
-                      name="client_validation_passed"
-                      value="true"
-                    />
+                    </div>
+                    <Link to="/" className="flex-1">
+                      <button
+                        type="button"
+                        className="w-full h-9 rounded-md border-2 border-neutral-200 font-bold text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition-all text-sm uppercase tracking-wider shadow-sm"
+                      >
+                        Cancel
+                      </button>
+                    </Link>
                   </div>
+                  <input
+                    type="hidden"
+                    name="action"
+                    value={isLogin ? "sign_in" : "sign_up"}
+                  />
+                  <input
+                    type="hidden"
+                    name="hcaptcha_token"
+                    value={captchaToken}
+                  />
+                  <input
+                    type="hidden"
+                    name="country_iso2"
+                    value={selectedCountryIso}
+                  />
+                  <input
+                    type="hidden"
+                    name="phone_country_code"
+                    value={selectedDialCode}
+                  />
+                  <input type="hidden" name="phone" value={phone} />
+                  <input
+                    type="hidden"
+                    name="country_dial_composite"
+                    value={`${selectedCountryIso}_${selectedDialCode}`}
+                  />
+
+                  {/* Enhanced security fields */}
+                  <input type="hidden" name="password" value={password} />
+                  <input
+                    type="hidden"
+                    name="confirmed_password"
+                    value={isLogin ? "" : confirmPassword}
+                  />
+                  <input
+                    type="hidden"
+                    name="passwords_match_verified"
+                    value={
+                      isLogin
+                        ? "true"
+                        : password === confirmPassword
+                          ? "true"
+                          : "false"
+                    }
+                  />
+
+                  {!isLogin && (
+                    <input
+                      type="hidden"
+                      name="password_strength_score"
+                      value={passwordStrength.score}
+                    />
+                  )}
+
+                  {/* FIXED: Use the dynamically generated submission hash */}
+                  <input
+                    type="hidden"
+                    name="submission_hash"
+                    value={submissionHash}
+                  />
+                  <input
+                    type="hidden"
+                    name="form_timestamp"
+                    value={formTimestamp}
+                  />
+                  <input
+                    type="hidden"
+                    name="client_validation_passed"
+                    value="true"
+                  />
                 </Form>
 
                 <div className="text-center pt-1">
@@ -1033,7 +1025,7 @@ export default function AuthForm() {
             </AnimatePresence>
           </div>
         </div>
-      </div>
+      </div >
 
 
     </>

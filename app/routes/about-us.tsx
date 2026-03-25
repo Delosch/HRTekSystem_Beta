@@ -5,14 +5,15 @@ import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import { MetaFunction } from "@remix-run/node";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
+import { motion } from "framer-motion";
 
 export const meta: MetaFunction = () => {
   return generateMeta({
     title: "About HRTek System - Transforming HR with AI",
     description: "Learn how HRTek System is revolutionizing HR transformation through AI-powered diagnostics, strategic consulting, and innovative technology solutions. Meet our team and discover our mission.",
     keywords: "about HRTek, HR technology company, AI HR solutions, HR transformation experts, Atul Dixit, HR consulting",
-    url: "https://hrteksystem.com/about-us",
-    image: "https://hrteksystem.com/og-about.jpg",
+    url: "https://www.hrteksystem.com/about-us",
+    image: "https://www.hrteksystem.com/og-about.jpg",
   });
 };
 
@@ -23,9 +24,45 @@ export default function AboutUs() {
     { name: "About Us", url: "/about-us" }
   ]);
 
+  const whoWeAreItems = [
+    {
+      title: "Our Mission",
+      subtitle: "Revolutionizing HR through technology for a smarter and agile workforce",
+      description:
+        "Our mission is to enable businesses to achieve their utmost capabilities by offering specialized advice and cutting-edge solutions in HR Technology and Transformation.",
+      image: "/assets/aboutUsAssets/aboutUs2a.png",
+      gradient: "from-yellow-400 to-orange-500",
+    },
+    {
+      title: "Our Claim for Fame",
+      subtitle: "Empowering businesses with innovative HR technology solutions",
+      description:
+        "At HRTek System, we believe in transforming the way organizations manage their human resources. Our vision is to empower businesses with innovative HR technology solutions that drive efficiency and enhance employee engagement.",
+      image: "/assets/aboutUsAssets/aboutUs2b.png",
+      gradient: "from-orange-500 to-red-500",
+    },
+    {
+      title: "Our Vision",
+      subtitle: "To redefine the future of HR Technology",
+      description:
+        "Transform HR technology by becoming the global leader in delivering innovative, ROI-driven solutions that empower organizations to build smarter, more agile, and employee-focused workplaces on global scale.",
+      image: "/assets/aboutUsAssets/aboutUs2c.png",
+      gradient: "from-pink-500 to-rose-600",
+    },
+    {
+      title: "Our Values",
+      subtitle:
+        "Transform HR with innovative tech that empowers people and drives growth",
+      description:
+        "At HRTek System, our core values are integrity, excellence, and collaboration. We commit to fostering robust relationships with our clients and providing outstanding service that surpasses their expectations.",
+      image: "/assets/aboutUsAssets/aboutUs2d.png",
+      gradient: "from-purple-600 to-indigo-600",
+    },
+  ];
+
   return (
     <>
-      <link rel="canonical" href="https://hrteksystem.com/about-us" />
+      <link rel="canonical" href="https://www.hrteksystem.com/about-us" />
 
       {/* Breadcrumb Schema */}
       <script
@@ -44,13 +81,13 @@ export default function AboutUs() {
                   {/* Left Side: Text and CTA */}
                   <div className="space-y-8">
                     <div>
-                      <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
-                        <span className="text-6xl md:text-7xl lg:text-9xl text-white whitespace-nowrap">About Us</span>
+                      <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white mt-10 md:mt-20">
+                        <span className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl text-white whitespace-normal md:whitespace-nowrap">About Us</span>
                         <br />
-                        <span className="font-light text-[#D4E1F4] text-xl md:text-3xl">
+                        <span className="font-light text-[#D4E1F4] text-lg sm:text-xl md:text-3xl mt-4 block">
                           Driven by purpose, powered by people and innovation
                         </span>
-                      </h2>
+                      </h1>
                     </div>
                     <p className="text-lg italic text-[#C5D5EC] max-w-xl text-justify">
                       At our core, we believe purposeful transformation begins
@@ -79,9 +116,9 @@ export default function AboutUs() {
         {/* Outer Large Card */}
         <div className="max-w-7xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden my-12 p-6 md:p-12 space-y-12">
           <div className="mb-8">
-            <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
               About Us
-            </h3>
+            </h2>
             <div className="w-16 h-1 bg-[#48cae4] mt-2 rounded"></div>
           </div>
           {/* Section 1 */}
@@ -100,11 +137,11 @@ export default function AboutUs() {
                   services.
                 </p>
                 {/* Image Placeholder */}
-                <div className="w-full h-96 bg-white rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">
+                <div className="w-full h-48 sm:h-64 md:h-96 bg-white rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">
                   <img
                     src="/assets/aboutUsAssets/aboutUs1aa.png"
                     alt="Team brainstorming and building a startup product in a collaborative setting"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-2"
                   />
                 </div>
               </div>
@@ -177,11 +214,11 @@ export default function AboutUs() {
                   technology industry.
                 </p>
                 {/* Image Placeholder */}
-                <div className="w-full h-96 bg-white rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">
+                <div className="w-full h-48 sm:h-64 md:h-96 bg-white rounded-lg flex items-center justify-center text-gray-400 text-sm border border-dashed border-gray-300">
                   <img
                     src="/assets/aboutUsAssets/aboutUs1bb.png"
                     alt="Our team focused on innovation and problem-solving in a collaborative workspace"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-2"
                   />
                 </div>
               </div>
@@ -189,210 +226,190 @@ export default function AboutUs() {
           </div>
         </div>
 
-        {/* Section 3: Alternating grid */}
-        <div className="p-6 md:p-12">
-          <div className="bg-white shadow-xl rounded-2xl p-8 md:p-12">
-            <div className="mb-8">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
-                Who We Are
-              </h3>
-              <div className="w-16 h-1 bg-[#ffbe0b] mt-2 rounded"></div>
+        {/* Section 3: Who We Are - Enhanced */}
+        <div className="p-6 md:p-12 relative overflow-hidden">
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 bg-gray-50 opacity-50 z-0"></div>
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="mb-16 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h3 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">
+                  Who We Are
+                </h3>
+                <div className="h-1.5 w-24 bg-gradient-to-r from-[#023e8a] to-[#48cae4] rounded-full mx-auto"></div>
+                <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
+                  We are innovators, strategists, and technologists dedicated to reshaping the future of human resources.
+                </p>
+              </motion.div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card 1 */}
-              <div className="bg-[#ffbe0b] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[280px]">
-                <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-                  Our Mission - Revolutionizing HR through technology for a
-                  smarter and agile workforce
-                </h3>
-                <p className="text-gray-700 text-sm leading-relaxed text-justify">
-                  Our mission is to enable businesses to achieve their utmost
-                  capabilities by offering specialized advice and cutting-edge
-                  solutions in HR Technology and Transformation.
-                </p>
-              </div>
 
-              {/* Image 1 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#ffbe0b] flex items-center justify-center p-4">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2a.png"
-                  alt="Inefficient manual HR process contrasted with modern automated HR system"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+              {whoWeAreItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group relative bg-white rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 flex flex-col h-full border border-gray-100"
+                >
+                  <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${item.gradient}`}></div>
 
-              {/* Image 2 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#fb5607] flex items-center justify-center p-4">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2b.png"
-                  alt="Improved business processes due to streamlined workforce management"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
+                  <div className="p-8 pb-4 flex-grow relative z-10">
+                    <h3 className={`text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r ${item.gradient}`}>
+                      {item.title}
+                    </h3>
+                    <h4 className="text-lg font-medium text-gray-700 mb-4 italic leading-snug">
+                      {item.subtitle}
+                    </h4>
+                    <p className="text-gray-600 leading-relaxed text-justify">
+                      {item.description}
+                    </p>
+                  </div>
 
-              {/* Card 2 */}
-              <div className="bg-[#fb5607] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[280px]">
-                <h3 className="text-2xl font-semibold text-white mb-2">
-                  Our Claim for Fame
-                </h3>
-                <p className="text-gray-100 text-sm leading-relaxed text-justify">
-                  At HRTek System, we believe in transforming the way
-                  organizations manage their human resources. Our vision is to
-                  empower businesses with innovative HR technology solutions
-                  that drive efficiency and enhance employee engagement.
-                </p>
-              </div>
+                  <div className="relative w-full h-56 bg-gradient-to-b from-transparent to-gray-50 flex items-end justify-center p-6 overflow-hidden">
+                    {/* Decorative Blob */}
+                    <div className={`absolute -bottom-10 -right-10 w-40 h-40 rounded-full opacity-10 bg-gradient-to-br ${item.gradient} blur-2xl`}></div>
 
-              {/* Card 3 */}
-              <div className="bg-[#ff006e] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[280px]">
-                <h3 className="text-2xl font-semibold text-black mb-2">
-                  Our Vision - To redefine the future of HR Technology
-                </h3>
-                <p className="text-black text-sm leading-relaxed text-justify">
-                  Transform HR technology by becoming the global leader in
-                  delivering innovative, ROI-driven solutions that empower
-                  organizations to build smarter, more agile, and
-                  employee-focused workplaces on global scale.
-                </p>
-              </div>
-
-              {/* Image 3 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#ff006e] flex items-center justify-center p-4">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2c.png"
-                  alt="Employees collaborating toward a unified organizational vision"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-
-              {/* Image 4 */}
-              <div className="bg-white shadow-lg rounded-lg border border-[#8338ec] flex items-center justify-center p-4">
-                <img
-                  src="/assets/aboutUsAssets/aboutUs2d.png"
-                  alt="Visual representation of core values including streamlined automation and operational simplicity"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-
-              {/* Card 4 */}
-              <div className="bg-[#8338ec] shadow-lg rounded-lg p-6 flex flex-col justify-center min-h-[280px]">
-                <h3 className="text-2xl font-semibold text-white mb-2">
-                  Our Values - Transform HR with innovative tech that empowers
-                  people and drives growth.
-                </h3>
-                <p className="text-gray-100 text-sm leading-relaxed text-justify">
-                  At HRTek System, our core values are integrity, excellence,
-                  and collaboration. We commit to fostering robust relationships
-                  with our clients and providing outstanding service that
-                  surpasses their expectations.
-                </p>
-              </div>
+                    <motion.img
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      transition={{ duration: 0.4 }}
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-contain relative z-10 drop-shadow-md"
+                    />
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Section 4: Heading + Card + Circular Image */}
+        {/* Section 4: Heading + Leadership Team */}
         <div className="p-6 md:p-12">
           <div className="bg-[#ece4db] rounded-lg shadow-lg p-6">
             <div className="mb-8">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800">
-                Meet The Visionary
-              </h3>
-              <div className="w-16 h-1 bg-gray-600 mt-2 rounded"></div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
+                Our Leadership Team
+              </h2>
+              <div className="w-32 h-1 bg-[#0a9396] mt-2 rounded"></div>
             </div>
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="flex-1 bg-[#ffe5d9] shadow-lg rounded-lg w-full border border-white">
-                <div className=" flex flex-col justify-center p-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                    About Me
+
+            <div className="space-y-12">
+              {/* Atul Dixit Section */}
+              <div className="flex flex-col md:flex-row items-stretch gap-6">
+                <div className="flex-1 bg-[#ffe5d9] shadow-lg rounded-xl w-full border border-white p-6 flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 border-b border-orange-200 pb-2">
+                    About Atul Dixit
                   </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed text-justify">
+                  <p className="text-gray-700 text-sm leading-relaxed text-justify">
                     Welcome to my Digital HR portfolio! I'm Atul Dixit, Founder
                     of HRTek System, a seasoned HR Transformation Leader and a
                     Project Management Expert, with over two decades of proven
                     success in driving HR technology innovation, process
                     optimization, and organizational excellence.
-                    <br />
-                    <br />
-                    <br />
                   </p>
                 </div>
-              </div>
-              <div className="flex-1 bg-white shadow-lg rounded-lg w-full border border-gray-300">
-                <div className=" flex flex-col justify-center p-6">
-                  <h4 className="text-xl font-semibold text-gray-800 mb-2">
-                    My journey
+                <div className="flex-1 bg-white shadow-lg rounded-xl w-full border border-gray-200 p-6 flex flex-col justify-center">
+                  <h4 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">
+                    His Journey
                   </h4>
-                  <p className="text-gray-600 text-sm leading-relaxed text-justify">
+                  <p className="text-gray-700 text-sm leading-relaxed text-justify">
                     Throughout my career, I have had the privilege of working
                     with leading organizations such as SpiceJet, CMS
                     Infosystems, Hindustan Field Services, Eureka Forbes, and
                     more. I ventured into business to bridge the gap between HR
-                    Technology and real business impact. After leading HR
-                    transformations for top firms, I saw the need for
-                    Expert-led, Tailored HR Tech Solutions.
+                    Technology and real business impact.
                   </p>
                 </div>
-              </div>
-              <div className="flex-1 flex justify-center w-full">
-                <div className="flex flex-col items-center space-y-2">
-                  {/* Circular Image with Border */}
-                  <div className="w-48 h-48 rounded-full bg-gray-300 shadow-lg overflow-hidden border-4 border-[#0a9396]">
-                    <img
-                      src="/assets/aboutUsAssets/founderImg.webp"
-                      alt="Founder and CEO of the company HRTek System"
-                      className="w-full h-full object-cover"
-                    />
+                <div className="flex-1 flex justify-center w-full min-w-[200px]">
+                  <div className="flex flex-col items-center space-y-3 p-4">
+                    <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-gray-100 shadow-xl overflow-hidden border-4 border-[#0a9396]">
+                      <img
+                        src="/assets/aboutUsAssets/founderImg.webp"
+                        alt="Atul Dixit - Founder & CEO"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-800">
+                        Atul Dixit
+                      </h3>
+                      <p className="text-blue-600 font-semibold text-sm uppercase tracking-widest mb-2">Founder & CEO</p>
+                      <a
+                        href="https://www.linkedin.com/in/atul-dixit/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0077b5] text-white hover:bg-[#005582] transition-colors"
+                        title="Connect on LinkedIn"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                        </svg>
+                      </a>
+                    </div>
                   </div>
-
-                  {/* Name */}
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    Atul Dixit
-                  </h2>
-
-                  {/* Position */}
-                  <p className="text-gray-500 text-sm">Founder & CEO</p>
                 </div>
               </div>
-            </div>
-            <div className="max-w-5xl mx-auto p-6">
-              <div className="bg-white shadow-lg rounded-2xl p-6 text-center">
-                <h2 className="text-xl font-bold text-gray-800 mb-6">
-                  Completion of System Diagnosis By HR-TEK System
-                </h2>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 items-center justify-items-center">
-                  <img
-                    src="/assets/aboutUsAssets/client1.webp"
-                    alt="Vandana Global logo – past work experience of our founder"
-                    className="h-16 object-contain"
-                  />
-                  <img
-                    src="/assets/aboutUsAssets/client2.webp"
-                    alt="SpiceJet logo – past work experience of our founder"
-                    className="h-16 object-contain"
-                  />
-                  <img
-                    src="/assets/aboutUsAssets/client3.webp"
-                    alt="Simpa logo – past work experience of our founder"
-                    className="h-16 object-contain"
-                  />
-                  <img
-                    src="/assets/aboutUsAssets/client4.webp"
-                    alt="Eureka Forbes logo – past work experience of our founder"
-                    className="h-16 object-contain"
-                  />
-                  <img
-                    src="/assets/aboutUsAssets/client5.webp"
-                    alt="CMS Info Systems logo – past work experience of our founder "
-                    className="h-16 object-contain"
-                  />
+              {/* Piyush Jaiswal Section */}
+              <div className="flex flex-col md:flex-row-reverse items-stretch gap-6">
+                <div className="flex-1 bg-[#e0f2f1] shadow-lg rounded-xl w-full border border-white p-6 flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 border-b border-teal-200 pb-2">
+                    About Piyush Jaiswal
+                  </h3>
+                  <p className="text-gray-700 text-sm leading-relaxed text-justify">
+                    Piyush Jaiswal is the Co-Founder & CMO of HRTek System, bringing a wealth of strategic marketing expertise in driving HR digital transformation. With a strong background in brand management and a passion for market innovation, he leads our growth vision to deliver state-of-the-art HR solutions.
+                  </p>
+                </div>
+                <div className="flex-1 bg-white shadow-lg rounded-xl w-full border border-gray-200 p-6 flex flex-col justify-center">
+                  <h4 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">
+                    His Vision
+                  </h4>
+                  <p className="text-gray-700 text-sm leading-relaxed text-justify">
+                    Dedicated to bridging the gap between brand values and user-centric HR tools, Piyush focuses on market presence, client engagement, and strategic positioning. His leadership ensures that HRTek System remains the preferred choice in the HR tech industry.
+                  </p>
+                </div>
+                <div className="flex-1 flex justify-center w-full min-w-[200px]">
+                  <div className="flex flex-col items-center space-y-3 p-4">
+                    <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full bg-gray-100 shadow-xl overflow-hidden border-4 border-[#0077b6]">
+                      <img
+                        src="/assets/aboutUsAssets/piyushImg.png"
+                        alt="Piyush Jaiswal - Co-Founder & CMO"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-800">
+                        Piyush Jaiswal
+                      </h3>
+                      <p className="text-teal-600 font-semibold text-sm uppercase tracking-widest mb-2">Co-Founder & CMO</p>
+                      <a
+                        href="https://www.linkedin.com/in/piyush-jaiswal"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#0077b5] text-white hover:bg-[#005582] transition-colors"
+                        title="Connect on LinkedIn"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Logos Section */}
             </div>
           </div>
         </div>
-
         <Footer />
       </div>
     </>

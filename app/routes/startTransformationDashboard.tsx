@@ -21,13 +21,13 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     name: "Intelligent Change Management",
     description: "Build organizational readiness and drive successful adoption",
     icon: "🔄",
-    route: "/changeDashboard"
+    route: "/change-management/assessment"
   },
   "HR Transformation Roadmap Generator": {
     name: "HR Transformation Roadmap",
     description: "Create strategic roadmaps for HR digital transformation",
     icon: "🗺️",
-    route: "/roadmapDashboard"
+    route: "/digital-roadmap/dashboard"
   },
   "Shared Service Designer": {
     name: "Shared Service Designer",
@@ -36,10 +36,10 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     route: "/sharedDashboard"
   },
   "HR Technology Maturity Analysis": {
-    name: "HR Technology Maturity Analysis",
-    description: "Assess your HR technology landscape and identify gaps",
+    name: "AI Driven Maturity Engine",
+    description: "Assess your HR technology landscape with AI-powered diagnostics",
     icon: "📊",
-    route: "/analysisDashboard"
+    route: "/ai-maturity/dashboard"
   },
   "HCM Vendor Fit Engine": {
     name: "HCM Vendor Fit Engine",
@@ -47,6 +47,12 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
     icon: "🎯",
     route: "/vendorDashboard"
   },
+  "AI Driven Maturity Engine": {
+    name: "AI Driven Maturity Engine",
+    description: "Assess your AI transformation maturity and digital readiness",
+    icon: "🤖",
+    route: "/ai-maturity/dashboard"
+  }
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
@@ -101,14 +107,17 @@ export const action: ActionFunction = async ({ request }) => {
     // Get the authoritative price from the server-side utility
     const price = getEnginePriceByName(engineName);
 
+    const durationMonths = formData.get("durationMonths") ? parseInt(formData.get("durationMonths") as string) : 1;
+
     try {
       await addOrUpdateCartItem({
         companyId: user.organisationId as string,
         productName: engineName,
         price: price,
         userId: user.userId,
+        durationMonths: durationMonths
       });
-      return json({ success: true, message: `${engineName} added to cart!` });
+      return json({ success: true, message: `${engineName} (${durationMonths} Month${durationMonths > 1 ? 's' : ''}) added to cart!` });
     } catch (error) {
       console.error("Cart error:", error);
       return json({ error: "Failed to add item to cart" }, { status: 500 });
@@ -335,9 +344,6 @@ export default function StartTransformationDashboard() {
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-blue-100">
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 font-medium">Relevance: {score}/10</span>
-                      <span className="text-lg font-bold text-gray-800">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(enginePrices[engineName] || 0)}
-                      </span>
                     </div>
 
                     <div className="flex gap-2">
@@ -405,10 +411,6 @@ export default function StartTransformationDashboard() {
                   ) : (
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-2">
                       <div className="flex flex-col">
-                        <span className="text-lg font-bold text-gray-800">
-                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(enginePrices[engineName] || 0)}
-                        </span>
-                      </div>
                       <div className="flex gap-2">
                         <fetcher.Form method="post" onSubmit={(e) => e.stopPropagation()}>
                           <input type="hidden" name="intent" value="addToCart" />
@@ -433,15 +435,16 @@ export default function StartTransformationDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div >
-        </section >
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
         {/* Why Transformation Section */}
-        < section >
+        <section>
           <h2 className="text-3xl font-bold text-gray-800 mb-6">
             Why Your HR Needs Digital Transformation
           </h2>
@@ -462,10 +465,10 @@ export default function StartTransformationDashboard() {
               ))}
             </ul>
           </div>
-        </section >
+        </section>
 
         {/* Our Approach */}
-        < section >
+        <section>
           <h2 className="text-3xl font-bold text-gray-800 mb-6">
             Our Transformation Approach
           </h2>
@@ -501,7 +504,7 @@ export default function StartTransformationDashboard() {
               </div>
             ))}
           </div>
-        </section >
+        </section>
       </main>
       <ToastContainer />
     </div>
