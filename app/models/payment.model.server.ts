@@ -22,9 +22,13 @@ export type PaymentStatus =
     | "payment_submitted"    // User uploaded proof, awaiting verification
     | "payment_verified"     // Admin verified payment
     | "payment_rejected"     // Payment proof rejected
-    | "completed";           // All done
+    | "completed"            // All done
+    | "request_pending_approval"
+    | "request_approved"
+    | "request_rejected";
 
 export type PaymentMethod = "bank_transfer" | "upi" | "qr_code";
+export type InvoiceKind = "PROFORMA" | "FINAL";
 
 export interface PaymentRecord {
     pk: string;              // COMPANY#{orgId}
@@ -39,9 +43,13 @@ export interface PaymentRecord {
     paymentMethod?: PaymentMethod;
 
     // Invoice details
+    invoiceKind?: InvoiceKind;
     invoiceNumber: string;
     invoiceDate: string;
     dueDate: string;
+    proformaInvoiceNumber?: string;
+    finalInvoiceNumber?: string;
+    finalInvoiceDate?: string;
     items: Array<{
         engineName: string;
         price: number;
@@ -82,6 +90,309 @@ export interface PaymentRecord {
     // Timestamps
     createdAt: string;
     updatedAt: string;
+
+    // Request-first payment workflow metadata (user dashboard)
+    workflowType?: "standard" | "request_based";
+    engineName?: string;
+    employeeCount?: number;
+    requestedPaymentPercent?: number;
+    requestedBaseAmount?: number;
+    approvedRequestedBaseAmount?: number;
+    approvedRequestedAmount?: number;
+    fullAmount?: number;
+    requestNotes?: string;
+}
+
+export interface EngineAccessStatus {
+    engineName: string;
+    requestStatus: "none" | "pending" | "approved" | "rejected";
+    assessmentUnlocked: boolean;
+    reportUnlocked: boolean;
+    approvedRequestedAmount: number;
+    approvedRequestedBaseAmount: number;
+    totalPaidAmount: number;
+    fullAmount: number;
+    pendingAmount: number;
+    employeeCount: number | null;
+    requestRecord: PaymentRecord | null;
+}
+
+function normalizeEngineName(name: string): string {
+    return (name || "").trim().toLowerCase();
+}
+
+function getItemGrossAmount(item: { price?: number }): number {
+    const base = Number(item?.price || 0);
+    return base + base * 0.18;
+}
+
+function mapRequestStatus(status?: PaymentStatus): EngineAccessStatus["requestStatus"] {
+    if (status === "request_pending_approval") return "pending";
+    if (status === "request_approved") return "approved";
+    if (status === "request_rejected") return "rejected";
+    return "none";
+}
+
+export async function createEnginePaymentRequest(params: {
+    orgId: string;
+    userId: string;
+    engineName: string;
+    employeeCount: number;
+    fullAmount: number;
+    requestedPercent: number;
+    requestNotes?: string;
+}): Promise<PaymentRecord> {
+    const now = new Date().toISOString();
+    const proformaInvoiceNumber = `PFI-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const percent = Math.min(100, Math.max(1, Math.round(params.requestedPercent)));
+    const fullAmount = Math.max(0, Math.round(params.fullAmount));
+    const requestedAmount = Math.round((fullAmount * percent) / 100);
+    const requestedBaseAmount = Math.round(requestedAmount / 1.18);
+    const requestedGstAmount = requestedAmount - requestedBaseAmount;
+
+    const normalizedEngine = normalizeEngineName(params.engineName);
+    const existingRequests = (await getCompanyPayments(params.orgId))
+        .filter(
+            (payment) =>
+                payment.workflowType === "request_based" &&
+                normalizeEngineName(payment.engineName || payment.items?.[0]?.engineName || "") === normalizedEngine &&
+                (payment.status === "request_pending_approval" || payment.status === "request_rejected")
+        )
+        .sort(
+            (a, b) =>
+                new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
+        );
+
+    const existingRequest = existingRequests[0];
+
+    if (existingRequest) {
+        await ddbDocClient.send(
+            new UpdateCommand({
+                TableName: USERS_TABLE,
+                Key: {
+                    pk: existingRequest.pk,
+                    sk: existingRequest.sk,
+                },
+                UpdateExpression: `
+                    SET #status = :status,
+                        #invoiceKind = :invoiceKind,
+                        #invoiceNumber = :invoiceNumber,
+                        #invoiceDate = :invoiceDate,
+                        #proformaInvoiceNumber = :proformaInvoiceNumber,
+                        #totalAmount = :totalAmount,
+                        #gstAmount = :gstAmount,
+                        #subtotal = :subtotal,
+                        #items = :items,
+                        #employeeCount = :employeeCount,
+                        #requestedPaymentPercent = :requestedPaymentPercent,
+                        #requestedBaseAmount = :requestedBaseAmount,
+                        #approvedRequestedBaseAmount = :approvedRequestedBaseAmount,
+                        #approvedRequestedAmount = :approvedRequestedAmount,
+                        #fullAmount = :fullAmount,
+                        #requestNotes = :requestNotes,
+                        #updatedAt = :updatedAt
+                `,
+                ExpressionAttributeNames: {
+                    "#status": "status",
+                    "#totalAmount": "totalAmount",
+                    "#invoiceKind": "invoiceKind",
+                    "#invoiceNumber": "invoiceNumber",
+                    "#invoiceDate": "invoiceDate",
+                    "#proformaInvoiceNumber": "proformaInvoiceNumber",
+                    "#gstAmount": "gstAmount",
+                    "#subtotal": "subtotal",
+                    "#items": "items",
+                    "#employeeCount": "employeeCount",
+                    "#requestedPaymentPercent": "requestedPaymentPercent",
+                    "#requestedBaseAmount": "requestedBaseAmount",
+                    "#approvedRequestedBaseAmount": "approvedRequestedBaseAmount",
+                    "#approvedRequestedAmount": "approvedRequestedAmount",
+                    "#fullAmount": "fullAmount",
+                    "#requestNotes": "requestNotes",
+                    "#updatedAt": "updatedAt",
+                },
+                ExpressionAttributeValues: {
+                    ":status": "request_pending_approval",
+                    ":invoiceKind": "PROFORMA",
+                    ":invoiceNumber": proformaInvoiceNumber,
+                    ":invoiceDate": now,
+                    ":proformaInvoiceNumber": proformaInvoiceNumber,
+                    ":totalAmount": requestedAmount,
+                    ":gstAmount": requestedGstAmount,
+                    ":subtotal": requestedBaseAmount,
+                    ":items": [
+                        {
+                            engineName: params.engineName,
+                            price: requestedBaseAmount,
+                            description: `Initial payment request for ${params.engineName}`,
+                            durationMonths: 1,
+                        },
+                    ],
+                    ":employeeCount": params.employeeCount,
+                    ":requestedPaymentPercent": percent,
+                    ":requestedBaseAmount": requestedBaseAmount,
+                    ":approvedRequestedBaseAmount": requestedBaseAmount,
+                    ":approvedRequestedAmount": requestedAmount,
+                    ":fullAmount": fullAmount,
+                    ":requestNotes": params.requestNotes || null,
+                    ":updatedAt": now,
+                },
+            })
+        );
+
+        return {
+            ...existingRequest,
+            status: "request_pending_approval",
+            invoiceKind: "PROFORMA",
+            invoiceNumber: proformaInvoiceNumber,
+            invoiceDate: now,
+            proformaInvoiceNumber,
+            totalAmount: requestedAmount,
+            gstAmount: requestedGstAmount,
+            subtotal: requestedBaseAmount,
+            items: [
+                {
+                    engineName: params.engineName,
+                    price: requestedBaseAmount,
+                    description: `Initial payment request for ${params.engineName}`,
+                    durationMonths: 1,
+                },
+            ],
+            employeeCount: params.employeeCount,
+            requestedPaymentPercent: percent,
+            requestedBaseAmount,
+            approvedRequestedBaseAmount: requestedBaseAmount,
+            approvedRequestedAmount: requestedAmount,
+            fullAmount,
+            requestNotes: params.requestNotes,
+            updatedAt: now,
+        };
+    }
+
+    const invoiceId = uuidv4();
+    const createdAt = now;
+
+    const paymentRequest: PaymentRecord = {
+        pk: `COMPANY#${params.orgId}`,
+        sk: `PAYMENT#${invoiceId}`,
+        invoiceId,
+        orderId: uuidv4(),
+        companyId: params.orgId,
+        totalAmount: requestedAmount,
+        gstAmount: requestedGstAmount,
+        subtotal: requestedBaseAmount,
+        status: "request_pending_approval",
+        invoiceKind: "PROFORMA",
+        invoiceNumber: proformaInvoiceNumber,
+        invoiceDate: createdAt,
+        dueDate: createdAt,
+        proformaInvoiceNumber,
+        items: [
+            {
+                engineName: params.engineName,
+                price: requestedBaseAmount,
+                description: `Initial payment request for ${params.engineName}`,
+                durationMonths: 1,
+            },
+        ],
+        workflowType: "request_based",
+        engineName: params.engineName,
+        employeeCount: params.employeeCount,
+        requestedPaymentPercent: percent,
+        requestedBaseAmount,
+        approvedRequestedBaseAmount: requestedBaseAmount,
+        approvedRequestedAmount: requestedAmount,
+        fullAmount,
+        requestNotes: params.requestNotes,
+        createdAt,
+        updatedAt: createdAt,
+    };
+
+    await ddbDocClient.send(
+        new PutCommand({
+            TableName: USERS_TABLE,
+            Item: paymentRequest,
+        })
+    );
+
+    return paymentRequest;
+}
+
+export async function getEngineAccessStatus(orgId: string, engineName: string): Promise<EngineAccessStatus> {
+    const normalizedEngine = normalizeEngineName(engineName);
+    const payments = await getCompanyPayments(orgId);
+    const enginePayments = payments.filter((payment) => {
+        if (normalizeEngineName(payment.engineName || "") === normalizedEngine) {
+            return true;
+        }
+        return (payment.items || []).some(
+            (item) => normalizeEngineName(item.engineName || "") === normalizedEngine
+        );
+    });
+
+    const requestRecords = enginePayments
+        .filter((payment) => payment.workflowType === "request_based")
+        .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+
+    const latestRequest = requestRecords[0] || null;
+    const requestStatus = mapRequestStatus(latestRequest?.status);
+
+    const approvedRequestedAmount = Number(
+        latestRequest?.approvedRequestedAmount ?? latestRequest?.totalAmount ?? 0
+    );
+    const approvedRequestedBaseAmount = Number(
+        latestRequest?.approvedRequestedBaseAmount ?? latestRequest?.requestedBaseAmount ?? latestRequest?.subtotal ?? 0
+    );
+
+    const fullAmount = Number(latestRequest?.fullAmount || 0);
+    const employeeCount = typeof latestRequest?.employeeCount === "number" ? latestRequest.employeeCount : null;
+
+    const verifiedPayments = enginePayments.filter(
+        (payment) => payment.status === "payment_verified" || payment.status === "completed"
+    );
+
+    const totalPaidAmount = verifiedPayments.reduce((sum, payment) => {
+        const matchingItems = (payment.items || []).filter(
+            (item) => normalizeEngineName(item.engineName || "") === normalizedEngine
+        );
+
+        if (matchingItems.length === 0) {
+            return sum;
+        }
+
+        if ((payment.items || []).length === 1) {
+            return sum + Number(payment.totalAmount || 0);
+        }
+
+        return sum + matchingItems.reduce((itemSum, item) => itemSum + getItemGrossAmount(item), 0);
+    }, 0);
+
+    const hasLegacyPaid = totalPaidAmount > 0 && !latestRequest;
+    const assessmentUnlocked = hasLegacyPaid || (requestStatus === "approved" && totalPaidAmount >= approvedRequestedAmount);
+    const reportUnlocked = hasLegacyPaid || (fullAmount > 0 && totalPaidAmount >= fullAmount);
+    const pendingAmount = Math.max(0, (fullAmount || approvedRequestedAmount) - totalPaidAmount);
+
+    return {
+        engineName,
+        requestStatus,
+        assessmentUnlocked,
+        reportUnlocked,
+        approvedRequestedAmount,
+        approvedRequestedBaseAmount,
+        totalPaidAmount,
+        fullAmount,
+        pendingAmount,
+        employeeCount,
+        requestRecord: latestRequest,
+    };
+}
+
+export async function getEngineAccessStatuses(orgId: string, engineNames: string[]): Promise<Record<string, EngineAccessStatus>> {
+    const result: Record<string, EngineAccessStatus> = {};
+    for (const engineName of engineNames) {
+        result[engineName] = await getEngineAccessStatus(orgId, engineName);
+    }
+    return result;
 }
 
 /**
@@ -103,7 +414,7 @@ export async function generateInvoice(
     }
 ): Promise<PaymentRecord> {
     const invoiceId = uuidv4();
-    const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    const proformaInvoiceNumber = `PFI-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
 
@@ -141,10 +452,12 @@ export async function generateInvoice(
         totalAmount,
         gstAmount,
         subtotal,
+        invoiceKind: "PROFORMA",
         status: "pending_payment",
-        invoiceNumber,
+        invoiceNumber: proformaInvoiceNumber,
         invoiceDate,
         dueDate,
+        proformaInvoiceNumber,
         items: cartItems.map(item => ({
             engineName: item.displayName || item.productName || item.engineName,
             price: item.price,
@@ -167,7 +480,7 @@ export async function generateInvoice(
 
     try {
         await ddbDocClient.send(command);
-        console.log(`Invoice generated: ${invoiceNumber} for company ${orgId}`);
+        console.log(`Proforma invoice generated: ${proformaInvoiceNumber} for company ${orgId}`);
         return paymentRecord;
     } catch (e) {
         console.error("Error generating invoice:", e);
@@ -237,6 +550,10 @@ export async function verifyPayment(
     adminId: string,
     verificationNotes?: string
 ): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    const finalizedAt = new Date().toISOString();
+    const finalInvoiceNumber = `FIN-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+
     const command = new UpdateCommand({
         TableName: USERS_TABLE,
         Key: {
@@ -245,20 +562,42 @@ export async function verifyPayment(
         },
         UpdateExpression: `
       SET #status = :status,
-          verifiedBy = :verifiedBy,
-          verifiedAt = :verifiedAt,
-          verificationNotes = :verificationNotes,
-          updatedAt = :updatedAt
+          #verifiedBy = :verifiedBy,
+          #verifiedAt = :verifiedAt,
+          #verificationNotes = :verificationNotes,
+          #updatedAt = :updatedAt,
+          #invoiceKind = :invoiceKind,
+          #finalInvoiceNumber = :finalInvoiceNumber,
+          #finalInvoiceDate = :finalInvoiceDate,
+          #invoiceNumber = :invoiceNumber,
+          #invoiceDate = :invoiceDate,
+          #proformaInvoiceNumber = :proformaInvoiceNumber
     `,
         ExpressionAttributeNames: {
-            "#status": "status"
+            "#status": "status",
+            "#verifiedBy": "verifiedBy",
+            "#verifiedAt": "verifiedAt",
+            "#verificationNotes": "verificationNotes",
+            "#updatedAt": "updatedAt",
+            "#invoiceKind": "invoiceKind",
+            "#finalInvoiceNumber": "finalInvoiceNumber",
+            "#finalInvoiceDate": "finalInvoiceDate",
+            "#invoiceNumber": "invoiceNumber",
+            "#invoiceDate": "invoiceDate",
+            "#proformaInvoiceNumber": "proformaInvoiceNumber",
         },
         ExpressionAttributeValues: {
             ":status": "payment_verified",
             ":verifiedBy": adminId,
-            ":verifiedAt": new Date().toISOString(),
+            ":verifiedAt": finalizedAt,
             ":verificationNotes": verificationNotes || null,
-            ":updatedAt": new Date().toISOString()
+            ":updatedAt": finalizedAt,
+            ":invoiceKind": "FINAL",
+            ":finalInvoiceNumber": finalInvoiceNumber,
+            ":finalInvoiceDate": finalizedAt,
+            ":invoiceNumber": finalInvoiceNumber,
+            ":invoiceDate": finalizedAt,
+            ":proformaInvoiceNumber": existing?.proformaInvoiceNumber || existing?.invoiceNumber || null,
         }
     });
 

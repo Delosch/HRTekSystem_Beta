@@ -156,6 +156,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await getEnhancedUser(request);
     if (!user) return redirect("/login");
 
+    if ((user as any).role !== "ADMIN") {
+        const access = await import("~/models/payment.model.server").then((mod) =>
+            mod.getEngineAccessStatus(user.organisationId, "Shared Service Designer")
+        );
+        if (!access.assessmentUnlocked) {
+            return redirect("/user-payment-dashboard");
+        }
+    }
+
     const [engineData, payments] = await Promise.all([
         findEngineData(user.organisationId, "Shared Service Designer"),
         getCompanyPayments(user.organisationId),

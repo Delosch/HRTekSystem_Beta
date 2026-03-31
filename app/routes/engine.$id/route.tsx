@@ -57,6 +57,14 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
         throw new Response("wrong parameters", { status: 404 })
     }
 
+    if ((user as any).role !== "ADMIN" && question_section !== "Profiling Assessment") {
+        const { getEngineAccessStatus } = await import("~/models/payment.model.server");
+        const access = await getEngineAccessStatus(user.organisationId || "", question_section);
+        if (!access.assessmentUnlocked) {
+            throw redirect("/user-payment-dashboard");
+        }
+    }
+
     console.log("Loading questions for section:", question_section, "(Slug:", slug, ")");
     const questions = await getLatestQuestion(question_section);
 

@@ -8,6 +8,7 @@ interface InvoiceItem {
 }
 
 interface InvoiceTemplateProps {
+    invoiceLabel?: string;
     invoiceNumber: string;
     invoiceDate: string;
     dueDate: string;
@@ -22,6 +23,7 @@ interface InvoiceTemplateProps {
 }
 
 export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
+    invoiceLabel = "Invoice",
     invoiceNumber,
     invoiceDate,
     dueDate,
@@ -85,7 +87,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
 
                     <div className="text-right flex flex-col items-end">
                         <div className="bg-[#00B5E2] text-[#000033] px-6 py-2 rounded-full mb-6 shadow-[0_0_30px_rgba(0,181,226,0.2)]">
-                            <p className="text-xs font-black uppercase tracking-widest">Official Receipt</p>
+                            <p className="text-xs font-black uppercase tracking-widest">{invoiceLabel}</p>
                         </div>
                         <div className="space-y-4">
                             <div>

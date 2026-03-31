@@ -191,7 +191,7 @@ export default function InvoicePage() {
                     {/* ── SECTION 1: Invoice Card ── */}
                     <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 relative print:shadow-none print:border-none print:m-0 print:p-0" id="invoice-content">
                         {/* Locked Overlay */}
-                        {payment.status !== "payment_verified" && (
+                        {payment.status === "payment_rejected" && (
                             <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center border-4 border-slate-100">
                                 <div className="text-center p-8 max-w-md">
                                     <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200">
@@ -216,10 +216,16 @@ export default function InvoicePage() {
                         )}
 
                         {/* Invoice Content */}
-                        <div className={payment.status !== "payment_verified" ? "blur-sm pointer-events-none select-none" : ""}>
+                        <div>
+                            <div className="mb-4 flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${payment.status === "payment_verified" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-indigo-50 text-indigo-700 border-indigo-200"}`}>
+                                    {payment.status === "payment_verified" ? "FINAL INVOICE" : "PROFORMA INVOICE"}
+                                </span>
+                            </div>
                             <InvoiceTemplate
-                                invoiceNumber={payment.invoiceNumber}
-                                invoiceDate={payment.invoiceDate}
+                                invoiceLabel={payment.status === "payment_verified" ? "Final Invoice" : "Proforma Invoice"}
+                                invoiceNumber={payment.status === "payment_verified" ? (payment.finalInvoiceNumber || payment.invoiceNumber) : (payment.proformaInvoiceNumber || payment.invoiceNumber)}
+                                invoiceDate={payment.status === "payment_verified" ? (payment.finalInvoiceDate || payment.invoiceDate) : payment.invoiceDate}
                                 dueDate={payment.dueDate}
                                 companyName={companyName}
                                 companyAddress={undefined}
