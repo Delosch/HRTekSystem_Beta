@@ -199,10 +199,12 @@ export default function Navbar() {
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                   className="flex items-center gap-4 hover:bg-white/5 p-1 px-2 rounded-xl transition-all duration-300"
                 >
-                  <div className="flex flex-col items-end hidden sm:flex">
-                    <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
-                    <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
-                  </div>
+                  {user.onboardingStatus === "Completed" && (
+                    <div className="flex flex-col items-end hidden sm:flex">
+                      <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
+                      <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
+                    </div>
+                  )}
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:scale-105 transition-transform">
                     <User className="w-6 h-6 text-white" />
                   </div>
@@ -358,15 +360,17 @@ export default function Navbar() {
                   <div className="mt-8 pt-8 border-t border-white/10">
                     {user ? (
                       <div className="space-y-6">
-                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl">
-                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border border-white/20">
-                            <User className="w-6 h-6 text-white" />
+                        {user.onboardingStatus === "Completed" && (
+                          <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl">
+                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border border-white/20">
+                              <User className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-bold truncate">{user.first_name} {user.last_name}</p>
+                              <p className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white font-bold truncate">{user.first_name} {user.last_name}</p>
-                            <p className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
-                          </div>
-                        </div>
+                        )}
                         <div className="flex flex-col gap-3">
                           <Link
                             to="/dashboard"

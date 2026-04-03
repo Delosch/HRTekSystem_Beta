@@ -19,8 +19,10 @@ import { HoverInput } from "~/components/AuthCards";
 
 import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { getSession, commitSession, requireUserSession } from "~/lib/session.server";
-import { saveEmailOTP, verifyEmailOTP, updateUser } from "~/models/user.model.server";
+import { saveEmailOTP, verifyEmailOTP, updateUser, getUserProfile } from "~/models/user.model.server";
 import { sendOTPEmail, createOTP } from "~/lib/email.otp.server";
+import { sendTemplateSMS } from "~/services/sms.server";
+import { notifyAdmin } from "~/services/admin.notifier.server";
 
 export const action: ActionFunction = async ({ request }) => {
   const user = await requireUserSession(request);
@@ -49,9 +51,84 @@ export const action: ActionFunction = async ({ request }) => {
       const isValid = await verifyEmailOTP(user.userId, code);
 
       if (isValid) {
+        // 1. Update user status in DB to "PendingApproval" (or keep "None" as per current admin filter)
+        // Admin's getPendingUsers looks for "None". I'll keep it "None" for now, or update it if needed.
+        // But the user requested " restrict the user , user acnt see anything after that ".
+        // So I'll explicitly set it to "None" just to be sure it's in the pending pool.
+        await updateUser(user.userId, { onboardingStatus: "None" });
+
+        // 2. Send Welcome notifications (SMS and Email)
+        const profile = await getUserProfile(user.userId);
+        const firstName = profile?.first_name ?? "there";
+        const lastName = profile?.last_name ?? "";
+        const userPhone = (profile?.phone ?? "").replace(/\D/g, "");
+        const userEmail  = profile?.email ?? user.email;
+
+        try {
+          // Welcome SMS
+          const welcomeTemplate = process.env.SMS_WELCOME_TEMPLATE_NAME;
+          if (welcomeTemplate && userPhone.length >= 10) {
+            await sendTemplateSMS({ mobileNo: userPhone, templateName: welcomeTemplate, params: firstName })
+              .catch(e => console.warn("[SMS Welcome] Failed:", e));
+          }
+
+          // Welcome Email
+          const nodemailer = await import("nodemailer");
+          const hasSmtp  = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+          const hasGmail = process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD;
+          if (hasSmtp || hasGmail) {
+            const transporter = hasSmtp
+              ? nodemailer.default.createTransport({
+                  host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT) || 587,
+                  secure: process.env.SMTP_SECURE === "true",
+                  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+                })
+              : nodemailer.default.createTransport({
+                  service: "Gmail",
+                  auth: { user: process.env.GMAIL_USER, pass: process.env.GOOGLE_APP_PASSWORD },
+                });
+            await transporter.sendMail({
+              from: process.env.SMTP_FROM || '"HRTek System" <noreply@hrteksystem.com>',
+              to: userEmail,
+              subject: "Thank you for registering with HRTek System",
+              html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+              <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+                  <tr><td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                      <tr><td style="background:linear-gradient(135deg,#023e8a 0%,#0353a4 100%);padding:40px 48px;text-align:center;">
+                        <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Thank You, ${firstName}!</h1>
+                        <p style="color:#93c5fd;margin:8px 0 0;font-size:15px;">Your registration with HRTek System is confirmed</p>
+                      </td></tr>
+                      <tr><td style="padding:40px 48px;color:#334155;">
+                        <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">Hi <strong>${firstName}</strong>, thank you for registering with <strong>HRTek System</strong> — your partner in HR transformation.</p>
+                        <div style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:8px;padding:20px;margin:0 0 24px;">
+                          <p style="margin:0;font-size:15px;color:#1e40af;font-weight:600;">Our Sales Team Will Contact You Shortly</p>
+                          <p style="margin:8px 0 0;font-size:14px;color:#1d4ed8;line-height:1.5;">One of our HR transformation specialists will reach out to you within 1–2 business days to guide you through the next steps.</p>
+                        </div>
+                        <p style="font-size:13px;color:#94a3b8;margin:0;">Questions? <a href="mailto:support@hrteksystem.com" style="color:#2563eb;">support@hrteksystem.com</a></p>
+                      </td></tr>
+                      <tr><td style="background:#f8fafc;padding:16px 48px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;">
+                        © ${new Date().getFullYear()} HRTekSystem Pvt. Ltd.
+                      </td></tr>
+                    </table>
+                  </td></tr>
+                </table>
+              </body></html>`,
+            }).catch(e => console.warn("[Email Welcome] Failed:", e));
+          }
+
+          // 3. Notify Admin about company registration request
+          await notifyAdmin("Company Registration Request", `User ${firstName} ${lastName} (${userEmail}) has completed verification and is waiting for approval to register their company.`);
+
+        } catch (notifierError) {
+          console.warn("Post-verification notification error:", notifierError);
+        }
+
         // Update session to reflect verified status
         const session = await getSession(request.headers.get("Cookie"));
         session.set("is_verified_email", true);
+        session.set("onboardingStatus", "None"); // Keep as "None" for admin dashboard compatibility
 
         return json(
           { success: true, verified: true },
@@ -132,6 +209,7 @@ export default function EmailVerify() {
   const [isResending, setIsResending] = useState(false);
   const [codeError, setCodeError] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSalesPopup, setShowSalesPopup] = useState(false);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [particles, setParticles] = useState<Array<{ left: string; top: string; duration: number; delay: number }>>([]);
@@ -636,16 +714,90 @@ export default function EmailVerify() {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">Email Verified!</h2>
                 <button
-                  onClick={() => window.location.href = "/dashboard"}
+                  onClick={() => setShowSalesPopup(true)}
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold shadow-lg"
                 >
-                  Continue to Dashboard
+                  Continue
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
       </div>
+
+      {/* Sales Team Popup — full-screen overlay after email verification */}
+      <AnimatePresence>
+        {showSalesPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#05060a]/95 backdrop-blur-md p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 32 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              className="relative w-full max-w-lg text-center"
+            >
+              {/* Glow */}
+              <div className="absolute inset-0 -z-10 bg-indigo-600/20 rounded-full blur-[80px]" />
+
+              {/* Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="relative w-20 h-20">
+                  <div className="absolute inset-0 bg-indigo-600/20 rounded-full animate-ping" />
+                  <div className="relative w-20 h-20 bg-indigo-600/10 border border-indigo-500/30 rounded-full flex items-center justify-center">
+                    <svg className="w-9 h-9 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
+                You're All Set!
+              </h1>
+              <p className="text-slate-400 text-base mb-8 leading-relaxed max-w-sm mx-auto">
+                Thank you for registering with <span className="text-white font-semibold">HRTek System</span>. Your account is now under review.
+              </p>
+
+              {/* Key message card */}
+              <div className="bg-white/[0.05] border border-white/10 rounded-2xl p-6 mb-8 text-left">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-base mb-1">Our Sales Team Will Contact You Shortly</p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      One of our HR transformation specialists will reach out to you within <span className="text-slate-300 font-medium">1–2 business days</span> to discuss your requirements and guide you through onboarding.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 justify-center text-xs text-slate-500 mb-8">
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                Your account is pending admin approval
+              </div>
+
+              <button
+                onClick={() => { window.location.href = "/pending-approval"; }}
+                className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-base transition-colors shadow-lg shadow-indigo-600/30"
+              >
+                Got It — Take Me to My Account
+              </button>
+
+              <p className="mt-4 text-xs text-slate-600">
+                © {new Date().getFullYear()} HRTekSystem Pvt. Ltd.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

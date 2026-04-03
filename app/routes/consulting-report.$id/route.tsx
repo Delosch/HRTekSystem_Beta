@@ -90,7 +90,9 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
         if (!data) {
             console.error(`[Consulting Report Loader] No assessment data found for ${params.id}`);
             if (url.searchParams.get("verify") === "true") {
-                throw new Response("No assessment data found", { status: 404 });
+                // Return 202 (not ready yet) instead of throwing 404.
+                // Throwing causes Root ErrorBoundary on navigation; returning 202 keeps polling safe.
+                return new Response(null, { status: 202 });
             }
 
             const promptMap: Record<string, string> = {
@@ -195,7 +197,7 @@ export const action: ActionFunction = async ({ request, params }) => {
         };
 
         try {
-            const advisory = await generateHTIAdvisory(aggregatedData as any, engineType as any);
+            const advisory = await generateHTIAdvisory(aggregatedData as any);
             await saveAdvisoryReport(
                 user.organisationId,
                 user.userId,

@@ -20,7 +20,6 @@ import type { MetaFunction } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "HRTek System - AI-Powered HR Transformation Platform" },
     { charSet: "utf-8" },
     { name: "viewport", content: "width=device-width, initial-scale=1" },
     { name: "description", content: "AI-powered HR transformation platform offering digital maturity assessment, HCM vendor selection, roadmap generation, and change management solutions." },
@@ -215,6 +214,8 @@ export default function App() {
   return (
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
+        {/* suppressHydrationWarning on title prevents browser-extension-caused hydration errors */}
+        <title suppressHydrationWarning>HRTek System - AI-Powered HR Transformation Platform</title>
         <Meta />
         <Links />
 

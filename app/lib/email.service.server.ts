@@ -40,57 +40,98 @@ export async function sendWelcomeEmail({ email, firstName, password, role, login
             });
         }
 
-        const fromAddress = process.env.SMTP_FROM || '"HRTek Systems" <noreply@hrteksystems.com>';
+        const fromAddress = process.env.SMTP_FROM || '"HRTek System" <no-reply@hrteksystem.com>';
+        const logoUrl = `${process.env.APP_URL || 'https://hrteksystem.com'}/hrtek_logo.png`;
 
-        const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px; }
-                .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-                .header { background-color: #0f172a; color: white; padding: 30px; text-align: center; }
-                .content { padding: 40px; color: #334155; }
-                .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
-                .credentials-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
-                .footer { background-color: #f8fafc; padding: 20px; text-align: center; color: #64748b; font-size: 12px; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Welcome to HRTek Systems</h1>
-                </div>
-                <div class="content">
-                    <p>Hello <strong>${firstName}</strong>,</p>
-                    <p>Your account has been successfully created by the administrator. You have been assigned the role of <strong>${role}</strong>.</p>
-                    
-                    <p>Here are your login credentials:</p>
-                    
-                    <div class="credentials-box">
-                        <p><strong>Email:</strong> ${email}</p>
-                        <p><strong>Password:</strong> ${password}</p>
-                    </div>
+        const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to HRTek System</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,0.10);border:1px solid #e2e8f0;">
 
-                    <p>Please log in and change your password immediately.</p>
-                    
-                    <div style="text-align: center;">
-                        <a href="${loginUrl}" class="button">Log In to Dashboard</a>
-                    </div>
-                </div>
-                <div class="footer">
-                    <p>&copy; ${new Date().getFullYear()} HRTek Systems. All rights reserved.</p>
-                    <p>If you did not expect this email, please contact your administrator.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        `;
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1d4ed8 100%);padding:36px 40px;text-align:center;">
+              <img src="${logoUrl}" alt="HRTek System" height="40" style="height:40px;object-fit:contain;display:block;margin:0 auto 14px;" />
+              <p style="margin:0;color:rgba(255,255,255,0.60);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Account Created</p>
+            </td>
+          </tr>
+
+          <!-- Welcome Banner -->
+          <tr>
+            <td style="background:#f0f7ff;border-bottom:1px solid #dbeafe;padding:20px 40px;text-align:center;">
+              <p style="margin:0;font-size:20px;font-weight:800;color:#1e3a8a;">Welcome, ${firstName}! &#127881;</p>
+              <p style="margin:4px 0 0;font-size:14px;color:#3b82f6;">Your HRTek System account is ready.</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px;">
+              <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+                Hello <strong style="color:#0f172a;">${firstName}</strong>, your account has been created by the administrator with the role of <strong style="color:#2563eb;">${role}</strong>.
+              </p>
+
+              <!-- Credentials Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:12px;margin:24px 0;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 4px;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Your Login Credentials</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;">
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#64748b;font-weight:600;width:80px;">Email</td>
+                        <td style="padding:6px 0;font-size:14px;color:#0f172a;font-weight:700;">${email}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:13px;color:#64748b;font-weight:600;">Password</td>
+                        <td style="padding:6px 0;font-size:14px;color:#0f172a;font-weight:700;font-family:'Courier New',monospace;">${password}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 24px;font-size:14px;color:#ef4444;font-weight:600;">&#9888;&nbsp; Please log in and change your password immediately.</p>
+
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="text-align:center;">
+                    <a href="${loginUrl}" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:0.3px;">Log In to Dashboard &rarr;</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background:#f8fafc;">
+              <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} HRTek System &mdash; A Product of Delosch Technologies Pvt. Ltd.</p>
+              <p style="margin:0;font-size:12px;color:#cbd5e1;">If you did not expect this email, please contact your administrator.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
         await transporter.sendMail({
-            from: process.env.SMTP_FROM || `"HRTek Systems" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+            from: fromAddress,
             to: email,
-            subject: "Welcome to HRTek - Your Account Credentials",
+            subject: "Welcome to HRTek System — Your Account Is Ready",
             html: htmlContent
         });
 
@@ -446,6 +487,143 @@ export async function sendTaskAssignedEmail({ name, email, task, position, id }:
 
     } catch (error: any) {
         console.error("❌ Failed to send task assignment email:", error);
+        return false;
+    }
+}
+
+export async function sendRegistrationThankYouEmail({ to, firstName }: { to: string; firstName: string }) {
+    try {
+        const hasSmtp = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+        const hasGmail = process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD;
+
+        if (!hasSmtp && !hasGmail) {
+            console.log(`📧 [Mock Thank You Email] To: ${to}`);
+            return false;
+        }
+
+        let transporter;
+        if (hasSmtp) {
+            transporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === 'true',
+                auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            });
+        } else {
+            transporter = nodemailer.createTransport({
+                service: "Gmail",
+                auth: { user: process.env.GMAIL_USER, pass: process.env.GOOGLE_APP_PASSWORD },
+            });
+        }
+
+        const fromAddress = process.env.SMTP_FROM || '"HRTek System" <no-reply@hrteksystem.com>';
+        const logoUrl = `${process.env.APP_URL || 'https://hrteksystem.com'}/hrtek_logo.png`;
+        const appUrl = process.env.APP_URL || 'https://hrteksystem.com';
+
+        const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to HR-Tek System</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,0.10);border:1px solid #e2e8f0;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1d4ed8 100%);padding:36px 40px;text-align:center;">
+              <img src="${logoUrl}" alt="HR-Tek System" height="40" style="height:40px;object-fit:contain;display:block;margin:0 auto 14px;" />
+              <p style="margin:0;color:rgba(255,255,255,0.60);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Registration Confirmation</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <p style="margin:0 0 20px;font-size:16px;color:#334155;line-height:1.7;">Dear <strong style="color:#0f172a;">${firstName}</strong>,</p>
+
+              <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.8;">
+                Welcome to <strong style="color:#0f172a;">HR-Tek System</strong> — a next-generation HR transformation platform that is incubated at <strong style="color:#1d4ed8;">AIC IIT Delhi</strong>.
+              </p>
+
+              <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.8;">
+                Thank you for registering with us and showing interest in our platform. We truly appreciate the opportunity to connect with you.
+              </p>
+
+              <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.8;">
+                Our business team is currently reviewing your profile and will reach out to you within the next <strong style="color:#0f172a;">1–2 business days</strong> to better understand your requirements and provide tailored guidance.
+              </p>
+
+              <p style="margin:0 0 32px;font-size:15px;color:#475569;line-height:1.8;">
+                At <strong style="color:#0f172a;">HR-Tek System</strong>, we are committed to partnering with you in building a future-ready HR ecosystem through a world-class HR transformation platform.
+              </p>
+
+              <!-- Info box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f7ff;border:1px solid #dbeafe;border-left:4px solid #2563eb;border-radius:12px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:18px 24px;">
+                    <p style="margin:0 0 6px;font-size:12px;color:#3b82f6;font-weight:700;letter-spacing:1px;text-transform:uppercase;">In the meantime</p>
+                    <p style="margin:0;font-size:14px;color:#1e3a8a;line-height:1.6;">You are welcome to explore the platform or share any specific requirements with us. Should you need any immediate assistance, please feel free to reach out via the contact link below.</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 32px;font-size:15px;color:#475569;line-height:1.8;">
+                Thank you once again for choosing <strong style="color:#0f172a;">HR-Tek System</strong>.
+              </p>
+
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding-right:12px;">
+                    <a href="${appUrl}/contact" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#ffffff;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:700;font-size:13px;">Contact Us &rarr;</a>
+                  </td>
+                  <td>
+                    <a href="${appUrl}" style="display:inline-block;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:700;font-size:13px;">Explore Platform</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background:#f8fafc;">
+              <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} <strong style="color:#64748b;">HR-Tek System</strong> &mdash; A Product of Delosch Technologies Pvt. Ltd.</p>
+              <p style="margin:0 0 6px;font-size:11px;color:#cbd5e1;">Incubated at <strong style="color:#94a3b8;">AIC IIT Delhi</strong> &bull; Lucknow, Uttar Pradesh, India</p>
+              <p style="margin:8px 0 0;font-size:11px;color:#cbd5e1;">
+                <a href="${appUrl}/terms" style="color:#93c5fd;text-decoration:none;font-weight:600;">Terms &amp; Conditions</a>
+                &nbsp;&bull;&nbsp;
+                <a href="${appUrl}/privacy" style="color:#93c5fd;text-decoration:none;font-weight:600;">Privacy Policy</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+        await transporter.sendMail({
+            from: fromAddress,
+            to,
+            subject: "Welcome to HR-Tek System — Thank You for Registering",
+            html: htmlContent,
+        });
+
+        console.log(`✅ Registration thank-you email sent to ${to}`);
+        return true;
+
+    } catch (error: any) {
+        console.error("❌ Failed to send registration thank-you email:", error);
         return false;
     }
 }

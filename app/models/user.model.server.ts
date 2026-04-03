@@ -1,7 +1,7 @@
 // dynamo db for use auth { mvp_user ~table name }
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
-import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand, DeleteCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -109,6 +109,74 @@ export async function signupUser(
             await notifyAdmin("New User Signup", `A new user has signed up: ${email} (${first_name} ${last_name})`);
         } catch (notifierError) {
             console.warn("Failed to notify admin about signup:", notifierError);
+        }
+
+        // Welcome email to user
+        try {
+            const nodemailer = await import("nodemailer");
+            const hasSmtp  = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+            const hasGmail = process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD;
+            if (hasSmtp || hasGmail) {
+                const transporter = hasSmtp
+                    ? nodemailer.default.createTransport({
+                        host: process.env.SMTP_HOST,
+                        port: Number(process.env.SMTP_PORT) || 587,
+                        secure: process.env.SMTP_SECURE === "true",
+                        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+                    })
+                    : nodemailer.default.createTransport({
+                        service: "Gmail",
+                        auth: { user: process.env.GMAIL_USER, pass: process.env.GOOGLE_APP_PASSWORD },
+                    });
+                const from = process.env.SMTP_FROM || '"HRTek System" <noreply@hrteksystem.com>';
+                await transporter.sendMail({
+                    from,
+                    to: email,
+                    subject: `Welcome to HRTek System — Your account is under review`,
+                    html: `
+                    <!DOCTYPE html><html lang="en">
+                    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+                    <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+                        <tr><td align="center">
+                          <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                            <tr>
+                              <td style="background:linear-gradient(135deg,#023e8a 0%,#0353a4 100%);padding:40px 48px;text-align:center;">
+                                <img src="https://www.hrteksystem.com/hrtek_logo.png" alt="HRTek System" style="height:40px;width:auto;margin-bottom:20px;" />
+                                <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Welcome, ${first_name}!</h1>
+                                <p style="color:#93c5fd;margin:8px 0 0;font-size:15px;">Your account has been created successfully</p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding:40px 48px;color:#334155;">
+                                <p style="font-size:16px;line-height:1.6;margin:0 0 20px;">Hi <strong>${first_name} ${last_name}</strong>,</p>
+                                <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">Thank you for registering with <strong>HRTek System</strong>. We're excited to have you onboard.</p>
+                                <div style="background:#fef9c3;border-left:4px solid #f59e0b;border-radius:8px;padding:20px;margin:0 0 24px;">
+                                  <p style="margin:0;font-size:15px;color:#92400e;font-weight:600;">Account Under Review</p>
+                                  <p style="margin:8px 0 0;font-size:14px;color:#78350f;line-height:1.5;">Your account is currently being reviewed by our team. You will receive an email once it has been approved and you can begin your HR transformation journey.</p>
+                                </div>
+                                <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0 0 8px;">Here's what happens next:</p>
+                                <ol style="font-size:14px;color:#475569;line-height:1.8;padding-left:20px;margin:0 0 24px;">
+                                  <li>Our team reviews your account (typically within 1–2 business days)</li>
+                                  <li>You'll receive an approval email with a link to complete your setup</li>
+                                  <li>Set up your company profile and start your assessments</li>
+                                </ol>
+                                <p style="font-size:13px;color:#94a3b8;margin:0;">If you have any questions, reply to this email or contact us at <a href="mailto:support@hrteksystem.com" style="color:#2563eb;">support@hrteksystem.com</a></p>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="background:#f8fafc;padding:20px 48px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;">
+                                © ${new Date().getFullYear()} HRTek System — A Product of Delosch Technologies Pvt. Ltd.
+                              </td>
+                            </tr>
+                          </table>
+                        </td></tr>
+                      </table>
+                    </body></html>`,
+                });
+            }
+        } catch (emailError) {
+            console.warn("Failed to send welcome email:", emailError);
         }
 
         console.log("User signed up:", email);
@@ -658,5 +726,180 @@ export async function deleteUser(userId: string): Promise<void> {
     } catch (error) {
         console.error(`Error deleting user ${userId}:`, error);
         throw new Error("Failed to delete user account.");
+    }
+}
+
+// ─── Admin: Pending User Approval ────────────────────────────────────────────
+
+export async function getPendingUsers(): Promise<DbUserItem[]> {
+    try {
+        const result = await ddbDocClient.send(new ScanCommand({
+            TableName: USERS_TABLE,
+            FilterExpression: "onboardingStatus = :status AND profile_type = :ptype",
+            ExpressionAttributeValues: {
+                ":status": "None",
+                ":ptype": "USER",
+            },
+            ProjectionExpression: "pk, sk, first_name, last_name, email, phone, country_iso, createdAt, onboardingStatus",
+        }));
+        return (result.Items || []) as DbUserItem[];
+    } catch (error) {
+        console.error("Error fetching pending users:", error);
+        throw new Error("Failed to fetch pending users.");
+    }
+}
+
+export async function approveUser(userId: string): Promise<void> {
+    // Approve + force-verify email & phone so approved users skip OTP gates
+    await ddbDocClient.send(new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: { pk: `USER#${userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET onboardingStatus = :status, is_verified_email = :v, is_verified_phone = :v",
+        ExpressionAttributeValues: { ":status": "Approved", ":v": true },
+    }));
+
+    // Fetch user email to send approval notification
+    try {
+        const profile = await getUserProfile(userId);
+        if (!profile?.email) return;
+        const { email, first_name, last_name } = profile as any;
+
+        const nodemailer = await import("nodemailer");
+        const hasSmtp  = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+        const hasGmail = process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD;
+        if (!hasSmtp && !hasGmail) return;
+
+        const transporter = hasSmtp
+            ? nodemailer.default.createTransport({
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === "true",
+                auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            })
+            : nodemailer.default.createTransport({
+                service: "Gmail",
+                auth: { user: process.env.GMAIL_USER, pass: process.env.GOOGLE_APP_PASSWORD },
+            });
+
+        const from = process.env.SMTP_FROM || '"HRTek System" <noreply@hrteksystem.com>';
+        await transporter.sendMail({
+            from,
+            to: email,
+            subject: `Your HRTek account has been approved! 🎉`,
+            html: `
+            <!DOCTYPE html><html lang="en">
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+            <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                    <tr>
+                      <td style="background:linear-gradient(135deg,#065f46 0%,#059669 100%);padding:40px 48px;text-align:center;">
+                        <img src="https://www.hrteksystem.com/hrtek_logo.png" alt="HRTek System" style="height:40px;width:auto;margin-bottom:20px;" />
+                        <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">You're Approved!</h1>
+                        <p style="color:#a7f3d0;margin:8px 0 0;font-size:15px;">Welcome to the HRTek transformation platform</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:40px 48px;color:#334155;">
+                        <p style="font-size:16px;line-height:1.6;margin:0 0 20px;">Hi <strong>${first_name} ${last_name}</strong>,</p>
+                        <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">Great news — your HRTek System account has been reviewed and <strong style="color:#059669;">approved</strong>!</p>
+                        <div style="text-align:center;margin:32px 0;">
+                          <a href="https://www.hrteksystem.com/auth/drx" style="display:inline-block;background:linear-gradient(135deg,#023e8a,#0353a4);color:#fff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;">Complete Your Setup →</a>
+                        </div>
+                        <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0;">You can now log in, set up your company profile, and begin your HR transformation assessments.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background:#f8fafc;padding:20px 48px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;">
+                        © ${new Date().getFullYear()} HRTek System — A Product of Delosch Technologies Pvt. Ltd.
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body></html>`,
+        });
+    } catch (emailError) {
+        console.warn("Failed to send approval email:", emailError);
+    }
+}
+
+export async function rejectUser(userId: string, reason?: string): Promise<void> {
+    await ddbDocClient.send(new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: { pk: `USER#${userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET onboardingStatus = :status, rejectionReason = :reason",
+        ExpressionAttributeValues: {
+            ":status": "Rejected",
+            ":reason": reason || "Your account did not meet our onboarding criteria.",
+        },
+    }));
+
+    try {
+        const profile = await getUserProfile(userId);
+        if (!profile?.email) return;
+        const { email, first_name, last_name } = profile as any;
+        const displayReason = reason || "Your account did not meet our onboarding criteria at this time.";
+
+        const nodemailer = await import("nodemailer");
+        const hasSmtp  = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+        const hasGmail = process.env.GMAIL_USER && process.env.GOOGLE_APP_PASSWORD;
+        if (!hasSmtp && !hasGmail) return;
+
+        const transporter = hasSmtp
+            ? nodemailer.default.createTransport({
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === "true",
+                auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+            })
+            : nodemailer.default.createTransport({
+                service: "Gmail",
+                auth: { user: process.env.GMAIL_USER, pass: process.env.GOOGLE_APP_PASSWORD },
+            });
+
+        const from = process.env.SMTP_FROM || '"HRTek System" <noreply@hrteksystem.com>';
+        await transporter.sendMail({
+            from,
+            to: email,
+            subject: `Update on your HRTek System account`,
+            html: `
+            <!DOCTYPE html><html lang="en">
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+            <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+                <tr><td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                    <tr>
+                      <td style="background:linear-gradient(135deg,#023e8a 0%,#0353a4 100%);padding:40px 48px;text-align:center;">
+                        <img src="https://www.hrteksystem.com/hrtek_logo.png" alt="HRTek System" style="height:40px;width:auto;margin-bottom:20px;" />
+                        <h1 style="color:#fff;margin:0;font-size:24px;font-weight:700;">Account Update</h1>
+                        <p style="color:#93c5fd;margin:8px 0 0;font-size:15px;">HRTek System — Registration Review</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:40px 48px;color:#334155;">
+                        <p style="font-size:16px;line-height:1.6;margin:0 0 20px;">Hi <strong>${first_name} ${last_name}</strong>,</p>
+                        <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">Thank you for your interest in HRTek System. After reviewing your registration, we are unable to approve your account at this time.</p>
+                        <div style="background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px;padding:20px;margin:0 0 24px;">
+                          <p style="margin:0;font-size:14px;font-weight:600;color:#991b1b;">Reason</p>
+                          <p style="margin:8px 0 0;font-size:14px;color:#7f1d1d;line-height:1.5;">${displayReason}</p>
+                        </div>
+                        <p style="font-size:14px;color:#64748b;line-height:1.6;margin:0;">If you believe this is an error or would like to appeal, please contact us at <a href="mailto:support@hrteksystem.com" style="color:#2563eb;">support@hrteksystem.com</a>.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background:#f8fafc;padding:20px 48px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0;">
+                        © ${new Date().getFullYear()} HRTek System — A Product of Delosch Technologies Pvt. Ltd.
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body></html>`,
+        });
+    } catch (emailError) {
+        console.warn("Failed to send rejection email:", emailError);
     }
 }

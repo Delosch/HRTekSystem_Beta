@@ -86,7 +86,14 @@ export async function generateAdvisoryReport(
             };
         }
 
-        // Step 5: Save report with pending status
+        // Step 5: Append audit trail entry for save event
+        if (!advisory.auditTrail) advisory.auditTrail = [];
+        advisory.auditTrail.push({
+            timestamp: new Date().toISOString(),
+            action: "submitted_for_review",
+            details: `Report submitted for admin review by ${requestedBy}`
+        });
+
         console.log("💾 Saving advisory report...");
         const reportId = await saveAdvisoryReport(
             companyId,
@@ -213,15 +220,6 @@ export async function processAdminApproval(
 
         // If approved, deliver to company
         if (action === "approve") {
-            // Check for payment status specifically for Roadmap Generator as requested
-            const hasPayment = await hasVerifiedPaymentForEngines(companyId, ["HR Transformation Roadmap Generator"]);
-            
-            if (!hasPayment) {
-                return {
-                    success: false,
-                    error: "Approval Denied: No verified payment found for 'HR Transformation Roadmap Generator'. Please ensure the company has purchased this module before final approval."
-                };
-            }
             await deliverApprovedReport(reportId);
         }
 

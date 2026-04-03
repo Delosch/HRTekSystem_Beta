@@ -4,7 +4,7 @@ import EngineStatusActions from "../components/DashboardComponents/EngineStatusA
 import { redirect, useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { completedEngine, fetchEngineRecomendations, findEngineData } from "~/models/engine.model.server";
 import { requireUserSession } from "~/lib/session.server";
-import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users } from "lucide-react";
+import { CheckCircle, Clock, ArrowRight, Sparkles, TrendingUp, Activity, Target, Users, CheckCircle2, Circle } from "lucide-react";
 import { json, LoaderFunction } from "@remix-run/node";
 import { getEnhancedUser } from "~/utils/user.server";
 import EnginePricingCard from "~/components/EnginePricingCard";
@@ -12,6 +12,63 @@ import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
 import PaymentStatusModal from "~/components/PaymentStatusModal";
 import { getEnginePaymentStatus } from "~/models/payment.model.server";
+
+// ── Real section definitions matching App.tsx ─────────────────────────────────
+const SECTION_KEYS: Record<string, string[]> = {
+  'business-strategy': ['drivers', 'outcomes', 'alignment', 'hr-role', 'sponsor'],
+  'process-maturity':  ['manual-areas', 'standardization', 'sop-maturity', 'benchmarking'],
+  'digital-capability':['digitized-areas', 'pain-points', 'user-satisfaction'],
+  'technology-landscape':['integrated-systems', 'hcm-platform', 'tool-count', 'vendor-optimization'],
+  'automation-ai':     ['ai-use-cases', 'automation-level', 'automation-percent', 'ai-comfort'],
+  'data-analytics':    ['data-consumers', 'data-quality', 'analytics-level', 'business-influence'],
+  'operating-model':   ['operating-model', 'shared-services-maturity', 'sla-tracking', 'effort-split'],
+  'change-readiness':  ['past-success', 'digital-capability', 'change-approach'],
+  'compliance-risk':   ['compliance-automation', 'audit-trails', 'privacy-maturity'],
+  'budget-vision':     ['budget-readiness', 'leadership-mindset', 'hr-vision', 'ecosystem-openness'],
+};
+
+const SECTION_LABELS: Record<string, string> = {
+  'business-strategy':   'Business Strategy & Intent',
+  'process-maturity':    'HR Process Maturity',
+  'digital-capability':  'Digital Capability',
+  'technology-landscape':'Technology Landscape',
+  'automation-ai':       'Automation & AI',
+  'data-analytics':      'Data & Analytics',
+  'operating-model':     'HR Operating Model',
+  'change-readiness':    'Change & Adoption',
+  'compliance-risk':     'Compliance & Risk',
+  'budget-vision':       'Budget & Vision',
+};
+
+const SECTION_GRADIENTS: Record<string, string> = {
+  'business-strategy':   'from-blue-500 to-indigo-500',
+  'process-maturity':    'from-teal-500 to-cyan-500',
+  'digital-capability':  'from-cyan-500 to-blue-500',
+  'technology-landscape':'from-indigo-500 to-purple-500',
+  'automation-ai':       'from-purple-500 to-pink-500',
+  'data-analytics':      'from-pink-500 to-rose-500',
+  'operating-model':     'from-orange-500 to-amber-500',
+  'change-readiness':    'from-amber-500 to-yellow-500',
+  'compliance-risk':     'from-green-500 to-emerald-500',
+  'budget-vision':       'from-emerald-500 to-teal-500',
+};
+
+/** Compute per-section completion % from actual responses */
+function computeSectionScores(responses: Record<string, any> | null | undefined): Record<string, number> {
+  const scores: Record<string, number> = {};
+  for (const [sectionId, keys] of Object.entries(SECTION_KEYS)) {
+    if (!responses || Object.keys(responses).length === 0) {
+      scores[sectionId] = 0;
+      continue;
+    }
+    const answered = keys.filter(k => {
+      const v = responses[k];
+      return v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0);
+    });
+    scores[sectionId] = Math.round((answered.length / keys.length) * 100);
+  }
+  return scores;
+}
 
 const ENGINE = "HR Transformation Roadmap Generator";
 
@@ -79,6 +136,22 @@ export const loader: LoaderFunction = async ({ request }) => {
     console.log("No recommendations available yet");
   }
 
+  // ── Compute real metrics from actual responses ──────────────────────────
+  const responses = currentEngineData?.responses || {};
+  const sectionScores = computeSectionScores(responses);
+
+  const totalSections = Object.keys(SECTION_KEYS).length; // 10
+  const stepsCompleted = Object.values(sectionScores).filter(s => s === 100).length;
+  const sectionsWithAnyData = Object.values(sectionScores).filter(s => s > 0).length;
+
+  // Average score: mean of all section completion %s (only 0 when nothing answered)
+  const averageScore = sectionsWithAnyData > 0
+    ? Math.round(Object.values(sectionScores).reduce((a, b) => a + b, 0) / totalSections)
+    : 0;
+
+  // Last active date from DynamoDB record
+  const lastActiveDate = currentEngineData?.createdAt || null;
+
   return json({
     locked: false,
     currentEngine: {
@@ -93,12 +166,22 @@ export const loader: LoaderFunction = async ({ request }) => {
     paymentStatus,
     isPaid,
     isPending,
-    hasReport
+    hasReport,
+    // real computed metrics
+    sectionScores,
+    stepsCompleted,
+    totalSections,
+    averageScore,
+    lastActiveDate,
   });
 };
 
 export default function RoadmapDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport } = useLoaderData<any>();
+  const {
+    currentEngine, completedEngines, recommendations, user,
+    paymentStatus, isPaid, isPending, hasReport,
+    sectionScores, stepsCompleted, totalSections, averageScore, lastActiveDate,
+  } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -175,13 +258,40 @@ export default function RoadmapDashboard() {
           </div>
         </div>
 
-        {/* Enhanced Metrics Grid */}
+        {/* Real Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { title: "Completion Rate", value: currentEngine.progress, suffix: "%", icon: Target, colorScheme: "blue" as const, trend: { value: 15, isPositive: true }, delay: "0ms" },
-            { title: "Total Submissions", value: 1, icon: Activity, colorScheme: "green" as const, delay: "100ms" },
-            { title: "Average Score", value: currentEngine.progress > 0 ? Math.floor(currentEngine.progress * 0.88) : 0, suffix: "/100", icon: TrendingUp, colorScheme: "purple" as const, trend: { value: 10, isPositive: true }, delay: "200ms" },
-            { title: "Active Users", value: 1, icon: Users, colorScheme: "amber" as const, delay: "300ms" }
+            {
+              title: "Completion Rate",
+              value: currentEngine.progress,
+              suffix: "%",
+              icon: Target,
+              colorScheme: "blue" as const,
+              delay: "0ms"
+            },
+            {
+              title: "Sections Complete",
+              value: stepsCompleted,
+              suffix: `/${totalSections}`,
+              icon: Activity,
+              colorScheme: "green" as const,
+              delay: "100ms"
+            },
+            {
+              title: "Average Score",
+              value: averageScore,
+              suffix: "/100",
+              icon: TrendingUp,
+              colorScheme: "purple" as const,
+              delay: "200ms"
+            },
+            {
+              title: "Status",
+              value: currentEngine.status,
+              icon: Users,
+              colorScheme: "amber" as const,
+              delay: "300ms"
+            }
           ].map(({ delay, ...metric }, index) => (
             <div key={index} style={{ animationDelay: delay }} className="animate-slide-up">
               <MetricsCard {...metric} />
@@ -204,16 +314,18 @@ export default function RoadmapDashboard() {
                 <ProgressRing progress={currentEngine.progress} size={160} strokeWidth={12} gradientId="progress-gradient" />
                 <div className="mt-6 w-full space-y-4">
                   <div className="flex justify-between items-center p-4 bg-gradient-to-r from-teal-50 to-teal-100/50 rounded-xl border border-teal-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                    <span className="text-sm font-semibold text-gray-700">Steps Completed</span>
+                    <span className="text-sm font-semibold text-gray-700">Sections Completed</span>
                     <span className="text-xl font-bold bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
-                      {Math.floor((currentEngine.progress / 100) * 10)}/10
+                      {stepsCompleted}/{totalSections}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center p-4 bg-gradient-to-r from-cyan-50 to-cyan-100/50 rounded-xl border border-cyan-200/50 hover:scale-105 transition-transform duration-300 cursor-pointer">
-                    <span className="text-sm font-semibold text-gray-700">Time Spent</span>
-                    <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-cyan-700 bg-clip-text text-transparent">
-                      {currentEngine.progress > 0 ? Math.floor(currentEngine.progress * 0.6) : 0} min
+                    <span className="text-sm font-semibold text-gray-700">Last Active</span>
+                    <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-cyan-700 bg-clip-text text-transparent">
+                      {lastActiveDate
+                        ? new Date(lastActiveDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                        : "Not started"}
                     </span>
                   </div>
                 </div>
@@ -273,33 +385,48 @@ export default function RoadmapDashboard() {
                 Assessment Breakdown
               </h2>
 
-              <div className="space-y-5">
-                {[
-                  { name: "Current State Analysis", score: 88, gradient: "from-teal-500 to-cyan-500" },
-                  { name: "Future State Vision", score: 92, gradient: "from-cyan-500 to-blue-500" },
-                  { name: "Gap Analysis", score: 78, gradient: "from-blue-500 to-indigo-500" },
-                  { name: "Implementation Strategy", score: 85, gradient: "from-indigo-500 to-purple-500" },
-                  { name: "ROI Projection", score: 80, gradient: "from-purple-500 to-pink-500" },
-                ].map((section, index) => (
-                  <div key={index} className="space-y-3 group">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 transition-colors">
-                        {section.name}
-                      </span>
-                      <span className="text-lg font-extrabold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
-                        {section.score}%
-                      </span>
+              <div className="space-y-4">
+                {currentEngine.progress === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <Activity className="w-6 h-6 text-gray-400" />
                     </div>
-                    <div className="relative w-full bg-gray-200/50 rounded-full h-3 overflow-hidden shadow-inner">
-                      <div
-                        className={`h-3 rounded-full bg-gradient-to-r ${section.gradient} transition-all duration-1000 ease-out relative overflow-hidden group-hover:shadow-lg`}
-                        style={{ width: `${section.score}%` }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                      </div>
-                    </div>
+                    <p className="text-sm font-semibold text-gray-500">No assessment data yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Start the assessment to see your section breakdown</p>
                   </div>
-                ))}
+                ) : (
+                  Object.entries(SECTION_KEYS).map(([sectionId], index) => {
+                    const score = sectionScores?.[sectionId] ?? 0;
+                    const gradient = SECTION_GRADIENTS[sectionId] || "from-teal-500 to-cyan-500";
+                    const label = SECTION_LABELS[sectionId] || sectionId;
+                    return (
+                      <div key={sectionId} className="space-y-2 group">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            {score === 100
+                              ? <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                              : score > 0
+                              ? <Circle className="w-4 h-4 text-teal-400 shrink-0" />
+                              : <Circle className="w-4 h-4 text-gray-300 shrink-0" />
+                            }
+                            <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
+                              {label}
+                            </span>
+                          </div>
+                          <span className="text-sm font-extrabold text-gray-700">
+                            {score}%
+                          </span>
+                        </div>
+                        <div className="relative w-full bg-gray-200/50 rounded-full h-2.5 overflow-hidden shadow-inner">
+                          <div
+                            className={`h-2.5 rounded-full bg-gradient-to-r ${gradient} transition-all duration-1000 ease-out`}
+                            style={{ width: `${score}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               <div className="mt-8 pt-6 border-t border-gray-200/50 flex gap-3">

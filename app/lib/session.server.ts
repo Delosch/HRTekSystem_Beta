@@ -275,10 +275,33 @@ export async function requireUserSession(request: Request): Promise<SessionData>
     const userSession = await getUserSession(request);
 
     if (!userSession) {
-        // If no user session, redirect to login page with the original URL as redirectTo
         const url = new URL(request.url);
         const redirectTo = url.pathname + url.search;
         throw redirect(`/auth?redirectTo=${encodeURIComponent(redirectTo)}`);
+    }
+
+    // Bypass status check for admins
+    if (userSession.isAdmin) return userSession;
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // Allowed paths for unverified/unapproved users
+    const isAuthPath = path.startsWith("/auth/");
+    const isApprovalPendingPath = path === "/pending-approval";
+    const isVerifyPath = path === "/auth/sms/verify" || path === "/auth/email/verify";
+
+    // If verified but not approved, redirect to pending page if not already there
+    if (userSession.is_verified_phone && userSession.is_verified_email) {
+        if (userSession.onboardingStatus !== "Approved" && !isApprovalPendingPath && !path.startsWith("/admin")) {
+           throw redirect("/pending-approval");
+        }
+    } else {
+        // If not verified, redirect to verification if trying to access other pages
+        if (!isVerifyPath && !path.startsWith("/auth") && !path.startsWith("/admin")) {
+            if (!userSession.is_verified_phone) throw redirect("/auth/sms/verify");
+            if (!userSession.is_verified_email) throw redirect("/auth/email/verify");
+        }
     }
 
     return userSession;

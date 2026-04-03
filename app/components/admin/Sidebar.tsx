@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, NavLink, useLocation } from "@remix-run/react";
+import { Link, NavLink } from "@remix-run/react";
 import {
   LayoutDashboard,
   Building2,
@@ -12,38 +11,45 @@ import {
   BarChart3,
   Globe,
   Settings2,
-  ChevronRight,
-  LogOut,
-  UserCircle
+  MessageSquare,
+  Briefcase,
+  UserCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
   isExpanded: boolean;
+  pendingCount?: number;
 }
 
 interface SidebarItem {
   label: string;
   href: string;
   icon: any;
+  badge?: number;
 }
 
-const adminSidebarItems: SidebarItem[] = [
+const baseItems: SidebarItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Companies", href: "/admin/companies", icon: Building2 },
   { label: "Users", href: "/admin/users", icon: Users },
+  { label: "Requests", href: "/admin/requests", icon: UserCheck },
   { label: "Assessments", href: "/admin/assessments", icon: CheckSquare },
   { label: "Reports", href: "/admin/reports", icon: Sparkles },
   { label: "Payments", href: "/admin/payments/verification", icon: CreditCard },
   { label: "Review Reports", href: "/admin/hti", icon: ShieldCheck },
+  { label: "Messages", href: "/admin/messages", icon: MessageSquare },
+  { label: "Careers", href: "/admin/careers", icon: Briefcase },
   { label: "Activity", href: "/admin/activity-logs", icon: ListTodo },
   { label: "Analytics", href: "/admin/website/analytics", icon: BarChart3 },
   { label: "Website", href: "/admin/website/home", icon: Globe },
   { label: "Permissions", href: "/admin/roles", icon: ShieldCheck },
 ];
 
-export default function Sidebar({ isExpanded }: SidebarProps) {
-  const location = useLocation();
+export default function Sidebar({ isExpanded, pendingCount = 0 }: SidebarProps) {
+  const adminSidebarItems = baseItems.map(item =>
+    item.href === "/admin/requests" ? { ...item, badge: pendingCount } : item
+  );
 
   return (
     <motion.div
@@ -88,22 +94,39 @@ export default function Sidebar({ isExpanded }: SidebarProps) {
             }
             end={item.href === "/admin"}
           >
-            <item.icon className="h-5 w-5 shrink-0 transition-transform group-hover:scale-110" />
+            <div className="relative shrink-0">
+              <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+              {/* Badge dot when collapsed */}
+              {!isExpanded && item.badge != null && item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-orange-500 rounded-full text-[9px] font-black text-white flex items-center justify-center leading-none">
+                  {item.badge > 9 ? "9+" : item.badge}
+                </span>
+              )}
+            </div>
             <AnimatePresence mode="wait">
               {isExpanded && (
                 <motion.span
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap flex-1"
                 >
                   {item.label}
                 </motion.span>
               )}
             </AnimatePresence>
+            {/* Badge pill when expanded */}
+            {isExpanded && item.badge != null && item.badge > 0 && (
+              <span className="ml-auto px-2 py-0.5 bg-orange-500 rounded-full text-[10px] font-black text-white leading-none">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            )}
             {!isExpanded && (
               <div className="absolute left-full ml-6 px-3 py-2 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-2xl border border-white/5">
                 {item.label}
+                {item.badge != null && item.badge > 0 && (
+                  <span className="ml-2 px-1.5 py-0.5 bg-orange-500 rounded-full text-[9px]">{item.badge}</span>
+                )}
               </div>
             )}
           </NavLink>

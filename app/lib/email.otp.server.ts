@@ -38,144 +38,72 @@ export async function sendOTPEmail(to: string, otp: string) {
             });
         }
 
-        const fromAddress = process.env.SMTP_FROM || `"HRTEK SYSTEM" <${process.env.SMTP_USER || 'noreply@hrteksystem.com'}>`;
-        const appName = "HR TEK SYSTEMS"
-        const otpExpiryMinutes = "10"
-        const supportUrl = "#"
-        const emailHtml = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Secure OTP from ${appName}</title>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-            body {
-                font-family: 'Poppins', sans-serif;
-                background-color: #f0f2f5;
-                margin: 0;
-                padding: 0;
-                -webkit-text-size-adjust: none;
-                line-height: 1.6;
-                color: #333;
-            }
-            .email-container {
-                max-width: 600px;
-                margin: 40px auto;
-                background: rgba(255, 255, 255, 0.7);
-                border-radius: 20px;
-                overflow: hidden;
-                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-                backdrop-filter: blur(8px);
-                -webkit-backdrop-filter: blur(8px);
-                border: 1px solid rgba(255, 255, 255, 0.18);
-            }
-            .header {
-                background: linear-gradient(135deg, rgba(70, 130, 180, 0.8), rgba(100, 149, 237, 0.8));
-                padding: 30px;
-                text-align: center;
-                border-top-left-radius: 20px;
-                border-top-right-radius: 20px;
-                color: #ffffff;
-                font-weight: 600;
-                font-size: 24px;
-                letter-spacing: 0.5px;
-                text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            }
-            .header span {
-                display: block;
-                font-size: 14px;
-                font-weight: 300;
-                margin-top: 5px;
-            }
-            .content {
-                padding: 40px 30px;
-                text-align: center;
-                color: #444;
-                font-size: 16px;
-            }
-            .otp-box {
-                background: rgba(255, 255, 255, 0.9);
-                border-radius: 15px;
-                padding: 25px 30px;
-                margin: 30px auto;
-                width: fit-content;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                backdrop-filter: blur(5px);
-                -webkit-backdrop-filter: blur(5px);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            .otp-code {
-                font-size: 38px;
-                font-weight: 600;
-                color: #1a73e8;
-                letter-spacing: 4px;
-                display: block;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            }
-            .instructions {
-                margin-top: 30px;
-                font-size: 15px;
-                color: #555;
-            }
-            .footer {
-                background: rgba(255, 255, 255, 0.5);
-                padding: 25px;
-                text-align: center;
-                font-size: 13px;
-                color: #777;
-                border-bottom-left-radius: 20px;
-                border-bottom-right-radius: 20px;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            .footer a {
-                color: #1a73e8;
-                text-decoration: none;
-                font-weight: 500;
-            }
-            .security-note {
-                margin-top: 20px;
-                font-size: 14px;
-                color: #777;
-                line-height: 1.5;
-                padding: 0 20px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="email-container">
-            <div class="header">
-                ${appName}
-                <span>Your Secure Access Code</span>
-            </div>
-            <div class="content">
-                <p>Hi there,</p>
-                <p>You've requested a one-time password to proceed with your action. Here's your secure 6-digit code:</p>
-                <div class="otp-box">
-                    <span class="otp-code">
-                        ${otp}
-                    </span>
-                </div>
-                <p class="instructions">
-                    Please enter this code into the required field on the ${appName} website/app.
-                </p>
-                <p class="security-note">
-                    This code is valid for **${otpExpiryMinutes} minutes** and is for your eyes only. If you didn't request this, please ignore this email.
-                </p>
-            </div>
-            <div class="footer">
-                <p>&copy; 2025 ${appName}. All rights reserved.</p>
-                <p>Need help? Visit our <a href="${supportUrl}" target="_blank">Support Center</a>.</p>
-            </div>
-        </div>
-    </body>
-    </html>`;
+        const fromAddress = process.env.SMTP_FROM || `"HRTek System" <${process.env.SMTP_USER || 'no-reply@hrteksystem.com'}>`;
+        const logoUrl = `${process.env.APP_URL || 'https://hrteksystem.com'}/hrtek_logo.png`;
+        const emailHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your OTP — HRTek System</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,0.10);border:1px solid #e2e8f0;">
 
-        const supportEmail = process.env.SUPPORT_EMAIL || "support@hrteksystem.com";
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1d4ed8 100%);padding:36px 40px;text-align:center;">
+              <img src="${logoUrl}" alt="HRTek System" height="40" style="height:40px;object-fit:contain;display:block;margin:0 auto 14px;" />
+              <p style="margin:0;color:rgba(255,255,255,0.60);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Email Verification</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:44px 40px 36px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0f172a;">Verify your identity</p>
+              <p style="margin:0 0 32px;font-size:15px;color:#64748b;line-height:1.6;">Use the one-time code below to complete your verification. This code expires in <strong style="color:#0f172a;">10 minutes</strong>.</p>
+
+              <!-- OTP Box -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
+                <tr>
+                  <td style="background:#f8fafc;border:2px dashed #2563eb;border-radius:16px;padding:22px 48px;">
+                    <span style="font-size:44px;font-weight:800;letter-spacing:14px;color:#2563eb;font-family:'Courier New',monospace;">${otp}</span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Warning chip -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="background:#fefce8;border:1px solid #fde68a;border-radius:100px;padding:8px 18px;">
+                    <span style="font-size:12px;color:#92400e;font-weight:600;">&#9888;&nbsp; Do not share this code with anyone</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;" /></td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;text-align:center;background:#f8fafc;">
+              <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">&copy; ${new Date().getFullYear()} HRTek System &mdash; A Product of Delosch Technologies Pvt. Ltd.</p>
+              <p style="margin:0;font-size:12px;color:#cbd5e1;">If you didn&apos;t request this, you can safely ignore this email.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
         await transporter.sendMail({
             from: fromAddress,

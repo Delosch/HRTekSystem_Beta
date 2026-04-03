@@ -1,0 +1,34 @@
+﻿On branch main
+Your branch and 'origin/main' have diverged,
+and have 1 and 2 different commits each, respectively.
+  (use "git pull" if you want to integrate the remote branch with yours)
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+	new file:   app/components/AssessmentSidebar.tsx
+	modified:   app/components/AuthCards.tsx
+	modified:   app/components/ScoringMatrix.tsx
+	new file:   app/components/SectionInsights.tsx
+	modified:   app/components/SharedServicesEngine/components/DomainCharts.tsx
+	modified:   app/components/SharedServicesEngine/components/DomainSection.tsx
+	new file:   app/hooks/useFormValidation.ts
+	modified:   app/routes/consulting-report.$id/route.tsx
+	modified:   app/routes/onboarding.profilingAssessment.tsx
+	new file:   app/utils/assessmentScoring.ts
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both modified:   app/components/QuestionnaireEngine.tsx
+	both modified:   app/routes/engine.$id/RenderEngineForm.tsx
+	both modified:   app/routes/intermediate.tsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	a7488e1.txt
+	git_reflog.txt
+	git_reflog_utf8.txt
+	git_status_merge.txt
+

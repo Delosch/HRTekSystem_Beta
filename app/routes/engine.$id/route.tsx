@@ -5,8 +5,8 @@ import { getAnswerSheetByAssessmentName, getLatestQuestion, save_answers } from 
 import { QuestionSchema } from "./questionSchema"
 import EngineFormRender from "./RenderEngineForm"
 import VendorFitAssessmentWrapper from "~/components/assessment/VendorFitAssessmentWrapper"
-import { generateHTIAdvisory } from "~/lib/hti.deepseek";
-import { saveAdvisoryReport } from "~/models/hti.model.server";
+// Note: Per-engine report generation is handled by dedicated assessment routes.
+// HTI advisory (cross-engine) is triggered from /hti, not here.
 import { createOrUpdateEngineStorage, findEngineData } from "~/models/engine.model.server"
 import { createLog } from "~/models/companylogs.model.server"
 import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server"
@@ -103,13 +103,12 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
         const companyId = user.organisationId;
         if (!companyId) { return null }
 
-        // Determine engine type for HTI
-        const engineTypeMap: Record<string, 'vendorFit' | 'sharedServices' | 'changeManagement'> = {
-            "HCM Vendor Fit Engine": "vendorFit",
-            "Shared Service Designer": "sharedServices",
-            "Intelligent Change Management": "changeManagement"
+        // Per-engine report redirect map (used by generate_report intent below)
+        const ENGINE_REPORT_REDIRECT: Record<string, string> = {
+            "HCM Vendor Fit Engine": "/vendorDashboard",
+            "Shared Service Designer": "/sharedDashboard",
+            "Intelligent Change Management": "/changeDashboard",
         };
-        const engineType = engineTypeMap[body.params] || 'vendorFit';
 
         // save response 
         const dataSheet = {
@@ -131,37 +130,10 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
         const assessmentId = body.assessment_id ? body.assessment_id.toString() : "";
         await save_answers(companyId, assessmentId.replace("QUESTION#", ""), user.userId, body);
 
-        // Handle AI Report Generation Intent
+        // Handle Report Generation Intent — redirect to the engine's dashboard/report page
         if (body.intent === "generate_report") {
-            const aggregatedData = {
-                companyId: user.organisationId,
-                timestamp: new Date().toISOString(),
-                engines: {
-                    [engineType]: {
-                        engineName: body.params,
-                        progress: body.progress,
-                        responses: body.answers,
-                        scores: {}, // Scoring logic for schema-based engines varies
-                        aiAnalysis: { }
-                    }
-                },
-                completedEnginesCount: 1,
-                totalEngines: 1
-            };
-
-            try {
-                const advisory = await generateHTIAdvisory(aggregatedData as any, engineType);
-                await saveAdvisoryReport(
-                    user.organisationId || companyId,
-                    user.userId,
-                    advisory,
-                    aggregatedData as any
-                );
-                return json({ success: true, advisory });
-            } catch (error) {
-                console.error("AI Generation Error:", error);
-                return json({ error: "Failed to generate AI report" }, { status: 500 });
-            }
+            const reportPage = ENGINE_REPORT_REDIRECT[body.params] || "/dashboard";
+            return json({ success: true, redirect: reportPage });
         }
 
         if (body.progress === 100 && body.section === "Completion") {

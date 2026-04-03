@@ -379,7 +379,7 @@ export default function Intermediate() {
               method: 'HEAD'
             });
 
-            if (reportResponse.ok || reportResponse.status === 200) {
+            if (reportResponse.status === 200) {
               console.log(`[Polling ${currentElapsed}s] ✅ Report route available`);
               setAiReady(true);
               if (pollRef.current) clearInterval(pollRef.current);
@@ -411,7 +411,7 @@ export default function Intermediate() {
                   method: 'HEAD' // Just check if it exists, don't load full content
                 });
 
-                if (reportResponse.ok || reportResponse.status === 200) {
+                if (reportResponse.status === 200) {
                   console.log(`[Polling ${currentElapsed}s] ✅ Report confirmed in database!`);
                   setAiReady(true);
                   if (pollRef.current) clearInterval(pollRef.current);

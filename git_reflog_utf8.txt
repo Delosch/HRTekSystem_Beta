@@ -1,0 +1,15 @@
+﻿42688aa HEAD@{0}: commit: chore: Add git status output files for repository state snapshots.
+fba8946 HEAD@{1}: reset: moving to origin/main
+a7488e1 HEAD@{2}: reset: moving to HEAD
+a7488e1 HEAD@{3}: commit: feat: Implement core HRTekSystem modules including various dashboards, assessments, reports, admin management, and payment processing.
+0928dc4 HEAD@{4}: commit: Final session optimizations: Align schemas, add retry logic to prevent race conditions, and cleanup unused code.
+a824896 HEAD@{5}: commit: Fix session management: Resolve 'Invalid session id' and empty data issues.
+4ae6285 HEAD@{6}: commit: fix: resolve invalid session id and empty dynamodb session flooding
+90106e2 HEAD@{7}: pull: Fast-forward
+1515498 HEAD@{8}: commit (merge): Merge conflict resolved in app/routes/articles.tsx
+d0cabaf HEAD@{9}: commit: chore: update SEO URLs to use www subdomain and fix digital roadmap UI state
+d73d1de HEAD@{10}: commit: Fix hydration errors, title mismatches, and implement AI Maturity & Digital Roadmap assessment dashboards and reports
+854411e HEAD@{11}: commit: Enhance carousel UI, fix booking modal visibility, thank-you screen, email/SMS notifications
+78a4502 HEAD@{12}: pull origin main: Fast-forward
+8e44067 HEAD@{13}: pull --rebase origin main (finish): returning to refs/heads/main
+8e44067 HEAD@{14}: pull --rebase origin main (pick): Add new video tutorials (HTI and ICMS) to video section
