@@ -87,6 +87,18 @@ export interface PaymentRecord {
     verificationNotes?: string;
     rejectionReason?: string;
 
+    // Part payment tracking
+    paidAmount?: number;      // Total amount paid so far
+    balanceDue?: number;       // Remaining amount to be paid
+    advanceAmount?: number;    // First payment percent
+
+    // Invoice locking
+    isLocked?: boolean;
+    lockedBy?: string;
+    lockedAt?: string;
+    unlockedBy?: string;
+    unlockedAt?: string;
+
     // Timestamps
     createdAt: string;
     updatedAt: string;
@@ -960,6 +972,269 @@ export async function getVerifiedPaymentsByCompany(companyId: string): Promise<P
     } catch (error) {
         console.error("Error fetching verified payments:", error);
         return [];
+    }
+}
+
+/**
+ * Get all pending approval payment requests (admin queue)
+ * Returns requests in status: request_pending_approval
+ */
+export async function getPendingApprovalRequests(): Promise<PaymentRecord[]> {
+    const command = new ScanCommand({
+        TableName: USERS_TABLE,
+        FilterExpression: "#status = :status AND begins_with(sk, :skPrefix)",
+        ExpressionAttributeNames: {
+            "#status": "status"
+        },
+        ExpressionAttributeValues: {
+            ":status": "request_pending_approval",
+            ":skPrefix": "PAYMENT#"
+        }
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        const payments = (Items as PaymentRecord[]) || [];
+
+        // Sort by creation date (newest first)
+        return payments.sort((a, b) => {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+        });
+    } catch (e) {
+        console.error("Error fetching pending approval requests:", e);
+        return [];
+    }
+}
+
+/**
+ * Admin approves a payment request
+ * Changes status from request_pending_approval to request_approved
+ */
+export async function approvePaymentRequest(
+    invoiceId: string,
+    orgId: string,
+    adminId: string,
+    approvalNotes?: string
+): Promise<void> {
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `
+            SET #status = :status,
+                #verifiedBy = :verifiedBy,
+                #verifiedAt = :verifiedAt,
+                #verificationNotes = :verificationNotes,
+                #updatedAt = :updatedAt
+        `,
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#verifiedBy": "verifiedBy",
+            "#verifiedAt": "verifiedAt",
+            "#verificationNotes": "verificationNotes",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":status": "request_approved",
+            ":verifiedBy": adminId,
+            ":verifiedAt": new Date().toISOString(),
+            ":verificationNotes": approvalNotes || null,
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Payment request approved for invoice ${invoiceId} by admin ${adminId}`);
+    } catch (e) {
+        console.error("Error approving payment request:", e);
+        throw e;
+    }
+}
+
+/**
+ * Admin rejects a payment request
+ * Changes status from request_pending_approval to request_rejected
+ */
+export async function rejectPaymentRequest(
+    invoiceId: string,
+    orgId: string,
+    adminId: string,
+    rejectionReason: string
+): Promise<void> {
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `
+            SET #status = :status,
+                #verifiedBy = :verifiedBy,
+                #verifiedAt = :verifiedAt,
+                #rejectionReason = :rejectionReason,
+                #updatedAt = :updatedAt
+        `,
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#verifiedBy": "verifiedBy",
+            "#verifiedAt": "verifiedAt",
+            "#rejectionReason": "rejectionReason",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":status": "request_rejected",
+            ":verifiedBy": adminId,
+            ":verifiedAt": new Date().toISOString(),
+            ":rejectionReason": rejectionReason,
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Payment request rejected for invoice ${invoiceId} by admin ${adminId}`);
+    } catch (e) {
+        console.error("Error rejecting payment request:", e);
+        throw e;
+    }
+}
+
+/**
+ * Lock an invoice (prevent further edits)
+ * Only ADMIN role can lock/unlock
+ */
+export async function lockInvoice(
+    invoiceId: string,
+    orgId: string,
+    adminId: string
+): Promise<void> {
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `SET #isLocked = :isLocked, #lockedBy = :lockedBy, #lockedAt = :lockedAt, #updatedAt = :updatedAt`,
+        ExpressionAttributeNames: {
+            "#isLocked": "isLocked",
+            "#lockedBy": "lockedBy",
+            "#lockedAt": "lockedAt",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":isLocked": true,
+            ":lockedBy": adminId,
+            ":lockedAt": new Date().toISOString(),
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Invoice locked: ${invoiceId}`);
+    } catch (e) {
+        console.error("Error locking invoice:", e);
+        throw e;
+    }
+}
+
+/**
+ * Unlock an invoice (allow edits)
+ * Only ADMIN role can unlock
+ */
+export async function unlockInvoice(
+    invoiceId: string,
+    orgId: string,
+    adminId: string
+): Promise<void> {
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `SET #isLocked = :isLocked, #unlockedBy = :unlockedBy, #unlockedAt = :unlockedAt, #updatedAt = :updatedAt`,
+        ExpressionAttributeNames: {
+            "#isLocked": "isLocked",
+            "#unlockedBy": "unlockedBy",
+            "#unlockedAt": "unlockedAt",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":isLocked": false,
+            ":unlockedBy": adminId,
+            ":unlockedAt": new Date().toISOString(),
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Invoice unlocked: ${invoiceId}`);
+    } catch (e) {
+        console.error("Error unlocking invoice:", e);
+        throw e;
+    }
+}
+
+/**
+ * Update invoice payment status (for part payments)
+ */
+export async function updateInvoicePaymentStatus(
+    invoiceId: string,
+    orgId: string,
+    paidAmount: number,
+    paymentNotes?: string
+): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    if (!existing) throw new Error("Invoice not found");
+
+    const previousPaid = existing.paidAmount || 0;
+    const newPaidAmount = previousPaid + paidAmount;
+    const balanceDue = Math.max(0, (existing.totalAmount || 0) - newPaidAmount);
+
+    const newStatus = balanceDue === 0 ? "payment_verified" : "part_paid";
+
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `
+            SET #status = :status,
+                #paidAmount = :paidAmount,
+                #balanceDue = :balanceDue,
+                #paymentNotes = :paymentNotes,
+                #updatedAt = :updatedAt
+        `,
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#paidAmount": "paidAmount",
+            "#balanceDue": "balanceDue",
+            "#paymentNotes": "paymentNotes",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":status": newStatus,
+            ":paidAmount": newPaidAmount,
+            ":balanceDue": balanceDue,
+            ":paymentNotes": paymentNotes || null,
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Invoice payment updated: ${invoiceId}, Paid: ₹${newPaidAmount}, Balance: ₹${balanceDue}`);
+    } catch (e) {
+        console.error("Error updating invoice payment:", e);
+        throw e;
     }
 }
 
