@@ -1,6 +1,6 @@
-import { useLoaderData, useFetcher, Link } from "@remix-run/react";
+import { useLoaderData, useFetcher, Link, useRevalidator } from "@remix-run/react";
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     CheckCircleIcon,
     XCircleIcon,
@@ -47,14 +47,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         const paymentsWithUrls = await Promise.all(
             pendingPayments.map(async (payment) => {
                 let proofUrl = null;
+                let proofDownloadUrl = null;
                 if (payment.paymentProofUrl) {
                     try {
                         proofUrl = await getPresignedGetUrl(payment.paymentProofUrl);
+                        const keyParts = payment.paymentProofUrl.split("/");
+                        const originalName = keyParts[keyParts.length - 1] || `${payment.invoiceNumber || payment.invoiceId}.bin`;
+                        proofDownloadUrl = await getPresignedGetUrl(payment.paymentProofUrl, {
+                            downloadFileName: originalName,
+                        });
                     } catch (e) {
                         console.error("Error getting presigned URL:", e);
                     }
                 }
-                return { ...payment, signedProofUrl: proofUrl };
+                return { ...payment, signedProofUrl: proofUrl, signedProofDownloadUrl: proofDownloadUrl };
             })
         );
 
@@ -121,6 +127,7 @@ export default function AdminPaymentVerification() {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [showProofModal, setShowProofModal] = useState(false);
     const [proofImageUrl, setProofImageUrl] = useState("");
+    const [proofDownloadUrl, setProofDownloadUrl] = useState("");
 
     const [showFilters, setShowFilters] = useState(false);
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
@@ -130,6 +137,23 @@ export default function AdminPaymentVerification() {
     const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
 
     const fetcher = useFetcher<ActionData>();
+    const revalidator = useRevalidator();
+
+    useEffect(() => {
+        const interval = window.setInterval(() => {
+            if (document.visibilityState === "visible") {
+                revalidator.revalidate();
+            }
+        }, 15000);
+
+        return () => window.clearInterval(interval);
+    }, [revalidator]);
+
+    useEffect(() => {
+        if (fetcher.data?.success) {
+            revalidator.revalidate();
+        }
+    }, [fetcher.data?.success, revalidator]);
 
     const uniqueEngines = Array.from(new Set(
         payments.flatMap((p: any) => p.items?.map((item: any) => item.engineName) || [])
@@ -254,8 +278,9 @@ export default function AdminPaymentVerification() {
         setSelectedPayment(null);
     };
 
-    const viewProof = (url: string) => {
-        setProofImageUrl(url);
+    const viewProof = (previewUrl: string, downloadUrl?: string | null) => {
+        setProofDownloadUrl(downloadUrl || previewUrl);
+        setProofImageUrl(previewUrl);
         setShowProofModal(true);
     };
 
@@ -520,7 +545,7 @@ export default function AdminPaymentVerification() {
                                                 <div className="flex items-center justify-end gap-2">
                                                     {payment.signedProofUrl && (
                                                         <button
-                                                            onClick={() => viewProof(payment.signedProofUrl)}
+                                                            onClick={() => viewProof(payment.signedProofUrl, payment.signedProofDownloadUrl)}
                                                             className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
                                                             title="View Payment Proof"
                                                         >
@@ -675,7 +700,7 @@ export default function AdminPaymentVerification() {
                             </div>
                             <div className="flex gap-4">
                                 <a
-                                    href={proofImageUrl}
+                                    href={proofDownloadUrl || proofImageUrl}
                                     download
                                     className="p-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition-all border border-white/10 flex items-center gap-3 font-bold text-sm"
                                 >

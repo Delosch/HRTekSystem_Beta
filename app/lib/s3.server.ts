@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
   S3ClientConfig,
   HeadObjectCommand,
+  HeadBucketCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createHash, randomUUID } from "crypto";
@@ -45,6 +46,73 @@ const s3Config: S3ClientConfig = {
 // Initialize S3 client
 const s3Client = new S3Client(s3Config);
 const BUCKET_NAME = AWS_S3_BUCKET_NAME;
+const DEFAULT_BUCKET_REGION = S3_BUCKET_REGION || AWS_REGION || "us-east-1";
+let cachedBucketRegion: string | null = null;
+
+function getBucketRegionFromError(error: any): string | null {
+  const metadataHeaders = error?.$metadata?.httpHeaders;
+  const responseHeaders = error?.$response?.headers;
+  const regionFromHeaders =
+    metadataHeaders?.["x-amz-bucket-region"] ||
+    responseHeaders?.["x-amz-bucket-region"];
+
+  return (
+    regionFromHeaders ||
+    error?.BucketRegion ||
+    error?.Region ||
+    null
+  );
+}
+
+function shouldRetryWithRegion(error: any): boolean {
+  const message = String(error?.message || "").toLowerCase();
+  const code = String(error?.name || error?.Code || "").toLowerCase();
+
+  return (
+    message.includes("must be addressed using the specified endpoint") ||
+    message.includes("incorrect region") ||
+    message.includes("permanentredirect") ||
+    code.includes("permanentredirect") ||
+    code.includes("authorizationheadermalformed")
+  );
+}
+
+function createRegionalClient(region: string): S3Client {
+  return new S3Client({
+    ...s3Config,
+    region,
+  });
+}
+
+async function discoverBucketRegion(): Promise<string | null> {
+  if (cachedBucketRegion) return cachedBucketRegion;
+
+  const candidateRegions = Array.from(
+    new Set([DEFAULT_BUCKET_REGION, AWS_REGION, "us-east-1"].filter(Boolean) as string[])
+  );
+
+  for (const region of candidateRegions) {
+    const probeClient = createRegionalClient(region);
+    try {
+      await probeClient.send(
+        new HeadBucketCommand({
+          Bucket: BUCKET_NAME,
+        })
+      );
+      cachedBucketRegion = region;
+      return cachedBucketRegion;
+    } catch (error: any) {
+      const detected = getBucketRegionFromError(error);
+      if (detected) {
+        cachedBucketRegion = detected;
+        return detected;
+      }
+    }
+  }
+
+  cachedBucketRegion = DEFAULT_BUCKET_REGION;
+  return cachedBucketRegion;
+}
 
 // ------------------------------------------------------------
 // Helper validation functions
@@ -70,6 +138,9 @@ export async function getPresignedUploadUrl(contentType: string, folder: string)
   if (!isValidFolderName(folder)) throw new Error("Invalid folder name");
 
   try {
+    const resolvedRegion = await discoverBucketRegion();
+    const client = createRegionalClient(resolvedRegion || DEFAULT_BUCKET_REGION);
+
     const extension = mime.extension(contentType) || "bin";
     const fileName = `${folder.trim()}/${randomUUID()}.${extension}`;
 
@@ -79,7 +150,7 @@ export async function getPresignedUploadUrl(contentType: string, folder: string)
       ContentType: contentType,
     });
 
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+    const signedUrl = await getSignedUrl(client, command, { expiresIn: 600 });
     return { uploadUrl: signedUrl, key: fileName };
   } catch (error: any) {
     console.error("Error generating presigned upload URL:", error);
@@ -141,16 +212,29 @@ export async function uploadFileToS3(file: File, folder: string): Promise<string
 // ------------------------------------------------------------
 // Generate Presigned GET URL
 // ------------------------------------------------------------
-export async function getPresignedGetUrl(key: string): Promise<string> {
+export async function getPresignedGetUrl(
+  key: string,
+  options?: {
+    downloadFileName?: string;
+  }
+): Promise<string> {
   if (!isValidS3Key(key)) throw new Error("Invalid S3 key");
 
   try {
+    const resolvedRegion = await discoverBucketRegion();
+    const client = createRegionalClient(resolvedRegion || DEFAULT_BUCKET_REGION);
+
+    const responseContentDisposition = options?.downloadFileName
+      ? `attachment; filename="${options.downloadFileName.replace(/"/g, "")}"`
+      : undefined;
+
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
+      ResponseContentDisposition: responseContentDisposition,
     });
 
-    return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    return await getSignedUrl(client, command, { expiresIn: 3600 });
   } catch (error: any) {
     console.error("Error generating get URL:", error);
     throw new Error(error.message);
@@ -181,15 +265,31 @@ export async function uploadToS3(
       throw new Error("Invalid data type. Expected Buffer or File.");
     }
 
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: key,
-        Body: buffer,
-        ContentType: fileContentType,
-        ContentLength: buffer.length,
-      })
-    );
+    const putCommand = new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: fileContentType,
+      ContentLength: buffer.length,
+    });
+
+    try {
+      await s3Client.send(putCommand);
+    } catch (error: any) {
+      if (!shouldRetryWithRegion(error)) {
+        throw error;
+      }
+
+      const detectedRegion = getBucketRegionFromError(error) || await discoverBucketRegion();
+      if (!detectedRegion) {
+        throw error;
+      }
+
+      cachedBucketRegion = detectedRegion;
+      console.warn(`Retrying S3 upload with detected bucket region: ${detectedRegion}`);
+      const regionalClient = createRegionalClient(detectedRegion);
+      await regionalClient.send(putCommand);
+    }
 
     // Return the S3 key (can be used to generate presigned URLs later)
     return key;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLoaderData, Form, useActionData, useNavigation } from "@remix-run/react";
+import { useLoaderData, Form, useActionData, useNavigation, useSearchParams } from "@remix-run/react";
 import { LoaderFunction, ActionFunction, redirect, json } from "@remix-run/node";
 import {
     Download,
@@ -61,7 +61,13 @@ export const action: ActionFunction = async ({ request, params }) => {
             const transactionId = formData.get("transactionId") as string;
             const paymentDate = formData.get("paymentDate") as string;
             const paymentNotes = formData.get("paymentNotes") as string;
-            const proofFile = formData.get("proofFile") as File;
+            const proofFileEntry = formData.get("proofFile");
+
+            if (!(proofFileEntry instanceof File)) {
+                return json({ error: "Please upload payment proof" }, { status: 400 });
+            }
+
+            const proofFile = proofFileEntry;
 
             console.log("📝 Payment submission:", { invoiceId, method: paymentMethod, fileSize: proofFile?.size });
 
@@ -93,10 +99,17 @@ export const action: ActionFunction = async ({ request, params }) => {
             await clearCart(user.organisationId || "");
             console.log("✅ Cart cleared after payment proof submission");
 
-            return json({
-                success: true,
-                message: "Payment proof submitted successfully! Our team will verify it within 1-2 business days."
-            });
+            try {
+                const { notifyAdmin } = await import("~/services/admin.notifier.server");
+                await notifyAdmin(
+                    "Payment Proof Submitted",
+                    `A payment proof has been submitted for verification.\n\nCompany: ${user.organisationId || "Unknown"}\nInvoice: ${invoiceId}\nPayment Method: ${paymentMethod}\nTransaction ID: ${transactionId || "N/A"}\nPayment Date: ${paymentDate}\nAmount: ${payment.totalAmount}`
+                );
+            } catch (notifierError) {
+                console.warn("Failed to notify admin about payment proof submission:", notifierError);
+            }
+
+            return redirect(`/payment/invoice/${invoiceId}?proofSubmitted=1`);
         } catch (error) {
             console.error("❌ Payment submission error:", error);
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -112,17 +125,37 @@ export default function InvoicePage() {
     const { payment, companyName, user } = useLoaderData<LoaderData>();
     const actionData = useActionData<{ success?: boolean; message?: string; error?: string }>();
     const navigation = useNavigation();
+    const [searchParams] = useSearchParams();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const isSubmitting = navigation.state === "submitting";
+    const proofSubmitted = searchParams.get("proofSubmitted") === "1";
 
     useEffect(() => {
-        if (actionData?.success) {
+        if (actionData?.success || proofSubmitted) {
             setShowSuccessModal(true);
         }
-    }, [actionData]);
+    }, [actionData, proofSubmitted]);
+
+    useEffect(() => {
+        if (!proofSubmitted) return;
+
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("proofSubmitted");
+        window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    }, [proofSubmitted]);
+
+    useEffect(() => {
+        if (!actionData?.error) return;
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        const errorBanner = document.querySelector(".success-error-messages");
+        if (errorBanner instanceof HTMLElement) {
+            errorBanner.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [actionData?.error]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
