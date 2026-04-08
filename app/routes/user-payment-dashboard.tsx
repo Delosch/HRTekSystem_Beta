@@ -141,6 +141,18 @@ export default function UserPaymentDashboard() {
     };
   }, [accessByEngine]);
 
+  // Auto-lock employee count when engine is selected and already has an active payment request
+  useEffect(() => {
+    if (!selectedEngineName) return;
+    
+    const access = accessByEngine[selectedEngineName];
+    // Only lock if there's a pending or approved request (not rejected or none)
+    if ((access?.requestStatus === "pending" || access?.requestStatus === "approved") && access?.employeeCount) {
+      setEmployeeCountInput(String(access.employeeCount));
+    }
+  }, [selectedEngineName, accessByEngine]);
+
+  // Fetch pricing based on employee count
   useEffect(() => {
     const selectedEngine = ENGINES.find((engine) => engine.name === selectedEngineName);
     const employeeCount = Number(employeeCountInput || 0);
@@ -302,16 +314,22 @@ export default function UserPaymentDashboard() {
                   <option key={engine.name} value={engine.name}>{engine.name}</option>
                 ))}
               </select>
-              <input
-                name="employeeCount"
-                type="number"
-                min={1}
-                required
-                placeholder="Employee size"
-                value={employeeCountInput}
-                onChange={(event) => setEmployeeCountInput(event.target.value)}
-                className="px-3 py-2 border border-slate-300 rounded-lg"
-              />
+              <div>
+                <input
+                  name="employeeCount"
+                  type="number"
+                  min={1}
+                  required
+                  placeholder="Employee size"
+                  value={employeeCountInput}
+                  onChange={(event) => setEmployeeCountInput(event.target.value)}
+                  disabled={selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved")}
+                  className="px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
+                />
+                {selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved") && (
+                  <p className="text-xs text-amber-600 mt-1">🔒 Locked: Employee size is fixed until this request is resolved</p>
+                )}
+              </div>
               <input
                 name="initialPercent"
                 type="number"
