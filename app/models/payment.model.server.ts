@@ -127,6 +127,7 @@ export interface EngineAccessStatus {
     pendingAmount: number;
     employeeCount: number | null;
     requestRecord: PaymentRecord | null;
+    rejectionReason?: string;
 }
 
 function normalizeEngineName(name: string): string {
@@ -396,6 +397,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         pendingAmount,
         employeeCount,
         requestRecord: latestRequest,
+        rejectionReason: latestRequest?.rejectionReason,
     };
 }
 

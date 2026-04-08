@@ -421,7 +421,14 @@ export default function UserPaymentDashboard() {
                         <td className="py-3 pr-4">{access.assessmentUnlocked ? "Unlocked" : "Locked"}</td>
                         <td className="py-3 pr-4">{access.reportUnlocked ? "Unlocked" : "Locked"}</td>
                         <td className="py-3">
-                          {access.requestStatus === "approved" && !access.assessmentUnlocked ? (
+                          {access.requestStatus === "rejected" ? (
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs text-rose-600 font-medium">Rejected</span>
+                              {access.rejectionReason && (
+                                <span className="text-xs text-rose-500 italic max-w-xs">{access.rejectionReason}</span>
+                              )}
+                            </div>
+                          ) : access.requestStatus === "approved" && !access.assessmentUnlocked ? (
                             <Form method="post">
                               <input type="hidden" name="intent" value="pay_approved_request" />
                               <input type="hidden" name="engineName" value={engine.name} />
