@@ -314,22 +314,17 @@ export default function UserPaymentDashboard() {
                   <option key={engine.name} value={engine.name}>{engine.name}</option>
                 ))}
               </select>
-              <div>
-                <input
-                  name="employeeCount"
-                  type="number"
-                  min={1}
-                  required
-                  placeholder="Employee size"
-                  value={employeeCountInput}
-                  onChange={(event) => setEmployeeCountInput(event.target.value)}
-                  disabled={selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved")}
-                  className="px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
-                />
-                {selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved") && (
-                  <p className="text-xs text-amber-600 mt-1">🔒 Locked: Employee size is fixed until this request is resolved</p>
-                )}
-              </div>
+              <input
+                name="employeeCount"
+                type="number"
+                min={1}
+                required
+                placeholder="Employee size"
+                value={employeeCountInput}
+                onChange={(event) => setEmployeeCountInput(event.target.value)}
+                disabled={selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved")}
+                className="px-3 py-2 border border-slate-300 rounded-lg disabled:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-500"
+              />
               <input
                 name="initialPercent"
                 type="number"
@@ -343,6 +338,12 @@ export default function UserPaymentDashboard() {
               />
               <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-70">{isSubmitting ? "Submitting..." : "Request Payment"}</button>
             </Form>
+
+            {selectedEngineName && (accessByEngine[selectedEngineName]?.requestStatus === "pending" || accessByEngine[selectedEngineName]?.requestStatus === "approved") && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-700 font-medium">🔒 Locked: Employee size is fixed until this request is resolved</p>
+              </div>
+            )}
 
             {(selectedEngineName || employeeCountInput || initialPercentInput) && (
               <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
