@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useFetcher, useNavigation } from "@remix-run/react";
+import { useLoaderData, useFetcher, useNavigation, Link } from "@remix-run/react";
 import { useState } from "react";
 import {
     CheckCircleIcon,
@@ -12,6 +12,7 @@ import {
     ChevronUpIcon,
     XMarkIcon,
     MagnifyingGlassIcon,
+    CheckBadgeIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -191,6 +192,13 @@ export default function AdminPaymentRequests() {
                         Review and approve/reject pending payment requests from clients
                     </p>
                 </div>
+                <Link
+                    to="/admin/payments/verification"
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
+                >
+                    <CheckBadgeIcon className="h-5 w-5" />
+                    Payment Verification
+                </Link>
             </div>
 
             {/* Stats Cards */}

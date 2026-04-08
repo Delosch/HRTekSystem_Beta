@@ -34,7 +34,7 @@ const adminSidebarItems: SidebarItem[] = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Assessments", href: "/admin/assessments", icon: CheckSquare },
   { label: "Reports", href: "/admin/reports", icon: Sparkles },
-  { label: "Payments", href: "/admin/payments/verification", icon: CreditCard },
+  { label: "Payments", href: "/admin/payments", icon: CreditCard },
   { label: "Review Reports", href: "/admin/hti", icon: ShieldCheck },
   { label: "Activity", href: "/admin/activity-logs", icon: ListTodo },
   { label: "Analytics", href: "/admin/website/analytics", icon: BarChart3 },
