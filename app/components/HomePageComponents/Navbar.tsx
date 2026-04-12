@@ -22,6 +22,11 @@ export default function Navbar() {
   const navigate = useNavigate();
   const rootData = useRouteLoaderData("root") as { user: any } | undefined;
   const user = rootData?.user;
+
+  // Debug: Log user data for troubleshooting
+  if (typeof window !== 'undefined' && user) {
+    console.log("📍 Navbar - User detected:", { userId: user.userId, email: user.email });
+  }
   const { pathname, hash } = location;
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);

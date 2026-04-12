@@ -83,6 +83,7 @@ export function ErrorBoundary() {
   return (
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
+        <title suppressHydrationWarning>HRTek System - Error</title>
         <Meta />
         <Links />
       </head>

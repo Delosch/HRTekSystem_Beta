@@ -73,7 +73,6 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
-        console.log(`✅ [SESSION STORAGE] Created session: ${sessionId}`);
         return sessionId;
     },
 
@@ -99,8 +98,6 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
             const { Item } = await ddbDocClient.send(command);
 
             if (Item) {
-                console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Found`);
-
                 const nowInSeconds = Math.floor(Date.now() / 1000);
                 // Check if the session has expired based on the TTL.
                 if (Item.expiresAt && Item.expiresAt < nowInSeconds) {
@@ -124,7 +121,6 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
             }
         }
 
-        console.log(`🔍 [SESSION STORAGE] Reading session: ${sessionId} - Not Found`);
         return null;
     },
 
@@ -150,7 +146,6 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
-        console.log(`update [SESSION STORAGE] Updated session: ${sessionId}`);
     },
 
     /**
@@ -167,7 +162,6 @@ export const { getSession, commitSession, destroySession } = createSessionStorag
         });
 
         await ddbDocClient.send(command);
-        console.log(`🗑️ [SESSION STORAGE] Deleted session: ${sessionId}`);
     }
 });
 
