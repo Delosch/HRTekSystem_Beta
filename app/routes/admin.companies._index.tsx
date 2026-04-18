@@ -37,9 +37,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
         const command = new ScanCommand({
             TableName: tableName,
-            FilterExpression: "begins_with(pk, :companyPrefix)",
+            FilterExpression: "begins_with(pk, :companyPrefix) AND profile_type = :ptype",
             ExpressionAttributeValues: {
-                ":companyPrefix": "COMPANY#"
+                ":companyPrefix": "COMPANY#",
+                ":ptype": "COMPANY"
             }
         });
 
@@ -204,7 +205,7 @@ export default function AdminCompanies() {
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
                                                     <CalendarDaysIcon className="h-3.5 w-3.5" />
-                                                    Member since {company.created_at ? new Date(company.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : "N/A"}
+                                                    Member since {(company.createdAt || company.created_at) ? new Date(company.createdAt || company.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : "N/A"}
                                                 </div>
                                             </div>
                                         </td>

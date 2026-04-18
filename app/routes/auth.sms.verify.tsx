@@ -418,13 +418,13 @@ export default function AuthVerify() {
   const stepColor = getStepColor();
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50 overflow-hidden flex items-center justify-center p-4">
+    <section className="relative min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 overflow-hidden flex items-center justify-center p-4">
       <Squares
         speed={0.3}
         squareSize={50}
         direction="diagonal"
-        borderColor="#E7E7E7"
-        hoverFillColor="#5A9553"
+        borderColor="#BAE6FD"
+        hoverFillColor="#38BDF8"
       />
 
       {/* Enhanced Background Particles - Fixed Hydration Mismatch */}
@@ -432,7 +432,7 @@ export default function AuthVerify() {
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-green-200/30 rounded-full"
+            className="absolute w-2 h-2 bg-blue-200/30 rounded-full"
             animate={{
               x: [0, 100, 0],
               y: [0, -100, 0],

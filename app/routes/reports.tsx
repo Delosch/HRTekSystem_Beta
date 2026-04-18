@@ -66,9 +66,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     const reports: ReportItem[] = allAnalyses
         .map((analysis: any) => {
             const engineName = analysis.section.trim();
-            const isFreeEngine = engineName === "Profiling Assessment";
-            const isVerified = verifiedEngines.includes(engineName) || isAdmin || isFreeEngine;
-            const isPaid = paidEngines.includes(engineName) || isAdmin || isFreeEngine;
+            const isVerified = verifiedEngines.includes(engineName) || isAdmin;
+            const isPaid = paidEngines.includes(engineName) || isAdmin;
             const reportUrl = reportRouteMap[engineName] || `/consulting-report/${encodeURIComponent(engineName)}`;
 
             return {

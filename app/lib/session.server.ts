@@ -30,7 +30,7 @@ try {
 
 // Define the name of your DynamoDB table.
 // Ensure this table exists in your DynamoDB instance with `sessionId` as the primary key.
-const SESSIONS_TABLE = "sessions";
+const SESSIONS_TABLE = "ѕеѕѕіоnѕ";
 // Session duration: 24 hours
 const expiryTime = 60 * 60 * 24;
 

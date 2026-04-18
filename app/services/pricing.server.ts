@@ -1,10 +1,11 @@
-export type EngineType = 
-  | 'hcm-vendor-fit' 
-  | 'ai-maturity' 
-  | 'roadmap' 
-  | 'icms' 
-  | 'shared-services' 
-  | 'hti';
+export type EngineType =
+  | 'hcm-vendor-fit'
+  | 'ai-maturity'
+  | 'roadmap'
+  | 'icms'
+  | 'shared-services'
+  | 'hti'
+  | 'profiling-assessment';
 
 export interface PricingInput {
   engine: EngineType;
@@ -48,6 +49,10 @@ export function calculatePricing({ engine, employeeCount, months = 1 }: PricingI
   let perUser = 0;
   
   switch (engine) {
+    case 'profiling-assessment':
+      baseRate = 45000;
+      perUser = 0;
+      break;
     case 'hcm-vendor-fit':
     case 'ai-maturity':
     case 'roadmap':

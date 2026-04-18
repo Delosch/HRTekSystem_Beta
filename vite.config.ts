@@ -10,6 +10,7 @@ declare module "@remix-run/node" {
 }
 
 export default defineConfig({
+  base: '/app/',
   server: {
     port: (process.env.NODE_ENV as string) === "staging" ? 3001 : 3000,
     strictPort: true,
