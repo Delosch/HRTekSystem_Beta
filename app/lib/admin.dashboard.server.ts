@@ -63,10 +63,10 @@ function timeAgo(iso: string): string {
 // ── Main export ──────────────────────────────────────────────────────────────
 
 export async function getDashboardStats() {
-    const ddbDocClient = getDynamoDBDocumentClient();
     const months = getLast7Months();
 
     try {
+        const ddbDocClient = getDynamoDBDocumentClient();
         const [companiesRes, usersRes, enginesRes, htiPendingRes, paymentsRes] =
             await Promise.all([
                 // All company profiles
@@ -259,9 +259,8 @@ export async function getFullActivityLog(): Promise<{
     details: string;
     type: "info" | "success" | "warning" | "error";
 }[]> {
-    const ddbDocClient = getDynamoDBDocumentClient();
-
     try {
+        const ddbDocClient = getDynamoDBDocumentClient();
         const [companiesRes, usersRes, enginesRes, htiRes, paymentsRes] = await Promise.all([
             ddbDocClient.send(new ScanCommand({
                 TableName: TABLE_NAME,

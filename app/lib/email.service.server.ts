@@ -41,7 +41,7 @@ export async function sendWelcomeEmail({ email, firstName, password, role, login
         }
 
         const fromAddress = process.env.SMTP_FROM || '"HRTek System" <no-reply@hrteksystem.com>';
-        const logoUrl = `${process.env.APP_URL || 'https://hrteksystem.com'}/hrtek_logo.png`;
+        const logoUrl = `${process.env.APP_URL || 'https://staging.hrteksystem.com'}/hrtek_logo.png`;
 
         const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -517,8 +517,8 @@ export async function sendRegistrationThankYouEmail({ to, firstName }: { to: str
         }
 
         const fromAddress = process.env.SMTP_FROM || '"HRTek System" <no-reply@hrteksystem.com>';
-        const logoUrl = `${process.env.APP_URL || 'https://hrteksystem.com'}/hrtek_logo.png`;
-        const appUrl = process.env.APP_URL || 'https://hrteksystem.com';
+        const logoUrl = `${process.env.APP_URL || 'https://staging.hrteksystem.com'}/hrtek_logo.png`;
+        const appUrl = process.env.APP_URL || 'https://staging.hrteksystem.com';
 
         const htmlContent = `<!DOCTYPE html>
 <html lang="en">
