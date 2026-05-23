@@ -3,6 +3,7 @@ import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
 import { getAllAnalysesForCompany } from "~/utils/analysis.server";
 import { getCompanyPayments } from "~/models/payment.model.server";
+import { getEngineClassification } from "~/utils/engine-classification";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { getEnhancedUser } from "~/utils/user.server";
 import { FileText, Lock, CheckCircle, Clock, AlertCircle } from "lucide-react";
@@ -40,14 +41,54 @@ export const loader: LoaderFunction = async ({ request }) => {
     const allPayments = await getCompanyPayments(user.organisationId);
 
     // Verified engines (payment_verified)
-    const verifiedEngines = allPayments
-        .filter(p => p.status === "payment_verified")
-        .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || []);
+    const verifiedEnginesSet = new Set(
+        allPayments
+            .filter(p => p.status === "payment_verified")
+            .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || [])
+    );
+
+    // Also include core engines that are included with advanced engine payments at >= 50% progress
+    const advancedPayments = allPayments.filter(p => {
+        const mainEngine = p.items?.[0]?.engineName;
+        return mainEngine && getEngineClassification(mainEngine) === "advanced";
+    });
+
+    for (const payment of advancedPayments) {
+        const paidAmount = payment.paidAmount || payment.totalAmount || 0;
+        const fullAmount = payment.fullAmount || payment.totalAmount || 0;
+        const paymentPercent = fullAmount > 0 ? Math.round((paidAmount / fullAmount) * 100) : 0;
+
+        if (paymentPercent >= 50 && payment.items && payment.items.length > 1) {
+            // Add core engines (price 0) from this payment
+            for (const item of payment.items.slice(1)) {
+                if (item.price === 0 || item.price === "0") {
+                    verifiedEnginesSet.add(item.engineName.trim());
+                }
+            }
+        }
+    }
+
+    const verifiedEngines = Array.from(verifiedEnginesSet);
 
     // Paid engines (payment_submitted or payment_verified)
-    const paidEngines = allPayments
-        .filter(p => p.status === "payment_submitted" || p.status === "payment_verified")
-        .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || []);
+    const paidEnginesSet = new Set(
+        allPayments
+            .filter(p => p.status === "payment_submitted" || p.status === "payment_verified")
+            .flatMap(payment => payment.items?.map((item: any) => item.engineName.trim()) || [])
+    );
+
+    // Also include core engines from advanced payments (even if not yet verified)
+    for (const payment of advancedPayments) {
+        if (payment.items && payment.items.length > 1) {
+            for (const item of payment.items.slice(1)) {
+                if (item.price === 0 || item.price === "0") {
+                    paidEnginesSet.add(item.engineName.trim());
+                }
+            }
+        }
+    }
+
+    const paidEngines = Array.from(paidEnginesSet);
 
     console.log(`[Reports Page] User: ${user.organisationId}`);
     console.log(`[Reports Page] Total Analyses Found: ${allAnalyses.length}`);

@@ -113,7 +113,14 @@ export default function AdminInvoices() {
                         className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
                         <ClockIcon className="h-4 w-4" />
-                        View Approval Queue
+                        Approval Queue
+                    </Link>
+                    <Link
+                        to="/admin/payments/verification"
+                        className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                    >
+                        <CheckCircleIcon className="h-4 w-4" />
+                        Verify Proofs
                     </Link>
                     <div className="relative">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

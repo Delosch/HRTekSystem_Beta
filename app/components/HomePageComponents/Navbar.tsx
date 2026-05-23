@@ -102,7 +102,7 @@ export default function Navbar() {
     { to: "/hcm-service", icon: Puzzle, label: "HR HCM Vendor Fit", color: "purple" },
     { to: "/maturity-analysis-service", icon: FileBarChart2, label: "HR Tech Diagnostics", color: "green" },
     { to: "/shared-service", icon: DraftingCompass, label: "HR Shared Services", color: "amber" },
-    { to: "/change-management-service", icon: Shapes, label: "HR Change Management", color: "rose" },
+    { to: "/change-management-service", icon: Shapes, label: "Intelligent Change Management System", color: "rose" },
     { to: "/hrtech-advisory-service", icon: Lightbulb, label: "HR Tech Advisory", color: "yellow" },
   ];
 

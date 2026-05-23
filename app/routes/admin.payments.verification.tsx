@@ -26,6 +26,8 @@ import {
     getPendingPaymentVerifications,
     verifyPayment,
     rejectPayment,
+    getEngineAccessStatus,
+    updateInstallmentStatus,
 } from "~/models/payment.model.server";
 import { getPresignedGetUrl } from "~/lib/s3.server";
 import { requireAdminSession } from "~/lib/session.server";
@@ -60,7 +62,26 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                         console.error("Error getting presigned URL:", e);
                     }
                 }
-                return { ...payment, signedProofUrl: proofUrl, signedProofDownloadUrl: proofDownloadUrl };
+
+                // Get remaining amount for this engine
+                let remainingAmount = 0;
+                let installmentInfo = null;
+                if (payment.engineName || payment.items?.[0]?.engineName) {
+                    try {
+                        const engineName = payment.engineName || payment.items[0].engineName;
+                        const accessStatus = await getEngineAccessStatus(payment.companyId, engineName);
+                        remainingAmount = accessStatus.remainingAmount;
+                        installmentInfo = accessStatus.installments ? {
+                            installments: accessStatus.installments,
+                            currentInstallment: accessStatus.currentInstallment,
+                            numberOfInstallments: accessStatus.numberOfInstallments,
+                        } : null;
+                    } catch (e) {
+                        console.error("Error getting engine access status:", e);
+                    }
+                }
+
+                return { ...payment, signedProofUrl: proofUrl, signedProofDownloadUrl: proofDownloadUrl, remainingAmount, installmentInfo };
             })
         );
 
@@ -515,6 +536,9 @@ export default function AdminPaymentVerification() {
                                             <td className="px-6 py-5">
                                                 <p className="text-sm font-black text-gray-900">₹{payment.totalAmount.toLocaleString()}</p>
                                                 <p className="text-[10px] font-bold text-emerald-600 uppercase">GST Inclusive</p>
+                                                {payment.remainingAmount > 0 && (
+                                                    <p className="text-[10px] font-bold text-rose-500 mt-1">Remaining: ₹{payment.remainingAmount.toLocaleString()}</p>
+                                                )}
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex justify-center">
@@ -612,6 +636,54 @@ export default function AdminPaymentVerification() {
                                                                         <span className="text-xs font-bold text-gray-400">System Trace ID</span>
                                                                         <span className="text-xs font-bold text-gray-900 font-mono">{payment.transactionId || 'NOT_LOGGED'}</span>
                                                                     </div>
+                                                                    {payment.remainingAmount > 0 && (
+                                                                        <div className="flex justify-between border-b border-gray-50 pb-2">
+                                                                            <span className="text-xs font-bold text-gray-400">Remaining Amount</span>
+                                                                            <span className="text-xs font-black text-rose-600">₹{payment.remainingAmount.toLocaleString()}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {payment.installmentInfo && (
+                                                                        <div className="pt-2">
+                                                                            <span className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Installment Plan</span>
+                                                                            <div className="mb-2 text-xs font-medium text-gray-600">
+                                                                                {payment.installmentInfo.installments.filter((i: any) => i.status === 'paid').length} of{' '}
+                                                                                {payment.installmentInfo.numberOfInstallments} installments paid
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                {payment.installmentInfo.installments.map((inst: any) => (
+                                                                                    <div key={inst.installmentNumber} className={`rounded-lg border ${inst.status === 'paid' ? 'bg-emerald-50 border-emerald-200' : inst.status === 'payment_submitted' ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+                                                                                        <div className="flex items-center justify-between text-xs p-2">
+                                                                                            <span className="font-bold">#{inst.installmentNumber} ({inst.percentage}%)</span>
+                                                                                            <span className="font-medium">₹{(inst.amount || 0).toLocaleString()}</span>
+                                                                                            <span className={`font-bold uppercase text-[10px] ${inst.status === 'paid' ? 'text-emerald-600' : inst.status === 'payment_submitted' ? 'text-amber-600' : 'text-gray-400'}`}>{inst.status}</span>
+                                                                                        </div>
+                                                                                        {inst.splitDetails && Array.isArray(inst.splitDetails) && inst.splitDetails.length > 0 && (
+                                                                                            <table className="w-full text-[10px] border-t border-gray-200">
+                                                                                                <thead>
+                                                                                                    <tr className="bg-gray-100/50">
+                                                                                                        <th className="px-2 py-1 text-left font-semibold text-gray-500">Item</th>
+                                                                                                        <th className="px-2 py-1 text-left font-semibold text-gray-500">Description</th>
+                                                                                                        <th className="px-2 py-1 text-left font-semibold text-gray-500">HSN</th>
+                                                                                                        <th className="px-2 py-1 text-left font-semibold text-gray-500">Amount</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    {inst.splitDetails.map((split: any, sIdx: number) => (
+                                                                                                        <tr key={sIdx} className="border-t border-gray-100">
+                                                                                                            <td className="px-2 py-1 text-gray-700">{split.item || '-'}</td>
+                                                                                                            <td className="px-2 py-1 text-gray-600">{split.description || '-'}</td>
+                                                                                                            <td className="px-2 py-1 text-gray-600 font-mono">{split.hsnCode || '-'}</td>
+                                                                                                            <td className="px-2 py-1 text-gray-700 font-medium">{split.amount || '-'}</td>
+                                                                                                        </tr>
+                                                                                                    ))}
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        )}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                     <div className="pt-2">
                                                                         <span className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Synchronizer Notes</span>
                                                                         <p className="text-sm font-medium text-gray-600 italic">

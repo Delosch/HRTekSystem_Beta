@@ -20,15 +20,191 @@ try {
 export type PaymentStatus =
     | "pending_payment"      // Invoice generated, awaiting payment
     | "payment_submitted"    // User uploaded proof, awaiting verification
-    | "payment_verified"     // Admin verified payment
-    | "payment_rejected"     // Payment proof rejected
+    | "payment_approved"     // Admin approved payment, awaiting customer acceptance
+    | "payment_verified"     // Customer accepted invoice and payment is finalized
+    | "payment_rejected"     // Payment proof rejected or invoice declined
     | "completed"            // All done
     | "request_pending_approval"
     | "request_approved"
-    | "request_rejected";
+    | "request_rejected"
+    | "cleared";
 
 export type PaymentMethod = "bank_transfer" | "upi" | "qr_code";
 export type InvoiceKind = "PROFORMA" | "FINAL";
+
+// Installment types
+export interface SplitDetailRow {
+    item: string;
+    description: string;
+    amount: string;
+    hsnCode?: string;
+}
+
+export interface InstallmentDetail {
+    installmentNumber: number;
+    percentage: number;
+    splitDetails: SplitDetailRow[];
+    amount?: number;       // Calculated: (fullAmount * percentage / 100)
+    status: "unpaid" | "payment_submitted" | "paid" | "rejected";
+    invoiceId?: string;    // Links to the payment record for this installment
+    paidAt?: string;
+    enabled?: boolean;     // Manually enabled by admin for payment
+}
+
+export type EnginePaymentType = "full" | "milestone";
+export type EngineClassification = "core" | "advanced";
+
+export interface FeatureUnlockMapping {
+    percentage: number;
+    features: string[];
+    dueDate?: string;
+}
+
+export interface EngineSubscriptionConfig {
+    engineName: string;
+    engineType: EngineClassification;
+    dependencyMapping?: string[];
+    defaultPaymentType: EnginePaymentType;
+    allowPartialPayment: boolean;
+    featureUnlocks?: FeatureUnlockMapping[];
+    manualEnabled?: boolean;
+    manualDisabled?: boolean;
+    overrideNotes?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface EngineSubscriptionRecord extends EngineSubscriptionConfig {
+    pk: string;
+    sk: string;
+}
+
+export const CORE_ENGINE_NAMES = [
+    "HR Digital Roadmap",
+    "HR HCM Vendor Fit",
+    "HR Tek Diagnostics",
+    "HR Shared Service"
+] as const;
+
+export const ADVANCED_ENGINE_NAMES = [
+    "HR Shared Service Engine",
+    "ICMS",
+    "HII"
+] as const;
+
+/**
+ * CORRECTED Engine Name Mapping
+ * Canonical names for engines
+ * 
+ * CORE ENGINES (100% upfront payment, no partial payments allowed):
+ * - HR Digital Roadmap
+ * - HR HCM Vendor Fit
+ * - HR Tek Diagnostics
+ * - HR Shared Service
+ * 
+ * ADVANCED ENGINES (milestone payments allowed):
+ * - HR Shared Service Engine (was incorrectly called "Decision Engine")
+ * - ICMS
+ * - HII (was incorrectly called "Transformative Engine")
+ */
+const ENGINE_NAME_CANONICAL_MAP: Record<string, string> = {
+    // Core engines
+    "hr transformation roadmap generator": "HR Digital Roadmap",
+    "hr digital roadmap": "HR Digital Roadmap",
+    "hcm vendor fit engine": "HR HCM Vendor Fit",
+    "hr hcm vendor fit": "HR HCM Vendor Fit",
+    "cognitive hcm vendor fit engine": "HR HCM Vendor Fit",
+    "shared service designer": "HR Shared Service",
+    "shared services": "HR Shared Service",
+    "shared services operating model planner": "HR Shared Service",
+    "hr shared services": "HR Shared Service",
+    "hr shared service": "HR Shared Service",
+    "hr tech diagnostics": "HR Tek Diagnostics",
+    "hr technology maturity analysis": "HR Tek Diagnostics",
+    "ai-driven hr tech diagnostics": "HR Tek Diagnostics",
+    
+    // Advanced engines
+    "hr shared service engine": "HR Shared Service Engine",
+    "decision engine": "HR Shared Service Engine",
+    "intelligent change management": "ICMS",
+    "hr change management": "ICMS",
+    "icms": "ICMS",
+    "hti - hr transformation intelligence": "HII",
+    "hr tech advisory": "HII",
+    "hti": "HII",
+    "transformative engine": "HII",
+    "hr transformation intelligence": "HII",
+    "hii": "HII",
+};
+
+export function canonicalEngineName(name: string): string {
+    const normalized = normalizeEngineName(name);
+    return ENGINE_NAME_CANONICAL_MAP[normalized] || name.trim();
+}
+
+export function getEngineClassification(engineName: string): EngineClassification | undefined {
+    const canonical = canonicalEngineName(engineName);
+    if ((CORE_ENGINE_NAMES as readonly string[]).includes(canonical)) return "core";
+    if ((ADVANCED_ENGINE_NAMES as readonly string[]).includes(canonical)) return "advanced";
+    return undefined;
+}
+
+export function getDefaultFeatureUnlockMapping(): FeatureUnlockMapping[] {
+    return [
+        { percentage: 40, features: ["Dashboard", "Setup"] },
+        { percentage: 30, features: ["Workflow", "Reports"] },
+        { percentage: 30, features: ["Automation", "Integration"] },
+    ];
+}
+
+export function buildFeatureUnlockMapping(config?: EngineSubscriptionConfig): FeatureUnlockMapping[] {
+    return config?.featureUnlocks && config.featureUnlocks.length > 0
+        ? config.featureUnlocks
+        : getDefaultFeatureUnlockMapping();
+}
+
+export function getUnlockedFeatures(config: EngineSubscriptionConfig | undefined, totalPaidAmount: number, fullAmount: number) {
+    const unlockMapping = buildFeatureUnlockMapping(config);
+    const progressPercent = fullAmount > 0 ? Math.min(100, Math.round((totalPaidAmount / fullAmount) * 100)) : 0;
+    const unlockedFeatures = unlockMapping
+        .filter((unlock) => progressPercent >= unlock.percentage)
+        .flatMap((unlock) => unlock.features)
+        .map((feature) => feature.trim())
+        .filter(Boolean);
+
+    return {
+        progressPercent,
+        unlockedFeatures: Array.from(new Set(unlockedFeatures)),
+        nextMilestone: unlockMapping.find((unlock) => progressPercent < unlock.percentage) || null,
+    };
+}
+
+export function stripInstallmentSuffix(engineName: string): string {
+    const match = engineName.match(/^(.*) - Installment #\d+$/);
+    return match ? match[1].trim() : engineName;
+}
+
+export function isCoreEngine(engineName: string): boolean {
+    return getEngineClassification(engineName) === "core";
+}
+
+export function isAdvancedEngine(engineName: string): boolean {
+    return getEngineClassification(engineName) === "advanced";
+}
+
+export interface EngineActivationSnapshot {
+    engineName: string;
+    activationStatus: "disabled" | "partially_enabled" | "enabled";
+    enabledFeatures: string[];
+    paymentProgress: number;
+    totalPaidAmount: number;
+    fullAmount: number;
+    updatedAt: string;
+}
+
+export interface PaymentActivationInfo {
+    engineActivations: EngineActivationSnapshot[];
+}
 
 export interface PaymentRecord {
     pk: string;              // COMPANY#{orgId}
@@ -87,6 +263,10 @@ export interface PaymentRecord {
     verificationNotes?: string;
     rejectionReason?: string;
 
+    // Engine subscription config
+    engineConfig?: EngineSubscriptionConfig;
+    activationInfo?: PaymentActivationInfo;
+
     // Part payment tracking
     paidAmount?: number;      // Total amount paid so far
     balanceDue?: number;       // Remaining amount to be paid
@@ -113,11 +293,30 @@ export interface PaymentRecord {
     approvedRequestedAmount?: number;
     fullAmount?: number;
     requestNotes?: string;
+
+    // Installment plan (set by admin when approving)
+    installments?: InstallmentDetail[];
+    currentInstallment?: number; // Which installment is next to pay
+    numberOfInstallments?: number;
+    paymentType?: "full" | "milestone";
+    hsnCode?: string;
 }
 
 export interface EngineAccessStatus {
     engineName: string;
     requestStatus: "none" | "pending" | "approved" | "rejected";
+    engineType?: EngineClassification;
+    paymentType?: EnginePaymentType;
+    allowPartialPayment?: boolean;
+    manualOverride?: {
+        enabled?: boolean;
+        disabled?: boolean;
+        notes?: string;
+    };
+    activationStatus?: "disabled" | "partially_enabled" | "enabled";
+    paymentProgress?: number;
+    enabledFeatures?: string[];
+    featureUnlocks?: FeatureUnlockMapping[];
     assessmentUnlocked: boolean;
     reportUnlocked: boolean;
     approvedRequestedAmount: number;
@@ -125,12 +324,18 @@ export interface EngineAccessStatus {
     totalPaidAmount: number;
     fullAmount: number;
     pendingAmount: number;
+    remainingAmount: number;
     employeeCount: number | null;
     requestRecord: PaymentRecord | null;
     rejectionReason?: string;
+    installments?: InstallmentDetail[];
+    currentInstallment?: number;
+    numberOfInstallments?: number;
+    isIncludedFreeWithAdvanced?: boolean;
+    parentAdvancedEngineName?: string;
 }
 
-function normalizeEngineName(name: string): string {
+export function normalizeEngineName(name: string): string {
     return (name || "").trim().toLowerCase();
 }
 
@@ -152,12 +357,12 @@ export async function createEnginePaymentRequest(params: {
     engineName: string;
     employeeCount: number;
     fullAmount: number;
-    requestedPercent: number;
+    requestedPercent?: number;
     requestNotes?: string;
 }): Promise<PaymentRecord> {
     const now = new Date().toISOString();
     const proformaInvoiceNumber = `PFI-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-    const percent = Math.min(100, Math.max(1, Math.round(params.requestedPercent)));
+    const percent = Math.min(100, Math.max(1, Math.round(params.requestedPercent ?? 100)));
     const fullAmount = Math.max(0, Math.round(params.fullAmount));
     const requestedAmount = Math.round((fullAmount * percent) / 100);
     const requestedBaseAmount = Math.round(requestedAmount / 1.18);
@@ -339,7 +544,13 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
             return true;
         }
         return (payment.items || []).some(
-            (item) => normalizeEngineName(item.engineName || "") === normalizedEngine
+            (item) => {
+                const iName = item.engineName || "";
+                if (normalizeEngineName(iName) === normalizedEngine) return true;
+                const match = iName.match(/^(.*) - Installment #(\d+)$/);
+                if (match && normalizeEngineName(match[1]) === normalizedEngine) return true;
+                return false;
+            }
         );
     });
 
@@ -348,17 +559,25 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         .sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
 
     const latestRequest = requestRecords[0] || null;
-    const requestStatus = mapRequestStatus(latestRequest?.status);
+    const isClearedRequest = latestRequest?.status === "cleared";
+    const requestStatus = isClearedRequest ? "none" : mapRequestStatus(latestRequest?.status);
 
-    const approvedRequestedAmount = Number(
-        latestRequest?.approvedRequestedAmount ?? latestRequest?.totalAmount ?? 0
-    );
-    const approvedRequestedBaseAmount = Number(
-        latestRequest?.approvedRequestedBaseAmount ?? latestRequest?.requestedBaseAmount ?? latestRequest?.subtotal ?? 0
-    );
+    const approvedRequestedAmount = isClearedRequest
+        ? 0
+        : Number(latestRequest?.approvedRequestedAmount ?? latestRequest?.totalAmount ?? 0);
+    const approvedRequestedBaseAmount = isClearedRequest
+        ? 0
+        : Number(latestRequest?.approvedRequestedBaseAmount ?? latestRequest?.requestedBaseAmount ?? latestRequest?.subtotal ?? 0);
 
-    const fullAmount = Number(latestRequest?.fullAmount || 0);
-    const employeeCount = typeof latestRequest?.employeeCount === "number" ? latestRequest.employeeCount : null;
+    const engineConfig = await getEngineSubscriptionConfig(orgId, engineName);
+    const engineType = engineConfig?.engineType ?? getEngineClassification(engineName);
+    const paymentType = engineConfig?.defaultPaymentType ?? (engineType === "core" ? "full" : "milestone");
+    const allowPartialPayment = engineConfig?.allowPartialPayment ?? (engineType === "advanced");
+    const manualForceEnabled = engineConfig?.manualEnabled === true;
+    const manualForceDisabled = engineConfig?.manualDisabled === true;
+
+    const fullAmount = isClearedRequest ? 0 : Number(latestRequest?.fullAmount || 0);
+    const employeeCount = isClearedRequest ? null : typeof latestRequest?.employeeCount === "number" ? latestRequest.employeeCount : null;
 
     const verifiedPayments = enginePayments.filter(
         (payment) => payment.status === "payment_verified" || payment.status === "completed"
@@ -366,7 +585,11 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
 
     const totalPaidAmount = verifiedPayments.reduce((sum, payment) => {
         const matchingItems = (payment.items || []).filter(
-            (item) => normalizeEngineName(item.engineName || "") === normalizedEngine
+            (item) => {
+                const iName = item.engineName || "";
+                if (normalizeEngineName(stripInstallmentSuffix(iName)) === normalizedEngine) return true;
+                return false;
+            }
         );
 
         if (matchingItems.length === 0) {
@@ -380,14 +603,123 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         return sum + matchingItems.reduce((itemSum, item) => itemSum + getItemGrossAmount(item), 0);
     }, 0);
 
-    const hasLegacyPaid = totalPaidAmount > 0 && !latestRequest;
-    const assessmentUnlocked = hasLegacyPaid || (requestStatus === "approved" && totalPaidAmount >= approvedRequestedAmount);
-    const reportUnlocked = hasLegacyPaid || (fullAmount > 0 && totalPaidAmount >= fullAmount);
+    const isFullyPaid = fullAmount > 0 && totalPaidAmount >= fullAmount;
+    const advancedUnlock = getUnlockedFeatures(engineConfig ?? undefined, totalPaidAmount, fullAmount);
+    const partiallyEnabled = engineType === "advanced" && advancedUnlock.unlockedFeatures.length > 0 && !isFullyPaid;
+    
+    // Check if this is a core engine included FREE with an advanced engine payment
+    // Look across ALL company request_based records (not just this engine's records)
+    let isIncludedFreeWithAdvanced = false;
+    let parentAdvancedEngineName = "";
+    let parentAdvancedTotalPaid = 0;
+    let parentAdvancedFullAmount = 0;
+
+    // First check the direct request records for this engine
+    const directIncluded = latestRequest && 
+        latestRequest.items && 
+        latestRequest.items.length > 1 && 
+        latestRequest.items.some(item => 
+            normalizeEngineName(item.engineName) === normalizedEngine && 
+            item.price === 0 &&
+            (item.description || "").includes("Included Core Engine")
+        );
+
+    if (directIncluded && latestRequest) {
+        isIncludedFreeWithAdvanced = true;
+        // The parent advanced engine is the main item (first item, or the one with price > 0)
+        const parentItem = latestRequest.items!.find(item => item.price > 0) || latestRequest.items![0];
+        parentAdvancedEngineName = parentItem?.engineName || latestRequest.engineName || "";
+    } else {
+        // Also scan other request records where this core engine might be bundled
+        const allRequestRecords = payments.filter(p => 
+            p.workflowType === "request_based" && 
+            p.status !== "cleared" &&
+            Array.isArray(p.items) &&
+            p.items.some(item => 
+                normalizeEngineName(item.engineName) === normalizedEngine && 
+                item.price === 0 &&
+                (item.description || "").includes("Included Core Engine")
+            )
+        );
+        if (allRequestRecords.length > 0) {
+            const parentRecord = allRequestRecords[0];
+            isIncludedFreeWithAdvanced = true;
+            const parentItem = parentRecord.items!.find(item => item.price > 0) || parentRecord.items![0];
+            parentAdvancedEngineName = parentItem?.engineName || parentRecord.engineName || "";
+        }
+    }
+
+    let coreEnabled = false;
+    if (isIncludedFreeWithAdvanced && parentAdvancedEngineName) {
+        // Calculate actual payment progress for the PARENT advanced engine
+        const parentNormalized = normalizeEngineName(parentAdvancedEngineName);
+        const parentPayments = payments.filter(p => {
+            if (p.status !== "payment_verified" && p.status !== "completed") return false;
+            return (p.items || []).some(item => 
+                normalizeEngineName(stripInstallmentSuffix(item.engineName || "")) === parentNormalized
+            );
+        });
+        parentAdvancedTotalPaid = parentPayments.reduce((sum, p) => sum + Number(p.totalAmount || 0), 0);
+
+        // Get the parent's full amount from request records
+        const parentRequestRecord = payments.find(p => 
+            p.workflowType === "request_based" && 
+            p.status !== "cleared" &&
+            normalizeEngineName(p.engineName || "") === parentNormalized
+        );
+        parentAdvancedFullAmount = Number(parentRequestRecord?.fullAmount || 0);
+
+        // Unlock core engine if 50%+ of parent advanced engine is paid
+        const paymentPercent = parentAdvancedFullAmount > 0 
+            ? Math.round((parentAdvancedTotalPaid / parentAdvancedFullAmount) * 100) 
+            : 0;
+        coreEnabled = paymentPercent >= 50 || parentAdvancedTotalPaid > 0;
+    } else {
+        coreEnabled = isFullyPaid;
+    }
+
+    const enabled = manualForceEnabled || (!manualForceDisabled && ((engineType === "core" && coreEnabled) || (engineType === "advanced" && advancedUnlock.unlockedFeatures.length > 0)));
+
+    const activationStatus: "disabled" | "partially_enabled" | "enabled" = manualForceDisabled
+        ? "disabled"
+        : enabled && (engineType === "advanced" ? isFullyPaid : coreEnabled)
+            ? "enabled"
+            : partiallyEnabled
+                ? "partially_enabled"
+                : "disabled";
+
+    const assessmentUnlocked = manualForceEnabled
+        ? true
+        : engineType === "core"
+            ? coreEnabled
+            : allowPartialPayment
+                ? advancedUnlock.unlockedFeatures.length > 0
+                : isFullyPaid;
+
+    const reportUnlocked = manualForceEnabled
+        ? true
+        : engineType === "core"
+            ? coreEnabled
+            : isFullyPaid;
+
     const pendingAmount = Math.max(0, (fullAmount || approvedRequestedAmount) - totalPaidAmount);
+    const remainingAmount = Math.max(0, fullAmount - totalPaidAmount);
 
     return {
         engineName,
         requestStatus,
+        engineType,
+        paymentType,
+        allowPartialPayment,
+        manualOverride: {
+            enabled: engineConfig?.manualEnabled,
+            disabled: engineConfig?.manualDisabled,
+            notes: engineConfig?.overrideNotes,
+        },
+        activationStatus,
+        paymentProgress: advancedUnlock.progressPercent,
+        enabledFeatures: advancedUnlock.unlockedFeatures,
+        featureUnlocks: buildFeatureUnlockMapping(engineConfig ?? undefined),
         assessmentUnlocked,
         reportUnlocked,
         approvedRequestedAmount,
@@ -395,9 +727,15 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         totalPaidAmount,
         fullAmount,
         pendingAmount,
+        remainingAmount,
         employeeCount,
         requestRecord: latestRequest,
         rejectionReason: latestRequest?.rejectionReason,
+        installments: latestRequest?.installments,
+        currentInstallment: latestRequest?.currentInstallment,
+        numberOfInstallments: latestRequest?.numberOfInstallments,
+        isIncludedFreeWithAdvanced,
+        parentAdvancedEngineName: isIncludedFreeWithAdvanced ? parentAdvancedEngineName : undefined,
     };
 }
 
@@ -428,7 +766,10 @@ export async function generateInvoice(
     }
 ): Promise<PaymentRecord> {
     const invoiceId = uuidv4();
-    const proformaInvoiceNumber = `PFI-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+    const invoiceDateObj = new Date();
+    const sequence = await getFinalInvoiceSequenceForDate(orgId, invoiceDateObj);
+    const invoiceDateString = invoiceDateObj.toISOString().slice(0, 10);
+    const proformaInvoiceNumber = `HR-${invoiceDateString}-${sequence.toString().padStart(2, '0')}`;
 
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
 
@@ -457,6 +798,79 @@ export async function generateInvoice(
     const invoiceDate = new Date().toISOString();
     const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
 
+    // Attempt to attach an approved installment plan (if any) for the engine in the cart.
+    // Admins can create/approve request-based installment plans which are stored as
+    // payment records with `workflowType === 'request_based'` and `status === 'request_approved'`.
+    // If the cart contains a single engine and an approved plan exists for that engine,
+    // copy that plan's `installments` into the generated proforma invoice and calculate
+    // installment amounts based on the item's price when necessary.
+    let appliedInstallments: InstallmentDetail[] | undefined = undefined;
+    let appliedHsnCode: string | undefined = undefined;
+    try {
+        if (cartItems.length === 1) {
+            const cartItem = cartItems[0];
+            const cartEngineName = stripInstallmentSuffix(cartItem.displayName || cartItem.productName || cartItem.engineName || "");
+            const companyPayments = await getCompanyPayments(orgId);
+            const requestRecords = companyPayments.filter(p =>
+                p.workflowType === 'request_based' &&
+                p.status !== 'cleared' &&
+                normalizeEngineName(stripInstallmentSuffix(p.engineName || p.items?.[0]?.engineName || '')) === normalizeEngineName(cartEngineName)
+            ).sort((a, b) => {
+                // Prioritize approved records
+                if (a.status === 'request_approved' && b.status !== 'request_approved') return -1;
+                if (b.status === 'request_approved' && a.status !== 'request_approved') return 1;
+                return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
+            });
+
+            const approvedPlan = requestRecords[0];
+
+            if (approvedPlan && Array.isArray(approvedPlan.installments)) {
+                const fullAmountForItem = Number(cartItem.price || 0);
+                appliedInstallments = approvedPlan.installments.map(inst => {
+                    const pct = Number(inst.percentage || 0);
+                    const calculatedAmount = typeof inst.amount === 'number'
+                        ? inst.amount
+                        : Math.round((fullAmountForItem * pct) / 100);
+
+                    const splitDetails = Array.isArray(inst.splitDetails)
+                        ? inst.splitDetails.map(sd => ({
+                            item: sd.item || '',
+                            description: sd.description || '',
+                            hsnCode: sd.hsnCode || '',
+                            amount: sd.amount ? String(sd.amount) : String(Math.round((fullAmountForItem * pct) / 100))
+                        }))
+                        : [];
+
+                    return {
+                        ...inst,
+                        amount: calculatedAmount,
+                        splitDetails
+                    } as InstallmentDetail;
+                });
+
+                // Also copy HSN code from the approved plan
+                if (approvedPlan.hsnCode) {
+                    appliedHsnCode = approvedPlan.hsnCode;
+                }
+            }
+
+            // If no installment plan was found, still try to find the HSN code from the request record
+            if (!appliedHsnCode) {
+                const requestWithHsn = companyPayments.find(p =>
+                    p.workflowType === 'request_based' &&
+                    p.hsnCode &&
+                    normalizeEngineName(stripInstallmentSuffix(p.engineName || p.items?.[0]?.engineName || '')) === normalizeEngineName(cartEngineName)
+                );
+                if (requestWithHsn?.hsnCode) {
+                    appliedHsnCode = requestWithHsn.hsnCode;
+                }
+            }
+        }
+    } catch (error) {
+        // Non-fatal: if anything goes wrong while looking up plans, we still generate the invoice
+        console.error("Error applying approved installment plan:", error);
+    }
+
     const paymentRecord: PaymentRecord = {
         pk: `COMPANY#${orgId}`,
         sk: `PAYMENT#${invoiceId}`,
@@ -483,8 +897,11 @@ export async function generateInvoice(
         sgst,
         igst,
         taxType,
+        hsnCode: appliedHsnCode,
         createdAt: invoiceDate,
-        updatedAt: invoiceDate
+        updatedAt: invoiceDate,
+        // Attach installments when an approved plan was found for this cart
+        ...(appliedInstallments ? { installments: appliedInstallments, paymentType: 'milestone' } : {})
     };
 
     const command = new PutCommand({
@@ -548,6 +965,20 @@ export async function submitPaymentProof(
     try {
         await ddbDocClient.send(command);
         console.log(`Payment proof submitted for invoice ${invoiceId}`);
+
+        // Sync installment status if this payment is for an installment
+        const existing = await getPaymentRecord(invoiceId, orgId);
+        for (const item of existing?.items || []) {
+            const match = item.engineName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) {
+                const engineName = match[1];
+                const installmentNum = parseInt(match[2]);
+                const access = await getEngineAccessStatus(orgId, engineName);
+                if (access.requestRecord?.invoiceId) {
+                    await updateInstallmentStatus(access.requestRecord.invoiceId, orgId, installmentNum, "payment_submitted");
+                }
+            }
+        }
     } catch (e) {
         console.error("Error submitting payment proof:", e);
         throw e;
@@ -564,9 +995,7 @@ export async function verifyPayment(
     adminId: string,
     verificationNotes?: string
 ): Promise<void> {
-    const existing = await getPaymentRecord(invoiceId, orgId);
     const finalizedAt = new Date().toISOString();
-    const finalInvoiceNumber = `FIN-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
 
     const command = new UpdateCommand({
         TableName: USERS_TABLE,
@@ -579,51 +1008,29 @@ export async function verifyPayment(
           #verifiedBy = :verifiedBy,
           #verifiedAt = :verifiedAt,
           #verificationNotes = :verificationNotes,
-          #updatedAt = :updatedAt,
-          #invoiceKind = :invoiceKind,
-          #finalInvoiceNumber = :finalInvoiceNumber,
-          #finalInvoiceDate = :finalInvoiceDate,
-          #invoiceNumber = :invoiceNumber,
-          #invoiceDate = :invoiceDate,
-          #proformaInvoiceNumber = :proformaInvoiceNumber
+          #updatedAt = :updatedAt
     `,
         ExpressionAttributeNames: {
             "#status": "status",
             "#verifiedBy": "verifiedBy",
             "#verifiedAt": "verifiedAt",
             "#verificationNotes": "verificationNotes",
-            "#updatedAt": "updatedAt",
-            "#invoiceKind": "invoiceKind",
-            "#finalInvoiceNumber": "finalInvoiceNumber",
-            "#finalInvoiceDate": "finalInvoiceDate",
-            "#invoiceNumber": "invoiceNumber",
-            "#invoiceDate": "invoiceDate",
-            "#proformaInvoiceNumber": "proformaInvoiceNumber",
+            "#updatedAt": "updatedAt"
         },
         ExpressionAttributeValues: {
-            ":status": "payment_verified",
+            ":status": "payment_approved",
             ":verifiedBy": adminId,
             ":verifiedAt": finalizedAt,
             ":verificationNotes": verificationNotes || null,
-            ":updatedAt": finalizedAt,
-            ":invoiceKind": "FINAL",
-            ":finalInvoiceNumber": finalInvoiceNumber,
-            ":finalInvoiceDate": finalizedAt,
-            ":invoiceNumber": finalInvoiceNumber,
-            ":invoiceDate": finalizedAt,
-            ":proformaInvoiceNumber": existing?.proformaInvoiceNumber || existing?.invoiceNumber || null,
+            ":updatedAt": finalizedAt
         }
     });
 
     try {
         await ddbDocClient.send(command);
-        console.log(`Payment verified for invoice ${invoiceId} by admin ${adminId}`);
-
-        // Auto-approve all pending reports for this company
-        await autoApproveCompanyReports(orgId);
-        console.log(`✅ Auto-approved all reports for company ${orgId} after payment verification`);
+        console.log(`Payment approved for customer acceptance for invoice ${invoiceId} by admin ${adminId}`);
     } catch (e) {
-        console.error("Error verifying payment:", e);
+        console.error("Error approving payment:", e);
         throw e;
     }
 }
@@ -723,8 +1130,162 @@ export async function rejectPayment(
     try {
         await ddbDocClient.send(command);
         console.log(`Payment rejected for invoice ${invoiceId} by admin ${adminId}`);
+
+        // Sync installment status if this payment is for an installment
+        const existing = await getPaymentRecord(invoiceId, orgId);
+        for (const item of existing?.items || []) {
+            const match = item.engineName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) {
+                const engineName = match[1];
+                const installmentNum = parseInt(match[2]);
+                const access = await getEngineAccessStatus(orgId, engineName);
+                if (access.requestRecord?.invoiceId) {
+                    await updateInstallmentStatus(access.requestRecord.invoiceId, orgId, installmentNum, "rejected");
+                }
+            }
+        }
     } catch (e) {
         console.error("Error rejecting payment:", e);
+        throw e;
+    }
+}
+
+export async function acceptInvoice(
+    invoiceId: string,
+    orgId: string,
+    userId: string
+): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    if (!existing) {
+        throw new Error(`Invoice ${invoiceId} not found for company ${orgId}`);
+    }
+
+    const finalizedAt = new Date().toISOString();
+    
+    let finalInvoiceNumber = existing.finalInvoiceNumber;
+    if (!finalInvoiceNumber) {
+        if (existing.proformaInvoiceNumber?.startsWith('HR-')) {
+            finalInvoiceNumber = existing.proformaInvoiceNumber;
+        } else {
+            const invoiceDateObj = new Date(finalizedAt);
+            const sequence = await getFinalInvoiceSequenceForDate(orgId, invoiceDateObj);
+            const invoiceDateString = invoiceDateObj.toISOString().slice(0, 10);
+            finalInvoiceNumber = `HR-${invoiceDateString}-${sequence.toString().padStart(2, '0')}`;
+        }
+    }
+
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `
+      SET #status = :status,
+          #acceptedBy = :acceptedBy,
+          #acceptedAt = :acceptedAt,
+          #updatedAt = :updatedAt,
+          #invoiceKind = :invoiceKind,
+          #finalInvoiceNumber = :finalInvoiceNumber,
+          #finalInvoiceDate = :finalInvoiceDate,
+          #invoiceNumber = :invoiceNumber,
+          #invoiceDate = :invoiceDate,
+          #proformaInvoiceNumber = :proformaInvoiceNumber
+    `,
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#acceptedBy": "acceptedBy",
+            "#acceptedAt": "acceptedAt",
+            "#updatedAt": "updatedAt",
+            "#invoiceKind": "invoiceKind",
+            "#finalInvoiceNumber": "finalInvoiceNumber",
+            "#finalInvoiceDate": "finalInvoiceDate",
+            "#invoiceNumber": "invoiceNumber",
+            "#invoiceDate": "invoiceDate",
+            "#proformaInvoiceNumber": "proformaInvoiceNumber"
+        },
+        ExpressionAttributeValues: {
+            ":status": "payment_verified",
+            ":acceptedBy": userId,
+            ":acceptedAt": finalizedAt,
+            ":updatedAt": finalizedAt,
+            ":invoiceKind": "FINAL",
+            ":finalInvoiceNumber": finalInvoiceNumber,
+            ":finalInvoiceDate": finalizedAt,
+            ":invoiceNumber": finalInvoiceNumber,
+            ":invoiceDate": finalizedAt,
+            ":proformaInvoiceNumber": existing.proformaInvoiceNumber || existing.invoiceNumber || null
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Customer accepted invoice ${invoiceId} for company ${orgId}`);
+
+        for (const item of existing.items || []) {
+            const engineName = item.engineName;
+            await processEngineActivationForPayment(orgId, invoiceId, engineName);
+
+            // If this invoice includes an installment payment, mark that installment as paid
+            const match = engineName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) {
+                const installmentNum = parseInt(match[2], 10);
+                const normalizedEngineName = match[1];
+                const access = await getEngineAccessStatus(orgId, normalizedEngineName);
+                if (access.requestRecord?.invoiceId) {
+                    await updateInstallmentStatus(access.requestRecord.invoiceId, orgId, installmentNum, "paid");
+                }
+            }
+        }
+
+        await autoApproveCompanyReports(orgId);
+        console.log(`✅ Auto-approved reports for company ${orgId} after customer invoice acceptance`);
+    } catch (e) {
+        console.error("Error accepting invoice:", e);
+        throw e;
+    }
+}
+
+export async function declineInvoice(
+    invoiceId: string,
+    orgId: string,
+    userId: string,
+    declineReason?: string
+): Promise<void> {
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `
+      SET #status = :status,
+          #declinedBy = :declinedBy,
+          #declinedAt = :declinedAt,
+          #declineReason = :declineReason,
+          #updatedAt = :updatedAt
+    `,
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#declinedBy": "declinedBy",
+            "#declinedAt": "declinedAt",
+            "#declineReason": "declineReason",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":status": "payment_rejected",
+            ":declinedBy": userId,
+            ":declinedAt": new Date().toISOString(),
+            ":declineReason": declineReason || null,
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Customer declined invoice ${invoiceId} for company ${orgId}`);
+    } catch (e) {
+        console.error("Error declining invoice:", e);
         throw e;
     }
 }
@@ -754,6 +1315,33 @@ export async function getPaymentRecord(
 }
 
 /**
+ * Get all active installment plans (for admin)
+ * Approved requests that have an installments array
+ */
+export async function getActiveInstallmentPlans(): Promise<PaymentRecord[]> {
+    const command = new ScanCommand({
+        TableName: USERS_TABLE,
+        FilterExpression: "#status = :status AND attribute_exists(#installments) AND begins_with(sk, :skPrefix)",
+        ExpressionAttributeNames: {
+            "#status": "status",
+            "#installments": "installments"
+        },
+        ExpressionAttributeValues: {
+            ":status": "request_approved",
+            ":skPrefix": "PAYMENT#"
+        }
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        return (Items as PaymentRecord[]) || [];
+    } catch (e) {
+        console.error("Error fetching active installment plans:", e);
+        throw e;
+    }
+}
+
+/**
  * Get all payments for a company
  */
 export async function getCompanyPayments(orgId: string): Promise<PaymentRecord[]> {
@@ -772,6 +1360,126 @@ export async function getCompanyPayments(orgId: string): Promise<PaymentRecord[]
         return (Items as PaymentRecord[]) || [];
     } catch (e) {
         console.error("Error fetching company payments:", e);
+        throw e;
+    }
+}
+
+export async function getFinalInvoiceSequenceForDate(orgId: string, date: Date): Promise<number> {
+    const payments = await getCompanyPayments(orgId);
+    const targetDate = date.toISOString().slice(0, 10);
+    const sameDayFinalInvoices = payments.filter(payment =>
+        payment.invoiceKind === "FINAL" &&
+        typeof payment.finalInvoiceDate === "string" &&
+        payment.finalInvoiceDate.startsWith(targetDate)
+    );
+    return sameDayFinalInvoices.length + 1;
+}
+
+export async function getEngineSubscriptionConfig(orgId: string, engineName: string): Promise<EngineSubscriptionConfig | null> {
+    const normalized = normalizeEngineName(canonicalEngineName(engineName));
+    const command = new GetCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `ENGINE_CONFIG#${normalized}`
+        }
+    });
+
+    try {
+        const { Item } = await ddbDocClient.send(command);
+        return Item ? (Item as EngineSubscriptionConfig) : null;
+    } catch (e) {
+        console.error("Error fetching engine subscription config:", e);
+        throw e;
+    }
+}
+
+export async function getAllEngineSubscriptionConfigs(orgId: string): Promise<EngineSubscriptionConfig[]> {
+    const command = new QueryCommand({
+        TableName: USERS_TABLE,
+        KeyConditionExpression: "pk = :pk AND begins_with(sk, :skPrefix)",
+        ExpressionAttributeValues: {
+            ":pk": `COMPANY#${orgId}`,
+            ":skPrefix": "ENGINE_CONFIG#"
+        },
+        ScanIndexForward: false
+    });
+
+    try {
+        const { Items } = await ddbDocClient.send(command);
+        return (Items as EngineSubscriptionConfig[]) || [];
+    } catch (e) {
+        console.error("Error fetching all engine subscription configs:", e);
+        throw e;
+    }
+}
+
+export async function saveEngineSubscriptionConfig(orgId: string, config: EngineSubscriptionConfig): Promise<EngineSubscriptionConfig> {
+    const canonicalName = canonicalEngineName(config.engineName);
+    const normalized = normalizeEngineName(canonicalName);
+    const now = new Date().toISOString();
+    const savedConfig: EngineSubscriptionConfig = {
+        ...config,
+        engineName: canonicalName,
+        engineType: config.engineType,
+        defaultPaymentType: config.engineType === "core" ? "full" : config.defaultPaymentType,
+        allowPartialPayment: config.engineType === "core" ? false : config.allowPartialPayment,
+        updatedAt: now,
+        createdAt: config.createdAt || now,
+    };
+
+    const command = new PutCommand({
+        TableName: USERS_TABLE,
+        Item: {
+            pk: `COMPANY#${orgId}`,
+            sk: `ENGINE_CONFIG#${normalized}`,
+            ...savedConfig,
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        return savedConfig;
+    } catch (e) {
+        console.error("Error saving engine subscription config:", e);
+        throw e;
+    }
+}
+
+export async function processEngineActivationForPayment(orgId: string, invoiceId: string, engineName: string): Promise<void> {
+    const normalizedEngineName = stripInstallmentSuffix(engineName);
+    const accessStatus = await getEngineAccessStatus(orgId, normalizedEngineName);
+    const snapshot: EngineActivationSnapshot = {
+        engineName: normalizedEngineName,
+        activationStatus: accessStatus.activationStatus || "disabled",
+        enabledFeatures: accessStatus.enabledFeatures || [],
+        paymentProgress: accessStatus.paymentProgress || 0,
+        totalPaidAmount: accessStatus.totalPaidAmount,
+        fullAmount: accessStatus.fullAmount,
+        updatedAt: new Date().toISOString(),
+    };
+
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `SET #activationInfo = :activationInfo, #updatedAt = :updatedAt`,
+        ExpressionAttributeNames: {
+            "#activationInfo": "activationInfo",
+            "#updatedAt": "updatedAt"
+        },
+        ExpressionAttributeValues: {
+            ":activationInfo": { engineActivations: [snapshot] },
+            ":updatedAt": new Date().toISOString()
+        }
+    });
+
+    try {
+        await ddbDocClient.send(command);
+    } catch (e) {
+        console.error("Error updating engine activation info:", e);
         throw e;
     }
 }
@@ -835,10 +1543,34 @@ export async function hasVerifiedPaymentForEngines(
             expiresAt.setMonth(expiresAt.getMonth() + duration);
             
             if (new Date() < expiresAt) {
-                paidEngines.add(item.engineName.trim());
+                let eName = item.engineName.trim();
+                const match = eName.match(/^(.*) - Installment #(\d+)$/);
+                if (match) eName = match[1].trim();
+                paidEngines.add(eName);
             }
         });
     });
+
+    // Also include core engines that are included with advanced engine payments at >= 50% progress
+    const advancedPayments = payments.filter(p => {
+        const mainEngine = p.items?.[0]?.engineName;
+        return mainEngine && getEngineClassification(mainEngine) === "advanced";
+    });
+
+    for (const payment of advancedPayments) {
+        const paidAmount = payment.paidAmount || payment.totalAmount || 0;
+        const fullAmount = payment.fullAmount || payment.totalAmount || 0;
+        const paymentPercent = fullAmount > 0 ? Math.round((paidAmount / fullAmount) * 100) : 0;
+
+        if (paymentPercent >= 50 && payment.items && payment.items.length > 1) {
+            // Add core engines (price 0) from this payment
+            for (const item of payment.items.slice(1)) {
+                if (item.price === 0) {
+                    paidEngines.add(item.engineName.trim());
+                }
+            }
+        }
+    }
 
     return engineNames.every(engine => paidEngines.has(engine.trim()));
 }
@@ -851,8 +1583,34 @@ export async function getVerifiedPaidEngines(orgId: string): Promise<string[]> {
 
     const verifiedPayments = payments.filter(p => p.status === "payment_verified");
     const paidEngines = new Set(
-        verifiedPayments.flatMap(p => p.items.map(item => item.engineName))
+        verifiedPayments.flatMap(p => p.items.map(item => {
+            let eName = item.engineName.trim();
+            const match = eName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) eName = match[1].trim();
+            return eName;
+        }))
     );
+
+    // Also include core engines that are included with advanced engine payments at >= 50% progress
+    const advancedPayments = payments.filter(p => {
+        const mainEngine = p.items?.[0]?.engineName;
+        return mainEngine && getEngineClassification(mainEngine) === "advanced";
+    });
+
+    for (const payment of advancedPayments) {
+        const paidAmount = payment.paidAmount || payment.totalAmount || 0;
+        const fullAmount = payment.fullAmount || payment.totalAmount || 0;
+        const paymentPercent = fullAmount > 0 ? Math.round((paidAmount / fullAmount) * 100) : 0;
+
+        if (paymentPercent >= 50 && payment.items && payment.items.length > 1) {
+            // Add core engines (price 0) from this payment
+            for (const item of payment.items.slice(1)) {
+                if (item.price === 0) {
+                    paidEngines.add(item.engineName.trim());
+                }
+            }
+        }
+    }
 
     return Array.from(paidEngines);
 }
@@ -900,7 +1658,12 @@ export async function getEnginePaymentStatus(orgId: string, engineName: string) 
     for (const p of payments) {
         if (p.status !== "payment_verified" && p.status !== "completed") continue;
         
-        const engineItem = p.items?.find(i => i.engineName.trim() === engineName.trim());
+        const engineItem = p.items?.find(i => {
+            let eName = i.engineName.trim();
+            const match = eName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) eName = match[1].trim();
+            return eName === engineName.trim();
+        });
         if (!engineItem) continue;
 
         const duration = engineItem.durationMonths || 1;
@@ -927,7 +1690,12 @@ export async function getEnginePaymentStatus(orgId: string, engineName: string) 
     // Check for pending verification
     const pendingPayment = payments.find(p => 
         p.status === "payment_submitted" && 
-        p.items?.some(i => i.engineName.trim() === engineName.trim())
+        p.items?.some(i => {
+            let eName = i.engineName.trim();
+            const match = eName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) eName = match[1].trim();
+            return eName === engineName.trim();
+        })
     );
 
     if (pendingPayment) {
@@ -937,7 +1705,12 @@ export async function getEnginePaymentStatus(orgId: string, engineName: string) 
     // Check for rejected payment (so they can try again)
     const rejectedPayment = payments.find(p => 
         p.status === "payment_rejected" && 
-        p.items?.some(i => i.engineName.trim() === engineName.trim())
+        p.items?.some(i => {
+            let eName = i.engineName.trim();
+            const match = eName.match(/^(.*) - Installment #(\d+)$/);
+            if (match) eName = match[1].trim();
+            return eName === engineName.trim();
+        })
     );
 
     if (rejectedPayment) {
@@ -1018,42 +1791,219 @@ export async function approvePaymentRequest(
     invoiceId: string,
     orgId: string,
     adminId: string,
-    approvalNotes?: string
+    approvalNotes?: string,
+    installments?: Array<{ installmentNumber: number; percentage: number; splitDetails: SplitDetailRow[]; featureUnlocks?: string[] }>,
+    options?: {
+        hsnCode?: string;
+        paymentType?: EnginePaymentType;
+        allocatedCoreEngines?: string[];
+    }
 ): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    const fullAmount = existing?.fullAmount || existing?.totalAmount || 0;
+    const engineName = existing?.engineName || existing?.items?.[0]?.engineName || "";
+    const engineType = getEngineClassification(engineName);
+
+    // Determine payment type: core engines are always "full"
+    const resolvedPaymentType: EnginePaymentType = engineType === "core" ? "full" : (options?.paymentType || "full");
+
+    if (engineType === "core" && installments && installments.length > 1) {
+        console.warn("Core engine request cannot include installment plan. Forcing single 100% installment.");
+        installments = undefined;
+    }
+
+    let installmentPlan: InstallmentDetail[] | undefined;
+    let numberOfInstallments: number | undefined;
+
+    if (installments && installments.length > 0) {
+        numberOfInstallments = installments.length;
+        installmentPlan = installments.map((inst) => ({
+            installmentNumber: inst.installmentNumber,
+            percentage: inst.percentage,
+            splitDetails: inst.splitDetails,
+            amount: Math.round((fullAmount * inst.percentage) / 100),
+            status: "unpaid" as const,
+            featureUnlocks: inst.featureUnlocks,
+        }));
+    }
+
+    // Build updated items array with allocated core engines
+    let updatedItems = existing?.items ? [...existing.items] : [];
+    if (options?.allocatedCoreEngines && options.allocatedCoreEngines.length > 0) {
+        for (const coreEngine of options.allocatedCoreEngines) {
+            if (!updatedItems.some(item => item.engineName === coreEngine)) {
+                updatedItems.push({
+                    engineName: coreEngine,
+                    price: 0,
+                    description: `Included Core Engine: ${coreEngine}`,
+                    durationMonths: 1,
+                });
+            }
+        }
+    }
+
+    const updateExprParts = [
+        "#status = :status",
+        "#verifiedBy = :verifiedBy",
+        "#verifiedAt = :verifiedAt",
+        "#verificationNotes = :verificationNotes",
+        "#updatedAt = :updatedAt",
+        "#paymentType = :paymentType",
+        "#items = :items",
+    ];
+    const exprNames: Record<string, string> = {
+        "#status": "status",
+        "#verifiedBy": "verifiedBy",
+        "#verifiedAt": "verifiedAt",
+        "#verificationNotes": "verificationNotes",
+        "#updatedAt": "updatedAt",
+        "#paymentType": "paymentType",
+        "#items": "items",
+    };
+    const exprValues: Record<string, any> = {
+        ":status": "request_approved",
+        ":verifiedBy": adminId,
+        ":verifiedAt": new Date().toISOString(),
+        ":verificationNotes": approvalNotes || null,
+        ":updatedAt": new Date().toISOString(),
+        ":paymentType": resolvedPaymentType,
+        ":items": updatedItems,
+    };
+
+    // HSN code
+    if (options?.hsnCode) {
+        updateExprParts.push("#hsnCode = :hsnCode");
+        exprNames["#hsnCode"] = "hsnCode";
+        exprValues[":hsnCode"] = options.hsnCode;
+    }
+
+    if (installmentPlan) {
+        updateExprParts.push("#installments = :installments");
+        updateExprParts.push("#numberOfInstallments = :numberOfInstallments");
+        updateExprParts.push("#currentInstallment = :currentInstallment");
+        exprNames["#installments"] = "installments";
+        exprNames["#numberOfInstallments"] = "numberOfInstallments";
+        exprNames["#currentInstallment"] = "currentInstallment";
+        exprValues[":installments"] = installmentPlan;
+        exprValues[":numberOfInstallments"] = numberOfInstallments;
+        exprValues[":currentInstallment"] = 1;
+    }
+
     const command = new UpdateCommand({
         TableName: USERS_TABLE,
         Key: {
             pk: `COMPANY#${orgId}`,
             sk: `PAYMENT#${invoiceId}`
         },
-        UpdateExpression: `
-            SET #status = :status,
-                #verifiedBy = :verifiedBy,
-                #verifiedAt = :verifiedAt,
-                #verificationNotes = :verificationNotes,
-                #updatedAt = :updatedAt
-        `,
-        ExpressionAttributeNames: {
-            "#status": "status",
-            "#verifiedBy": "verifiedBy",
-            "#verifiedAt": "verifiedAt",
-            "#verificationNotes": "verificationNotes",
-            "#updatedAt": "updatedAt"
-        },
-        ExpressionAttributeValues: {
-            ":status": "request_approved",
-            ":verifiedBy": adminId,
-            ":verifiedAt": new Date().toISOString(),
-            ":verificationNotes": approvalNotes || null,
-            ":updatedAt": new Date().toISOString()
-        }
+        UpdateExpression: `SET ${updateExprParts.join(", ")}`,
+        ExpressionAttributeNames: exprNames,
+        ExpressionAttributeValues: exprValues,
     });
 
     try {
         await ddbDocClient.send(command);
-        console.log(`Payment request approved for invoice ${invoiceId} by admin ${adminId}`);
+        console.log(`Payment request approved for invoice ${invoiceId} by admin ${adminId} with ${numberOfInstallments || 0} installments, paymentType=${resolvedPaymentType}`);
     } catch (e) {
         console.error("Error approving payment request:", e);
+        throw e;
+    }
+}
+
+/**
+ * Update installment status after payment verification
+ */
+export async function updateInstallmentStatus(
+    invoiceId: string,
+    orgId: string,
+    installmentNumber: number,
+    newStatus: "paid" | "rejected" | "payment_submitted"
+): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    if (!existing || !existing.installments) return;
+
+    const updatedInstallments = existing.installments.map((inst) => {
+        if (inst.installmentNumber === installmentNumber) {
+            return {
+                ...inst,
+                status: newStatus,
+                paidAt: newStatus === "paid" ? new Date().toISOString() : undefined,
+            };
+        }
+        return inst;
+    });
+
+    // DO NOT auto-increment currentInstallment here. Admin must explicitly enable the next installment.
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `SET #installments = :installments, #updatedAt = :updatedAt`,
+        ExpressionAttributeNames: {
+            "#installments": "installments",
+            "#updatedAt": "updatedAt",
+        },
+        ExpressionAttributeValues: {
+            ":installments": updatedInstallments,
+            ":updatedAt": new Date().toISOString(),
+        },
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Installment ${installmentNumber} updated to ${newStatus} for invoice ${invoiceId}`);
+    } catch (e) {
+        console.error("Error updating installment status:", e);
+        throw e;
+    }
+}
+
+/**
+ * Enable a specific installment manually (Admin initiated)
+ */
+export async function enableInstallment(
+    invoiceId: string,
+    orgId: string,
+    installmentNumber: number
+): Promise<void> {
+    const existing = await getPaymentRecord(invoiceId, orgId);
+    if (!existing || !existing.installments) return;
+
+    const updatedInstallments = existing.installments.map((inst) => {
+        if (inst.installmentNumber === installmentNumber) {
+            return {
+                ...inst,
+                enabled: true
+            };
+        }
+        return inst;
+    });
+
+    const command = new UpdateCommand({
+        TableName: USERS_TABLE,
+        Key: {
+            pk: `COMPANY#${orgId}`,
+            sk: `PAYMENT#${invoiceId}`
+        },
+        UpdateExpression: `SET #installments = :installments, #currentInstallment = :currentInstallment, #updatedAt = :updatedAt`,
+        ExpressionAttributeNames: {
+            "#installments": "installments",
+            "#currentInstallment": "currentInstallment",
+            "#updatedAt": "updatedAt",
+        },
+        ExpressionAttributeValues: {
+            ":installments": updatedInstallments,
+            ":currentInstallment": installmentNumber,
+            ":updatedAt": new Date().toISOString(),
+        },
+    });
+
+    try {
+        await ddbDocClient.send(command);
+        console.log(`Installment ${installmentNumber} manually enabled for invoice ${invoiceId}`);
+    } catch (e) {
+        console.error("Error enabling installment:", e);
         throw e;
     }
 }
@@ -1234,9 +2184,239 @@ export async function updateInvoicePaymentStatus(
     try {
         await ddbDocClient.send(command);
         console.log(`Invoice payment updated: ${invoiceId}, Paid: ₹${newPaidAmount}, Balance: ₹${balanceDue}`);
+
+        // ✅ NEW: Unlock assessment/report based on payment percentage
+        for (const item of existing?.items || []) {
+            const engineName = item.engineName;
+            // Skip installment items - handle only base engines
+            if (!engineName.includes(" - Installment #")) {
+                await unlockAccessByPaymentPercentage(invoiceId, orgId, engineName);
+            }
+        }
     } catch (e) {
         console.error("Error updating invoice payment:", e);
         throw e;
     }
 }
 
+/**
+ * Unlock assessment/report based on payment percentage
+ * 50% payment → Unlock Assessment
+ * 100% payment → Unlock Report
+ */
+export async function unlockAccessByPaymentPercentage(
+    invoiceId: string,
+    orgId: string,
+    engineName: string
+): Promise<void> {
+    try {
+        // Get current payment record
+        const paymentRecord = await getPaymentRecord(invoiceId, orgId);
+        if (!paymentRecord) {
+            console.warn(`No payment record found for ${invoiceId}`);
+            return;
+        }
+
+        const totalAmount = paymentRecord.totalAmount || 0;
+        const paidAmount = paymentRecord.paidAmount || 0;
+
+        if (totalAmount <= 0) return;
+
+        // Calculate payment percentage
+        const paymentPercentage = (paidAmount / totalAmount) * 100;
+
+        console.log(`💰 Payment Progress: ₹${paidAmount} / ₹${totalAmount} = ${paymentPercentage.toFixed(2)}%`);
+
+        // Determine what to unlock
+        const shouldUnlockAssessment = paymentPercentage >= 50;
+        const shouldUnlockReport = paymentPercentage >= 100;
+
+        if (!shouldUnlockAssessment && !shouldUnlockReport) {
+            console.log(`⏳ Payment is ${paymentPercentage.toFixed(2)}% - waiting for 50% to unlock assessment`);
+            return;
+        }
+
+        // Find and update the access record for this engine
+        const scanCommand = new ScanCommand({
+            TableName: USERS_TABLE,
+            FilterExpression: "pk = :pk AND begins_with(sk, :sk) AND #engine = :engine",
+            ExpressionAttributeNames: {
+                "#engine": "engineName"
+            },
+            ExpressionAttributeValues: {
+                ":pk": `COMPANY#${orgId}`,
+                ":sk": "ENGINE_ACCESS#",
+                ":engine": engineName
+            }
+        });
+
+        const response = await ddbDocClient.send(scanCommand);
+        const accessRecord = response.Items?.[0];
+
+        if (!accessRecord) {
+            console.warn(`No access record found for engine: ${engineName}`);
+            return;
+        }
+
+        // Build update expression based on what needs to be unlocked
+        let updateExpression = "SET #updatedAt = :updatedAt";
+        const expressionValues: any = { ":updatedAt": new Date().toISOString() };
+        const expressionNames: any = { "#updatedAt": "updatedAt" };
+
+        if (shouldUnlockAssessment) {
+            updateExpression += ", #assessmentUnlocked = :true, #assessmentUnlockedAt = :now";
+            expressionNames["#assessmentUnlocked"] = "assessmentUnlocked";
+            expressionNames["#assessmentUnlockedAt"] = "assessmentUnlockedAt";
+            expressionValues[":true"] = true;
+            expressionValues[":now"] = new Date().toISOString();
+        }
+
+        if (shouldUnlockReport) {
+            updateExpression += ", #reportUnlocked = :true, #reportUnlockedAt = :now";
+            expressionNames["#reportUnlocked"] = "reportUnlocked";
+            expressionNames["#reportUnlockedAt"] = "reportUnlockedAt";
+            expressionValues[":true"] = true;
+            expressionValues[":now"] = new Date().toISOString();
+        }
+
+        const updateCommand = new UpdateCommand({
+            TableName: USERS_TABLE,
+            Key: {
+                pk: accessRecord.pk,
+                sk: accessRecord.sk
+            },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeNames: expressionNames,
+            ExpressionAttributeValues: expressionValues
+        });
+
+        await ddbDocClient.send(updateCommand);
+
+        if (shouldUnlockAssessment) {
+            console.log(`✅ [50% REACHED] Assessment unlocked for ${engineName}`);
+        }
+        if (shouldUnlockReport) {
+            console.log(`✅ [100% REACHED] Report unlocked for ${engineName}`);
+        }
+
+    } catch (error) {
+        console.error("Error unlocking access by payment percentage:", error);
+        // Don't throw - this is non-critical
+    }
+}
+
+/**
+ * Clear all payment requests for a company (for testing)
+ */
+export async function clearAllPaymentRequests(orgId: string): Promise<void> {
+    try {
+        const payments = await getCompanyPayments(orgId);
+        let clearedCount = 0;
+        let preservedCount = 0;
+        
+        for (const payment of payments) {
+            // ── PRESERVE approved request_based records ──
+            // These records hold the installment plan definitions, HSN codes,
+            // and split details configured by the admin. Wiping them causes
+            // new invoices to lose this configuration data.
+            const isApprovedRequestRecord =
+                payment.workflowType === "request_based" &&
+                (payment.status === "request_approved" ||
+                 (Array.isArray(payment.installments) && payment.installments.length > 0));
+
+            if (isApprovedRequestRecord) {
+                console.log(`🛡️ Preserving approved request record ${payment.invoiceId} (engine: ${payment.engineName}, installments: ${payment.installments?.length || 0})`);
+                
+                // Reset only the installment statuses back to "unpaid" so the
+                // plan can be re-used for a fresh payment cycle, but keep all
+                // structural data (amounts, percentages, splitDetails, hsnCode)
+                if (Array.isArray(payment.installments) && payment.installments.length > 0) {
+                    const resetInstallments = payment.installments.map(inst => ({
+                        ...inst,
+                        status: "unpaid" as const,
+                        paidAt: undefined,
+                        paidAmount: undefined,
+                    }));
+                    
+                    const resetCommand = new UpdateCommand({
+                        TableName: USERS_TABLE,
+                        Key: {
+                            pk: `COMPANY#${orgId}`,
+                            sk: `PAYMENT#${payment.invoiceId}`
+                        },
+                        UpdateExpression: `SET #installments = :installments, #currentInstallment = :currentInstallment, #updatedAt = :updatedAt`,
+                        ExpressionAttributeNames: {
+                            "#installments": "installments",
+                            "#currentInstallment": "currentInstallment",
+                            "#updatedAt": "updatedAt",
+                        },
+                        ExpressionAttributeValues: {
+                            ":installments": resetInstallments,
+                            ":currentInstallment": 1,
+                            ":updatedAt": new Date().toISOString(),
+                        }
+                    });
+                    
+                    try {
+                        await ddbDocClient.send(resetCommand);
+                    } catch (e) {
+                        console.error(`Error resetting installment statuses for ${payment.invoiceId}:`, e);
+                    }
+                }
+                
+                preservedCount++;
+                continue;
+            }
+            
+            // ── CLEAR all other records (transactional payments, pending/rejected requests) ──
+            const command = new UpdateCommand({
+                TableName: USERS_TABLE,
+                Key: {
+                    pk: `COMPANY#${orgId}`,
+                    sk: `PAYMENT#${payment.invoiceId}`
+                },
+                UpdateExpression: `SET #status = :status, #updatedAt = :updatedAt, #totalAmount = :zero, #fullAmount = :zero, #paidAmount = :zero, #balanceDue = :zero, #approvedRequestedAmount = :zero, #approvedRequestedBaseAmount = :zero, #requestedBaseAmount = :zero, #requestedPaymentPercent = :zero, #items = :emptyItems, #installments = :emptyInstallments, #workflowType = :workflowType, #engineName = :emptyString, #requestNotes = :emptyString, #paymentType = :full`,
+                ExpressionAttributeNames: {
+                    "#status": "status",
+                    "#updatedAt": "updatedAt",
+                    "#totalAmount": "totalAmount",
+                    "#fullAmount": "fullAmount",
+                    "#paidAmount": "paidAmount",
+                    "#balanceDue": "balanceDue",
+                    "#approvedRequestedAmount": "approvedRequestedAmount",
+                    "#approvedRequestedBaseAmount": "approvedRequestedBaseAmount",
+                    "#requestedBaseAmount": "requestedBaseAmount",
+                    "#requestedPaymentPercent": "requestedPaymentPercent",
+                    "#items": "items",
+                    "#installments": "installments",
+                    "#workflowType": "workflowType",
+                    "#engineName": "engineName",
+                    "#requestNotes": "requestNotes",
+                    "#paymentType": "paymentType",
+                },
+                ExpressionAttributeValues: {
+                    ":status": "cleared",
+                    ":updatedAt": new Date().toISOString(),
+                    ":zero": 0,
+                    ":emptyItems": [],
+                    ":emptyInstallments": [],
+                    ":workflowType": "standard",
+                    ":emptyString": "",
+                    ":full": "full",
+                }
+            });
+
+            try {
+                await ddbDocClient.send(command);
+                clearedCount++;
+            } catch (e) {
+                console.error(`Error clearing payment ${payment.invoiceId}:`, e);
+            }
+        }
+
+        console.log(`✅ Reset complete for company ${orgId}: cleared ${clearedCount} records, preserved ${preservedCount} approved request records`);
+    } catch (error) {
+        console.error("Error clearing payment requests:", error);
+        throw error;
+    }
+}

@@ -15,11 +15,41 @@ interface InvoiceTemplateProps {
     companyName: string;
     companyAddress?: string;
     companyGSTIN?: string;
+    billingContact?: {
+        name: string;
+        email: string;
+        phone: string;
+        address?: string;
+        city?: string;
+        state?: string;
+        pincode?: string;
+        gstin?: string;
+    };
     items: InvoiceItem[];
     subtotal: number;
     gstAmount: number;
+    cgst?: number;
+    sgst?: number;
+    igst?: number;
     totalAmount: number;
     paymentMethod?: string;
+    hsnCode?: string;
+    paymentType?: string;
+    paidAmount?: number;
+    balanceDue?: number;
+    installments?: Array<{
+        installmentNumber: number;
+        percentage: number;
+        amount?: number;
+        dueDate?: string;
+        splitDetails?: Array<{
+            item: string;
+            description: string;
+            amount: string;
+            hsnCode?: string;
+        }>;
+        status?: string;
+    }>;
 }
 
 export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
@@ -30,11 +60,20 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
     companyName,
     companyAddress,
     companyGSTIN,
+    billingContact,
     items,
     subtotal,
     gstAmount,
     totalAmount,
-    paymentMethod
+    paymentMethod,
+    hsnCode,
+    cgst,
+    sgst,
+    igst,
+    paymentType,
+    paidAmount,
+    balanceDue,
+    installments
 }) => {
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-IN', {
@@ -57,236 +96,368 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         }
     };
 
+    const paidInstallments = installments?.filter(inst => inst.status?.toLowerCase() === 'paid') ?? [];
+    const unpaidInstallments = installments?.filter(inst => inst.status?.toLowerCase() !== 'paid') ?? [];
+    const displayInstallments = installments ?? [];
+    const hasInstallments = displayInstallments.length > 0;
+
+    // Calculate Amount Paid and Balance Due based on installment statuses:
+    // - With installments: Amount Paid = sum of paid installments, Balance Due = sum of unpaid installments
+    // - Without installments (full payment): both are 0
+    const calculatedPaidAmount = hasInstallments
+        ? paidInstallments.reduce((sum, inst) => sum + (inst.amount ?? Math.round((totalAmount * inst.percentage) / 100)), 0)
+        : 0;
+
+    // Detect the current installment number from the invoice item name (e.g. "Engine - Installment #2")
+    const firstItemName = items?.[0]?.engineName || '';
+    const instMatch = firstItemName.match(/- Installment #(\d+)$/);
+    const currentInstallmentNumber = instMatch ? parseInt(instMatch[1], 10) : 0;
+
+    const calculatedBalanceDue = hasInstallments
+        ? (currentInstallmentNumber > 0
+            ? displayInstallments
+                .filter(inst => inst.installmentNumber > currentInstallmentNumber)
+                .reduce((sum, inst) => sum + (inst.amount ?? Math.round((totalAmount * inst.percentage) / 100)), 0)
+            : unpaidInstallments.reduce((sum, inst) => sum + (inst.amount ?? Math.round((totalAmount * inst.percentage) / 100)), 0))
+        : 0;
+
+    // Total Paid = amount of the CURRENT installment being invoiced
+    const currentInstallment = displayInstallments.find(inst => inst.installmentNumber === currentInstallmentNumber);
+    const currentInstallmentAmount = currentInstallment
+        ? (currentInstallment.amount ?? Math.round((totalAmount * currentInstallment.percentage) / 100))
+        : 0;
+
+    // Advance Paid = sum of all PREVIOUS installments (installments before the current one)
+    const advancePaidAmount = hasInstallments && currentInstallmentNumber > 1
+        ? displayInstallments
+            .filter(inst => inst.installmentNumber < currentInstallmentNumber)
+            .reduce((sum, inst) => sum + (inst.amount ?? Math.round((totalAmount * inst.percentage) / 100)), 0)
+        : 0;
+
+    const displayPaidAmount = hasInstallments && currentInstallmentNumber > 0
+        ? currentInstallmentAmount
+        : (paidAmount !== undefined ? paidAmount : calculatedPaidAmount);
+
+    const displayBalanceDue = hasInstallments && currentInstallmentNumber > 0
+        ? calculatedBalanceDue
+        : (balanceDue !== undefined ? balanceDue : calculatedBalanceDue);
+
+    const fallbackTaxAmount = typeof gstAmount === 'number' && gstAmount > 0 ? Math.round(gstAmount / 2) : Math.round(subtotal * 0.09);
+    const cgstAmount = typeof cgst === 'number' && cgst > 0 ? cgst : fallbackTaxAmount;
+    const sgstAmount = typeof sgst === 'number' && sgst > 0 ? sgst : fallbackTaxAmount;
+
+    const grandTotalOfInstallments = hasInstallments
+        ? displayInstallments.reduce((sum, inst) => sum + (inst.amount ?? Math.round((totalAmount * inst.percentage) / 100)), 0)
+        : (totalAmount > 0 ? totalAmount : subtotal + (cgstAmount + sgstAmount));
+    const totalTaxAmount = cgstAmount + sgstAmount;
+    const invoiceTotalAmount = totalAmount > 0 ? totalAmount : subtotal + totalTaxAmount;
+
     return (
-        <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-none overflow-hidden print:shadow-none print:border-none border border-gray-100 flex flex-col min-h-[1100px] print:min-h-0 print:w-full">
-            {/* Header Section - Inspired by Landing Page Navbar */}
-            <div className="bg-[#000033] p-10 md:p-14 text-white relative overflow-hidden">
-                {/* Decorative background accent */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-
-                <div className="flex flex-col md:flex-row justify-between items-start gap-10 relative z-10">
-                    <div className="flex items-center gap-5">
-                        <div className="w-20 h-20 flex items-center justify-center">
-                            <img
-                                src="/logo_icon_final.png"
-                                alt="HR-TEK"
-                                className="h-full w-auto object-contain"
-                            />
-                        </div>
-                        <div className="flex flex-col">
-                            <h1 className="text-4xl font-black tracking-tighter leading-none mb-1">
-                                <span className="text-white">HR-TEK</span>{" "}
-                                <span className="text-[#00B5E2]">SYSTEM</span>
-                            </h1>
-                            <p className="text-[10px] text-white/50 font-black uppercase tracking-[0.3em]">
-                                Intelligent HR Transformation
-                            </p>
-
-                        </div>
-                    </div>
-
-                    <div className="text-right flex flex-col items-end">
-                        <div className="bg-[#00B5E2] text-[#000033] px-6 py-2 rounded-full mb-6 shadow-[0_0_30px_rgba(0,181,226,0.2)]">
-                            <p className="text-xs font-black uppercase tracking-widest">{invoiceLabel}</p>
-                        </div>
-                        <div className="space-y-4">
+        <div className="max-w-5xl mx-auto bg-white border border-slate-400 shadow-sm print:shadow-none print:border print:border-slate-400 text-slate-900">
+            <div className="px-8 py-6 print:px-6 print:py-4">
+                <div className="flex flex-col xl:flex-row justify-between gap-8 pb-6 border-b border-slate-300">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                                <img src="/logo_icon_final.png" alt="HR-TEK" className="h-full w-auto" />
+                            </div>
                             <div>
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Invoice Reference</p>
-                                <p className="text-2xl font-black tracking-tighter">{invoiceNumber}</p>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Issuance</p>
-                                <p className="text-2xl font-black tracking-tighter">{formatDate(invoiceDate)}</p>
+                                <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">Issuer</p>
+                                <h1 className="text-2xl font-black text-slate-900">HR-TEK SYSTEM</h1>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Billing Content */}
-            <div className="p-10 md:p-14 flex-1">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mb-16">
-                    {/* Bill From - Static Corporate Data */}
-                    <div className="space-y-5">
-                        <h3 className="text-[11px] font-black text-[#000033] uppercase tracking-[0.2em] flex items-center gap-3">
-                            <span className="w-5 h-[2px] bg-[#00B5E2]" />
-                            From / Origin
-                        </h3>
-                        <div className="space-y-2">
-                            <p className="font-black text-slate-900 text-lg tracking-tight">HR-Tek System</p>
-                            <div className="text-slate-500 text-[13px] font-medium leading-relaxed space-y-0.5">
-                                <p>Plot No. 14-15, Madhusudan Colony</p>
-                                <p>IIM Road, Lucknow - 226013</p>
-                                <p>Uttar Pradesh, India</p>
-                            </div>
-                            <div className="mt-6 space-y-1.5 pt-4 border-t border-slate-50">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase w-12">GSTIN</span>
-                                    <span className="text-xs font-bold text-slate-700">09AANCP9887E1ZJ</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase w-12">Email</span>
-                                    <span className="text-xs font-bold text-slate-700">support@hrteksystem.com</span>
-                                </div>
+                        <div className="space-y-1 text-sm font-medium text-slate-600 leading-relaxed">
+                            <p>Plot No. 14-15, Madhupuram</p>
+                            <p>IIM Road, Lucknow - 226013</p>
+                            <p>Uttar Pradesh, India</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 pt-4">
+                            <div>
+                                <p className="text-slate-800">GSTIN</p>
+                                <p className="text-slate-900">09AANCP9887E1ZJ</p>
                             </div>
                         </div>
+                        <div className="pt-2">
+                            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Email</p>
+                            <p className="text-[11px] font-bold text-slate-900 normal-case tracking-normal">support@hrteksystem.com</p>
+                        </div>
                     </div>
-
-                    {/* Bill To - Dynamic Client Data */}
-                    <div className="space-y-5">
-                        <h3 className="text-[11px] font-black text-[#000033] uppercase tracking-[0.2em] flex items-center gap-3">
-                            <span className="w-5 h-[2px] bg-[#00B5E2]" />
-                            Recipient / Bill To
-                        </h3>
-                        <div className="space-y-2">
-                            <p className="font-extrabold text-slate-900 text-2xl tracking-tighter">{companyName}</p>
-                            {companyAddress ? (
-                                <p className="text-slate-500 text-[13px] font-medium leading-relaxed">{companyAddress}</p>
-                            ) : (
-                                <p className="text-slate-300 italic text-xs">Full billing address not provided</p>
-                            )}
-
-                            {companyGSTIN && (
-                                <div className="mt-4 inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tax Identity</span>
-                                    <span className="text-xs font-black text-slate-800 tracking-wider">{companyGSTIN}</span>
-                                </div>
-                            )}
-
-                            <div className="mt-8 bg-[#000033]/5 p-5 rounded-2xl border border-[#000033]/5 flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Payment Channel</p>
-                                    <p className="text-sm font-black text-[#000033]">{getPaymentModeLabel(paymentMethod)}</p>
-                                </div>
-                                <div className="h-8 w-[1px] bg-slate-200" />
-                                <div className="text-right space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currency</p>
-                                    <p className="text-sm font-black text-slate-800">INR (₹)</p>
-                                </div>
+                    <div className="self-start text-right">
+                        <div className="inline-flex items-center justify-between gap-3 bg-slate-100 border border-slate-300 px-5 py-3 rounded-3xl">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">{invoiceLabel}</p>
+                                <p className="text-xl font-black text-slate-900 leading-none mt-2 whitespace-nowrap">{invoiceNumber}</p>
+                            </div>
+                        </div>
+                        <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-slate-600">
+                            <div className="space-y-1">
+                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Invoice Date</p>
+                                <p className="font-semibold text-slate-900">{formatDate(invoiceDate)}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Due Date</p>
+                                <p className="font-semibold text-slate-900">{formatDate(dueDate)}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Items Ledger Table */}
-                <div className="mb-16 border border-slate-100 rounded-[2rem] overflow-hidden shadow-sm bg-white relative">
-                    <table className="w-full text-sm">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-8">
+                    <div className="rounded-3xl border border-slate-300 bg-slate-50 p-6 space-y-3">
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Bill To</p>
+                        <p className="text-lg font-black text-slate-900">{billingContact?.name || companyName}</p>
+                        {billingContact ? (
+                            <>
+                                {billingContact.address && (
+                                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{billingContact.address}</p>
+                                )}
+                                {(billingContact.city || billingContact.state || billingContact.pincode) && (
+                                    <p className="text-sm text-slate-600">
+                                        {[billingContact.city, billingContact.state, billingContact.pincode].filter(Boolean).join(', ')}
+                                    </p>
+                                )}
+                                <div className="pt-3 border-t border-slate-300 space-y-2">
+                                    {billingContact.email && (
+                                        <div>
+                                            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Email</p>
+                                            <p className="text-sm text-slate-900 font-semibold">{billingContact.email}</p>
+                                        </div>
+                                    )}
+                                    {billingContact.phone && (
+                                        <div>
+                                            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Phone</p>
+                                            <p className="text-sm text-slate-900 font-semibold">+91 {billingContact.phone}</p>
+                                        </div>
+                                    )}
+                                    {(billingContact.gstin || companyGSTIN) && (
+                                        <div>
+                                            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">GSTIN</p>
+                                            <p className="text-sm text-slate-900 font-semibold">{billingContact.gstin || companyGSTIN}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {companyAddress ? (
+                                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{companyAddress}</p>
+                                ) : (
+                                    <p className="text-sm text-slate-400 italic">Billing address not provided</p>
+                                )}
+                                {companyGSTIN && (
+                                    <div className="pt-3 border-t border-slate-300">
+                                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">GSTIN</p>
+                                        <p className="text-sm text-slate-900 font-semibold">{companyGSTIN}</p>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                    <div className="rounded-3xl border border-slate-300 bg-slate-50 p-6 space-y-3">
+                        <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Payment Details</p>
+                        <div className="text-sm text-slate-600 space-y-2">
+                            <div className="flex justify-between gap-2">
+                                <span>Payment Mode</span>
+                                <span className="font-semibold text-slate-900">{getPaymentModeLabel(paymentMethod)}</span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span>Invoice Type</span>
+                                <span className="font-semibold text-slate-900">{invoiceLabel}</span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                                <span>Currency</span>
+                                <span className="font-semibold text-slate-900">INR</span>
+                            </div>
+                            <div className="flex justify-between gap-2 border-t border-slate-200 pt-2">
+                                <span>Grand Total</span>
+                                <span className="font-bold text-slate-900">{formatCurrency(grandTotalOfInstallments)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {displayInstallments.length > 0 && (
+                    <div className="mb-10 print:break-inside-auto" style={{ breakInside: 'auto', pageBreakInside: 'auto' }}>
+                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 print:break-inside-auto" style={{ breakInside: 'auto', pageBreakInside: 'auto' }}>
+                            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">Installment Breakdown</h3>
+                            <div className="space-y-4 text-sm text-slate-700">
+                                {displayInstallments.map((inst, idx) => {
+                                    const calculatedAmount = inst.amount ?? Math.round((totalAmount * inst.percentage) / 100);
+                                    return (
+                                        <div key={idx} className={`rounded-2xl border p-4 print:break-inside-avoid ${inst.status?.toLowerCase() === 'paid' ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 bg-white'}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                                <div>
+                                                    <p className="text-sm font-semibold text-slate-900">Installment {inst.installmentNumber}</p>
+                                                    <p className="text-xs text-slate-500">{inst.percentage}% of total</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-semibold text-slate-900">{formatCurrency(calculatedAmount)}</p>
+                                                    {inst.dueDate && <p className="text-xs text-slate-500">Due by {formatDate(inst.dueDate)}</p>}
+                                                </div>
+                                            </div>
+                                            <div className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                inst.status?.toLowerCase() === 'paid'
+                                                    ? 'bg-emerald-100 text-emerald-800'
+                                                    : inst.status?.toLowerCase() === 'payment_submitted'
+                                                        ? 'bg-amber-100 text-amber-800'
+                                                        : inst.status?.toLowerCase() === 'rejected'
+                                                            ? 'bg-rose-100 text-rose-800'
+                                                            : 'bg-slate-100 text-slate-700'
+                                            }`}>
+                                                {inst.status?.toLowerCase() === 'paid' && '✅ Paid'}
+                                                {inst.status?.toLowerCase() === 'payment_submitted' && '⏳ Proof Submitted'}
+                                                {inst.status?.toLowerCase() === 'rejected' && '❌ Rejected'}
+                                                {(!inst.status || inst.status?.toLowerCase() === 'unpaid') && '🔒 Unpaid'}
+                                                {inst.status && !['paid', 'payment_submitted', 'rejected', 'unpaid'].includes(inst.status.toLowerCase()) && inst.status.replace(/_/g, ' ')}
+                                            </div>
+                                            {inst.splitDetails && inst.splitDetails.length > 0 && (
+                                                <div className="mt-4 space-y-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Split Details</p>
+                                                    <div className="grid gap-3">
+                                                        {inst.splitDetails.map((split, splitIdx) => (
+                                                            <div key={splitIdx} className="rounded-2xl border border-slate-300 bg-slate-50 p-3 text-sm">
+                                                                <div className="flex justify-between gap-3">
+
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-sm font-semibold text-slate-900">{split.description || split.item}</p>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            {split.item && (
+                                                                                <p className="text-xs text-slate-500">{split.item}</p>
+                                                                            )}
+                                                                            {split.hsnCode && (
+                                                                                <p className="text-[10px] font-mono font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">HSN: {split.hsnCode}</p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="font-semibold text-slate-900">{split.amount}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <div className="overflow-x-auto mb-10">
+                    <table className="min-w-full border-collapse text-sm border border-slate-300">
                         <thead>
-                            <tr className="bg-[#000033] text-white">
-                                <th className="p-6 text-left text-[10px] font-black uppercase tracking-[0.2em] pl-10">Ref</th>
-                                <th className="p-6 text-left text-[10px] font-black uppercase tracking-[0.2em]">Service Description</th>
-                                <th className="p-6 text-right text-[10px] font-black uppercase tracking-[0.2em]">HSN Code</th>
-                                <th className="p-6 text-right text-[10px] font-black uppercase tracking-[0.2em] pr-10 whitespace-nowrap">Net Amount</th>
+                            <tr className="bg-slate-100 text-left text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                                <th className="px-4 py-4">S.No</th>
+                                <th className="px-4 py-4">Item & Description</th>
+                                <th className="px-4 py-4 text-right">HSN</th>
+                                <th className="px-4 py-4 text-right">Qty</th>
+                                <th className="px-4 py-4 text-right">Rate</th>
+                                <th className="px-4 py-4 text-right">Tax Rate</th>
+                                <th className="px-4 py-4 text-right">Amount</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {items.map((item, index) => (
-                                <tr key={index} className="group hover:bg-slate-50/80 transition-all">
-                                    <td className="p-8 text-slate-400 font-bold pl-10">#0{index + 1}</td>
-                                    <td className="p-8">
-                                        <p className="text-base font-black text-slate-900 group-hover:text-[#000033] transition-colors">{item.engineName}</p>
-                                        <p className="text-xs text-slate-500 mt-2 font-medium max-w-sm leading-relaxed">{item.description}</p>
+                        <tbody className="divide-y divide-slate-200">
+                            {items.filter(item => !(item.price === 0 && (item.description || "").includes("Included Core Engine"))).map((item, index) => (
+                                <tr key={index} className="bg-white">
+                                    <td className="px-4 py-5 align-top text-slate-500 font-semibold">{index + 1}</td>
+                                    <td className="px-4 py-5 align-top">
+                                        <div className="font-black text-slate-900">{item.engineName}</div>
+                                        <div className="text-xs text-slate-500 mt-2 leading-relaxed">{item.description}</div>
+                                        {(item.hsnCode || hsnCode) && (
+                                            <div className="text-xs text-slate-500 mt-1">HSN Code: {item.hsnCode || hsnCode}</div>
+                                        )}
                                     </td>
-                                    <td className="p-8 text-right font-mono text-xs font-bold text-slate-400">{item.hsnCode || '998311'}</td>
-                                    <td className="p-8 text-right pr-10">
-                                        <span className="text-base font-black text-slate-900">{formatCurrency(item.price)}</span>
-                                    </td>
+                                    <td className="px-4 py-5 align-top text-right font-semibold text-slate-900">{item.hsnCode || hsnCode || ''}</td>
+                                    <td className="px-4 py-5 align-top text-right font-semibold text-slate-900">1</td>
+                                    <td className="px-4 py-5 align-top text-right font-semibold text-slate-900">{formatCurrency(item.price)}</td>
+                                    <td className="px-4 py-5 align-top text-right font-semibold text-slate-900">18%</td>
+                                    <td className="px-4 py-5 align-top text-right font-black text-slate-900">{formatCurrency(item.price)}</td>
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot>
-                            <tr className="border-t-2 border-slate-100">
-                                <td colSpan={2} />
-                                <td className="p-6 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">Sub-Total</td>
-                                <td className="p-6 text-right pr-10 font-bold text-slate-700">{formatCurrency(subtotal)}</td>
-                            </tr>
-                            <tr>
-                                <td colSpan={2} />
-                                <td className="p-2 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">Tax (GST 18%)</td>
-                                <td className="p-2 text-right pr-10 font-bold text-slate-700">{formatCurrency(gstAmount)}</td>
-                            </tr>
-                            <tr className="bg-[#000033] text-white">
-                                <td colSpan={2} className="p-8 pl-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="h-2 w-2 bg-[#00B5E2] rounded-full animate-pulse" />
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80">Finalized Balance</p>
-                                    </div>
-                                </td>
-                                <td className="p-8 text-right text-xs font-bold uppercase tracking-widest">Total Liability</td>
-                                <td className="p-8 text-right pr-10 font-black text-3xl tracking-tighter text-[#00B5E2]">
-                                    {formatCurrency(totalAmount)}
-                                </td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
 
-                {/* Footer Section - Instructions & Terms */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                    {/* Bank & Payment */}
-                    <div className="space-y-6">
-                        <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
-                            <svg className="w-4 h-4 text-[#00B5E2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                            Payment Directives
-                        </h4>
-                        <div className="bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 space-y-8">
-                            <div className="space-y-3">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bank Remittance</p>
-                                <div className="space-y-1">
-                                    <p className="text-sm font-black text-slate-900">State Bank of India</p>
-                                    <p className="text-xs font-bold text-[#00B5E2]">IFSC Code: SBIN0010175</p>
-                                    <p className="text-base font-black text-slate-800 tracking-widest mt-2 font-mono">00000020532076408</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                    <div className="rounded-3xl border border-slate-300 bg-slate-50 p-6 space-y-4">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Bank Details</h3>
+                        <div className="space-y-2 text-sm text-slate-700">
+                            <p className="font-bold">State Bank of India</p>
+                            <p>Account Name: HR-TEK SYSTEM</p>
+                            <p>Account No: 00000020532076408</p>
+                            <p>IFSC: SBIN0010175</p>
+                            <p>Branch: Lucknow</p>
+                        </div>
+                    </div>
+                    <div className="rounded-3xl border border-slate-300 bg-slate-50 p-6 space-y-4">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Total Summary</h3>
+                        <div className="space-y-3 text-sm text-slate-700">
+                            <div className="flex justify-between">
+                                <span>Sub Total</span>
+                                <span className="font-semibold text-slate-900">{formatCurrency(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>CGST (9%)</span>
+                                <span className="font-semibold text-slate-900">{formatCurrency(cgstAmount)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>SGST (9%)</span>
+                                <span className="font-semibold text-slate-900">{formatCurrency(sgstAmount)}</span>
+                            </div>
+                            {hasInstallments && currentInstallmentNumber > 0 && (
+                                <>
+                                    <div className="flex justify-between border-t border-slate-200 pt-3">
+                                        <span>Total Paid <span className="text-xs text-slate-500">(Installment #{currentInstallmentNumber})</span></span>
+                                        <span className="font-semibold text-slate-900">{formatCurrency(currentInstallmentAmount)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span>Advance Paid <span className="text-xs text-slate-500">(Previous Installments)</span></span>
+                                        <span className="font-semibold text-slate-900">{formatCurrency(advancePaidAmount)}</span>
+                                    </div>
+                                </>
+                            )}
+                            {(!hasInstallments || currentInstallmentNumber === 0) && (
+                                <div className="flex justify-between">
+                                    <span>Amount Paid</span>
+                                    <span className="font-semibold text-slate-900">{formatCurrency(calculatedPaidAmount)}</span>
                                 </div>
+                            )}
+                            <div className="flex justify-between">
+                                <span>Balance Due</span>
+                                <span className={`font-semibold ${calculatedBalanceDue > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                    {formatCurrency(calculatedBalanceDue)}
+                                </span>
                             </div>
-                            <div className="pt-6 border-t border-slate-200/50 space-y-3">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instant Settlement (UPI)</p>
-                                <p className="text-xs font-black text-slate-700 flex items-center gap-2">
-                                    <span className="px-2 py-0.5 bg-slate-900 text-white rounded text-[8px] tracking-tighter">VPA</span>
-                                    deloschtechnologiesprivatelimited@sbi
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Legal & Footer Notes */}
-                    <div className="space-y-6">
-                        <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
-                            <svg className="w-4 h-4 text-[#00B5E2]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                            Legal Annotations
-                        </h4>
-                        <div className="space-y-6">
-                            <ul className="space-y-4">
-                                {[
-                                    'Service access is activated immediately upon successful payment verification.',
-                                    'This invoice is a final record of the transaction.',
-                                    'Disputes should be addressed through official support channels.',
-                                    'All digital products are non-refundable once unlocked.'
-                                ].map((note, i) => (
-                                    <li key={i} className="flex gap-4 items-start text-[11px] font-medium text-slate-500 leading-relaxed">
-                                        <span className="text-indigo-400 font-black mt-0.5">•</span>
-                                        {note}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <div className="pt-8 border-t border-slate-100 flex flex-col gap-2">
-                                <p className="text-xs font-black text-slate-900 uppercase tracking-widest">Support Inquiries</p>
-                                <p className="text-[11px] font-bold text-slate-400">EMAIL / support@hrteksystem.com</p>
-                                <p className="text-[11px] font-bold text-slate-400">TEL / +91 93358 70619</p>
+                            <div className="flex justify-between border-t border-slate-300 pt-4 text-lg font-black text-slate-900">
+                                <span>Total</span>
+                                <span>{formatCurrency(invoiceTotalAmount)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Bottom Global Footer */}
-            <div className="mt-auto border-t border-slate-100 bg-slate-50 p-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">Integrated Financial System • Verified Output</p>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10 border-b border-slate-300">
+                    <div className="space-y-4 text-sm text-slate-700">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Terms & Conditions</h3>
+                        <ul className="list-disc list-inside space-y-2">
+                            <li>Invoice is valid only after verification of payment proof.</li>
+                            <li>Payment must be completed within 7 days of invoice date.</li>
+                            <li>Disputes must be raised within 5 business days.</li>
+                            <li>Refunds are not applicable once services are activated.</li>
+                        </ul>
+                    </div>
+                    <div className="space-y-4 text-sm text-slate-700">
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500">Authorized Signature</h3>
+                        <div className="h-28 rounded-3xl border border-slate-300 bg-white flex items-center justify-center p-2">
+                            <img src="/authorized-signature.png" alt="Authorized Signature - Delosch Technologies" className="h-full object-contain" />
+                        </div>
+                        <p className="text-xs text-slate-500">Delosch Technologies Pvt. Ltd. - Authorized Signatory</p>
+                    </div>
                 </div>
-                <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
-                    HR-TEK SYSTEM • LUCKNOW • INDIA
+
+                <div className="pt-8 text-[11px] text-slate-500 space-y-2">
+                    <p>Thank you for your business. Please retain this invoice for your records.</p>
+                    <p>All services are subject to HR-TEK SYSTEM terms and conditions.</p>
                 </div>
             </div>
         </div>
