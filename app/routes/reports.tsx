@@ -3,7 +3,7 @@ import { useLoaderData, Link } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
 import { getAllAnalysesForCompany } from "~/utils/analysis.server";
 import { getCompanyPayments } from "~/models/payment.model.server";
-import { getEngineClassification } from "~/utils/engine-classification";
+import { getEngineClassificationClient as getEngineClassification } from "~/utils/engine-classification";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { getEnhancedUser } from "~/utils/user.server";
 import { FileText, Lock, CheckCircle, Clock, AlertCircle } from "lucide-react";
