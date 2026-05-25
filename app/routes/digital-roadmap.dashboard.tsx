@@ -23,34 +23,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // Payment gating
     const { hasVerifiedPaymentForEngines } = await import("~/models/payment.model.server");
     const hasPaid = user.isAdmin || await hasVerifiedPaymentForEngines(user.organisationId, ["HR Transformation Roadmap Generator"]);
-
+    
     if (!hasPaid) {
         return redirect("/roadmapDashboard");
     }
 
-    // Fetch real DeepSeek AI analysis data
-    const { getLatestAnalysis } = await import("~/utils/analysis.server");
-    let aiAnalysis = null;
-    try {
-        aiAnalysis = await getLatestAnalysis(user.organisationId, "HR Transformation Roadmap Generator");
-        // Also try the mapped section name if the first query returns nothing
-        if (!aiAnalysis) {
-            aiAnalysis = await getLatestAnalysis(user.organisationId, "Digital Roadmap");
-        }
-    } catch (e) {
-        console.error("[digital-roadmap dashboard] getLatestAnalysis failed:", e);
-    }
+    const { getCompanyAdvisories } = await import("~/models/hti.model.server");
+    const advisories = await getCompanyAdvisories(user.organisationId);
+    const latestReportId = advisories.length > 0 ? advisories[0].reportId : null;
 
-    let latestReportId = null;
-    try {
-        const { getCompanyAdvisories } = await import("~/models/hti.model.server");
-        const advisories = await getCompanyAdvisories(user.organisationId);
-        latestReportId = advisories.length > 0 ? advisories[0].reportId : null;
-    } catch (e) {
-        console.error("[digital-roadmap dashboard] getCompanyAdvisories failed:", e);
-    }
-
-    return json({ user, engineData, aiAnalysis, latestReportId });
+    return json({ user, engineData, latestReportId });
 }
 
 export const action: ActionFunction = async ({ request }) => {
@@ -77,7 +59,7 @@ export const action: ActionFunction = async ({ request }) => {
         };
 
         try {
-            const advisory = await generateHTIAdvisory(aggregatedData as any);
+            const advisory = await generateHTIAdvisory(aggregatedData as any, "digitalRoadmap");
             await saveAdvisoryReport(user.organisationId, user.userId, advisory, aggregatedData as any);
             return json({ success: true, advisory });
         } catch (error) {
@@ -89,13 +71,12 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function DigitalRoadmapDashboardRoute() {
-    const { user, engineData, aiAnalysis, latestReportId } = useLoaderData<typeof loader>();
+    const { user, engineData, latestReportId } = useLoaderData<typeof loader>();
 
     return (
         <>
             <DigitalRoadmapDashboard
                 data={engineData}
-                aiAnalysis={aiAnalysis}
                 brandName={user.organisationName || "Your Organization"}
                 companyLogo={user.companyLogo}
                 reportId={latestReportId}

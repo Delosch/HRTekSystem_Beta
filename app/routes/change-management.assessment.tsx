@@ -114,6 +114,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/login");
     }
 
+    if ((user as any).role !== "ADMIN") {
+        const access = await import("~/models/payment.model.server").then((mod) =>
+            mod.getEngineAccessStatus(user.organisationId, "Intelligent Change Management")
+        );
+        if (!access.assessmentUnlocked) {
+            return redirect("/user-payment-dashboard");
+        }
+    }
+
     // We can load existing assessment data here if needed
     const engineData = await findEngineData(user.organisationId, "Intelligent Change Management");
     const initialAnswers = engineData?.responses || {};

@@ -15,8 +15,8 @@ import Squares from "~/components/squareBg";
 import countryCode from "app/data/country_code_order.json";
 import { HoverInput, SearchableDialCodeSelect } from "~/components/AuthCards";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { saveOTP, verifyStoredOTP, updateUser, getUserProfile } from "~/models/user.model.server";
-import { sendLoginOTP, sendTemplateSMS } from "~/services/sms.server";
+import { saveOTP, verifyStoredOTP, updateUser } from "~/models/user.model.server";
+import { sendLoginOTP } from "~/services/sms.server";
 
 const countryCodes = countryCode.countryCode;
 
@@ -76,14 +76,13 @@ export const action: ActionFunction = async ({ request }) => {
         session.set("is_verified_phone", true);
 
         console.log(`[SMS Verify] OTP verified successfully, session updated`);
-
-        session.set("is_verified_phone", true);
-        console.log(`[SMS Verify] OTP verified successfully, session updated`);
-
-
         return json(
           { success: true },
-          { headers: { "Set-Cookie": await commitSession(session) } }
+          {
+            headers: {
+              "Set-Cookie": await commitSession(session)
+            }
+          }
         );
       } else {
         console.warn(`[SMS Verify] Invalid or expired OTP for user ${user.userId}`);
@@ -143,12 +142,9 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
     return redirect('/auth')
   }
 
-  // Redirect if phone already verified, but ensure email verification is also done
+  // Redirect if already verified
   if (user.is_verified_phone) {
-    if (!user.is_verified_email) {
-      return redirect('/auth/email/verify');
-    }
-    return redirect('/auth/drx'); // Or wherever you go after both are verified
+    return redirect('/onboarding');
   }
 
   // Extract number and code if stored in (91)1234567890 format
@@ -246,7 +242,7 @@ export default function AuthVerify() {
           setResendMessage("Code sent!");
         } else if (action === "otp") {
           setStep("success");
-          setTimeout(() => navigate("/auth/email/verify"), 1500);
+          setTimeout(() => navigate("/onboarding"), 1500);
         } else if (action === "update") {
           // Update successful, we are already on 'otp' step due to optimistic update in handler
           setResendMessage("Code sent to new number!");
@@ -418,13 +414,13 @@ export default function AuthVerify() {
   const stepColor = getStepColor();
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-100 overflow-hidden flex items-center justify-center p-4">
+    <section className="relative min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50 overflow-hidden flex items-center justify-center p-4">
       <Squares
         speed={0.3}
         squareSize={50}
         direction="diagonal"
-        borderColor="#BAE6FD"
-        hoverFillColor="#38BDF8"
+        borderColor="#E7E7E7"
+        hoverFillColor="#5A9553"
       />
 
       {/* Enhanced Background Particles - Fixed Hydration Mismatch */}
@@ -432,7 +428,7 @@ export default function AuthVerify() {
         {particles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-blue-200/30 rounded-full"
+            className="absolute w-2 h-2 bg-green-200/30 rounded-full"
             animate={{
               x: [0, 100, 0],
               y: [0, -100, 0],

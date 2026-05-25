@@ -34,12 +34,17 @@ console.log(`📡 S3 Client Target: ${AWS_S3_BUCKET_NAME} in ${S3_BUCKET_REGION}
 
 // Configure S3 client - use S3_BUCKET_REGION for bucket operations
 const s3Config: S3ClientConfig = {
-  region: S3_BUCKET_REGION, // Use bucket's actual region (us-east-1)
+  region: S3_BUCKET_REGION, // Use bucket's actual region (ap-south-1)
   credentials: {
     accessKeyId: AWS_ACCESS_KEY_ID as string,
     secretAccessKey: AWS_SECRET_ACCESS_KEY as string,
   },
-  // Don't set explicit endpoint - let SDK auto-resolve based on bucket location
+  // Set explicit endpoint for regional buckets to avoid endpoint resolution issues
+  ...(S3_BUCKET_REGION !== 'us-east-1' && {
+    endpoint: `https://s3.${S3_BUCKET_REGION}.amazonaws.com`
+  }),
+  // Force path-style URLs for better regional compatibility
+  forcePathStyle: true
 };
 
 // Initialize S3 client

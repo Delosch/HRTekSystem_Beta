@@ -38,7 +38,7 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         console.log(`[Consulting Report Loader] User: ${user.organisationId}, Engine: ${params.id}`);
 
-        const { getEnginePaymentStatus } = await import("~/models/payment.model.server");
+        const { getEnginePaymentStatus, getEngineAccessStatus } = await import("~/models/payment.model.server");
         const isAdmin = (user as any).role === "ADMIN";
 
         // Check if this is a free assessment (onboarding)
@@ -46,6 +46,9 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         // Get detailed payment status
         const paymentStatusResult = isFreeEngine ? { status: "paid" } : await getEnginePaymentStatus(user.organisationId, params.id || "");
+        const accessStatus = isFreeEngine
+            ? null
+            : await getEngineAccessStatus(user.organisationId, params.id || "");
         
         const isPaid = isAdmin || isFreeEngine || paymentStatusResult.status === "paid";
         const isPending = !isPaid && paymentStatusResult.status === "pending";
@@ -82,6 +85,10 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
             return redirect('/cartDashboard');
         }
 
+        if (!isAdmin && accessStatus && !accessStatus.reportUnlocked) {
+            return json({ paymentStatus: "partial", pendingAmount: accessStatus.pendingAmount });
+        }
+
         // FIX: Don't add COMPANY# prefix - getLatestAnalysis already does this
         const data = await getLatestAnalysis(user.organisationId, params.id);
 
@@ -90,9 +97,7 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
         if (!data) {
             console.error(`[Consulting Report Loader] No assessment data found for ${params.id}`);
             if (url.searchParams.get("verify") === "true") {
-                // Return 202 (not ready yet) instead of throwing 404.
-                // Throwing causes Root ErrorBoundary on navigation; returning 202 keeps polling safe.
-                return new Response(null, { status: 202 });
+                throw new Response("No assessment data found", { status: 404 });
             }
 
             const promptMap: Record<string, string> = {
@@ -152,6 +157,7 @@ interface LoaderReturn {
     companyLogo?: string,
     assessmentId?: string,
     paymentStatus?: string,
+    pendingAmount?: number,
     reportType?: 'detailed' | 'standard',
     responses?: any,
     questions?: any
@@ -197,7 +203,7 @@ export const action: ActionFunction = async ({ request, params }) => {
         };
 
         try {
-            const advisory = await generateHTIAdvisory(aggregatedData as any);
+            const advisory = await generateHTIAdvisory(aggregatedData as any, engineType as any);
             await saveAdvisoryReport(
                 user.organisationId,
                 user.userId,
@@ -218,6 +224,31 @@ export const action: ActionFunction = async ({ request, params }) => {
 
 export default function ConsultingReport() {
     const loaderData = useLoaderData<LoaderReturn>();
+
+    if (loaderData.paymentStatus === 'partial') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+                <div className="bg-white p-10 rounded-3xl shadow-2xl max-w-lg text-center border border-gray-100">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Clock className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-4">Report Locked Until 100% Payment</h1>
+                    <p className="text-gray-500 mb-8 text-lg leading-relaxed">
+                        Your assessment is unlocked, but full report access requires complete payment settlement.
+                        Remaining amount: <span className="font-semibold text-gray-800">Rs {(loaderData.pendingAmount || 0).toLocaleString()}</span>.
+                    </p>
+                    <div className="flex flex-col gap-4">
+                        <a href="/cartDashboard" className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">
+                            Complete Remaining Payment
+                        </a>
+                        <a href="/user-payment-dashboard" className="text-gray-500 font-semibold hover:text-gray-700 transition-colors">
+                            View Payment Status
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (loaderData.paymentStatus === 'pending') {
         return (

@@ -22,11 +22,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const rootData = useRouteLoaderData("root") as { user: any } | undefined;
   const user = rootData?.user;
-
-  // Debug: Log user data for troubleshooting
-  if (typeof window !== 'undefined' && user) {
-    console.log("📍 Navbar - User detected:", { userId: user.userId, email: user.email });
-  }
   const { pathname, hash } = location;
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -107,7 +102,7 @@ export default function Navbar() {
     { to: "/hcm-service", icon: Puzzle, label: "HR HCM Vendor Fit", color: "purple" },
     { to: "/maturity-analysis-service", icon: FileBarChart2, label: "HR Tech Diagnostics", color: "green" },
     { to: "/shared-service", icon: DraftingCompass, label: "HR Shared Services", color: "amber" },
-    { to: "/change-management-service", icon: Shapes, label: "HR Change Management", color: "rose" },
+    { to: "/change-management-service", icon: Shapes, label: "Intelligent Change Management System", color: "rose" },
     { to: "/hrtech-advisory-service", icon: Lightbulb, label: "HR Tech Advisory", color: "yellow" },
   ];
 
@@ -204,12 +199,10 @@ export default function Navbar() {
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                   className="flex items-center gap-4 hover:bg-white/5 p-1 px-2 rounded-xl transition-all duration-300"
                 >
-                  {user.onboardingStatus === "Completed" && (
-                    <div className="flex flex-col items-end hidden sm:flex">
-                      <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
-                      <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
-                    </div>
-                  )}
+                  <div className="flex flex-col items-end hidden sm:flex">
+                    <span className="text-white text-sm font-bold">{user.first_name} {user.last_name}</span>
+                    <span className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</span>
+                  </div>
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white/20 shadow-lg group-hover:scale-105 transition-transform">
                     <User className="w-6 h-6 text-white" />
                   </div>
@@ -365,17 +358,15 @@ export default function Navbar() {
                   <div className="mt-8 pt-8 border-t border-white/10">
                     {user ? (
                       <div className="space-y-6">
-                        {user.onboardingStatus === "Completed" && (
-                          <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl">
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border border-white/20">
-                              <User className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-bold truncate">{user.first_name} {user.last_name}</p>
-                              <p className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
-                            </div>
+                        <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border border-white/20">
+                            <User className="w-6 h-6 text-white" />
                           </div>
-                        )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-bold truncate">{user.first_name} {user.last_name}</p>
+                            <p className="text-[#00B5E2] text-[10px] font-medium uppercase tracking-wider">{user.role || 'Member'}</p>
+                          </div>
+                        </div>
                         <div className="flex flex-col gap-3">
                           <Link
                             to="/dashboard"

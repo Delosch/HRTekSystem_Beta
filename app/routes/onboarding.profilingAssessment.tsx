@@ -1,8 +1,8 @@
-import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
-import { useFetcher, useLoaderData, useNavigate } from "@remix-run/react";
 import { useEffect } from "react";
+import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
+import { useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { commitSession, getSession, requireUserSession } from "~/lib/session.server";
-import { getLatestQuestion, save_answers, store_analysis } from "~/utils/question.utils";
+import { getLatestQuestion, save_answers } from "~/utils/question.utils";
 import QuestionnaireEngine from "~/components/QuestionnaireEngine";
 import type { QuestionSchema } from "./engine.$id/questionSchema";
 import { updateUser } from "~/models/user.model.server";
@@ -67,42 +67,6 @@ export const action: ActionFunction = async ({ request }) => {
         progress: 100
       });
 
-      // Auto-generate AI report for Profiling Assessment
-      try {
-        const { generateProfilingReport } = await import("~/lib/profiling.genAi.server");
-        const reportResult = await generateProfilingReport(companyId, assessmentId, body.answers || {});
-        await store_analysis(
-          companyId,
-          `${companyId}#${assessmentId}`,
-          "Profiling Assessment",
-          reportResult as any
-        );
-        console.log(`[Profiling Assessment] AI report generated and stored for ${companyId}`);
-      } catch (reportError) {
-        console.warn("[Profiling Assessment] Auto-report generation failed:", reportError);
-        // Store a placeholder so the report shows up in My Reports
-        await store_analysis(
-          companyId,
-          `${companyId}#${assessmentId}`,
-          "Profiling Assessment",
-          { status: "pending_generation", message: "Report generation in progress." } as any
-        );
-      }
-
-      // Add ₹45,000 to cart for Profiling Assessment report access
-      try {
-        const cartItem: CartItem = {
-          companyId,
-          productName: "Profiling Assessment",
-          price: 45000,
-          userId: user.userId,
-        };
-        await addOrUpdateCartItem(cartItem);
-        console.log(`[Profiling Assessment] ₹45,000 added to cart for ${companyId}`);
-      } catch (cartError) {
-        console.warn("[Profiling Assessment] Failed to add to cart:", cartError);
-      }
-
       // Notify Admin
       try {
         const { notifyAdmin } = await import("~/services/admin.notifier.server");
@@ -151,7 +115,7 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);
       }
 
-      return json({ success: true, redirect: "/cartDashboard" }, {
+      return json({ success: true, redirect: "/intermediate" }, {
         headers: {
           "Set-Cookie": await commitSession(session),
         },

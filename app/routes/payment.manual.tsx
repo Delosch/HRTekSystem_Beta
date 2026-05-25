@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Form, useNavigation, useActionData } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CreditCard, Building2, Smartphone, QrCode, Upload, CheckCircle, X } from "lucide-react";
 import { ENGINE_PRICING, BUNDLE_PRICING } from "~/config/pricing.config";
 
@@ -156,11 +156,14 @@ export async function action({ request }: ActionFunctionArgs) {
             phone: (user as any).phone_number || "",
         });
 
+        const paymentDate = (formData.get("paymentDate") as string) || new Date().toISOString();
+
         // Update to payment_submitted status with proof
         await submitPaymentProof(invoice.invoiceId, orgId, {
             paymentMethod: paymentMethod as "bank_transfer" | "upi" | "qr_code",
             transactionId: transactionId || "",
             paymentProofUrl: proofUrl,
+            paymentDate: paymentDate,
             paymentNotes: `Manual payment via ${paymentMethod}`,
         });
 
@@ -195,6 +198,15 @@ export default function ManualPayment() {
     const [selectedMethod, setSelectedMethod] = useState<"bank" | "upi" | "qr">("bank");
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
+    const [paymentDate, setPaymentDate] = useState<string>("");
+
+    useEffect(() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        setPaymentDate(`${year}-${month}-${day}`);
+    }, []);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -453,6 +465,20 @@ export default function ManualPayment() {
                                                 required
                                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 placeholder="Enter transaction ID from your payment app"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Payment Date *</label>
+                                            <input
+                                                type="date"
+                                                name="paymentDate"
+                                                required
+                                                value={paymentDate}
+                                                onChange={(e) => setPaymentDate(e.target.value)}
+                                                max={paymentDate || new Date().toISOString().split('T')[0]} // Block future dates
+                                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow disabled:bg-slate-50 disabled:text-slate-400"
+                                                disabled={isSubmitting}
                                             />
                                         </div>
 

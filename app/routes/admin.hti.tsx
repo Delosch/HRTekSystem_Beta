@@ -1,7 +1,7 @@
 import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Form, useNavigation, useFetcher, Link, useActionData } from "@remix-run/react";
 import { requireAdminSession } from "~/lib/session.server";
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment } from "react";
 import {
     CpuChipIcon,
     CheckBadgeIcon,
@@ -30,18 +30,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     let pendingApprovals: any[] = [];
     let approvedReports: any[] = [];
-    let totalReportsCount = 0;
-    let loaderError: string | null = null;
 
     try {
-        const { getPendingApprovals, getAllHTIReports } = await import("~/models/hti.model.server");
-
-        const [pendingReports, allReports] = await Promise.all([
-            getPendingApprovals(),
-            getAllHTIReports()
-        ]);
-
-        totalReportsCount = allReports.length;
+        const { getPendingApprovals } = await import("~/models/hti.model.server");
+        const pendingReports = await getPendingApprovals();
 
         pendingApprovals = pendingReports.map(report => ({
             reportId: report.reportId,
@@ -57,34 +49,48 @@ export async function loader({ request }: LoaderFunctionArgs) {
             approvedBy: report.approvedBy
         }));
 
-        approvedReports = allReports
-            .filter((r: any) => r.status === "approved")
-            .map((report: any) => ({
-                reportId: report.reportId,
-                companyId: report.companyId,
-                generatedAt: report.generatedAt,
-                generatedBy: report.generatedBy,
-                status: report.status,
-                approvedAt: report.approvedAt,
-                approvedBy: report.approvedBy,
-                isLocked: report.isLocked ?? true,
-                lockedAt: report.lockedAt,
-                lockedBy: report.lockedBy,
-                completedEngines: report.inputData?.completedEnginesCount || 5,
-                totalEngines: report.inputData?.totalEngines || 5,
-                executiveSummary: report.advisory?.executiveSummary || "No summary available",
-                advisory: report.advisory
-            }));
-    } catch (error: any) {
+        const { ddbDocClient } = await import("~/lib/dynamodb.server");
+        const { ScanCommand } = await import("@aws-sdk/lib-dynamodb");
+        const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+
+        const approvedResult = await ddbDocClient.send(
+            new ScanCommand({
+                TableName: TABLE_NAME,
+                FilterExpression: "contains(#sk, :prefix) AND #status = :status",
+                ExpressionAttributeNames: {
+                    "#sk": "sk",
+                    "#status": "status"
+                },
+                ExpressionAttributeValues: {
+                    ":prefix": "HTI_REPORT#",
+                    ":status": "approved"
+                }
+            })
+        );
+
+        approvedReports = (approvedResult.Items || []).map((report: any) => ({
+            reportId: report.reportId,
+            companyId: report.companyId,
+            generatedAt: report.generatedAt,
+            generatedBy: report.generatedBy,
+            status: report.status,
+            approvedAt: report.approvedAt,
+            approvedBy: report.approvedBy,
+            isLocked: report.isLocked ?? true,
+            lockedAt: report.lockedAt,
+            lockedBy: report.lockedBy,
+            completedEngines: report.inputData?.completedEnginesCount || 5,
+            totalEngines: report.inputData?.totalEngines || 5,
+            executiveSummary: report.advisory?.executiveSummary || "No summary available",
+            advisory: report.advisory
+        }));
+    } catch (error) {
         console.error("Error fetching HTI reports:", error);
-        loaderError = error?.message || "Failed to load HTI reports";
     }
 
     return json({
         pendingApprovals,
-        approvedReports,
-        totalReportsCount,
-        loaderError
+        approvedReports
     });
 }
 
@@ -116,7 +122,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function AdminHTIApprovals() {
-    const { pendingApprovals, approvedReports, totalReportsCount, loaderError } = useLoaderData<typeof loader>();
+    const { pendingApprovals, approvedReports } = useLoaderData<typeof loader>();
     const actionData = useActionData<{ success?: boolean; error?: string }>();
     const navigation = useNavigation();
     const fetcher = useFetcher();
@@ -127,26 +133,8 @@ export default function AdminHTIApprovals() {
     const [editedAdvisory, setEditedAdvisory] = useState<any>(null);
     const [showPDFPreview, setShowPDFPreview] = useState(false);
     const [previewReport, setPreviewReport] = useState<any>(null);
-    const [rejectModal, setRejectModal] = useState<{ reportId: string; companyId: string } | null>(null);
-    const [rejectNotes, setRejectNotes] = useState("");
-    const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
     const isProcessing = navigation.state === "submitting";
-
-    useEffect(() => {
-        if (actionData?.success) {
-            setToast({ message: "Action completed — report status updated successfully.", type: "success" });
-            setRejectModal(null);
-            setRejectNotes("");
-            const t = setTimeout(() => setToast(null), 4000);
-            return () => clearTimeout(t);
-        }
-        if (actionData?.error) {
-            setToast({ message: actionData.error, type: "error" });
-            const t = setTimeout(() => setToast(null), 5000);
-            return () => clearTimeout(t);
-        }
-    }, [actionData]);
 
     const handleEditMode = (reportId: string, advisory: any) => {
         setEditMode(reportId);
@@ -190,13 +178,16 @@ export default function AdminHTIApprovals() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-12 p-4 animate-in fade-in duration-700">
-            {loaderError && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-6 py-4 rounded-2xl flex items-center gap-3">
-                    <ExclamationTriangleIcon className="h-6 w-6" />
-                    <div>
-                        <span className="font-bold block">Could not load HTI reports</span>
-                        <span className="text-xs font-medium">{loaderError}</span>
-                    </div>
+            {actionData?.error && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+                    <XCircleIcon className="h-6 w-6" />
+                    <span className="font-bold">{actionData.error}</span>
+                </div>
+            )}
+            {actionData?.success && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+                    <CheckBadgeIcon className="h-6 w-6" />
+                    <span className="font-bold">Action completed successfully.</span>
                 </div>
             )}
             {/* Intel Header */}
@@ -246,10 +237,10 @@ export default function AdminHTIApprovals() {
                     </div>
                 </div>
                 <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 flex flex-col justify-between">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Generated</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Accuracy Level</p>
                     <div>
-                        <p className="text-4xl font-black text-gray-900">{totalReportsCount}</p>
-                        <p className="text-xs font-bold text-slate-400 mt-2">All statuses</p>
+                        <p className="text-4xl font-black text-gray-900 uppercase">99.4<span className="text-lg">%</span></p>
+                        <p className="text-xs font-bold text-indigo-400 mt-2">v4.2-Verified</p>
                     </div>
                 </div>
             </div>
@@ -421,22 +412,21 @@ export default function AdminHTIApprovals() {
                                                         <input type="hidden" name="reportId" value={report.reportId} />
                                                         <input type="hidden" name="companyId" value={report.companyId} />
                                                         <input type="hidden" name="notes" value={adminNotes} />
+
                                                         <button
                                                             name="action" value="approve"
-                                                            disabled={isProcessing}
-                                                            className="h-12 px-8 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-60"
+                                                            className="h-12 px-8 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all"
                                                         >
-                                                            {isProcessing ? "Processing..." : "Approve"}
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            name="action" value="reject"
+                                                            className="h-12 w-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"
+                                                            title="Reject Report"
+                                                        >
+                                                            <XCircleIcon className="h-6 w-6" />
                                                         </button>
                                                     </Form>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setRejectModal({ reportId: report.reportId, companyId: report.companyId }); setRejectNotes(""); }}
-                                                        className="h-12 px-6 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all flex items-center gap-2 border border-rose-100"
-                                                    >
-                                                        <XCircleIcon className="h-4 w-4" />
-                                                        Reject
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -448,47 +438,30 @@ export default function AdminHTIApprovals() {
                 )}
             </section>
 
-            {/* Approved Repository — always visible */}
-            <section className="space-y-6 pt-4">
-                <div className="flex items-center justify-between px-4">
-                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                        <DocumentCheckIcon className="h-5 w-5 text-emerald-500" />
-                        Approved Reports
-                        <span className="ml-2 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-black border border-emerald-100">
-                            {approvedReports.length}
-                        </span>
-                    </h2>
-                </div>
-
-                {approvedReports.length === 0 ? (
-                    <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2.5rem] p-14 text-center">
-                        <DocumentCheckIcon className="h-12 w-12 text-gray-100 mx-auto mb-3" />
-                        <p className="text-sm font-bold text-gray-400">No approved reports yet.</p>
-                        <p className="text-xs text-gray-300 font-medium mt-1">Approved reports will appear here after you review the queue above.</p>
+            {/* Approved Repository */}
+            {approvedReports.length > 0 && (
+                <section className="space-y-6 pt-12">
+                    <div className="flex items-center justify-between px-4">
+                        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                            <DocumentCheckIcon className="h-5 w-5 text-emerald-500" />
+                            Approved Reports
+                        </h2>
                     </div>
-                ) : (
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {approvedReports.map((report: any) => (
                             <div key={report.reportId} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${report.isLocked ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${report.isLocked ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'}`}>
                                         {report.isLocked ? <LockClosedIcon className="h-3 w-3" /> : <LockOpenIcon className="h-3 w-3" />}
                                         {report.isLocked ? 'Finalized' : 'Draft'}
                                     </div>
-                                    <span className="text-[10px] font-bold text-gray-400">
-                                        {report.approvedAt ? new Date(report.approvedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                                    </span>
+                                    <span className="text-[10px] font-bold text-gray-400">{new Date(report.approvedAt).toLocaleDateString()}</span>
                                 </div>
-                                <h3 className="text-base font-black text-gray-900 mb-0.5 truncate">{report.companyId}</h3>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                                    Approved by: <span className="text-indigo-500">{report.approvedBy || "Admin"}</span>
-                                </p>
-                                <p className="text-xs text-gray-500 line-clamp-2 mb-4">
-                                    {typeof report.executiveSummary === "string"
-                                        ? report.executiveSummary.replace(/<[^>]*>/g, "").slice(0, 120) + "..."
-                                        : "Advisory report approved."}
-                                </p>
-                                <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
+                                <h3 className="text-lg font-bold text-gray-900 mb-1">{report.companyId}</h3>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.1em] mb-4">Advisory Model v4.1</p>
+
+                                <div className="flex items-center gap-2 mt-auto pt-4 border-t border-gray-50">
                                     <button
                                         onClick={() => handlePreviewPDF(report)}
                                         className="flex-1 px-4 py-2 bg-gray-50 text-gray-600 rounded-xl text-[10px] font-black uppercase hover:bg-gray-900 hover:text-white transition-all"
@@ -497,8 +470,7 @@ export default function AdminHTIApprovals() {
                                     </button>
                                     <button
                                         onClick={() => report.isLocked ? handleUnlockReport(report.reportId, report.companyId) : handleLockReport(report.reportId, report.companyId)}
-                                        title={report.isLocked ? "Unlock report" : "Lock & publish report"}
-                                        className={`p-2 rounded-xl transition-all ${report.isLocked ? 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'}`}
+                                        className={`p-2 rounded-xl transition-all ${report.isLocked ? 'text-gray-400 hover:text-indigo-600' : 'text-emerald-600 bg-emerald-50'}`}
                                     >
                                         {report.isLocked ? <LockOpenIcon className="h-5 w-5" /> : <LockClosedIcon className="h-5 w-5" />}
                                     </button>
@@ -506,8 +478,8 @@ export default function AdminHTIApprovals() {
                             </div>
                         ))}
                     </div>
-                )}
-            </section>
+                </section>
+            )}
 
             {showPDFPreview && previewReport && (
                 <PDFPreviewModal
@@ -516,106 +488,6 @@ export default function AdminHTIApprovals() {
                     onClose={() => setShowPDFPreview(false)}
                 />
             )}
-
-            {/* Reject Confirmation Modal */}
-            <AnimatePresence>
-                {rejectModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                        onClick={(e) => { if (e.target === e.currentTarget) setRejectModal(null); }}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.92, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.92, opacity: 0, y: 20 }}
-                            transition={{ type: "spring", stiffness: 350, damping: 28 }}
-                            className="bg-white rounded-[2.5rem] shadow-2xl max-w-lg w-full p-10 relative"
-                        >
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="h-12 w-12 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0">
-                                    <XCircleIcon className="h-6 w-6 text-rose-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-black text-gray-900">Reject Report</h3>
-                                    <p className="text-xs font-medium text-gray-400 mt-0.5">Company: <span className="text-gray-700 font-bold">{rejectModal.companyId}</span></p>
-                                </div>
-                            </div>
-
-                            <p className="text-sm text-gray-500 font-medium mb-6 bg-rose-50 rounded-2xl p-4 border border-rose-100">
-                                This will mark the report as <span className="font-black text-rose-700">Rejected</span> and notify the team. Please provide a reason so the AI system can be improved.
-                            </p>
-
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
-                                Rejection Reason <span className="text-rose-500">*</span>
-                            </label>
-                            <textarea
-                                value={rejectNotes}
-                                onChange={(e) => setRejectNotes(e.target.value)}
-                                placeholder="e.g. Advisory content lacks depth in change management section. Please regenerate with more specific recommendations..."
-                                rows={4}
-                                className="w-full bg-gray-50 rounded-2xl px-5 py-3 text-sm font-medium text-gray-700 focus:ring-4 focus:ring-rose-100 outline-none transition-all resize-none mb-6 border border-gray-100"
-                            />
-
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setRejectModal(null)}
-                                    className="flex-1 h-12 bg-gray-100 text-gray-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
-                                >
-                                    Cancel
-                                </button>
-                                <Form method="post" className="flex-1">
-                                    <input type="hidden" name="reportId" value={rejectModal.reportId} />
-                                    <input type="hidden" name="companyId" value={rejectModal.companyId} />
-                                    <input type="hidden" name="notes" value={rejectNotes} />
-                                    <button
-                                        name="action" value="reject"
-                                        disabled={!rejectNotes.trim() || isProcessing}
-                                        className="w-full h-12 bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 hover:bg-rose-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        <XCircleIcon className="h-4 w-4" />
-                                        {isProcessing ? "Rejecting..." : "Confirm Reject"}
-                                    </button>
-                                </Form>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Toast Notification */}
-            <AnimatePresence>
-                {toast && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className={`fixed bottom-6 right-6 z-50 flex items-start gap-4 px-6 py-4 rounded-2xl shadow-2xl max-w-sm ${toast.type === "success"
-                            ? "bg-gray-900 text-white"
-                            : "bg-rose-600 text-white"
-                        }`}
-                    >
-                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 ${toast.type === "success" ? "bg-emerald-500" : "bg-rose-400"}`}>
-                            {toast.type === "success"
-                                ? <CheckBadgeIcon className="h-5 w-5 text-white" />
-                                : <ExclamationTriangleIcon className="h-5 w-5 text-white" />
-                            }
-                        </div>
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-widest mb-0.5">
-                                {toast.type === "success" ? "Success" : "Error"}
-                            </p>
-                            <p className="text-xs font-medium opacity-90">{toast.message}</p>
-                        </div>
-                        <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0">
-                            <XCircleIcon className="h-4 w-4" />
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
