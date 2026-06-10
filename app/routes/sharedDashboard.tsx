@@ -277,6 +277,7 @@ export default function SharedDashboard() {
 
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
+                  type="button"
                   onClick={handleReportAction}
                   className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${isPaid && hasReport
                     ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white'

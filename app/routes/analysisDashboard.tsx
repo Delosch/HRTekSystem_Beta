@@ -307,6 +307,7 @@ export default function AnalysisDashboard() {
                     param={ENGINE}
                   />
                   <button
+                    type="button"
                     onClick={handleReportAction}
                     className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl text-white ${isPaid && hasReport
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'

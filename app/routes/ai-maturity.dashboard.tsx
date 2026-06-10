@@ -215,6 +215,7 @@ export default function AiMaturityDashboard() {
 
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
+                  type="button"
                   onClick={handleReportAction}
                   className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${
                     isPaid && hasReport ? 'bg-gradient-to-r from-violet-600 via-blue-600 to-indigo-600 hover:from-violet-700 hover:via-blue-700 hover:to-indigo-700 text-white'
@@ -290,6 +291,7 @@ export default function AiMaturityDashboard() {
               <div className="mt-6 pt-6 border-t border-gray-200/50 flex gap-3">
                 <EngineStatusActions engineStatus={currentEngine.status} param={ENGINE} />
                 <button
+                  type="button"
                   onClick={handleReportAction}
                   className={`flex-1 px-6 py-4 font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-white ${
                     isPaid && hasReport ? 'bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700'

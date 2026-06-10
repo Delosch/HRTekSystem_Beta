@@ -333,6 +333,7 @@ export default function RoadmapDashboard() {
 
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
+                  type="button"
                   onClick={handleReportAction}
                   className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${isPaid && hasReport
                     ? 'bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white'
@@ -432,6 +433,7 @@ export default function RoadmapDashboard() {
               <div className="mt-8 pt-6 border-t border-gray-200/50 flex gap-3">
                 <EngineStatusActions engineStatus={currentEngine.status} param={ENGINE} />
                 <button
+                  type="button"
                   onClick={handleReportAction}
                   className={`flex-1 px-6 py-4 font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-white ${isPaid && hasReport
                     ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700'
