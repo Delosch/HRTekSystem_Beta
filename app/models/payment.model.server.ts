@@ -122,11 +122,14 @@ const ENGINE_NAME_CANONICAL_MAP: Record<string, string> = {
     "hr tech diagnostics": "HR Tek Diagnostics",
     "hr technology maturity analysis": "HR Tek Diagnostics",
     "ai-driven hr tech diagnostics": "HR Tek Diagnostics",
+    "ai driven maturity engine": "HR Tek Diagnostics",
+    "hr tek diagnostics": "HR Tek Diagnostics",
     
     // Advanced engines
     "hr shared service engine": "HR Shared Service Engine",
     "decision engine": "HR Shared Service Engine",
     "intelligent change management": "ICMS",
+    "intelligent change management system": "ICMS",
     "hr change management": "ICMS",
     "icms": "ICMS",
     "hti - hr transformation intelligence": "HII",
@@ -368,12 +371,12 @@ export async function createEnginePaymentRequest(params: {
     const requestedBaseAmount = Math.round(requestedAmount / 1.18);
     const requestedGstAmount = requestedAmount - requestedBaseAmount;
 
-    const normalizedEngine = normalizeEngineName(params.engineName);
+    const normalizedEngine = normalizeEngineName(canonicalEngineName(params.engineName));
     const existingRequests = (await getCompanyPayments(params.orgId))
         .filter(
             (payment) =>
                 payment.workflowType === "request_based" &&
-                normalizeEngineName(payment.engineName || payment.items?.[0]?.engineName || "") === normalizedEngine &&
+                normalizeEngineName(canonicalEngineName(payment.engineName || payment.items?.[0]?.engineName || "")) === normalizedEngine &&
                 (payment.status === "request_pending_approval" || payment.status === "request_rejected")
         )
         .sort(
@@ -537,18 +540,20 @@ export async function createEnginePaymentRequest(params: {
 }
 
 export async function getEngineAccessStatus(orgId: string, engineName: string): Promise<EngineAccessStatus> {
-    const normalizedEngine = normalizeEngineName(engineName);
+    const canonicalEngine = canonicalEngineName(engineName);
+    const normalizedEngine = normalizeEngineName(canonicalEngine);
     const payments = await getCompanyPayments(orgId);
     const enginePayments = payments.filter((payment) => {
-        if (normalizeEngineName(payment.engineName || "") === normalizedEngine) {
+        const paymentCanonical = normalizeEngineName(canonicalEngineName(payment.engineName || ""));
+        if (paymentCanonical === normalizedEngine) {
             return true;
         }
         return (payment.items || []).some(
             (item) => {
                 const iName = item.engineName || "";
-                if (normalizeEngineName(iName) === normalizedEngine) return true;
+                if (normalizeEngineName(canonicalEngineName(iName)) === normalizedEngine) return true;
                 const match = iName.match(/^(.*) - Installment #(\d+)$/);
-                if (match && normalizeEngineName(match[1]) === normalizedEngine) return true;
+                if (match && normalizeEngineName(canonicalEngineName(match[1])) === normalizedEngine) return true;
                 return false;
             }
         );
@@ -587,7 +592,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         const matchingItems = (payment.items || []).filter(
             (item) => {
                 const iName = item.engineName || "";
-                if (normalizeEngineName(stripInstallmentSuffix(iName)) === normalizedEngine) return true;
+                if (normalizeEngineName(canonicalEngineName(stripInstallmentSuffix(iName))) === normalizedEngine) return true;
                 return false;
             }
         );
@@ -619,7 +624,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         latestRequest.items && 
         latestRequest.items.length > 1 && 
         latestRequest.items.some(item => 
-            normalizeEngineName(item.engineName) === normalizedEngine && 
+            normalizeEngineName(canonicalEngineName(item.engineName)) === normalizedEngine && 
             item.price === 0 &&
             (item.description || "").includes("Included Core Engine")
         );
@@ -636,7 +641,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
             p.status !== "cleared" &&
             Array.isArray(p.items) &&
             p.items.some(item => 
-                normalizeEngineName(item.engineName) === normalizedEngine && 
+                normalizeEngineName(canonicalEngineName(item.engineName)) === normalizedEngine && 
                 item.price === 0 &&
                 (item.description || "").includes("Included Core Engine")
             )
@@ -652,11 +657,11 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
     let coreEnabled = false;
     if (isIncludedFreeWithAdvanced && parentAdvancedEngineName) {
         // Calculate actual payment progress for the PARENT advanced engine
-        const parentNormalized = normalizeEngineName(parentAdvancedEngineName);
+        const parentNormalized = normalizeEngineName(canonicalEngineName(parentAdvancedEngineName));
         const parentPayments = payments.filter(p => {
             if (p.status !== "payment_verified" && p.status !== "completed") return false;
             return (p.items || []).some(item => 
-                normalizeEngineName(stripInstallmentSuffix(item.engineName || "")) === parentNormalized
+                normalizeEngineName(canonicalEngineName(stripInstallmentSuffix(item.engineName || ""))) === parentNormalized
             );
         });
         parentAdvancedTotalPaid = parentPayments.reduce((sum, p) => sum + Number(p.totalAmount || 0), 0);
@@ -665,7 +670,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         const parentRequestRecord = payments.find(p => 
             p.workflowType === "request_based" && 
             p.status !== "cleared" &&
-            normalizeEngineName(p.engineName || "") === parentNormalized
+            normalizeEngineName(canonicalEngineName(p.engineName || "")) === parentNormalized
         );
         parentAdvancedFullAmount = Number(parentRequestRecord?.fullAmount || 0);
 

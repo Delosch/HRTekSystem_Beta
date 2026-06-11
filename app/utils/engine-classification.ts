@@ -58,6 +58,8 @@ export const ENGINE_NAME_CANONICAL_MAP_CLIENT: Record<string, string> = {
     "hr tech diagnostics": "HR Tek Diagnostics",
     "hr technology maturity analysis": "HR Tek Diagnostics",
     "ai-driven hr tech diagnostics": "HR Tek Diagnostics",
+    "ai driven maturity engine": "HR Tek Diagnostics",
+    "hr tek diagnostics": "HR Tek Diagnostics",
     
     // Advanced engines
     "hr shared service engine": "HR Shared Service Engine",
