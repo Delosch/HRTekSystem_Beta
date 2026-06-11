@@ -1,6 +1,5 @@
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
-import { getLatestAnalysis } from "~/utils/analysis.server";
 import { v4 as uuidv4 } from "uuid";
 
 const TABLE_NAME = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
@@ -30,8 +29,6 @@ export interface HTIEngineData {
     responses?: Record<string, any>;
     aiAnalysis?: any;
     scores?: Record<string, number>;
-    // AI-generated analysis report text (from ANALYSIS# records)
-    aiReport?: string;
 }
 
 export interface HTIAggregatedInput {
@@ -79,37 +76,6 @@ export interface HTIAdvisoryContent {
         priceINR: string;
         priceUSD: string;
     };
-    // Structured scores (0-100)
-    transformationReadinessScore?: number;
-    riskExposureIndex?: number;
-    confidenceScore?: number;
-    // Per-engine capability heatmap
-    capabilityHeatmap?: Array<{
-        engine: string;
-        score: number;
-        status: "strong" | "moderate" | "critical";
-    }>;
-    // Transformation priority matrix (impact vs effort)
-    priorityMatrix?: Array<{
-        initiative: string;
-        impact: number;  // 1-10
-        effort: number;  // 1-10
-        timeframe: "now" | "next" | "later";
-        category: string;
-    }>;
-    // Structured "do not transform yet" flags
-    doNotTransformNow?: Array<{
-        area: string;
-        reason: string;
-        category: "organizational" | "financial" | "technical" | "cultural";
-        revisitIn?: string;
-    }>;
-    // Audit trail
-    auditTrail?: Array<{
-        timestamp: string;
-        action: string;
-        details: string;
-    }>;
 }
 
 export interface HTIAdvisoryReport {
@@ -145,38 +111,8 @@ export interface HTIAdvisoryReport {
 // DATA AGGREGATION
 // ========================================
 
-// Maps engine names to the section strings used in ANALYSIS# records
-const ENGINE_ANALYSIS_SECTION_MAP: Record<string, string> = {
-    "HR Technology Maturity Analysis": "AI Maturity Assessment",
-    "HR Transformation Roadmap Generator": "Digital Roadmap",
-    "Cognitive HCM Vendor Fit": "Vendor Fit Assessment",
-    "HCM Vendor Fit Engine": "Vendor Fit Assessment",
-    "Intelligent Change Management": "Change Management Assessment",
-    "Shared Service Designer": "Shared Services Assessment",
-};
-
-/**
- * Attach AI-generated analysis report text to engine data
- */
-async function attachAIReport(companyId: string, engineData: HTIEngineData): Promise<HTIEngineData> {
-    const sectionName = ENGINE_ANALYSIS_SECTION_MAP[engineData.engineName];
-    if (!sectionName) return engineData;
-    try {
-        const analysisRecord = await getLatestAnalysis(companyId, sectionName);
-        if (analysisRecord && analysisRecord.analysis) {
-            engineData.aiReport = typeof analysisRecord.analysis === "string"
-                ? analysisRecord.analysis
-                : JSON.stringify(analysisRecord.analysis);
-        }
-    } catch (err) {
-        console.warn(`Could not fetch AI report for ${engineData.engineName}:`, err);
-    }
-    return engineData;
-}
-
 /**
  * Aggregate data from all 5 HR engines for a company
- * Fetches both raw engine scores/responses AND AI-generated analysis reports
  */
 export async function aggregateEngineData(companyId: string): Promise<HTIAggregatedInput> {
     const engineNames = [
@@ -198,36 +134,37 @@ export async function aggregateEngineData(companyId: string): Promise<HTIAggrega
         totalEngines: engineNames.length
     };
 
-    // Map results to structured format and attach AI reports
+    // Map results to structured format
     if (engineResults[0]) {
-        aggregated.engines.maturity = await attachAIReport(companyId, engineResults[0]);
+        aggregated.engines.maturity = engineResults[0];
         if (engineResults[0].progress === 100) aggregated.completedEnginesCount++;
     }
     if (engineResults[1]) {
-        aggregated.engines.roadmap = await attachAIReport(companyId, engineResults[1]);
+        aggregated.engines.roadmap = engineResults[1];
         if (engineResults[1].progress === 100) aggregated.completedEnginesCount++;
     }
 
     // Handle Vendor Fit (Aliasing check)
     if (engineResults[2]) {
-        aggregated.engines.vendor = await attachAIReport(companyId, engineResults[2]);
+        aggregated.engines.vendor = engineResults[2];
         if (engineResults[2].progress === 100) aggregated.completedEnginesCount++;
     } else {
         // Fallback: Try fetching with the actual DB name "HCM Vendor Fit Engine"
         const altVendorData = await getEngineData(companyId, "HCM Vendor Fit Engine");
         if (altVendorData) {
-            altVendorData.engineName = "Cognitive HCM Vendor Fit";
-            aggregated.engines.vendor = await attachAIReport(companyId, altVendorData);
+            aggregated.engines.vendor = altVendorData;
+            // Normalize name back to expected
+            aggregated.engines.vendor.engineName = "Cognitive HCM Vendor Fit";
             if (altVendorData.progress === 100) aggregated.completedEnginesCount++;
         }
     }
 
     if (engineResults[3]) {
-        aggregated.engines.change = await attachAIReport(companyId, engineResults[3]);
+        aggregated.engines.change = engineResults[3];
         if (engineResults[3].progress === 100) aggregated.completedEnginesCount++;
     }
     if (engineResults[4]) {
-        aggregated.engines.sharedServices = await attachAIReport(companyId, engineResults[4]);
+        aggregated.engines.sharedServices = engineResults[4];
         if (engineResults[4].progress === 100) aggregated.completedEnginesCount++;
     }
 
@@ -385,71 +322,30 @@ export async function getCompanyAdvisories(companyId: string): Promise<HTIAdviso
 
 /**
  * Get all pending approvals (admin function)
- * Uses paginated scan to ensure all records are returned regardless of table size.
  */
 export async function getPendingApprovals(): Promise<HTIAdvisoryReport[]> {
     try {
-        const allItems: any[] = [];
-        let lastEvaluatedKey: Record<string, any> | undefined = undefined;
+        // Scan for all HTI reports with status = pending
+        // In production, create a GSI on status field for better performance
+        const result = await ddbDocClient.send(
+            new ScanCommand({
+                TableName: TABLE_NAME,
+                FilterExpression: "contains(#sk, :prefix) AND #status = :status",
+                ExpressionAttributeNames: {
+                    "#sk": "sk",
+                    "#status": "status"
+                },
+                ExpressionAttributeValues: {
+                    ":prefix": "HTI_REPORT#",
+                    ":status": "pending"
+                }
+            })
+        );
 
-        do {
-            const result: any = await ddbDocClient.send(
-                new ScanCommand({
-                    TableName: TABLE_NAME,
-                    FilterExpression: "begins_with(#sk, :prefix) AND #status = :status",
-                    ExpressionAttributeNames: {
-                        "#sk": "sk",
-                        "#status": "status"
-                    },
-                    ExpressionAttributeValues: {
-                        ":prefix": "HTI_REPORT#",
-                        ":status": "pending"
-                    },
-                    ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {})
-                })
-            );
-            allItems.push(...(result.Items || []));
-            lastEvaluatedKey = result.LastEvaluatedKey;
-        } while (lastEvaluatedKey);
-
-        console.log(`📊 Found ${allItems.length} pending HTI reports`);
-        return allItems as HTIAdvisoryReport[];
+        console.log(`📊 Found ${result.Items?.length || 0} pending HTI reports`);
+        return (result.Items || []) as HTIAdvisoryReport[];
     } catch (error) {
         console.error("Error fetching pending approvals:", error);
-        return [];
-    }
-}
-
-/**
- * Get ALL HTI reports across all companies (admin function - for stats)
- */
-export async function getAllHTIReports(): Promise<HTIAdvisoryReport[]> {
-    try {
-        const allItems: any[] = [];
-        let lastEvaluatedKey: Record<string, any> | undefined = undefined;
-
-        do {
-            const result: any = await ddbDocClient.send(
-                new ScanCommand({
-                    TableName: TABLE_NAME,
-                    FilterExpression: "begins_with(#sk, :prefix)",
-                    ExpressionAttributeNames: {
-                        "#sk": "sk"
-                    },
-                    ExpressionAttributeValues: {
-                        ":prefix": "HTI_REPORT#"
-                    },
-                    ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {})
-                })
-            );
-            allItems.push(...(result.Items || []));
-            lastEvaluatedKey = result.LastEvaluatedKey;
-        } while (lastEvaluatedKey);
-
-        console.log(`📊 Found ${allItems.length} total HTI reports`);
-        return allItems as HTIAdvisoryReport[];
-    } catch (error) {
-        console.error("Error fetching all HTI reports:", error);
         return [];
     }
 }

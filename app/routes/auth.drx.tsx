@@ -39,45 +39,31 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 
   // Dynamic redirection logic based on verification status
-  if (!phoneVerified && cookie_container.country_iso === "IN") {
+  if (!phoneVerified && cookie_container.country_iso==="IN") {
     console.log("Redirecting to phone verification for userId:", cookie_container.userId);
-    throw redirect("/auth/sms/verify");
+    throw redirect("/auth/sms/verify"); // Redirect to phone verification page
   } else if (!emailVerified) {
     console.log("Redirecting to email verification for userId:", cookie_container.userId);
-    throw redirect("/auth/email/verify");
-  } else {
-    // Both phone and email are verified (or non-IN user with email verified)
-    // Guard: organisationId may be undefined or empty
-    const hasOrg = cookie_container.organisationId && cookie_container.organisationId.length > 0;
-
-    if (!hasOrg) {
-      // Gate: check approval status before allowing company creation
-      const preOrgStatus = cookie_container.onboardingStatus;
-      if (preOrgStatus === "None" || !preOrgStatus) {
-        console.log("Redirecting to pending-approval: account not yet reviewed");
-        throw redirect("/pending-approval");
-      }
-      if (preOrgStatus === "Rejected") {
-        throw redirect("/pending-approval?status=rejected");
-      }
-      // Approved — proceed to company creation/join flow
-      throw redirect("/create-or-join");
+    throw redirect("/auth/email/verify"); // Redirect to email verification page
+  } else if(phoneVerified && emailVerified) {
+    // All verifications complete, redirect to onboarding or dashboard
+    // @@ now we will check if a company profile is already linked with the user or not if yes load that load that 
+    // const company_list = getUserCompanyMemberships(user.userId)
+    
+    if(cookie_container.organisationId==="" || cookie_container.organisationId.length === 0){
+      throw redirect("/create-or-join")
     }
-
-    const status = cookie_container.onboardingStatus;
-
-    if (status === "Completed") {
-      throw redirect("/dashboard");
-    } else if (status === "Assessment") {
-      throw redirect("/onboarding/profilingAssessment");
-    } else if (status === "Company") {
-      throw redirect("/onboarding/company");
-    } else {
-      // "None", undefined, or any unknown status with a valid org:
-      // Send to profiling assessment (the first real onboarding step after company setup)
-      console.log(`Onboarding status "${status}" — redirecting to profiling assessment`);
-      throw redirect("/onboarding/profilingAssessment");
+    else if (cookie_container.onboardingStatus === "Company"){
+      throw redirect("/onboarding/company")
     }
+    else if(cookie_container.onboardingStatus==="Assessment"){
+      throw redirect("/onboarding/profilingAssessment")
+    }
+    else if(cookie_container.onboardingStatus ==="Completed"){
+      throw redirect("/dashboard")
+    }
+    console.log("All verifications complete. Redirecting to onboarding for userId:", cookie_container.userId);
+    throw redirect("/onboarding"); // Redirect to the onboarding page and now it will see for sub completed form
   }
 
   // This part of the code should ideally not be reached if the redirects are working as intended.
