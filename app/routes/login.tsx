@@ -235,6 +235,7 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                 organisationId: user.organisationId,
                 country_iso: user.country_iso,
                 two_fa_enabled: user.two_fa_enabled,
+                isAdmin: false
             }, redirectTo);
         }
 
@@ -255,7 +256,8 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
                     onboardingStatus: user.onboardingStatus,
                     organisationId: user.organisationId,
                     two_fa_enabled: user.two_fa_enabled,
-                    country_iso: user.country_iso
+                    country_iso: user.country_iso,
+                    isAdmin: false
                 }, redirectTo);
             } catch (error) {
                 return json({ error: "Invalid email or password. Please check your credentials and try again." }, { status: 401 });

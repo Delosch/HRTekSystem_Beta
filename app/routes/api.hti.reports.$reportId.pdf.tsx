@@ -23,13 +23,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     }
 
     // Payment gating
-    const { getCompanyPayments } = await import("~/models/payment.model.server");
-    const payments = await getCompanyPayments(user.organisationId);
+    const { getVerifiedPaymentsByCompany } = await import("~/models/payment.model.server");
+    const payments = await getVerifiedPaymentsByCompany(user.organisationId);
     const isAdmin = (user as any).role === "ADMIN";
-    const hasPaid = isAdmin || payments.some((p: any) =>
-        (p.status === "payment_verified" || p.status === "completed") &&
-        p.items?.some((i: any) => i.engineName.startsWith("HTI Advisory:"))
-    );
+    const isApprovedAndLocked = report.status === "approved" && report.isLocked;
+    const hasPaid = isAdmin || payments.length > 0 || isApprovedAndLocked;
 
     if (!hasPaid) {
         throw new Response("Payment required to download HTI reports", { status: 403 });

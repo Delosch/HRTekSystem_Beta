@@ -68,8 +68,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
   const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
-  const isPaid = isAdmin || paymentStatus.status === "paid";
-  const isPending = !isAdmin && paymentStatus.status === "pending";
+  const isPaid = true; // BYPASS: Force paid for testing
+  const isPending = false; // BYPASS: Force no pending for testing
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -275,7 +275,6 @@ export default function ChangeDashboard() {
               {/* Enhanced View Detailed Dashboard Button */}
               <div className="mt-6 pt-6 border-t border-gray-200/50">
                 <button
-                  type="button"
                   onClick={handleReportAction}
                   className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center justify-center gap-3 group relative overflow-hidden ${isPaid && hasReport
                     ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white'
@@ -374,7 +373,6 @@ export default function ChangeDashboard() {
                   param={ENGINE}
                 />
                 <button
-                  type="button"
                   onClick={handleReportAction}
                   className={`flex-1 px-6 py-4 font-bold rounded-2xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 text-white ${isPaid && hasReport
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'

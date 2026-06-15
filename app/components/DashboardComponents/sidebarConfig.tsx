@@ -73,7 +73,6 @@ export const sidebarSections: SidebarSection[] = [
   {
     title: "Billing",
     items: [
-      { label: "Payment Requests", path: "/user-payment-dashboard", icon: CreditCard },
       { label: "Cart", path: "/cartDashboard", icon: ShoppingCart },
       { label: "Receipts", path: "/receiptsDashboard", icon: CreditCard },
     ],

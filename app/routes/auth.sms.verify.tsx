@@ -15,8 +15,8 @@ import Squares from "~/components/squareBg";
 import countryCode from "app/data/country_code_order.json";
 import { HoverInput, SearchableDialCodeSelect } from "~/components/AuthCards";
 import { requireUserSession, commitSession, getSession } from "~/lib/session.server";
-import { saveOTP, verifyStoredOTP, updateUser } from "~/models/user.model.server";
-import { sendLoginOTP } from "~/services/sms.server";
+import { saveOTP, verifyStoredOTP, updateUser, getUserProfile } from "~/models/user.model.server";
+import { sendLoginOTP, sendTemplateSMS } from "~/services/sms.server";
 
 const countryCodes = countryCode.countryCode;
 
@@ -76,13 +76,14 @@ export const action: ActionFunction = async ({ request }) => {
         session.set("is_verified_phone", true);
 
         console.log(`[SMS Verify] OTP verified successfully, session updated`);
+
+        session.set("is_verified_phone", true);
+        console.log(`[SMS Verify] OTP verified successfully, session updated`);
+
+
         return json(
           { success: true },
-          {
-            headers: {
-              "Set-Cookie": await commitSession(session)
-            }
-          }
+          { headers: { "Set-Cookie": await commitSession(session) } }
         );
       } else {
         console.warn(`[SMS Verify] Invalid or expired OTP for user ${user.userId}`);
@@ -142,9 +143,12 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
     return redirect('/auth')
   }
 
-  // Redirect if already verified
+  // Redirect if phone already verified, but ensure email verification is also done
   if (user.is_verified_phone) {
-    return redirect('/onboarding');
+    if (!user.is_verified_email) {
+      return redirect('/auth/email/verify');
+    }
+    return redirect('/auth/drx'); // Or wherever you go after both are verified
   }
 
   // Extract number and code if stored in (91)1234567890 format
@@ -242,7 +246,7 @@ export default function AuthVerify() {
           setResendMessage("Code sent!");
         } else if (action === "otp") {
           setStep("success");
-          setTimeout(() => navigate("/onboarding"), 1500);
+          setTimeout(() => navigate("/auth/email/verify"), 1500);
         } else if (action === "update") {
           // Update successful, we are already on 'otp' step due to optimistic update in handler
           setResendMessage("Code sent to new number!");

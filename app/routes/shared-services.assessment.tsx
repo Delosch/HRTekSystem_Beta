@@ -51,6 +51,7 @@ function VideoPreview({ videoId }: { videoId: string }) {
         </div>
     );
 }
+import SharedServicesMonthModal from "~/components/SharedServicesMonthModal";
 import sharedServicesStyles from "~/styles/shared-services-engine.css?url";
 import { findEngineData } from "~/models/engine.model.server";
 import { getCompanyPayments } from "~/models/payment.model.server";
@@ -61,6 +62,7 @@ import { addOrUpdateCartItem } from "~/models/cart.model.server";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport, type HTIAdvisoryContent } from "~/models/hti.model.server";
 import { createOrUpdateEngineStorage } from "~/models/engine.model.server";
+import { store_analysis } from "~/utils/question.utils";
 
 export const meta: MetaFunction = () => {
     return [
@@ -103,6 +105,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     // Save progress without generating report — add engine to cart
     if (intent === "save_and_cart") {
+        const months = parseInt(formData.get("months") as string) || 1;
+
         await createOrUpdateEngineStorage({
             company_id: user.organisationId,
             user_id: user.id || user.userId,
@@ -114,16 +118,18 @@ export async function action({ request }: ActionFunctionArgs) {
 
         const company = await getCompanyProfile(user.organisationId);
         const employeeCount = company?.employee_count || 100;
-        const pricingResult = calculatePricing({ engine: 'shared-services', employeeCount });
+        const pricingResult = calculatePricing({ engine: 'shared-services', employeeCount, months });
 
         await addOrUpdateCartItem({
             companyId: user.organisationId,
             productName: "Shared Service Designer",
             price: pricingResult.totalPrice,
             userId: user.id || user.userId,
+            durationMonths: months,
+            employeeCount: typeof employeeCount === 'number' ? employeeCount : parseInt(String(employeeCount) || "100"),
         });
 
-        return json({ redirectTo: "/cartDashboard" });
+        return redirect("/cartDashboard");
     }
 
     try {
@@ -145,7 +151,15 @@ export async function action({ request }: ActionFunctionArgs) {
             aggregatedData as any
         );
 
-        return json({ success: true, advisory });
+        // Create ANALYSIS# record so consulting-report loader can find it
+        await store_analysis(
+            user.organisationId,
+            `${user.organisationId}#Shared Service Designer`,
+            "Shared Service Designer",
+            { advisory, sstiResult, responses: answers } as any
+        );
+
+        return redirect("/sharedDashboard");
     } catch (error) {
         console.error("AI Generation Error:", error);
         return json({ error: "Failed to generate AI report" }, { status: 500 });
@@ -156,15 +170,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await getEnhancedUser(request);
     if (!user) return redirect("/login");
 
-    if ((user as any).role !== "ADMIN") {
-        const access = await import("~/models/payment.model.server").then((mod) =>
-            mod.getEngineAccessStatus(user.organisationId, "Shared Service Designer")
-        );
-        if (!access.assessmentUnlocked) {
-            return redirect("/user-payment-dashboard");
-        }
-    }
-
     const [engineData, payments] = await Promise.all([
         findEngineData(user.organisationId, "Shared Service Designer"),
         getCompanyPayments(user.organisationId),
@@ -173,11 +178,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const initialAnswers = engineData?.responses || {};
     const savedProgress = engineData?.progress || 0;
 
-    const isAdmin = (user as any).role === "ADMIN";
-    const isPaid = isAdmin || payments.some(p =>
-        (p.status === "payment_submitted" || p.status === "payment_verified") &&
-        p.items?.some((item: any) => item.engineName?.trim() === "Shared Service Designer")
-    );
+    const isPaid = true;
 
     return json({ user, initialAnswers, isPaid, savedProgress });
 }
@@ -193,6 +194,7 @@ export default function SharedServicesAssessment() {
     const [showExecutiveSummary, setShowExecutiveSummary] = useState(false);
     const [showAIReport, setShowAIReport] = useState(false);
     const [showToast, setShowToast] = useState(false);
+    const [showMonthModal, setShowMonthModal] = useState(false);
     const [currentDomain, setCurrentDomain] = useState(0);
     const [mounted, setMounted] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -226,6 +228,14 @@ export default function SharedServicesAssessment() {
 
     const generateReport = () => {
         fetcher.submit({ answers: JSON.stringify(answers) }, { method: "post" });
+    };
+
+    const handleMonthSelect = (months: number) => {
+        setShowMonthModal(false);
+        fetcher.submit(
+            { answers: JSON.stringify(answers), intent: "save_and_cart", months: months.toString() },
+            { method: "post" }
+        );
     };
 
     const isGenerating = fetcher.state !== "idle";
@@ -637,14 +647,24 @@ export default function SharedServicesAssessment() {
                                                 </div>
 
                                                 {isLastDomain ? (
-                                                    <button
-                                                        onClick={() => setShowExecutiveSummary(true)}
-                                                        disabled={!sstiResult.isComplete}
-                                                        className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200"
-                                                    >
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                        View Results
-                                                    </button>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            onClick={() => setShowExecutiveSummary(true)}
+                                                            disabled={!sstiResult.isComplete}
+                                                            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-indigo-200 text-indigo-700 rounded-xl text-sm font-semibold hover:bg-indigo-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                            View Results
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setShowMonthModal(true)}
+                                                            disabled={!sstiResult.isComplete || isGenerating}
+                                                            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-200"
+                                                        >
+                                                            <ShoppingCart className="w-4 h-4" />
+                                                            Submit Assessment
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <button
                                                         onClick={() => setCurrentDomain(d => Math.min(assessmentData.length - 1, d + 1))}
@@ -668,6 +688,11 @@ export default function SharedServicesAssessment() {
                     )}
                 </div>
             </div>
+            <SharedServicesMonthModal
+                isOpen={showMonthModal}
+                onClose={() => setShowMonthModal(false)}
+                onSelect={handleMonthSelect}
+            />
         </div>
     );
 }

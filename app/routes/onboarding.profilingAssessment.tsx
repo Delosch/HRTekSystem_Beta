@@ -89,19 +89,7 @@ export const action: ActionFunction = async ({ request }) => {
         );
       }
 
-      // Add ₹45,000 to cart for Profiling Assessment report access
-      try {
-        const cartItem: CartItem = {
-          companyId,
-          productName: "Profiling Assessment",
-          price: 45000,
-          userId: user.userId,
-        };
-        await addOrUpdateCartItem(cartItem);
-        console.log(`[Profiling Assessment] ₹45,000 added to cart for ${companyId}`);
-      } catch (cartError) {
-        console.warn("[Profiling Assessment] Failed to add to cart:", cartError);
-      }
+
 
       // Notify Admin
       try {
@@ -151,7 +139,7 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);
       }
 
-      return json({ success: true, redirect: "/cartDashboard" }, {
+      return json({ success: true, redirect: "/consulting-report/Profiling Assessment" }, {
         headers: {
           "Set-Cookie": await commitSession(session),
         },

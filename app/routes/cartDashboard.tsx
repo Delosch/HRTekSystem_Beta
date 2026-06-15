@@ -16,7 +16,6 @@ import {
 
 import Sidebar from "../components/DashboardComponents/Sidebar";
 import { getCartItems, deleteCartItem } from "~/models/cart.model.server";
-import { acceptInvoice, declineInvoice } from "~/models/payment.model.server";
 import { requireUserSession } from "~/lib/session.server";
 import { getEnhancedUser } from "~/utils/user.server";
 import { calculatePricing, type EngineType } from "~/services/pricing.server";
@@ -86,11 +85,10 @@ export const loader: LoaderFunction = async ({ request }: { request: Request }) 
 
   // Build engine payment status map — highest priority status wins
   const statusPriority: Record<string, number> = {
-    payment_verified: 6,
-    completed: 6,
-    payment_approved: 5,
-    payment_submitted: 4,
-    pending_payment: 3,
+    payment_verified: 5,
+    completed: 5,
+    payment_submitted: 3,
+    pending_payment: 2,
     payment_rejected: 1,
   };
 
@@ -131,21 +129,6 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
     return json({ success: true });
   }
 
-  if (intent === "acceptInvoice") {
-    const invoiceId = formData.get("invoiceId") as string;
-    if (!invoiceId) return json({ error: "Missing invoice ID" }, { status: 400 });
-    await acceptInvoice(invoiceId, user.organisationId || "", user.userId);
-    return json({ success: true, message: "Invoice accepted and finalized." });
-  }
-
-  if (intent === "rejectInvoice") {
-    const invoiceId = formData.get("invoiceId") as string;
-    const rejectReason = formData.get("rejectReason") as string;
-    if (!invoiceId) return json({ error: "Missing invoice ID" }, { status: 400 });
-    await declineInvoice(invoiceId, user.organisationId || "", user.userId, rejectReason || undefined);
-    return json({ success: true, message: "Invoice declined. Please contact support for next steps." });
-  }
-
   return json({ error: "Invalid intent" }, { status: 400 });
 };
 
@@ -167,14 +150,6 @@ const paymentStatusConfig: Record<string, { label: string; icon: React.ElementTy
     bg: "bg-emerald-50",
     border: "border-emerald-200",
     dot: "bg-emerald-500",
-  },
-  payment_approved: {
-    label: "Awaiting Acceptance",
-    icon: ClockIcon,
-    color: "text-violet-700",
-    bg: "bg-violet-50",
-    border: "border-violet-200",
-    dot: "bg-violet-500",
   },
   payment_submitted: {
     label: "Pending Verification",
@@ -272,12 +247,6 @@ const CartItemRow = ({ item, paymentInfo }: { item: any; paymentInfo?: EnginePay
   const total = item.price + gst;
   const isPaid = paymentInfo?.status === "payment_verified" || paymentInfo?.status === "completed";
 
-  useEffect(() => {
-    if (fetcher.data?.success && fetcher.state === 'idle') {
-      window.location.reload();
-    }
-  }, [fetcher.data, fetcher.state]);
-
   return (
     <div className={`border-b pb-5 transition-opacity last:border-b-0 ${isDeleting ? 'opacity-50' : 'opacity-100'}`}>
       <div className="flex items-start justify-between gap-4">
@@ -371,48 +340,16 @@ const CartItemRow = ({ item, paymentInfo }: { item: any; paymentInfo?: EnginePay
           </Link>
         </div>
       )}
-
-      {paymentInfo?.status === "payment_approved" && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <fetcher.Form method="post" className="w-full">
-            <input type="hidden" name="intent" value="acceptInvoice" />
-            <input type="hidden" name="invoiceId" value={paymentInfo.invoiceId} />
-            <button
-              type="submit"
-              disabled={fetcher.state === 'submitting'}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 transition"
-            >
-              <CheckCircleIcon className="w-4 h-4" />
-              Accept Invoice
-            </button>
-          </fetcher.Form>
-          <fetcher.Form method="post" className="w-full">
-            <input type="hidden" name="intent" value="rejectInvoice" />
-            <input type="hidden" name="invoiceId" value={paymentInfo.invoiceId} />
-            <input type="hidden" name="rejectReason" value="Customer declined final invoice" />
-            <button
-              type="submit"
-              disabled={fetcher.state === 'submitting'}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-rose-600 text-white font-semibold shadow-sm hover:bg-rose-700 transition"
-            >
-              <XCircleIcon className="w-4 h-4" />
-              Reject Invoice
-            </button>
-          </fetcher.Form>
-        </div>
-      )}
     </div>
   );
 };
 
 const PaymentStatusOverview = ({ enginePaymentMap }: { enginePaymentMap: Record<string, EnginePaymentInfo> }) => {
-  const fetcher = useFetcher();
   const entries = Object.entries(enginePaymentMap);
   if (entries.length === 0) return null;
 
   const groups = {
     payment_verified: entries.filter(([, v]) => v.status === "payment_verified" || v.status === "completed"),
-    payment_approved: entries.filter(([, v]) => v.status === "payment_approved"),
     payment_submitted: entries.filter(([, v]) => v.status === "payment_submitted"),
     pending_payment: entries.filter(([, v]) => v.status === "pending_payment"),
     payment_rejected: entries.filter(([, v]) => v.status === "payment_rejected"),
@@ -448,58 +385,6 @@ const PaymentStatusOverview = ({ enginePaymentMap }: { enginePaymentMap: Record<
                     </div>
                   </div>
                   <span className="text-xs font-black text-emerald-700">₹{info.amount.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Awaiting Acceptance */}
-        {groups.payment_approved.length > 0 && (
-          <div>
-            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-              <ClockIcon className="h-3 w-3" /> Awaiting Acceptance ({groups.payment_approved.length})
-            </p>
-            <div className="space-y-2">
-              {groups.payment_approved.map(([name, info]) => (
-                <div key={name} className="p-3 bg-violet-50 border border-violet-100 rounded-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">{getEngineIcon(name)}</span>
-                      <div>
-                        <p className="text-xs font-bold text-gray-800">{name}</p>
-                        <p className="text-[10px] text-gray-400 font-mono">{info.invoiceNumber}</p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-violet-700">₹{info.amount.toLocaleString()}</span>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <fetcher.Form method="post" className="w-full">
-                      <input type="hidden" name="intent" value="acceptInvoice" />
-                      <input type="hidden" name="invoiceId" value={info.invoiceId} />
-                      <button
-                        type="submit"
-                        disabled={fetcher.state === 'submitting'}
-                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold shadow-sm hover:bg-emerald-700 transition text-xs"
-                      >
-                        <CheckCircleIcon className="w-3 h-3" />
-                        Accept
-                      </button>
-                    </fetcher.Form>
-                    <fetcher.Form method="post" className="w-full">
-                      <input type="hidden" name="intent" value="rejectInvoice" />
-                      <input type="hidden" name="invoiceId" value={info.invoiceId} />
-                      <input type="hidden" name="rejectReason" value="Customer declined final invoice" />
-                      <button
-                        type="submit"
-                        disabled={fetcher.state === 'submitting'}
-                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-rose-600 text-white font-semibold shadow-sm hover:bg-rose-700 transition text-xs"
-                      >
-                        <XCircleIcon className="w-3 h-3" />
-                        Reject
-                      </button>
-                    </fetcher.Form>
-                  </div>
                 </div>
               ))}
             </div>

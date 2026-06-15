@@ -2,7 +2,8 @@ import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node"
 import { useActionData, useSearchParams } from "@remix-run/react";
 import { useEffect } from "react";
 import { signupUser, loginUser } from "~/models/user.model.server";
-import { createAuthSession } from "~/lib/session.server";
+import { createAuthSession, getUserSession } from "~/lib/session.server";
+import { sendRegistrationThankYouEmail } from "~/lib/email.service.server";
 import { validateSubmissionHash } from "~/lib/auth.server";
 import AuthForm from "~/components/AuthCards";
 import Navbar from "~/components/HomePageComponents/Navbar";
@@ -92,6 +93,25 @@ const validatePhoneNumber = (phone: string): boolean => {
 
 const sanitizeInput = (input: string): string => {
     return input.trim().replace(/[<>'"&]/g, '');
+};
+
+export const loader: LoaderFunction = async ({ request }) => {
+    let session = null;
+    try {
+        session = await getUserSession(request);
+    } catch (e) {
+        // getUserSession threw (corrupted/invalid session) — just show login page
+        if (e instanceof Response) return {};
+    }
+
+    if (session?.userId) {
+        // Valid session — send to post-auth router
+        const url = new URL(request.url);
+        const redirectTo = url.searchParams.get("redirectTo") || "/auth/drx";
+        throw redirect(redirectTo);
+    }
+
+    return {};
 };
 
 export const action: ActionFunction = async ({ request }: { request: Request }) => {
@@ -209,6 +229,9 @@ export const action: ActionFunction = async ({ request }: { request: Request }) 
             };
 
             const user = await signupUser(signupData);
+
+            // Fire & forget — do not block registration on email send
+            sendRegistrationThankYouEmail({ to: user.email, firstName: user.first_name }).catch(() => {});
 
             // Get redirectTo from URL query params
             const url = new URL(request.url);

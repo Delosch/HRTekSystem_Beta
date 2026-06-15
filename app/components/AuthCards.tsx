@@ -493,15 +493,8 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
 
 
   // ENHANCED: Updated handleSubmit with fresh hash generation
-  const handleSubmit = async (e: React.FormEvent) => {
-    if (isLogin) {
-      resetCaptchaUi();
-    }
-
-    // Generate fresh hash right before submission
-    const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
-    setSubmissionHash(freshHash);
-    setFormTimestamp(freshTimestamp);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const form = e.currentTarget;
 
     // Enhanced password validation before submission
     if (!isLogin) {
@@ -528,6 +521,16 @@ export default function AuthForm({ initialIsLogin = true }: { initialIsLogin?: b
       triggerCaptcha();
       return;
     }
+
+    // Generate fresh hash right before submission and add to form
+    const { hash: freshHash, timestamp: freshTimestamp } = await generateSecureSubmissionHash();
+
+    // Update hidden form fields with fresh values
+    const hashInput = form.querySelector('input[name="submission_hash"]') as HTMLInputElement;
+    const timestampInput = form.querySelector('input[name="form_timestamp"]') as HTMLInputElement;
+
+    if (hashInput) hashInput.value = freshHash;
+    if (timestampInput) timestampInput.value = freshTimestamp.toString();
   };
   const navigate = useNavigate();
 

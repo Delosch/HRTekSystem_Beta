@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLoaderData, Form, useActionData, useNavigation, useSearchParams } from "@remix-run/react";
+import { useLoaderData, Form, useActionData, useNavigation } from "@remix-run/react";
 import { LoaderFunction, ActionFunction, redirect, json } from "@remix-run/node";
 import {
     Download,
@@ -14,144 +14,40 @@ import {
     ArrowRight
 } from "lucide-react";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
+import { requireUserSession } from "~/lib/session.server";
+import { getEnhancedUser } from "~/utils/user.server";
+import { getPaymentRecord, submitPaymentProof, PaymentMethod, PaymentRecord } from "~/models/payment.model.server";
+import { uploadToS3 } from "~/lib/s3.server";
 import { InvoiceTemplate } from "~/components/InvoiceTemplate";
-import type { PaymentMethod, PaymentRecord } from "~/models/payment.model.server";
 
 interface LoaderData {
     payment: PaymentRecord;
     companyName: string;
-    companyAddress?: string;
-    companyGSTIN?: string;
-    billingContact?: {
-        name: string;
-        email: string;
-        phone: string;
-        address?: string;
-        city?: string;
-        state?: string;
-        pincode?: string;
-        gstin?: string;
-    };
     user: any;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-    const { getEnhancedUser } = await import("~/utils/user.server");
     const user = await getEnhancedUser(request);
     if (!user) return redirect('/auth');
 
     const invoiceId = params.invoiceId;
     if (!invoiceId) return redirect('/cartDashboard');
 
-    const { getPaymentRecord, getCompanyPayments, normalizeEngineName } = await import("~/models/payment.model.server");
     const payment = await getPaymentRecord(invoiceId, user.organisationId || "");
     if (!payment) return redirect('/cartDashboard');
 
-    console.log("🔍 [INVOICE LOADER] Loading invoice:", invoiceId);
-    console.log("🔍 [INVOICE LOADER] Payment status:", payment.status);
-    console.log("🔍 [INVOICE LOADER] Payment has installments:", Array.isArray(payment.installments), payment.installments?.length || 0);
-    console.log("🔍 [INVOICE LOADER] Payment hsnCode:", payment.hsnCode);
-
-    // Fetch the latest installment statuses from the request record
-    // (installment status updates go to the request record, not the invoice record)
-    try {
-        const companyPayments = await getCompanyPayments(user.organisationId || "");
-        const engineName = payment.engineName || payment.items?.[0]?.engineName || "";
-        console.log("🔍 [INVOICE LOADER] Engine name from payment:", engineName);
-        console.log("🔍 [INVOICE LOADER] Total company payments found:", companyPayments.length);
-
-        if (engineName) {
-            const cleanedName = engineName.replace(/ - Installment #\d+$/, "");
-            const normalizedEngineName = normalizeEngineName(cleanedName);
-            console.log("🔍 [INVOICE LOADER] Normalized engine name:", normalizedEngineName);
-            
-            // Log all request_based records for debugging
-            const allRequestBased = companyPayments.filter(p => p.workflowType === "request_based");
-            console.log("🔍 [INVOICE LOADER] Request-based records found:", allRequestBased.length);
-            allRequestBased.forEach((p, i) => {
-                console.log(`🔍 [INVOICE LOADER]   Request ${i}: engine="${p.engineName}", itemEngine="${p.items?.[0]?.engineName}", installments=${p.installments?.length || 0}, status="${p.status}", hsnCode="${p.hsnCode}"`);
-            });
-            
-            const requestRecords = companyPayments.filter(p => {
-                if (p.workflowType !== "request_based") return false;
-                if (p.status === "cleared") return false;
-                
-                const pEngineName = normalizeEngineName(p.engineName || "");
-                const pItemEngineName = normalizeEngineName(p.items?.[0]?.engineName || "");
-                
-                const match = pEngineName === normalizedEngineName || pItemEngineName === normalizedEngineName;
-                console.log(`🔍 [INVOICE LOADER]   Comparing: "${pEngineName}" or "${pItemEngineName}" === "${normalizedEngineName}" => ${match}`);
-                return match;
-            }).sort((a, b) => {
-                // Prioritize approved records
-                if (a.status === 'request_approved' && b.status !== 'request_approved') return -1;
-                if (b.status === 'request_approved' && a.status !== 'request_approved') return 1;
-                return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime();
-            });
-            
-            console.log("🔍 [INVOICE LOADER] Matching request records:", requestRecords.length);
-            const requestRecord = requestRecords[0];
-
-            if (requestRecord && Array.isArray(requestRecord.installments)) {
-                console.log("🔍 [INVOICE LOADER] ✅ Found request record with", requestRecord.installments.length, "installments");
-                requestRecord.installments.forEach((inst: any) => {
-                    console.log(`🔍 [INVOICE LOADER]   Inst ${inst.installmentNumber}: ${inst.percentage}%, status=${inst.status}, splitDetails=${inst.splitDetails?.length || 0}`);
-                });
-                
-                if (Array.isArray(payment.installments)) {
-                    console.log("🔍 [INVOICE LOADER] Merging into existing payment installments");
-                    payment.installments = payment.installments.map(inst => {
-                        const latestInst = requestRecord.installments!.find(
-                            (ri: any) => ri.installmentNumber === inst.installmentNumber
-                        );
-                        if (latestInst) {
-                            return { ...inst, status: latestInst.status || inst.status, splitDetails: latestInst.splitDetails || inst.splitDetails };
-                        }
-                        return inst;
-                    });
-                } else {
-                    console.log("🔍 [INVOICE LOADER] Payment had NO installments - copying from request record");
-                    payment.installments = requestRecord.installments;
-                    payment.paymentType = requestRecord.paymentType || 'milestone';
-                }
-            } else {
-                console.log("🔍 [INVOICE LOADER] ❌ No matching request record found with installments");
-            }
-
-            // Also grab HSN code from the request record if the payment doesn't have one
-            if (!payment.hsnCode && requestRecord?.hsnCode) {
-                console.log("🔍 [INVOICE LOADER] Copying hsnCode from request:", requestRecord.hsnCode);
-                payment.hsnCode = requestRecord.hsnCode;
-            }
-        } else {
-            console.log("🔍 [INVOICE LOADER] ⚠️ No engine name found on payment, skipping request record lookup");
-        }
-    } catch (err) {
-        console.error("🔍 [INVOICE LOADER] ❌ ERROR in installment merge:", err);
-    }
-
-    console.log("🔍 [INVOICE LOADER] FINAL payment.installments:", payment.installments?.length || 0);
-    console.log("🔍 [INVOICE LOADER] FINAL payment.hsnCode:", payment.hsnCode);
-
-    // Fetch company details to get company name and billing info
+    // Fetch company details to get company name
     const { getCompanyProfile } = await import("~/models/company.model.server");
-    const companyProfile = await getCompanyProfile(user.organisationId || "").catch((err) => {
-        console.warn("Unable to load company profile for invoice page", err);
-        return null;
-    });
+    const companyProfile = await getCompanyProfile(user.organisationId || "");
 
     return json<LoaderData>({
         payment,
         companyName: companyProfile?.company_name || "Your Company",
-        companyAddress: companyProfile?.address || undefined,
-        companyGSTIN: companyProfile?.govid_type === "GST" ? companyProfile?.pan_gst_adhaar : undefined,
-        billingContact: payment.billingContact || undefined,
         user
     });
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-    const { requireUserSession } = await import("~/lib/session.server");
     const user = await requireUserSession(request);
     if (!user) return redirect('/auth');
 
@@ -165,13 +61,7 @@ export const action: ActionFunction = async ({ request, params }) => {
             const transactionId = formData.get("transactionId") as string;
             const paymentDate = formData.get("paymentDate") as string;
             const paymentNotes = formData.get("paymentNotes") as string;
-            const proofFileEntry = formData.get("proofFile");
-
-            if (!(proofFileEntry instanceof File)) {
-                return json({ error: "Please upload payment proof" }, { status: 400 });
-            }
-
-            const proofFile = proofFileEntry;
+            const proofFile = formData.get("proofFile") as File;
 
             console.log("📝 Payment submission:", { invoiceId, method: paymentMethod, fileSize: proofFile?.size });
 
@@ -182,7 +72,6 @@ export const action: ActionFunction = async ({ request, params }) => {
             // Upload proof to S3
             console.log("☁️ Uploading to S3...");
             const sanitizedFileName = proofFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-            const { uploadToS3 } = await import("~/lib/s3.server");
             const proofUrl = await uploadToS3(
                 proofFile,
                 `payment-proofs/${user.organisationId}/${invoiceId}/${sanitizedFileName}`
@@ -190,7 +79,6 @@ export const action: ActionFunction = async ({ request, params }) => {
             console.log("✅ S3 upload done:", proofUrl);
 
             console.log("💾 Saving to DynamoDB...");
-            const { submitPaymentProof } = await import("~/models/payment.model.server");
             await submitPaymentProof(invoiceId, user.organisationId || "", {
                 paymentMethod,
                 transactionId: transactionId || undefined,
@@ -205,17 +93,10 @@ export const action: ActionFunction = async ({ request, params }) => {
             await clearCart(user.organisationId || "");
             console.log("✅ Cart cleared after payment proof submission");
 
-            try {
-                const { notifyAdmin } = await import("~/services/admin.notifier.server");
-                await notifyAdmin(
-                    "Payment Proof Submitted",
-                    `A payment proof has been submitted for verification.\n\nCompany: ${user.organisationId || "Unknown"}\nInvoice: ${invoiceId}\nPayment Method: ${paymentMethod}\nTransaction ID: ${transactionId || "N/A"}\nPayment Date: ${paymentDate}\nAmount: ${payment.totalAmount}`
-                );
-            } catch (notifierError) {
-                console.warn("Failed to notify admin about payment proof submission:", notifierError);
-            }
-
-            return redirect(`/payment/invoice/${invoiceId}?proofSubmitted=1`);
+            return json({
+                success: true,
+                message: "Payment proof submitted successfully! Our team will verify it within 1-2 business days."
+            });
         } catch (error) {
             console.error("❌ Payment submission error:", error);
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -228,40 +109,20 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 export default function InvoicePage() {
-    const { payment, companyName, companyAddress, companyGSTIN, billingContact, user } = useLoaderData<LoaderData>();
+    const { payment, companyName, user } = useLoaderData<LoaderData>();
     const actionData = useActionData<{ success?: boolean; message?: string; error?: string }>();
     const navigation = useNavigation();
-    const [searchParams] = useSearchParams();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const isSubmitting = navigation.state === "submitting";
-    const proofSubmitted = searchParams.get("proofSubmitted") === "1";
 
     useEffect(() => {
-        if (actionData?.success || proofSubmitted) {
+        if (actionData?.success) {
             setShowSuccessModal(true);
         }
-    }, [actionData, proofSubmitted]);
-
-    useEffect(() => {
-        if (!proofSubmitted) return;
-
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.delete("proofSubmitted");
-        window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
-    }, [proofSubmitted]);
-
-    useEffect(() => {
-        if (!actionData?.error) return;
-
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        const errorBanner = document.querySelector(".success-error-messages");
-        if (errorBanner instanceof HTMLElement) {
-            errorBanner.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    }, [actionData?.error]);
+    }, [actionData]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -299,189 +160,13 @@ export default function InvoicePage() {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media print {
-                    @page {
-                        size: A4;
-                        margin: 12mm 10mm;
-                    }
-
-                    /* Reset everything */
-                    html, body {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        background: white !important;
-                        font-size: 11px !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-
-                    /* Hide all non-invoice elements */
-                    nav, .sidebar, button, .print\\:hidden, footer,
-                    #payment-upload-form, #payment-methods-section,
-                    .success-error-messages, [class*="print:hidden"] {
-                        display: none !important;
-                    }
-
-                    /* Reset the flex layout so sidebar margin is removed */
-                    .flex.flex-col.md\\:flex-row.min-h-screen {
-                        display: block !important;
-                        min-height: auto !important;
-                        background: white !important;
-                    }
-
-                    /* Remove sidebar margin and padding from main */
-                    main {
-                        margin: 0 !important;
-                        margin-left: 0 !important;
-                        padding: 0 !important;
-                        width: 100% !important;
-                    }
-
-                    /* Reset max-width container */
-                    .max-w-5xl {
-                        max-width: 100% !important;
-                        width: 100% !important;
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-
-                    .space-y-6 > :not(#invoice-content) {
-                        display: none !important;
-                    }
-                    .space-y-6 > #invoice-content {
-                        display: block !important;
-                    }
-
-                    /* Invoice content card - remove decorative styles */
-                    #invoice-content {
-                        border: none !important;
-                        box-shadow: none !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        width: 100% !important;
-                        border-radius: 0 !important;
-                        background: white !important;
-                    }
-
-                    /* Invoice badge at the top */
-                    #invoice-content > div > .mb-4 {
-                        margin-bottom: 8px !important;
-                    }
-
-                    /* InvoiceTemplate root container */
-                    #invoice-content .max-w-5xl {
-                        max-width: 100% !important;
-                        border: 1px solid #e2e8f0 !important;
-                        box-shadow: none !important;
-                        display: block !important;
-                    }
-
-                    /* Inner padding for the invoice template */
-                    #invoice-content .px-8.py-6 {
-                        padding: 20px 24px !important;
-                    }
-
-                    /* Header section: ensure side-by-side layout */
-                    #invoice-content .flex.flex-col.xl\\:flex-row {
-                        display: flex !important;
-                        flex-direction: row !important;
-                        justify-content: space-between !important;
-                    }
-
-                    /* Logo image */
-                    #invoice-content img {
-                        max-height: 48px !important;
-                    }
-
-                    /* Rounded cards in Bill To / Payment Details - flatten for print */
-                    #invoice-content .rounded-3xl {
-                        border-radius: 8px !important;
-                        padding: 12px 16px !important;
-                        page-break-inside: avoid;
-                    }
-
-                    /* Grid columns - force side-by-side */
-                    #invoice-content .grid.grid-cols-1.lg\\:grid-cols-2,
-                    #invoice-content .grid.grid-cols-1.md\\:grid-cols-2 {
-                        display: grid !important;
-                        grid-template-columns: 1fr 1fr !important;
-                        gap: 16px !important;
-                    }
-
-                    /* Table styling for print */
-                    #invoice-content table {
-                        width: 100% !important;
-                        border-collapse: collapse !important;
-                        page-break-inside: avoid;
-                    }
-
-                    #invoice-content thead tr {
-                        background-color: #f1f5f9 !important;
-                    }
-
-                    #invoice-content th, #invoice-content td {
-                        padding: 8px 12px !important;
-                        font-size: 10px !important;
-                    }
-
-                    #invoice-content tbody tr {
-                        background-color: white !important;
-                    }
-
-                    /* Background colors must be preserved */
-                    .bg-slate-100, .bg-slate-50 {
-                        background-color: #f8fafc !important;
-                    }
-
-                    /* Font sizes for print */
-                    #invoice-content h1 {
-                        font-size: 18px !important;
-                    }
-
-                    #invoice-content .text-3xl {
-                        font-size: 20px !important;
-                    }
-
-                    #invoice-content .text-2xl {
-                        font-size: 16px !important;
-                    }
-
-                    #invoice-content .text-lg {
-                        font-size: 13px !important;
-                    }
-
-                    /* Prevent page breaks inside important sections */
-                    #invoice-content > div {
-                        page-break-inside: avoid;
-                    }
-
-                    /* Ensure total summary and terms don't break across pages */
-                    #invoice-content .mb-10,
-                    #invoice-content .pb-10 {
-                        margin-bottom: 16px !important;
-                        padding-bottom: 16px !important;
-                        page-break-inside: avoid;
-                    }
-
-                    /* Signature box */
-                    #invoice-content .h-24 {
-                        height: 60px !important;
-                        border-radius: 8px !important;
-                    }
-
-                    /* Footer text */
-                    #invoice-content .pt-8 {
-                        padding-top: 12px !important;
-                    }
-
-                    /* Hide the locked overlay in print */
-                    #invoice-content .absolute.inset-0 {
-                        display: none !important;
-                    }
-
-                    /* Hide rejection reason in print */
-                    #invoice-content .bg-red-50 {
-                        display: none !important;
-                    }
+                    @page { margin: 0; size: auto; }
+                    body { margin: 0; padding: 0 !important; background: white !important; }
+                    nav, .sidebar, button, .print-hidden, footer, #payment-upload-form, #payment-methods-section, .success-error-messages { display: none !important; }
+                    main { margin: 0 !important; padding: 0 !important; width: 100% !important; position: absolute; left: 0; top: 0; }
+                    .max-w-5xl { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+                    #invoice-content { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 }
             `}} />
 
@@ -506,7 +191,7 @@ export default function InvoicePage() {
                     {/* ── SECTION 1: Invoice Card ── */}
                     <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 relative print:shadow-none print:border-none print:m-0 print:p-0" id="invoice-content">
                         {/* Locked Overlay */}
-                        {payment.status === "payment_rejected" && (
+                        {payment.status !== "payment_verified" && (
                             <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center border-4 border-slate-100">
                                 <div className="text-center p-8 max-w-md">
                                     <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200">
@@ -531,34 +216,19 @@ export default function InvoicePage() {
                         )}
 
                         {/* Invoice Content */}
-                        <div>
-                            <div className="mb-4 flex items-center gap-2">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${payment.status === "payment_verified" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-indigo-50 text-indigo-700 border-indigo-200"}`}>
-                                    {payment.status === "payment_verified" ? "FINAL INVOICE" : "PROFORMA INVOICE"}
-                                </span>
-                            </div>
+                        <div className={payment.status !== "payment_verified" ? "blur-sm pointer-events-none select-none" : ""}>
                             <InvoiceTemplate
-                                invoiceLabel={payment.status === "payment_verified" ? "Final Invoice" : "Proforma Invoice"}
-                                invoiceNumber={payment.status === "payment_verified" ? (payment.finalInvoiceNumber || payment.invoiceNumber) : (payment.proformaInvoiceNumber || payment.invoiceNumber)}
-                                invoiceDate={payment.status === "payment_verified" ? (payment.finalInvoiceDate || payment.invoiceDate) : payment.invoiceDate}
-                                dueDate={payment.dueDate || payment.invoiceDate}
+                                invoiceNumber={payment.invoiceNumber}
+                                invoiceDate={payment.invoiceDate}
+                                dueDate={payment.dueDate}
                                 companyName={companyName}
-                                companyAddress={companyAddress}
-                                companyGSTIN={companyGSTIN}
-                                billingContact={billingContact}
-                                items={payment.items || []}
-                                subtotal={payment.subtotal ?? 0}
-                                gstAmount={payment.gstAmount ?? 0}
-                                cgst={payment.cgst}
-                                sgst={payment.sgst}
-                                igst={payment.igst}
-                                totalAmount={payment.totalAmount ?? 0}
+                                companyAddress={undefined}
+                                companyGSTIN={undefined}
+                                items={payment.items}
+                                subtotal={payment.subtotal}
+                                gstAmount={payment.gstAmount}
+                                totalAmount={payment.totalAmount}
                                 paymentMethod={payment.paymentMethod}
-                                hsnCode={payment.hsnCode}
-                                paymentType={payment.paymentType}
-                                paidAmount={payment.paidAmount ?? 0}
-                                balanceDue={payment.balanceDue ?? 0}
-                                installments={payment.installments}
                             />
                             {payment.status === "payment_rejected" && payment.rejectionReason && (
                                 <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -579,6 +249,10 @@ export default function InvoicePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="bg-white rounded-lg p-6 shadow-md border border-blue-100">
                                         <h4 className="font-semibold text-gray-900 mb-3 text-center">Scan & Pay via UPI</h4>
+                                        <div className="flex flex-col items-center">
+                                            <div className="bg-white p-4 rounded-lg border-2 border-blue-200 mb-3">
+                                                <img src="/assets/payment/upi-qr-code.jpg" alt="UPI QR Code" className="w-48 h-48 object-contain" />
+                                            </div>
                                             <div className="text-center mb-3">
                                                 <p className="text-xs text-gray-600 mb-1">UPI ID:</p>
                                                 <p className="text-sm font-mono font-semibold text-gray-900 bg-gray-50 px-3 py-1 rounded">deloschtechnologiesprivatelimited@sbi</p>
@@ -589,6 +263,7 @@ export default function InvoicePage() {
                                                 <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">Paytm</span>
                                                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">BHIM</span>
                                             </div>
+                                        </div>
                                     </div>
                                     <div className="bg-white rounded-lg p-6 shadow-md border border-blue-100">
                                         <h4 className="font-semibold text-gray-900 mb-4">Bank Transfer / NEFT / RTGS</h4>
@@ -796,23 +471,6 @@ export default function InvoicePage() {
                     </div>
                 </div>
             )}
-        </div>
-    );
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-            <div className="max-w-xl w-full rounded-3xl border border-gray-200 bg-white p-10 shadow-xl">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">Invoice page error</h1>
-                <p className="text-gray-600 mb-4">An unexpected error occurred while loading the invoice.</p>
-                <div className="rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-red-800">
-                    {error.message}
-                </div>
-                <a href="/cartDashboard" className="mt-6 inline-flex items-center justify-center px-5 py-3 bg-blue-600 text-white rounded-xl shadow-sm hover:bg-blue-700">
-                    Go back to cart
-                </a>
-            </div>
         </div>
     );
 }

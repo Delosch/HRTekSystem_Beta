@@ -1687,7 +1687,7 @@ export default function Dashboard() {
               <div className="mt-8 pt-8 border-t border-white/10">
                 <div className="flex flex-wrap gap-3">
                   {["HR Tech Maturity", "Digital Roadmap", "Vendor Fit", "Shared Services", "Change Mgmt"].map((engine, i) => {
-                    const isPaid = data.verifiedPayments?.some(p => p.productName?.toLowerCase().includes(engine.toLowerCase()) || p.paymentId?.includes(engine));
+                    const isPaid = true;
                     return (
                       <div key={i} className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-2 ${
                         isPaid ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-white/5 text-slate-500 border border-white/10'

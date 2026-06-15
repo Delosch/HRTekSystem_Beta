@@ -202,8 +202,34 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const companyId = user.organisationId || "";
 
   const url = new URL(request.url);
-  const promptId = url.searchParams.get("promptId") || "digital_maturity";
   const engine = url.searchParams.get("engine") || "Profiling Assessment";
+  let promptId = url.searchParams.get("promptId");
+
+  // Robust mapping fallback for promptId based on engine name
+  if (!promptId || promptId === "digital_maturity" || promptId === "shared_services" || promptId === "digital_roadmap") {
+    switch (engine) {
+      case "Shared Service Designer":
+        promptId = "shared_service";
+        break;
+      case "HR Transformation Roadmap Generator":
+        promptId = "digital_transformation";
+        break;
+      case "HR Technology Maturity Analysis":
+      case "HR Tech Maturity Analysis":
+        promptId = "tech_maturity";
+        break;
+      case "Intelligent Change Management":
+      case "Change Management Readiness":
+        promptId = "change_management";
+        break;
+      case "HCM Vendor Fit Engine":
+        promptId = "vendor_fit";
+        break;
+      default:
+        promptId = promptId || "digital_maturity";
+    }
+  }
+
   const skipQuestions = url.searchParams.get("skipQuestions") === "true";
 
   const currentStatus = getAIStatus(companyId);
@@ -216,8 +242,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Check if report already exists in DB
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
   const existingReport = await getLatestAnalysis(companyId, engine);
+  const isReportReady = existingReport && existingReport.result?.status !== "pending_generation";
 
-  console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}`);
+  console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}, Ready: ${isReportReady}`);
 
   // Trigger generation only when needed:
   // 1) Forced regeneration requested
@@ -228,8 +255,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const shouldGenerate =
     forceRegeneration ||
     currentStatus === "error" ||
-    (currentStatus === "ready" && !existingReport) ||
-    (!currentStatus && !existingReport);
+    (currentStatus === "ready" && !isReportReady) ||
+    (!currentStatus && !isReportReady);
 
   if (shouldGenerate) {
     const { generate } = await import("~/lib/processor.genAi");
@@ -243,7 +270,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       setAIStatus(companyId, "error");
     });
   } else {
-    console.log(`[Intermediate Loader] ⏭️ Skipping generation (Status: ${currentStatus}, Report exists: ${!!existingReport})`);
+    console.log(`[Intermediate Loader] ⏭️ Skipping generation (Status: ${currentStatus}, Report exists and ready: ${isReportReady})`);
   }
 
   return json({
@@ -253,7 +280,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     promptId,
     skipQuestions,
     initialStatus: currentStatus,
-    hasExistingReport: !!existingReport
+    hasExistingReport: isReportReady
   });
 }
 
@@ -379,7 +406,7 @@ export default function Intermediate() {
               method: 'HEAD'
             });
 
-            if (reportResponse.ok || reportResponse.status === 200) {
+            if (reportResponse.status === 200) {
               console.log(`[Polling ${currentElapsed}s] ✅ Report route available`);
               setAiReady(true);
               if (pollRef.current) clearInterval(pollRef.current);
@@ -411,7 +438,7 @@ export default function Intermediate() {
                   method: 'HEAD' // Just check if it exists, don't load full content
                 });
 
-                if (reportResponse.ok || reportResponse.status === 200) {
+                if (reportResponse.status === 200) {
                   console.log(`[Polling ${currentElapsed}s] ✅ Report confirmed in database!`);
                   setAiReady(true);
                   if (pollRef.current) clearInterval(pollRef.current);

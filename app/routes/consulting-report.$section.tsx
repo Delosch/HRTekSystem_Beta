@@ -1,8 +1,10 @@
-import { json, redirect, type LoaderFunctionArgs, type MetaFunction } from "@remix-run/node";
+import { json, redirect, type LoaderFunctionArgs, type MetaFunction, type ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { getEnhancedUser } from "~/utils/user.server";
 import { getLatestAnalysis } from "~/utils/question.utils";
-import { getCompanyPayments } from "~/models/payment.model.server";
+import { requireUserSession } from "~/lib/session.server";
+import { getCompanyProfile } from "~/models/company.model.server";
+import { getAnswerSheetByAssessmentName, getLatestQuestion } from "~/utils/question.utils";
 import Sidebar from "~/components/DashboardComponents/Sidebar";
 import { motion } from "framer-motion";
 import {
@@ -20,6 +22,15 @@ import {
   Calendar,
 } from "lucide-react";
 
+// Import engine-specific report components
+import ChangeManagementReport from "~/components/reports/ChangeManagementReport";
+import RoadmapReport from "~/components/reports/RoadmapReport";
+import SharedServicesReport from "~/components/reports/SharedServicesReport";
+import VendorFitReportDashboard from "~/components/reports/VendorFitReportDashboard";
+import TechMaturityReport from "~/components/reports/TechMaturityReport";
+import DigitalMaturityReport from "~/components/reports/DigitalMaturityReport";
+import ProfilingReport from "~/components/reports/ProfilingReport";
+
 export const meta: MetaFunction<typeof loader> = ({ params }) => [
   { title: `${decodeURIComponent(params.section || "Report")} | HRTek System` },
 ];
@@ -29,29 +40,209 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   if (!user || !user.organisationId) return redirect("/auth");
 
   const section = decodeURIComponent(params.section || "");
+  const url = new URL(request.url);
 
-  // Gate: payment must be verified (admin users bypass)
-  const isAdmin = (user as any).role === "ADMIN";
-  if (!isAdmin) {
-    const payments = await getCompanyPayments(user.organisationId);
-    const isVerified = payments.some(
-      (p) =>
-        p.status === "payment_verified" &&
-        p.items?.some((item: any) => item.engineName?.trim() === section)
+  // BYPASS: Payment gate disabled — all engines are free
+  // const isAdmin = (user as any).role === "ADMIN";
+  // if (!isAdmin) {
+  //   const payments = await getCompanyPayments(user.organisationId);
+  //   const isVerified = payments.some(
+  //     (p) =>
+  //       p.status === "payment_verified" &&
+  //       p.items?.some((item: any) => item.engineName?.trim() === section)
+  //   );
+  //   if (!isVerified) {
+  //     return redirect("/reports");
+  //   }
+  // }
+
+  const analysis = await getLatestAnalysis(user.organisationId, section);
+  const isReportReady = analysis && analysis.result?.status !== "pending_generation";
+
+  console.log(`[Consulting Report Loader] Section: ${section}, Data found: ${!!analysis}, Ready: ${isReportReady}`);
+
+  // If no report is ready, handle appropriately
+  if (!isReportReady) {
+    // Polling check from intermediate.tsx — return 202 so polling doesn't crash
+    if (url.searchParams.get("verify") === "true") {
+      return new Response(null, { status: 202 });
+    }
+
+    // Redirect to intermediate to trigger generation
+    const promptMap: Record<string, string> = {
+      "Profiling Assessment": "digital_maturity",
+      "Digital Maturity Assessment": "digital_maturity",
+      "HR Technology Maturity Analysis": "tech_maturity",
+      "HR Tech Maturity Analysis": "tech_maturity",
+      "Shared Service Designer": "shared_service",
+      "Intelligent Change Management": "change_management",
+      "Change Management Readiness": "change_management",
+      "HCM Vendor Fit Engine": "vendor_fit",
+      "HR Transformation Roadmap Generator": "digital_transformation",
+    };
+
+    const promptId = promptMap[section] || "digital_maturity";
+    return redirect(
+      `/intermediate?engine=${encodeURIComponent(section)}&promptId=${encodeURIComponent(promptId)}&skipQuestions=true`
     );
-    if (!isVerified) {
-      return redirect("/reports");
+  }
+
+  // Fetch company info for branding
+  const company_info = await getCompanyProfile(user.organisationId);
+  const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client";
+
+  // Also fetch raw responses and questions (best-effort; should not fail report rendering)
+  let responses = null;
+  let questions = null;
+  try {
+    responses = await getAnswerSheetByAssessmentName(user.organisationId, section);
+    questions = await getLatestQuestion(section);
+  } catch (auxError) {
+    console.error("[Consulting Report Loader] Failed to fetch responses/questions:", auxError);
+  }
+
+  return json({ user, section, analysis, brand_name, companyLogo: company_info?.logo_url, responses, questions });
+}
+
+// --- Action (for AI report generation from engine page) ---
+export async function action({ request, params }: ActionFunctionArgs) {
+  const user = await requireUserSession(request);
+  if (!user || !user.organisationId) return json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  const engineId = decodeURIComponent(params.section || "");
+
+  if (body.intent === "generate_report") {
+    console.log(`[Consulting Report Action] Generating report for: ${engineId}`);
+
+    const engineTypeMap: Record<string, string> = {
+      "Intelligent Change Management": "changeManagement",
+      "Shared Service Designer": "sharedServices",
+      "HCM Vendor Fit Engine": "vendorFit",
+      "HR Transformation Roadmap Generator": "sharedServices",
+      "HR Technology Maturity Analysis": "sharedServices",
+      "HR Tech Maturity Analysis": "sharedServices",
+    };
+
+    const engineType = engineTypeMap[engineId] || "sharedServices";
+
+    const aggregatedData = {
+      companyId: user.organisationId,
+      timestamp: new Date().toISOString(),
+      engines: {
+        [engineType]: {
+          engineName: engineId,
+          progress: 100,
+          responses: body.answers || {},
+          scores: {},
+          aiAnalysis: {},
+        },
+      },
+      completedEnginesCount: 1,
+      totalEngines: 1,
+    };
+
+    try {
+      const { generateHTIAdvisory } = await import("~/lib/hti.deepseek");
+      const { saveAdvisoryReport } = await import("~/models/hti.model.server");
+      const advisory = await generateHTIAdvisory(aggregatedData as any);
+      await saveAdvisoryReport(user.organisationId, user.userId, advisory, aggregatedData as any);
+      return json({ success: true, advisory });
+    } catch (error) {
+      console.error("AI Generation Error in Consulting Report:", error);
+      return json({ error: "Failed to generate AI report" }, { status: 500 });
     }
   }
 
-  const analysis = await getLatestAnalysis(user.organisationId, section);
-
-  return json({ user, section, analysis });
+  return json({ error: "Invalid intent" }, { status: 400 });
 }
 
 export default function ConsultingReportPage() {
-  const { user, section, analysis } = useLoaderData<typeof loader>();
+  const { user, section, analysis, brand_name, companyLogo, responses, questions } =
+    useLoaderData<typeof loader>();
 
+  // --- Engine-specific report components ---
+  if (section === "Profiling Assessment") {
+    return (
+      <ProfilingReport
+        data={analysis}
+        user={user}
+        brandName={brand_name || "Your Organization"}
+        assessmentId={section}
+      />
+    );
+  }
+  if (section === "Intelligent Change Management") {
+    return (
+      <ChangeManagementReport
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        companyLogo={companyLogo}
+        assessmentId={section}
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+  if (section === "HR Transformation Roadmap Generator") {
+    return (
+      <RoadmapReport
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        companyLogo={companyLogo}
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+  if (section === "Shared Service Designer") {
+    return (
+      <SharedServicesReport
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        companyLogo={companyLogo}
+        assessmentId={section}
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+  if (section === "HCM Vendor Fit Engine") {
+    return (
+      <VendorFitReportDashboard
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        companyLogo={companyLogo}
+        assessmentId={section}
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+  if (section === "HR Technology Maturity Analysis" || section === "HR Tech Maturity Analysis") {
+    return (
+      <TechMaturityReport
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+  if (section === "Digital Maturity Assessment") {
+    return (
+      <DigitalMaturityReport
+        data={analysis}
+        brandName={brand_name || "Your Organization"}
+        assessmentId={section}
+        reportType="detailed"
+        responses={responses}
+        questions={questions}
+      />
+    );
+  }
+
+  // --- Default: Inline report view (original Apr 18 layout) ---
   const report = analysis?.result as any;
   const generatedAt = analysis?.createdAt
     ? new Date(analysis.createdAt).toLocaleDateString("en-IN", {

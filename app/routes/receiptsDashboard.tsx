@@ -235,27 +235,39 @@ export default function ReceiptDashboard() {
                           </div>
                         )}
 
-
+                        {/* Payment Proof */}
+                        {payment.paymentProofUrl && (
+                          <div>
+                            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Payment Proof</label>
+                            <a
+                              href={payment.paymentProofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                            >
+                              <FileText className="w-4 h-4" />
+                              View Receipt
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3">
+                    <div className="mt-6 pt-4 border-t border-gray-200 flex gap-3">
+                      <button
+                        onClick={() => window.print()}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download Receipt
+                      </button>
                       <Link
                         to={`/payment/invoice/${payment.invoiceId}`}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium"
                       >
                         <Receipt className="w-4 h-4" />
                         View Invoice
-                      </Link>
-                      <Link
-                        to={`/payment/invoice/${payment.invoiceId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
-                      >
-                        <Download className="w-4 h-4" />
-                        Open Invoice
                       </Link>
                     </div>
                   </div>

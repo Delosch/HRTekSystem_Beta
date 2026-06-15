@@ -1,7 +1,7 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
+import { useLoaderData, Link, useFetcher } from "@remix-run/react";
 import { requireAdminSession } from "~/lib/session.server";
-import { getUserProfile } from "~/models/user.model.server";
+import { getUserProfile, approveUser, rejectUser } from "~/models/user.model.server";
 import { 
     UserIcon, 
     AtSymbolIcon, 
@@ -15,6 +15,8 @@ import {
     EnvelopeIcon
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     await requireAdminSession(request);
@@ -33,8 +35,59 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     return json({ user });
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+    await requireAdminSession(request);
+    const formData = await request.formData();
+    const intent = formData.get("intent") as string;
+    const userId = formData.get("userId") as string;
+    const reason = formData.get("reason") as string | undefined;
+
+    if (!userId) return json({ error: "Missing userId" }, { status: 400 });
+
+    try {
+        if (intent === "approve") {
+            await approveUser(userId);
+            return json({ success: true, message: "User approved and notified." });
+        }
+        if (intent === "reject") {
+            await rejectUser(userId, reason || undefined);
+            return json({ success: true, message: "User rejected and notified." });
+        }
+        return json({ error: "Invalid intent" }, { status: 400 });
+    } catch (err: any) {
+        return json({ error: err.message || "Action failed" }, { status: 500 });
+    }
+}
+
 export default function UserDetail() {
     const { user } = useLoaderData<typeof loader>();
+    const fetcher = useFetcher<any>();
+
+    const handleApprove = (userId: string) => {
+        if (!confirm("Are you sure you want to approve this user?")) return;
+        const fd = new FormData();
+        fd.set("intent", "approve");
+        fd.set("userId", userId);
+        fetcher.submit(fd, { method: "post" });
+    };
+
+    const handleReject = (user: any) => {
+        const reason = prompt(`Enter rejection reason for ${user.first_name} ${user.last_name} (optional):`);
+        if (reason === null) return;
+        const fd = new FormData();
+        fd.set("intent", "reject");
+        fd.set("userId", user.pk.replace("USER#", ""));
+        fd.set("reason", reason);
+        fetcher.submit(fd, { method: "post" });
+    };
+
+    useEffect(() => {
+        if (fetcher.data?.success) {
+            toast.success(fetcher.data.message);
+        } else if (fetcher.data?.error) {
+            toast.error(fetcher.data.error);
+        }
+    }, [fetcher.data]);
 
     return (
         <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -54,6 +107,35 @@ export default function UserDetail() {
                     <span className="text-gray-900">User Profile</span>
                 </div>
             </div>
+
+            {/* Pending Approval Alert Banner */}
+            {user.onboardingStatus === "None" && (
+                <div className="bg-amber-50 border border-amber-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-amber-100/50 rounded-2xl text-amber-800">
+                            <UserIcon className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-900">Pending Approval</h3>
+                            <p className="text-sm text-slate-600">This user's account is currently awaiting security and registration approval.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => handleApprove(user.pk.replace("USER#", ""))}
+                            className="px-6 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 whitespace-nowrap"
+                        >
+                            Approve User
+                        </button>
+                        <button
+                            onClick={() => handleReject(user)}
+                            className="px-6 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 whitespace-nowrap"
+                        >
+                            Reject User
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Profile Header Card */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">

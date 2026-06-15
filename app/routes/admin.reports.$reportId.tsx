@@ -1,5 +1,6 @@
-import { json, LoaderFunction } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { json, redirect } from "@remix-run/node";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
+import { useLoaderData, Link, Form, useNavigation, useActionData } from "@remix-run/react";
 import { useState } from "react";
 import {
     ArrowLeftIcon, CheckCircleIcon, ClockIcon, BuildingOffice2Icon,
@@ -72,6 +73,34 @@ export const loader: LoaderFunction = async ({ params }) => {
     };
 
     return json({ report });
+};
+
+export const action: ActionFunction = async ({ request, params }) => {
+    const formData = await request.formData();
+    const intent = formData.get("intent") as string;
+    const companyId = formData.get("companyId") as string;
+    let reportId = params.reportId as string;
+    reportId = decodeURIComponent(reportId);
+
+    if (!reportId || !companyId || !intent) {
+        return json({ success: false, message: "Missing required fields" }, { status: 400 });
+    }
+
+    const { updateAnalysisStatus } = await import("~/utils/analysis.server");
+    const pk = `COMPANY#${companyId}`;
+    const status = intent === "approve" ? "approved" : "rejected";
+    const success = await updateAnalysisStatus(pk, reportId, status);
+
+    if (success && intent === "approve") {
+        try {
+            const { autoGenerateProposal } = await import("~/services/proposal.service.server");
+            await autoGenerateProposal(companyId);
+        } catch (err) {
+            console.error("Failed to trigger proposal generation:", err);
+        }
+    }
+
+    return json({ success, message: success ? `Report ${status} successfully` : "Failed to update status" });
 };
 
 // ─────────────────────────────────────────────
@@ -199,6 +228,9 @@ function PageDivider({ page, total }: { page: number; total: number }) {
 // ─────────────────────────────────────────────
 export default function AdminReportView() {
     const { report } = useLoaderData<{ report: ReportData }>();
+    const actionData = useActionData<{ success?: boolean; message?: string }>();
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting";
     const [isExporting, setIsExporting] = useState(false);
 
     const { execSummary, maturityAnalysis, dimScores, strategicInsights, detailedRecs, consultingReport, roadmap, dimDeepDives, investmentInd, readinessMetrics } = parseResult(report.result);
@@ -233,17 +265,68 @@ export default function AdminReportView() {
         }
     };
 
+    // Update badge when action completes
+    const effectiveStatus = (actionData?.success && navigation.state === "idle" && actionData?.message?.includes("approved"))
+        ? "approved"
+        : (actionData?.success && navigation.state === "idle" && actionData?.message?.includes("rejected"))
+            ? "rejected"
+            : report.status;
+    const effectiveBadge = statusBadgeProps[effectiveStatus] || statusBadgeProps.approved;
+
     return (
         <div className="min-h-screen bg-slate-50 print:bg-white">
             {/* Top Nav Bar — hidden on print */}
             <div className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm print:hidden">
+                {actionData?.success === false && (
+                    <div className="bg-rose-50 border-b border-rose-200 text-rose-700 px-6 py-2 flex items-center gap-2 text-sm font-bold">
+                        <XCircleIcon className="w-4 h-4 flex-shrink-0" />
+                        {actionData.message}
+                    </div>
+                )}
+                {actionData?.success === true && (
+                    <div className="bg-emerald-50 border-b border-emerald-200 text-emerald-700 px-6 py-2 flex items-center gap-2 text-sm font-bold">
+                        <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
+                        {actionData.message}
+                    </div>
+                )}
                 <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
                     <Link to="/admin/reports" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-bold text-sm transition-colors">
                         <ArrowLeftIcon className="w-4 h-4" />
                         Back to Reports
                     </Link>
                     <div className="flex items-center gap-2">
-                        <Badge text={statusBadge.label} variant={statusBadge.variant} />
+                        <Badge text={effectiveBadge.label} variant={effectiveBadge.variant} />
+
+                        {/* Approve / Reject — only when pending */}
+                        {(report.status === "pending" && effectiveStatus === "pending") && (
+                            <>
+                                <Form method="post">
+                                    <input type="hidden" name="intent" value="approve" />
+                                    <input type="hidden" name="companyId" value={report.companyId} />
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-50"
+                                    >
+                                        <CheckCircleIcon className="w-4 h-4" />
+                                        {isSubmitting ? "Approving…" : "Approve"}
+                                    </button>
+                                </Form>
+                                <Form method="post">
+                                    <input type="hidden" name="intent" value="reject" />
+                                    <input type="hidden" name="companyId" value={report.companyId} />
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 border border-rose-100 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+                                    >
+                                        <XCircleIcon className="w-4 h-4" />
+                                        Reject
+                                    </button>
+                                </Form>
+                            </>
+                        )}
+
                         <button
                             onClick={() => window.print()}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all"

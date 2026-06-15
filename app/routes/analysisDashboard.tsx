@@ -63,8 +63,8 @@ export const loader: LoaderFunction = async ({ request }) => {
   // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
   const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
-  const isPaid = isAdmin || paymentStatus.status === "paid";
-  const isPending = !isAdmin && paymentStatus.status === "pending";
+  const isPaid = true; // BYPASS: Force paid for testing (was: isAdmin || paymentStatus.status === "paid")
+  const isPending = false; // BYPASS: Force no pending for testing
   const hasReport = !!latestAnalysis;
 
   let recommendations = null;
@@ -128,13 +128,8 @@ export default function AnalysisDashboard() {
 
   const handleReportAction = () => {
     if (hasReport) {
-      if (isPaid) {
-        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
-      } else if (isPending || paymentStatus.status === "rejected") {
-        setIsStatusModalOpen(true);
-      } else {
-        navigate('/payment/checkout');
-      }
+      // BYPASS: Always navigate to report for testing (was: check isPaid/isPending)
+      navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
     } else {
       if (currentEngine.progress === 100) {
         navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
@@ -307,7 +302,6 @@ export default function AnalysisDashboard() {
                     param={ENGINE}
                   />
                   <button
-                    type="button"
                     onClick={handleReportAction}
                     className={`flex-1 px-6 py-3 font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl text-white ${isPaid && hasReport
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'

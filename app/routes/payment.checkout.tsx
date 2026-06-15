@@ -129,18 +129,8 @@ export const action: ActionFunction = async ({ request }) => {
             const companyDetails = await getCompanyProfile(user.organisationId || "");
 
             // Get billing contact from form data
-            const billingContactStr = formData.get("billingContact");
-            if (!billingContactStr || typeof billingContactStr !== "string") {
-                throw new Error("Billing details are missing or invalid.");
-            }
-
-            let billingContact;
-            try {
-                billingContact = JSON.parse(billingContactStr);
-            } catch (parseError) {
-                console.error("Invalid billing contact JSON:", parseError, billingContactStr);
-                throw new Error("Billing details could not be parsed. Please try again.");
-            }
+            const billingContactStr = formData.get("billingContact") as string;
+            const billingContact = billingContactStr ? JSON.parse(billingContactStr) : undefined;
 
             const invoice = await generateInvoice(
                 user.organisationId || "",
@@ -155,7 +145,7 @@ export const action: ActionFunction = async ({ request }) => {
             return redirect(`/payment/invoice/${invoice.invoiceId}`);
         } catch (error) {
             console.error("Error generating invoice:", error);
-            return json({ error: error instanceof Error ? error.message : "Failed to generate invoice" }, { status: 400 });
+            return json({ error: "Failed to generate invoice" }, { status: 500 });
         }
     }
 
@@ -188,7 +178,7 @@ export const action: ActionFunction = async ({ request }) => {
             return json({ success: true, message: "Payment proof submitted successfully" });
         } catch (error) {
             console.error("Error submitting payment proof:", error);
-            return json({ error: "Failed to submit payment proof" }, { status: 400 });
+            return json({ error: "Failed to submit payment proof" }, { status: 500 });
         }
     }
 
@@ -235,11 +225,6 @@ export default function PaymentCheckout() {
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-900">Complete Your Payment</h1>
                         <p className="text-gray-600 mt-2">Choose your preferred payment method and submit proof for verification</p>
-                        {actionData?.error && (
-                            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                                {actionData.error}
-                            </div>
-                        )}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -443,13 +428,11 @@ export default function PaymentCheckout() {
                         form.style.display = 'none';
 
                         const intentInput = document.createElement('input');
-                        intentInput.type = 'hidden';
                         intentInput.name = 'intent';
                         intentInput.value = 'generate_invoice';
                         form.appendChild(intentInput);
 
                         const billingInput = document.createElement('input');
-                        billingInput.type = 'hidden';
                         billingInput.name = 'billingContact';
                         billingInput.value = JSON.stringify(details);
                         form.appendChild(billingInput);

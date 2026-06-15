@@ -154,7 +154,7 @@ export default function RecommendationPage() {
   };
 
   const handleGoToCheckout = () => {
-    navigate("/cartDashboard");
+    navigate("/dashboard");
   };
 
   return (
@@ -269,7 +269,7 @@ export default function RecommendationPage() {
                 onClick={handleGoToCheckout}
                 className="rounded-lg border border-blue-600 bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
               >
-                No more engines, go to checkout
+                Return to Dashboard
               </button>
             </div>
           </section>

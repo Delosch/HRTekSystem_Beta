@@ -121,11 +121,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     const engineName = engineId.trim();
     const isFreeEngine = engineName === "Profiling Assessment";
 
-    // Check if any payment record for this engine is verified
-    const isPaid = isAdmin || isFreeEngine || allPayments.some((p: any) =>
-      p.status === "payment_verified" &&
-      p.items?.some((i: any) => i.engineName.trim() === engineId.trim())
-    );
+    // Check if any payment record for this engine is verified (forced to true)
+    const isPaid = true;
 
     // Check if any payment record for this engine is pending (submitted but not verified)
     const isPending = !isPaid && !isFreeEngine && allPayments.some((p: any) =>

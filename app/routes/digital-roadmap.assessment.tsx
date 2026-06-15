@@ -94,15 +94,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const user = await getEnhancedUser(request);
     if (!user) return redirect("/login");
 
-    if ((user as any).role !== "ADMIN") {
-        const access = await import("~/models/payment.model.server").then((mod) =>
-            mod.getEngineAccessStatus(user.organisationId, "HR Transformation Roadmap Generator")
-        );
-        if (!access.assessmentUnlocked) {
-            return redirect("/user-payment-dashboard");
-        }
-    }
-
     const engineData = await findEngineData(user.organisationId, "HR Transformation Roadmap Generator");
     const initialAnswers = engineData?.responses || {};
     const savedProgress = engineData?.progress || 0;

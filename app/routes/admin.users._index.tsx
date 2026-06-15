@@ -1,5 +1,5 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
+import { useLoaderData, Link, useFetcher } from "@remix-run/react";
 import { requireAdminSession } from "~/lib/session.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
@@ -18,6 +18,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+import { approveUser, rejectUser } from "~/models/user.model.server";
 
 const USER_CHART_DATA = [
     { name: 'Jan', newUsers: 40 },
@@ -67,9 +70,60 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 }
 
+export async function action({ request }: ActionFunctionArgs) {
+    await requireAdminSession(request);
+    const formData = await request.formData();
+    const intent = formData.get("intent") as string;
+    const userId = formData.get("userId") as string;
+    const reason = formData.get("reason") as string | undefined;
+
+    if (!userId) return json({ error: "Missing userId" }, { status: 400 });
+
+    try {
+        if (intent === "approve") {
+            await approveUser(userId);
+            return json({ success: true, message: "User approved and notified." });
+        }
+        if (intent === "reject") {
+            await rejectUser(userId, reason || undefined);
+            return json({ success: true, message: "User rejected and notified." });
+        }
+        return json({ error: "Invalid intent" }, { status: 400 });
+    } catch (err: any) {
+        return json({ error: err.message || "Action failed" }, { status: 500 });
+    }
+}
+
 export default function AdminUsers() {
     const data = useLoaderData<typeof loader>();
     const { users, totalCount, verifiedEmails, withOrg, verifiedPhones } = data;
+    const fetcher = useFetcher<any>();
+
+    const handleApprove = (userId: string) => {
+        if (!confirm("Are you sure you want to approve this user?")) return;
+        const fd = new FormData();
+        fd.set("intent", "approve");
+        fd.set("userId", userId);
+        fetcher.submit(fd, { method: "post" });
+    };
+
+    const handleReject = (user: any) => {
+        const reason = prompt(`Enter rejection reason for ${user.first_name} ${user.last_name} (optional):`);
+        if (reason === null) return;
+        const fd = new FormData();
+        fd.set("intent", "reject");
+        fd.set("userId", user.pk.replace("USER#", ""));
+        fd.set("reason", reason);
+        fetcher.submit(fd, { method: "post" });
+    };
+
+    useEffect(() => {
+        if (fetcher.data?.success) {
+            toast.success(fetcher.data.message);
+        } else if (fetcher.data?.error) {
+            toast.error(fetcher.data.error);
+        }
+    }, [fetcher.data]);
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 p-4 animate-in fade-in duration-700">
@@ -251,6 +305,22 @@ export default function AdminUsers() {
                                         </td>
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                {user.onboardingStatus === "None" && (
+                                                    <div className="flex items-center gap-1.5 mr-2">
+                                                        <button
+                                                            onClick={() => handleApprove(user.pk.replace("USER#", ""))}
+                                                            className="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl transition-all border border-emerald-100 active:scale-95"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleReject(user)}
+                                                            className="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl transition-all border border-red-100 active:scale-95"
+                                                        >
+                                                            Reject
+                                                        </button>
+                                                    </div>
+                                                )}
                                                 <Link
                                                     to={`/admin/users/${user.pk.replace("USER#", "")}`}
                                                     className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"

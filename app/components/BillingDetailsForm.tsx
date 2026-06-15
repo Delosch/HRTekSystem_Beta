@@ -12,10 +12,10 @@ export interface BillingContact {
     name: string;
     email: string;
     phone: string;
-    address: string;
-    city: string;
-    state: string;
-    pincode: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
     gstin?: string;
 }
 
@@ -56,14 +56,6 @@ export default function BillingDetailsForm({ onSubmit, onCancel, cartItems = [],
             newErrors.phone = "Phone is required";
         } else if (!/^\d{10}$/.test(billingDetails.phone.replace(/\D/g, ""))) {
             newErrors.phone = "Phone must be 10 digits";
-        }
-        if (!billingDetails.address.trim()) newErrors.address = "Address is required";
-        if (!billingDetails.city.trim()) newErrors.city = "City is required";
-        if (!billingDetails.state.trim()) newErrors.state = "State is required";
-        if (!billingDetails.pincode.trim()) {
-            newErrors.pincode = "Pincode is required";
-        } else if (!/^\d{6}$/.test(billingDetails.pincode)) {
-            newErrors.pincode = "Pincode must be 6 digits";
         }
 
         setErrors(newErrors);
@@ -246,16 +238,15 @@ export default function BillingDetailsForm({ onSubmit, onCancel, cartItems = [],
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     <MapPin className="w-4 h-4 inline mr-2" />
-                                    Address *
+                                    Address
                                 </label>
                                 <textarea
                                     value={billingDetails.address}
                                     onChange={(e) => setBillingDetails({ ...billingDetails, address: e.target.value })}
-                                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     rows={2}
                                     placeholder="Street address, building name, etc."
                                 />
-                                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
                             </div>
 
                             {/* City, State, Pincode */}
@@ -263,46 +254,40 @@ export default function BillingDetailsForm({ onSubmit, onCancel, cartItems = [],
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         <Building2 className="w-4 h-4 inline mr-2" />
-                                        City *
+                                        City
                                     </label>
                                     <input
                                         type="text"
                                         value={billingDetails.city}
                                         onChange={(e) => setBillingDetails({ ...billingDetails, city: e.target.value })}
-                                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         placeholder="Mumbai"
                                     />
-                                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
                                     <select
                                         value={billingDetails.state}
                                         onChange={(e) => setBillingDetails({ ...billingDetails, state: e.target.value })}
-                                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.state ? 'border-red-500' : 'border-gray-300'}`}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         {indianStates.map(state => (
                                             <option key={state} value={state}>{state}</option>
                                         ))}
                                     </select>
-                                    {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pincode *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
                                     <input
                                         type="text"
                                         value={billingDetails.pincode}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-                                            setBillingDetails({ ...billingDetails, pincode: value });
-                                        }}
-                                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 ${errors.pincode ? 'border-red-500' : 'border-gray-300'}`}
+                                        onChange={(e) => setBillingDetails({ ...billingDetails, pincode: e.target.value })}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                         placeholder="400001"
                                         maxLength={6}
                                     />
-                                    {errors.pincode && <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>}
                                 </div>
                             </div>
 
