@@ -131,7 +131,7 @@ export default function VendorDashboard() {
   const handleReportAction = () => {
     if (hasReport) {
       if (isPaid) {
-        navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
+        navigate(`/fit/report/${encodeURIComponent(ENGINE)}`);
       } else if (isPending || paymentStatus.status === "rejected") {
         setIsStatusModalOpen(true);
       } else {
@@ -510,7 +510,7 @@ export default function VendorDashboard() {
         status={paymentStatus.status}
         engineName={ENGINE}
         expiresAt={paymentStatus.expiresAt}
-        onProceed={paymentStatus.status === "paid" ? () => navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
+        onProceed={paymentStatus.status === "paid" ? () => navigate(`/fit/report/${encodeURIComponent(ENGINE)}`) : () => navigate('/payment/checkout')}
       />
     </div>
   );

@@ -26,22 +26,29 @@ import BoardDossierRenderer from "~/components/reports/BoardDossierRenderer";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const session = await requireUserSession(request);
-    const user = await getUserProfile(session.userId);
-    if (!user || !user.organisationId) return redirect("/auth/drx");
+    const user = await getUserProfile(session.userId).catch(() => null);
 
-    const company = await getCompanyProfile(user.organisationId);
+    const url = new URL(request.url);
+    let organisationId = user?.organisationId || session.organisationId;
+
+    const isAdmin = session.isAdmin || (user as any)?.role === "ADMIN" || (session as any)?.role === "ADMIN";
+    if (isAdmin) {
+        const queryCompanyId = url.searchParams.get("companyId") || url.searchParams.get("organisationId");
+        if (queryCompanyId) {
+            organisationId = queryCompanyId;
+        }
+    }
+
+    if (!organisationId) return redirect("/auth/drx");
+
+    const company = await getCompanyProfile(organisationId);
 
     const [reports, payments] = await Promise.all([
-        getCompanyAdvisories(user.organisationId),
-        getVerifiedPaymentsByCompany(user.organisationId),
+        getCompanyAdvisories(organisationId),
+        getVerifiedPaymentsByCompany(organisationId),
     ]);
 
-    const isAdmin = (user as any).role === "ADMIN";
-    const approvedReport = reports?.find(r => r.status === "approved" && r.isLocked);
-    const hasPaid = true; // BYPASS: Force paid for testing (was: isAdmin || payments.length > 0 || !!approvedReport)
-
     // Check for ?reportId= param
-    const url = new URL(request.url);
     const requestedId = url.searchParams.get("reportId");
 
     let report;
@@ -50,6 +57,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
     if (!report) {
         report = reports
+            ?.filter(r => r.status === "approved")
+            .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())[0]
+            ?? reports
             ?.filter(r => r.status === "approved" && r.isLocked)
             .sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())[0]
             ?? reports?.sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())[0];

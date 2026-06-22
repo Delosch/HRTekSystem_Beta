@@ -40,6 +40,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   if (!user || !user.organisationId) return redirect("/auth");
 
   const section = decodeURIComponent(params.section || "");
+  if (section === "HCM Vendor Fit Engine") {
+    return redirect(`/fit/report/${encodeURIComponent(section)}`);
+  }
   const url = new URL(request.url);
 
   // BYPASS: Payment gate disabled — all engines are free
@@ -175,7 +178,7 @@ export default function ConsultingReportPage() {
   if (section === "Intelligent Change Management") {
     return (
       <ChangeManagementReport
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         companyLogo={companyLogo}
         assessmentId={section}
@@ -187,7 +190,7 @@ export default function ConsultingReportPage() {
   if (section === "HR Transformation Roadmap Generator") {
     return (
       <RoadmapReport
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         companyLogo={companyLogo}
         responses={responses}
@@ -198,7 +201,7 @@ export default function ConsultingReportPage() {
   if (section === "Shared Service Designer") {
     return (
       <SharedServicesReport
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         companyLogo={companyLogo}
         assessmentId={section}
@@ -210,7 +213,7 @@ export default function ConsultingReportPage() {
   if (section === "HCM Vendor Fit Engine") {
     return (
       <VendorFitReportDashboard
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         companyLogo={companyLogo}
         assessmentId={section}
@@ -222,7 +225,7 @@ export default function ConsultingReportPage() {
   if (section === "HR Technology Maturity Analysis" || section === "HR Tech Maturity Analysis") {
     return (
       <TechMaturityReport
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         responses={responses}
         questions={questions}
@@ -232,7 +235,7 @@ export default function ConsultingReportPage() {
   if (section === "Digital Maturity Assessment") {
     return (
       <DigitalMaturityReport
-        data={analysis}
+        data={analysis?.result || analysis}
         brandName={brand_name || "Your Organization"}
         assessmentId={section}
         reportType="detailed"

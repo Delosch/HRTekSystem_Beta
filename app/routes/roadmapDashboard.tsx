@@ -141,7 +141,10 @@ export const loader: LoaderFunction = async ({ request }) => {
   const sectionScores = computeSectionScores(responses);
 
   const totalSections = Object.keys(SECTION_KEYS).length; // 10
-  const stepsCompleted = Object.values(sectionScores).filter(s => s === 100).length;
+  
+  // A section is counted in the progress panel if it is at least 50% completed
+  const stepsCompleted = Object.values(sectionScores).filter(s => s >= 50).length;
+
   const sectionsWithAnyData = Object.values(sectionScores).filter(s => s > 0).length;
 
   // Average score: mean of all section completion %s (only 0 when nothing answered)

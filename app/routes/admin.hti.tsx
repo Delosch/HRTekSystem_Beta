@@ -148,6 +148,24 @@ export default function AdminHTIApprovals() {
         }
     }, [actionData]);
 
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rId = urlParams.get("reportId");
+            if (rId) {
+                const foundPending = pendingApprovals.find((r: any) => r.reportId === rId || `HTI_REPORT#${r.generatedAt}` === rId || r.reportId.includes(rId));
+                if (foundPending) {
+                    setSelectedReportId(foundPending.reportId);
+                } else {
+                    const foundApproved = approvedReports.find((r: any) => r.reportId === rId || `HTI_REPORT#${r.generatedAt}` === rId || r.reportId.includes(rId));
+                    if (foundApproved) {
+                        setSelectedReportId(foundApproved.reportId);
+                    }
+                }
+            }
+        }
+    }, [pendingApprovals, approvedReports]);
+
     const handleEditMode = (reportId: string, advisory: any) => {
         setEditMode(reportId);
         setEditedAdvisory({ ...advisory });

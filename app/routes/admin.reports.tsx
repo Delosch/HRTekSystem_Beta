@@ -28,11 +28,15 @@ interface Report {
 
 export const loader: LoaderFunction = async () => {
     const { getAllAnalysisReports } = await import("~/utils/analysis.server");
+    const { getAllHTIReports } = await import("~/models/hti.model.server");
     const { getCompanyProfile } = await import("~/models/company.model.server");
 
-    const allReports = await getAllAnalysisReports();
+    const [allReports, allHtiReports] = await Promise.all([
+        getAllAnalysisReports(),
+        getAllHTIReports()
+    ]);
 
-    const reports: Report[] = await Promise.all(allReports.map(async (item: any) => {
+    const transformedReports: Report[] = await Promise.all(allReports.map(async (item: any) => {
         const companyId = item.pk.replace("COMPANY#", "");
         let companyName = "Unknown Company";
         try {
@@ -54,6 +58,29 @@ export const loader: LoaderFunction = async () => {
         };
     }));
 
+    const transformedHtiReports: Report[] = await Promise.all(allHtiReports.map(async (item: any) => {
+        const companyId = item.companyId;
+        let companyName = "Unknown Company";
+        try {
+            const profile = await getCompanyProfile(companyId);
+            if (profile) {
+                companyName = profile.company_name || profile.brand_name || companyId;
+            }
+        } catch (e) {
+            console.error(`Failed to fetch profile for ${companyId}`, e);
+        }
+
+        return {
+            reportId: item.sk,
+            companyId: companyId,
+            companyName: companyName,
+            engineName: "HTI Consolidated Advisory Report",
+            submittedAt: item.generatedAt || new Date().toISOString(),
+            status: item.status || "approved"
+        };
+    }));
+
+    const reports = [...transformedReports, ...transformedHtiReports];
     reports.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
     return json({ reports });
@@ -67,6 +94,18 @@ export const action: ActionFunction = async ({ request }) => {
 
     if (!reportId || !companyId || !action) {
         return json({ success: false, message: "Missing required fields" }, { status: 400 });
+    }
+
+    if (reportId.startsWith("HTI_REPORT#")) {
+        const { getAllHTIReports, updateApprovalStatus } = await import("~/models/hti.model.server");
+        const allHti = await getAllHTIReports();
+        const found = allHti.find(h => h.sk === reportId && h.companyId === companyId);
+        if (found) {
+            const status = action === "approve" ? "approved" : "rejected";
+            const success = await updateApprovalStatus(companyId, found.reportId, status, "Admin", "Approved via AI Report Hub");
+            return json({ success, message: success ? `Report ${status} successfully` : "Failed to update report status" });
+        }
+        return json({ success: false, message: "HTI Report not found" }, { status: 404 });
     }
 
     const { updateAnalysisStatus, getAnalysisById } = await import("~/utils/analysis.server");
@@ -239,7 +278,7 @@ export default function AdminReports() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                                 <a
-                                                href={`/admin/reports/${encodeURIComponent(report.reportId)}`}
+                                                href={report.reportId.startsWith("HTI_REPORT#") ? `/admin/hti?reportId=${encodeURIComponent(report.reportId)}` : `/admin/reports/${encodeURIComponent(report.reportId)}`}
                                                 className="h-12 px-6 bg-white border border-gray-100 text-gray-900 rounded-2xl flex items-center gap-3 text-xs font-black uppercase tracking-widest transition-all hover:border-indigo-600 hover:text-indigo-600 shadow-sm"
                                             >
                                                 View

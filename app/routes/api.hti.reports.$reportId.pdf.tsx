@@ -7,8 +7,17 @@ import { HTIReportPDF } from "~/components/HTIReportPDF";
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const user = await requireUserSession(request);
     const { reportId } = params;
+    const url = new URL(request.url);
 
-    if (!user.organisationId) {
+    let targetCompanyId = user.organisationId;
+    if (user.isAdmin) {
+        const queryCompanyId = url.searchParams.get("companyId");
+        if (queryCompanyId) {
+            targetCompanyId = queryCompanyId;
+        }
+    }
+
+    if (!targetCompanyId) {
         throw new Response("Unauthorized", { status: 401 });
     }
 
@@ -16,7 +25,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         throw new Response("Report ID required", { status: 400 });
     }
 
-    const report = await getAdvisoryReport(user.organisationId, reportId);
+    const report = await getAdvisoryReport(targetCompanyId, reportId);
 
     if (!report) {
         throw new Response("Report not found", { status: 404 });
@@ -24,8 +33,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
     // Payment gating
     const { getVerifiedPaymentsByCompany } = await import("~/models/payment.model.server");
-    const payments = await getVerifiedPaymentsByCompany(user.organisationId);
-    const isAdmin = (user as any).role === "ADMIN";
+    const payments = await getVerifiedPaymentsByCompany(targetCompanyId);
+    const isAdmin = user.isAdmin || (user as any).role === "ADMIN";
     const isApprovedAndLocked = report.status === "approved" && report.isLocked;
     const hasPaid = isAdmin || payments.length > 0 || isApprovedAndLocked;
 
@@ -35,8 +44,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
     // Fetch company name for branding
     const { getCompanyProfile } = await import("~/models/company.model.server");
-    const company = await getCompanyProfile(user.organisationId);
-    const brandName = company?.brand_name || user.organisationId;
+    const company = await getCompanyProfile(targetCompanyId);
+    const brandName = company?.brand_name || targetCompanyId;
 
     // Render PDF to stream
     const stream = await renderToStream(<HTIReportPDF report={report} brandName={brandName} />);

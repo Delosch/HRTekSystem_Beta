@@ -130,10 +130,20 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
         const assessmentId = body.assessment_id ? body.assessment_id.toString() : "";
         await save_answers(companyId, assessmentId.replace("QUESTION#", ""), user.userId, body);
 
-        // Handle Report Generation Intent — redirect to the engine's dashboard/report page
+        // Handle Report Generation Intent — redirect to intermediate to start generation pipeline
         if (body.intent === "generate_report") {
-            const reportPage = ENGINE_REPORT_REDIRECT[body.params] || "/dashboard";
-            return json({ success: true, redirect: reportPage });
+            const ENGINE_PROMPT_MAP: Record<string, string> = {
+                "HCM Vendor Fit Engine": "vendor_fit",
+                "Shared Service Designer": "shared_service",
+                "Intelligent Change Management": "change_management",
+                "HR Transformation Roadmap Generator": "digital_transformation",
+                "HR Technology Maturity Analysis": "tech_maturity",
+            };
+            const promptId = ENGINE_PROMPT_MAP[body.params] || "digital_maturity";
+            return json({
+                success: true,
+                redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&promptId=${encodeURIComponent(promptId)}`
+            });
         }
 
         if (body.progress === 100 && body.section === "Completion") {

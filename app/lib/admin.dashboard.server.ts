@@ -2,7 +2,10 @@ import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { getPendingPaymentVerifications } from "~/models/payment.model.server";
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const COMPANIES_TABLE = process.env.DYNAMODB_COMPANIES_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const USERS_TABLE = process.env.DYNAMODB_USERS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const ASSESSMENTS_TABLE = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
+const PAYMENTS_TABLE = process.env.DYNAMODB_PAYMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
 // ── Engine display metadata ──────────────────────────────────────────────────
 const ENGINE_META: Record<string, { short: string; color: string }> = {
@@ -71,28 +74,28 @@ export async function getDashboardStats() {
             await Promise.all([
                 // All company profiles
                 ddbDocClient.send(new ScanCommand({
-                    TableName: TABLE_NAME,
+                    TableName: COMPANIES_TABLE,
                     FilterExpression: "profile_type = :t",
                     ExpressionAttributeValues: { ":t": "COMPANY" },
                     ProjectionExpression: "pk, company_name, createdAt",
                 })),
                 // All user profiles
                 ddbDocClient.send(new ScanCommand({
-                    TableName: TABLE_NAME,
+                    TableName: USERS_TABLE,
                     FilterExpression: "profile_type = :t",
                     ExpressionAttributeValues: { ":t": "USER" },
                     ProjectionExpression: "pk, first_name, last_name, createdAt, is_verified_email",
                 })),
                 // All engine records
                 ddbDocClient.send(new ScanCommand({
-                    TableName: TABLE_NAME,
+                    TableName: ASSESSMENTS_TABLE,
                     FilterExpression: "begins_with(sk, :p)",
                     ExpressionAttributeValues: { ":p": "ENGINE#" },
                     ProjectionExpression: "pk, sk, progress, completedAt",
                 })),
                 // Pending HTI reports
                 ddbDocClient.send(new ScanCommand({
-                    TableName: TABLE_NAME,
+                    TableName: ASSESSMENTS_TABLE,
                     FilterExpression: "begins_with(sk, :p) AND #st = :s",
                     ExpressionAttributeNames: { "#st": "status" },
                     ExpressionAttributeValues: { ":p": "HTI_REPORT#", ":s": "pending" },
@@ -100,7 +103,7 @@ export async function getDashboardStats() {
                 })),
                 // Recent payment records
                 ddbDocClient.send(new ScanCommand({
-                    TableName: TABLE_NAME,
+                    TableName: PAYMENTS_TABLE,
                     FilterExpression: "begins_with(sk, :p)",
                     ExpressionAttributeNames: { "#st": "status" },
                     ExpressionAttributeValues: { ":p": "PAYMENT#" },
@@ -263,32 +266,32 @@ export async function getFullActivityLog(): Promise<{
         const ddbDocClient = getDynamoDBDocumentClient();
         const [companiesRes, usersRes, enginesRes, htiRes, paymentsRes] = await Promise.all([
             ddbDocClient.send(new ScanCommand({
-                TableName: TABLE_NAME,
+                TableName: COMPANIES_TABLE,
                 FilterExpression: "profile_type = :t",
                 ExpressionAttributeValues: { ":t": "COMPANY" },
                 ProjectionExpression: "pk, company_name, createdAt, createdBy",
             })),
             ddbDocClient.send(new ScanCommand({
-                TableName: TABLE_NAME,
+                TableName: USERS_TABLE,
                 FilterExpression: "profile_type = :t",
                 ExpressionAttributeValues: { ":t": "USER" },
                 ProjectionExpression: "pk, first_name, last_name, email, createdAt",
             })),
             ddbDocClient.send(new ScanCommand({
-                TableName: TABLE_NAME,
+                TableName: ASSESSMENTS_TABLE,
                 FilterExpression: "begins_with(sk, :p) AND progress = :done",
                 ExpressionAttributeValues: { ":p": "ENGINE#", ":done": 100 },
                 ProjectionExpression: "pk, sk, completedAt",
             })),
             ddbDocClient.send(new ScanCommand({
-                TableName: TABLE_NAME,
+                TableName: ASSESSMENTS_TABLE,
                 FilterExpression: "begins_with(sk, :p)",
                 ExpressionAttributeNames: { "#st": "status" },
                 ExpressionAttributeValues: { ":p": "HTI_REPORT#" },
                 ProjectionExpression: "companyId, generatedAt, #st, approvedAt, approvedBy, generatedBy",
             })),
             ddbDocClient.send(new ScanCommand({
-                TableName: TABLE_NAME,
+                TableName: PAYMENTS_TABLE,
                 FilterExpression: "begins_with(sk, :p)",
                 ExpressionAttributeNames: { "#st": "status" },
                 ExpressionAttributeValues: { ":p": "PAYMENT#" },

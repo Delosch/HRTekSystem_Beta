@@ -35,7 +35,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
         submittedBy: r.generatedBy,
         submittedAt: new Date(r.generatedAt).toLocaleString(),
         status: r.status === "approved" ? "Approved" : r.status === "rejected" ? "Rejected" : "Pending Review",
-        previewUrl: `/api/hti/reports/${r.reportId}/pdf`,
+        previewUrl: `/api/hti/reports/${r.reportId}/pdf?companyId=${orgId}`,
         companyId: r.companyId
     }));
 

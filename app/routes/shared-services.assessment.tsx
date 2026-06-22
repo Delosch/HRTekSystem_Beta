@@ -142,24 +142,9 @@ export async function action({ request }: ActionFunctionArgs) {
             responses: answers
         });
 
-        const advisory = await generateHTIAdvisory(aggregatedData as any);
-
-        await saveAdvisoryReport(
-            user.organisationId,
-            user.id || user.userId,
-            advisory,
-            aggregatedData as any
+        return redirect(
+            `/intermediate?promptId=shared_service&engine=${encodeURIComponent("Shared Service Designer")}`
         );
-
-        // Create ANALYSIS# record so consulting-report loader can find it
-        await store_analysis(
-            user.organisationId,
-            `${user.organisationId}#Shared Service Designer`,
-            "Shared Service Designer",
-            { advisory, sstiResult, responses: answers } as any
-        );
-
-        return redirect("/sharedDashboard");
     } catch (error) {
         console.error("AI Generation Error:", error);
         return json({ error: "Failed to generate AI report" }, { status: 500 });

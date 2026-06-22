@@ -1,5 +1,5 @@
 //fit/report/HCM Vendor Fit Engine
-import type { LoaderFunction } from "@remix-run/node";
+import type { LoaderFunction, ActionFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { getEnginePriceByName } from "~/lib/pricing";
 import { addOrUpdateCartItem } from "~/models/cart.model.server";
@@ -100,6 +100,48 @@ type HcmAnalysis = {
   };
 };
 
+// --- Remix Action Function ---
+export const action: ActionFunction = async ({ request, params }) => {
+  const user = await requireUserSession(request);
+  if (!user || !user.organisationId) return json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  const engineId = params.id;
+
+  if (body.intent === "generate_report") {
+    console.log(`[Fit Report Action] Generating report for: ${engineId}`);
+
+    const aggregatedData = {
+      companyId: user.organisationId,
+      timestamp: new Date().toISOString(),
+      engines: {
+        vendorFit: {
+          engineName: engineId,
+          progress: 100,
+          responses: body.answers || {},
+          scores: {},
+          aiAnalysis: {},
+        },
+      },
+      completedEnginesCount: 1,
+      totalEngines: 1,
+    };
+
+    try {
+      const { generateHTIAdvisory } = await import("~/lib/hti.deepseek");
+      const { saveAdvisoryReport } = await import("~/models/hti.model.server");
+      const advisory = await generateHTIAdvisory(aggregatedData as any);
+      await saveAdvisoryReport(user.organisationId, user.userId, advisory, aggregatedData as any);
+      return json({ success: true, advisory });
+    } catch (error) {
+      console.error("AI Generation Error in Fit Report:", error);
+      return json({ error: "Failed to generate AI report" }, { status: 500 });
+    }
+  }
+
+  return json({ error: "Invalid intent" }, { status: 400 });
+};
+
 // --- Remix Loader Function ---
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -147,6 +189,16 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     if (engineId.toLowerCase() === "hcm vendor fit engine") {
       const data = await getLatestAnalysis(user.organisationId, engineId);
+      const isReportReady = data && data.result;
+
+      const url = new URL(request.url);
+      if (url.searchParams.get("verify") === "true") {
+        if (!isReportReady) {
+          return new Response(null, { status: 202 });
+        }
+        return new Response(null, { status: 200 });
+      }
+
       if (!data || !data.result) {
         console.log("no report")
         throw new Response("No assessment data found for this organization.", { status: 404 });

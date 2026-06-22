@@ -155,28 +155,51 @@ export const getAnswerSheet = async (company_id: string, assessment_id: string) 
 }
 // get answer sheet by company id and assessment name
 export const getAnswerSheetByAssessmentName = async (company_id: string, assessment_name: string) => {
-    const assessment_id = await getLatestQuestion(assessment_name)
+    const assessment_id = await getLatestQuestion(assessment_name);
 
-    if (!assessment_id || !assessment_id.pk) {
-        console.error("Assessment not found for:", assessment_name);
-        return undefined;
+    let command;
+    if (assessment_id && assessment_id.pk) {
+        command = new QueryCommand({
+            TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
+            KeyConditionExpression: "pk = :pk AND sk= :sk",
+            ExpressionAttributeValues: {
+                ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
+                ":sk": `ASSESSMENT#${assessment_id.pk.replace("QUESTION#", "")}`
+            },
+            ScanIndexForward: false, // Sorts by createdAt descending (latest first)
+            Limit: 1                 // Only fetch the latest one
+        });
     }
 
-    const command = new QueryCommand({
-        TableName: process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform",
-        KeyConditionExpression: "pk = :pk AND sk= :sk",
-        ExpressionAttributeValues: {
-            ":pk": `COMPANY#${company_id.replace("COMPANY#", "")}`,
-            ":sk": `ASSESSMENT#${assessment_id.pk.replace("QUESTION#", "")}`
-        },
-        ScanIndexForward: false, // Sorts by createdAt descending (latest first)
-        Limit: 1                 // Only fetch the latest one
-    });
+    let Items;
+    if (command) {
+        try {
+            const response = await ddbDocClient.send(command);
+            Items = response.Items;
+        } catch (err) {
+            console.error("Error querying assessment in getAnswerSheetByAssessmentName:", err);
+        }
+    }
 
-    const { Items } = await ddbDocClient.send(command);
-    console.log("Answer Sheet : \n", Items)
-    return Items?.[0]?.answers
-}
+    if (Items && Items.length > 0) {
+        console.log("Answer Sheet (ASSESSMENT#): \n", Items);
+        return Items[0].answers;
+    }
+
+    // Fallback: query engine storage table directly
+    console.log(`⚠️ Answer sheet not found with ASSESSMENT# prefix, falling back to engine storage for: ${assessment_name}`);
+    try {
+        const { findEngineData } = await import("~/models/engine.model.server");
+        const engineData = await findEngineData(company_id, assessment_name);
+        if (engineData && engineData.responses) {
+            return engineData.responses.answers || engineData.responses;
+        }
+    } catch (fallbackErr) {
+        console.error("Fallback to findEngineData failed in getAnswerSheetByAssessmentName:", fallbackErr);
+    }
+
+    return undefined;
+};
 
 export const getAllResponseSheet = async (orgId: string) => {
     const command = new QueryCommand({
@@ -257,8 +280,7 @@ export async function getLatestAnalysis(company_id: string, question_section: st
         ExpressionAttributeNames: {
             "#section": "section"
         },
-        ScanIndexForward: false, // Latest first
-        Limit: 1
+        ScanIndexForward: false // Latest first
     });
 
     try {
