@@ -14,11 +14,13 @@ interface ExecutiveVerdictProps {
 }
 
 export function ExecutiveVerdict({ data }: ExecutiveVerdictProps) {
-    const vendors = data?.vendorRecommendations || [
+    const defaultVendors = [
         { category: "Workday", fitScore: 92, riskFlags: ["Low Risk"], reasons: ["Global compliance", "Unified data"], status: 'Market Leader' },
         { category: "SAP SuccessFactors", fitScore: 84, riskFlags: ["Medium Risk"], reasons: ["ERP Integration", "Payroll depth"], status: 'Enterprise Scale' },
         { category: "Oracle HCM Cloud", fitScore: 79, riskFlags: ["Medium Risk"], reasons: ["Org modelling", "Complexity"], status: 'Capability Depth' },
     ];
+    const raw = data?.vendorRecommendations;
+    const vendors = Array.isArray(raw) && raw.length > 0 ? raw : defaultVendors;
 
     return (
         <div className="space-y-16">
@@ -39,7 +41,7 @@ export function ExecutiveVerdict({ data }: ExecutiveVerdictProps) {
                 <div className="flex gap-4">
                     <div className="px-6 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Top Alignment</p>
-                        <p className="text-lg font-black text-slate-900 uppercase italic leading-none">Primary: {vendors[0].category}</p>
+                        <p className="text-lg font-black text-slate-900 uppercase italic leading-none">Primary: {vendors[0]?.category || 'Primary Vendor'}</p>
                     </div>
                 </div>
             </div>
@@ -63,10 +65,10 @@ export function ExecutiveVerdict({ data }: ExecutiveVerdictProps) {
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-3">
                                         <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center font-black text-3xl shadow-xl ${i === 0 ? 'bg-blue-600 text-white' : 'bg-slate-900 text-white'}`}>
-                                            {v.category.charAt(0)}
+                                            {v.category?.charAt(0) || 'V'}
                                         </div>
                                         <div className="space-y-1">
-                                            <h3 className="text-2xl font-black tracking-tighter uppercase italic leading-tight">{v.category}</h3>
+                                            <h3 className="text-2xl font-black tracking-tighter uppercase italic leading-tight">{v.category || 'Vendor'}</h3>
                                             <p className={`text-[10px] font-black uppercase tracking-widest ${i === 0 ? 'text-blue-400' : 'text-slate-400'}`}>
                                                 {v.status || 'Strategic Nominee'}
                                             </p>
@@ -139,7 +141,7 @@ export function ExecutiveVerdict({ data }: ExecutiveVerdictProps) {
                 <div className="flex-1 space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Exposure Analysis Note</p>
                     <p className="text-sm font-bold text-slate-700 leading-relaxed italic">
-                        "The primary selection differentiator across the top three candidates relates to the depth of native AI integration—{vendors[0].category} currently leads with its 'Human Capital Brain' architecture."
+                        "The primary selection differentiator across the top three candidates relates to the depth of native AI integration—{vendors[0]?.category || 'Primary Vendor'} currently leads with its 'Human Capital Brain' architecture."
                     </p>
                 </div>
             </motion.div>
