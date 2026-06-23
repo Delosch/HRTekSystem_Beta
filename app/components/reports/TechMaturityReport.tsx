@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "@remix-run/react";
 import { motion, AnimatePresence } from "framer-motion";
 import BoardDossierRenderer from "./BoardDossierRenderer";
-import { useFetcher } from "@remix-run/react";
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
-import type { HTIAdvisoryContent } from "~/models/hti.model.server";
+import { useReportGenerator } from "~/hooks/useReportGenerator";
 import {
     ArrowLeft, Download, TrendingUp, AlertTriangle, CheckCircle,
     Lightbulb, ChevronDown, ChevronUp, FileText, Target, Activity, Cpu, Database, Network
@@ -27,29 +26,11 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [reportData, setReportData] = useState<HTIAdvisoryContent | null>(null);
-    const fetcher = useFetcher();
-    const isGenerating = fetcher.state !== "idle";
-
-    useEffect(() => {
-        if (fetcher.data && (fetcher.data as any).success) {
-            setReportData((fetcher.data as any).advisory);
-        }
-    }, [fetcher.data]);
+    const { reportData, isGenerating, reportError, generate } = useReportGenerator();
 
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        if (!reportData) {
-            fetcher.submit(
-                {
-                    intent: "generate_report",
-                    params: "Tech Maturity Engine",
-                    answers: (data as any)?.responses || {},
-                    progress: 100
-                },
-                { method: "post", encType: "application/json" }
-            );
-        }
+        generate("Tech Maturity Engine", (data as any)?.responses);
     };
 
     const result = (data?.result || {}) as any;

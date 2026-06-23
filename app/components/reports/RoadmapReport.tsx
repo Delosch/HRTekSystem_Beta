@@ -10,9 +10,8 @@ import {
 
 import { motion, AnimatePresence } from "framer-motion";
 import BoardDossierRenderer from "./BoardDossierRenderer";
-import { useFetcher } from "@remix-run/react";
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
-import type { HTIAdvisoryContent } from "~/models/hti.model.server";
+import { useReportGenerator } from "~/hooks/useReportGenerator";
 
 interface RoadmapReportProps {
     data: any;
@@ -33,31 +32,11 @@ export default function RoadmapReport({ data, brandName, companyLogo, responses,
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [reportData, setReportData] = useState<HTIAdvisoryContent | null>(null);
-    const fetcher = useFetcher();
-    const isGenerating = fetcher.state !== "idle";
-
-    useEffect(() => {
-        if (fetcher.data && (fetcher.data as any).success) {
-            setReportData((fetcher.data as any).advisory);
-        } else if (fetcher.data && (fetcher.data as any).error) {
-            console.error("Roadmap Report Generation Error:", (fetcher.data as any).error);
-        }
-    }, [fetcher.data]);
+    const { reportData, isGenerating, reportError, generate } = useReportGenerator();
 
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        if (!reportData) {
-            fetcher.submit(
-                {
-                    intent: "generate_report",
-                    params: "HR Transformation Roadmap Generator",
-                    answers: responses || {},
-                    progress: 100
-                },
-                { method: "post", encType: "application/json" }
-            );
-        }
+        generate("HR Transformation Roadmap Generator", responses);
     };
 
     const result = (data?.result || {}) as any;
@@ -465,7 +444,7 @@ export default function RoadmapReport({ data, brandName, companyLogo, responses,
                 onClose={() => setIsPreviewOpen(false)}
                 reportData={reportData}
                 isGenerating={isGenerating}
-                error={(fetcher.data as any)?.error}
+                error={reportError}
                 engineTitle="HR Transformation Roadmap"
                 brandName={brandName}
             />

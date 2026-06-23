@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import SharedServicesDashboard from "./SharedServices/SharedServicesDashboard";
 import { motion, AnimatePresence } from "framer-motion";
-import { useFetcher } from "@remix-run/react";
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
-import type { HTIAdvisoryContent } from "~/models/hti.model.server";
+import { useReportGenerator } from "~/hooks/useReportGenerator";
 
 interface SharedServicesReportProps {
     data: any;
@@ -18,31 +17,11 @@ interface SharedServicesReportProps {
 export default function SharedServicesReport({ data, brandName, assessmentId, companyLogo, responses, questions }: SharedServicesReportProps) {
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [reportData, setReportData] = useState<HTIAdvisoryContent | null>(null);
-    const fetcher = useFetcher();
-    const isGenerating = fetcher.state !== "idle";
-
-    useEffect(() => {
-        if (fetcher.data && (fetcher.data as any).success) {
-            setReportData((fetcher.data as any).advisory);
-        } else if (fetcher.data && (fetcher.data as any).error) {
-            console.error("Shared Services Report Generation Error:", (fetcher.data as any).error);
-        }
-    }, [fetcher.data]);
+    const { reportData, isGenerating, reportError, generate } = useReportGenerator();
 
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        if (!reportData) {
-            fetcher.submit(
-                {
-                    intent: "generate_report",
-                    params: "Shared Service Designer",
-                    answers: responses || {},
-                    progress: 100
-                },
-                { method: "post", encType: "application/json" }
-            );
-        }
+        generate("Shared Service Designer", responses);
     };
 
     return (
@@ -63,7 +42,7 @@ export default function SharedServicesReport({ data, brandName, assessmentId, co
                 onClose={() => setIsPreviewOpen(false)}
                 reportData={reportData}
                 isGenerating={isGenerating}
-                error={(fetcher.data as any)?.error}
+                error={reportError}
                 engineTitle="Shared Services Designer"
                 brandName={brandName}
             />

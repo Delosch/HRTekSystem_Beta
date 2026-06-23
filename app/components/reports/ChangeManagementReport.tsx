@@ -3,10 +3,9 @@ import {
     LayoutDashboard, Users, TrendingUp, Bell, FileText, Settings,
     ArrowLeft, Download, Share2, Globe, Database, Cpu, ShieldCheck
 } from 'lucide-react';
-import { useFetcher } from "@remix-run/react";
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
-import type { HTIAdvisoryContent } from "~/models/hti.model.server";
 import ChangeManagementDashboard from "./ChangeManagement/ChangeManagementDashboard";
+import { useReportGenerator } from "~/hooks/useReportGenerator";
 
 type View = 'dashboard' | 'emotions' | 'stakeholders' | 'interventions' | 'alerts' | 'reports' | 'settings';
 
@@ -28,35 +27,15 @@ export default function ChangeManagementReport({ data, brandName, assessmentId, 
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [reportData, setReportData] = useState<HTIAdvisoryContent | null>(null);
-    const fetcher = useFetcher();
-    const isGenerating = fetcher.state !== "idle";
+    const { reportData, isGenerating, reportError, generate } = useReportGenerator();
 
     useEffect(() => {
         document.title = `${data?.profile?.organizationName || 'HRTek'} | Change Intelligence Engine`;
     }, [data]);
 
-    useEffect(() => {
-        if (fetcher.data && (fetcher.data as any).success) {
-            setReportData((fetcher.data as any).advisory);
-        } else if (fetcher.data && (fetcher.data as any).error) {
-            console.error("Change Report Generation Error:", (fetcher.data as any).error);
-        }
-    }, [fetcher.data]);
-
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        if (!reportData) {
-            fetcher.submit(
-                {
-                    intent: "generate_report",
-                    params: "Intelligent Change Management",
-                    answers: responses || {},
-                    progress: 100
-                },
-                { method: "post", encType: "application/json" }
-            );
-        }
+        generate("Intelligent Change Management", responses);
     };
 
     useEffect(() => {
@@ -145,7 +124,7 @@ export default function ChangeManagementReport({ data, brandName, assessmentId, 
                 onClose={() => setIsPreviewOpen(false)}
                 reportData={reportData}
                 isGenerating={isGenerating}
-                error={(fetcher.data as any)?.error}
+                error={reportError}
                 engineTitle="Intelligent Change Management"
                 brandName={brandName}
             />

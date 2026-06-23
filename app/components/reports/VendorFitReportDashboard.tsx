@@ -6,9 +6,8 @@ import {
 } from 'lucide-react';
 import { VendorFitDashboard as NewVendorFitDashboard } from "./VendorFit/VendorFitDashboard";
 import { motion, AnimatePresence } from "framer-motion";
-import { useFetcher } from "@remix-run/react";
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
-import type { HTIAdvisoryContent } from "~/models/hti.model.server";
+import { useReportGenerator } from "~/hooks/useReportGenerator";
 
 type View = 'executive' | 'context' | 'financial' | 'functional' | 'matching' | 'risk' | 'tech' | 'tradeoffs' | 'rankings' | 'recommendation' | 'roadmap';
 
@@ -29,9 +28,7 @@ export default function VendorFitReportDashboard({ data, brandName, assessmentId
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [reportData, setReportData] = useState<HTIAdvisoryContent | null>(null);
-    const fetcher = useFetcher();
-    const isGenerating = fetcher.state !== "idle";
+    const { reportData, isGenerating, reportError, generate } = useReportGenerator();
 
     useEffect(() => setIsMounted(true), []);
 
@@ -39,27 +36,9 @@ export default function VendorFitReportDashboard({ data, brandName, assessmentId
         document.title = `${brandName || 'HRTek'} | Vendor Fit Intelligence`;
     }, [brandName]);
 
-    useEffect(() => {
-        if (fetcher.data && (fetcher.data as any).success) {
-            setReportData((fetcher.data as any).advisory);
-        } else if (fetcher.data && (fetcher.data as any).error) {
-            console.error("Report Generation Error:", (fetcher.data as any).error);
-        }
-    }, [fetcher.data]);
-
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        if (!reportData) {
-            fetcher.submit(
-                {
-                    intent: "generate_report",
-                    params: "HCM Vendor Fit Engine",
-                    answers: responses || {},
-                    progress: 100
-                },
-                { method: "post", encType: "application/json" }
-            );
-        }
+        generate("HCM Vendor Fit Engine", responses);
     };
 
     useEffect(() => {
@@ -195,7 +174,7 @@ export default function VendorFitReportDashboard({ data, brandName, assessmentId
                 onClose={() => setIsPreviewOpen(false)}
                 reportData={reportData}
                 isGenerating={isGenerating}
-                error={(fetcher.data as any)?.error}
+                error={reportError}
                 engineTitle="HCM Vendor Fit"
                 brandName={brandName}
             />
