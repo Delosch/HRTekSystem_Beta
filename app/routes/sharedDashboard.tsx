@@ -142,7 +142,7 @@ export default function SharedDashboard() {
       }
     } else {
       if (currentEngine.progress === 100) {
-        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}&skipQuestions=true`);
       } else {
         navigate(`/shared-services/assessment`);
       }

@@ -144,7 +144,7 @@ export default function ChangeDashboard() {
       }
     } else {
       if (currentEngine.progress === 100) {
-        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}&skipQuestions=true`);
       } else {
         navigate(`/change-management/assessment`);
       }

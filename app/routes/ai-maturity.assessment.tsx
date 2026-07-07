@@ -83,7 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         return json({
             success: true,
-            redirect: `/intermediate?promptId=digital_maturity&engine=${encodeURIComponent("AI Driven Maturity Engine")}`
+            redirect: `/intermediate?promptId=digital_maturity&engine=${encodeURIComponent("AI Driven Maturity Engine")}&skipQuestions=true`
         });
     }
 

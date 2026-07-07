@@ -142,7 +142,7 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
             const promptId = ENGINE_PROMPT_MAP[body.params] || "digital_maturity";
             return json({
                 success: true,
-                redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&promptId=${encodeURIComponent(promptId)}`
+                redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&promptId=${encodeURIComponent(promptId)}&skipQuestions=true`
             });
         }
 
@@ -202,7 +202,7 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
             console.log("🎯 Eligibility Check:", eligibilityResult.message);
 
             // All engines redirect directly to intermediate report generator after completion
-            return json({ success: true, redirect: `/intermediate?engine=${encodeURIComponent(body.params)}` });
+            return json({ success: true, redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&skipQuestions=true` });
         }
         return json({ message: "Received!" });
     }

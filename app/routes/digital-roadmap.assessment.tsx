@@ -83,7 +83,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
         return json({
             success: true,
-            redirect: `/intermediate?promptId=digital_transformation&engine=${encodeURIComponent("HR Transformation Roadmap Generator")}`
+            redirect: `/intermediate?promptId=digital_transformation&engine=${encodeURIComponent("HR Transformation Roadmap Generator")}&skipQuestions=true`
         });
     }
 

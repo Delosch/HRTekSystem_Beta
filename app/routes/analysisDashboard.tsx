@@ -132,7 +132,7 @@ export default function AnalysisDashboard() {
       navigate(`/consulting-report/${encodeURIComponent(ENGINE)}`);
     } else {
       if (currentEngine.progress === 100) {
-        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}`);
+        navigate(`/intermediate?engine=${encodeURIComponent(ENGINE)}&skipQuestions=true`);
       } else {
         navigate(`/engine/${encodeURIComponent(ENGINE)}`);
       }

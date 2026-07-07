@@ -67,7 +67,7 @@ export async function action({ request }: ActionFunctionArgs) {
         });
         return json({
             success: true,
-            redirect: `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}`
+            redirect: `/intermediate?promptId=change_management&engine=${encodeURIComponent("Intelligent Change Management")}&skipQuestions=true`
         });
     }
 
