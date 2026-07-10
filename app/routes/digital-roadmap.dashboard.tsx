@@ -12,11 +12,26 @@ export const meta: MetaFunction = () => {
 };
 
 export async function loader({ request }: LoaderFunctionArgs) {
-    const user = await getEnhancedUser(request);
-    if (!user) return redirect("/login");
+    const url = new URL(request.url);
+    const isVerifyPoll = url.searchParams.get("verify") === "true";
 
-    const engineData = await findEngineData(user.organisationId, "HR Transformation Roadmap Generator");
+    const user = await getEnhancedUser(request);
+    if (!user) {
+        if (isVerifyPoll) return new Response(null, { status: 202 });
+        return redirect("/login");
+    }
+
+    // Wrap all DB operations in try-catch so verify polling never 500s
+    let engineData: any = null;
+    try {
+        engineData = await findEngineData(user.organisationId, "HR Transformation Roadmap Generator");
+    } catch (e) {
+        console.error("[digital-roadmap dashboard] findEngineData failed:", e);
+        if (isVerifyPoll) return new Response(null, { status: 202 });
+    }
+
     if (!engineData || engineData.progress < 100) {
+        if (isVerifyPoll) return new Response(null, { status: 202 });
         return redirect("/roadmapDashboard");
     }
 
@@ -24,6 +39,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const hasPaid = true; // BYPASS: Force paid for testing
 
     if (!hasPaid) {
+        if (isVerifyPoll) return new Response(null, { status: 202 });
         return redirect("/roadmapDashboard");
     }
 
@@ -41,12 +57,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
 
     const isReportReady = aiAnalysis && aiAnalysis.result && aiAnalysis.result.status !== "pending_generation";
-    const url = new URL(request.url);
-    if (url.searchParams.get("verify") === "true") {
-        if (!isReportReady) {
-            return new Response(null, { status: 202 });
-        }
-        return new Response(null, { status: 200 });
+
+    // For verify polling from intermediate.tsx — return early with status code
+    if (isVerifyPoll) {
+        return new Response(null, { status: isReportReady ? 200 : 202 });
     }
 
     let latestReportId = null;

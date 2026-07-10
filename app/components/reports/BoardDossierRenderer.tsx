@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     Activity, Target, AlertTriangle, CheckCircle2, TrendingUp,
     Zap, Rocket, Layers, Globe, ShieldAlert, FileText,
@@ -32,6 +32,12 @@ interface BoardDossierRendererProps {
 }
 
 export default function BoardDossierRenderer({ report, engineName }: BoardDossierRendererProps) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     if (!report?.consulting_report && !report?.consultingReport) {
         return (
             <div className="p-12 text-center bg-slate-50 rounded-3xl border border-slate-200">
@@ -57,7 +63,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                 </div>
                 <div className="text-right">
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Confidential Report</p>
-                    <p className="text-xs font-medium text-slate-500">{new Date().toLocaleDateString()}</p>
+                    <p className="text-xs font-medium text-slate-500">{isMounted ? new Date().toLocaleDateString() : '-- --- ----'}</p>
                 </div>
             </div>
 
@@ -1275,7 +1281,7 @@ export default function BoardDossierRenderer({ report, engineName }: BoardDossie
                     <img src="/logo_icon_final.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Confidential Board Dossier • {engineName} Analysis • Powered by HRTEKSYSTEM AI</p>
-                <p className="text-[10px] mt-1 text-slate-400 font-semibold uppercase tracking-[0.4em]">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <p className="text-[10px] mt-1 text-slate-400 font-semibold uppercase tracking-[0.4em]">{isMounted ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-- --- ----'}</p>
             </footer>
         </div>
     );
