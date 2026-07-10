@@ -242,7 +242,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // Check if report already exists in DB
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
   const existingReport = await getLatestAnalysis(companyId, engine);
-  const isReportReady = existingReport && existingReport.result?.status !== "pending_generation";
+  let isReportReady = existingReport && existingReport.result?.status !== "pending_generation";
+
+  // For Profiling Assessment, detect old schema (from profiling.genAi.server) and force regeneration
+  if (isReportReady && engine === "Profiling Assessment") {
+    const result = existingReport?.result || {};
+    if (!result.maturity_analysis && (result.executiveSummary || result.companyProfile)) {
+      console.log("[Intermediate Loader] Profiling Assessment has old schema, forcing regeneration");
+      isReportReady = false;
+    }
+  }
 
   console.log(`[Intermediate Loader] Existing Report: ${existingReport ? 'Found' : 'Not Found'}, Ready: ${isReportReady}`);
 

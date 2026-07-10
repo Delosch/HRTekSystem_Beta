@@ -44,48 +44,8 @@ export async function generate(
       `🚀 Starting DeepSeek V3 (AWS Bedrock) generation for company: ${company_id}, section: ${question_section}`
     );
 
-    // Dedicated background generator for Onboarding Profiling Assessment
-    if (question_section === "Profiling Assessment") {
-      const { generateProfilingReport } = await import("~/lib/profiling.genAi.server");
-      
-      const result = await prompt_processed(prompt_id, question_section, company_id);
-      const assessment_id = result ? result[0] : `${company_id}#Profiling Assessment`;
-
-      let answer = await getAnswerSheet(company_id, assessment_id);
-      if (!answer) {
-        const { findEngineData } = await import("~/models/engine.model.server");
-        const engineRecord = await findEngineData(company_id, question_section);
-        if (engineRecord && engineRecord.responses) {
-          answer = (engineRecord.responses as any).answers || engineRecord.responses;
-        }
-      }
-
-      if (!answer) {
-        console.error("❌ No answer sheet found for Profiling Assessment background generation");
-        setAIStatus(company_id, 'error');
-        return false;
-      }
-
-      const answersMap = (answer as any).answers || answer;
-      const reportResult = await generateProfilingReport(company_id, assessment_id, answersMap);
-
-      const stored = await store_analysis(
-        company_id,
-        assessment_id,
-        question_section,
-        reportResult as any
-      );
-
-      if (stored) {
-        console.log("✅ Profiling Assessment analysis stored successfully in background");
-        setAIStatus(company_id, 'ready');
-        return true;
-      } else {
-        console.error("❌ Storing Profiling Assessment analysis failed in background");
-        setAIStatus(company_id, 'error');
-        return false;
-      }
-    }
+    // Profiling Assessment now uses the standard digital_maturity prompt path (same as all other engines)
+    // The old profiling.genAi.server generator has been retired in favor of the unified pipeline
 
     /**
      * 1. Build base prompt and get assessment id

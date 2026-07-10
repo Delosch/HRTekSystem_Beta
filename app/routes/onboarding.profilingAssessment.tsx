@@ -67,26 +67,16 @@ export const action: ActionFunction = async ({ request }) => {
         progress: 100
       });
 
-      // Auto-generate AI report for Profiling Assessment
+      // Auto-generate AI report for Profiling Assessment using digital_maturity prompt
       try {
-        const { generateProfilingReport } = await import("~/lib/profiling.genAi.server");
-        const reportResult = await generateProfilingReport(companyId, assessmentId, body.answers || {});
-        await store_analysis(
-          companyId,
-          `${companyId}#${assessmentId}`,
-          "Profiling Assessment",
-          reportResult as any
-        );
-        console.log(`[Profiling Assessment] AI report generated and stored for ${companyId}`);
+        const { generate: generateDigitalMaturity } = await import("~/lib/digitalMaturity.genAi");
+        // Fire-and-forget: the generate function stores the analysis via store_analysis internally
+        generateDigitalMaturity("digital_maturity", "Profiling Assessment", companyId).catch((err: any) => {
+          console.warn("[Profiling Assessment] Background AI generation failed:", err);
+        });
+        console.log(`[Profiling Assessment] AI report generation started for ${companyId}`);
       } catch (reportError) {
         console.warn("[Profiling Assessment] Auto-report generation failed:", reportError);
-        // Store a placeholder so the report shows up in My Reports
-        await store_analysis(
-          companyId,
-          `${companyId}#${assessmentId}`,
-          "Profiling Assessment",
-          { status: "pending_generation", message: "Report generation in progress." } as any
-        );
       }
 
 

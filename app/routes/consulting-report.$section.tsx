@@ -60,7 +60,18 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   // }
 
   const analysis = await getLatestAnalysis(user.organisationId, section);
-  const isReportReady = analysis && analysis.result?.status !== "pending_generation";
+  let isReportReady = analysis && analysis.result?.status !== "pending_generation";
+
+  // For Profiling Assessment, ensure the data uses the digital_maturity schema
+  // Old reports generated with profiling.genAi.server have executiveSummary/companyProfile
+  // but DigitalMaturityReport needs maturity_analysis/strategic_insights
+  if (isReportReady && section === "Profiling Assessment") {
+    const result = analysis?.result || {};
+    if (!result.maturity_analysis && (result.executiveSummary || result.companyProfile)) {
+      console.log("[Consulting Report Loader] Profiling Assessment has old schema, forcing regeneration");
+      isReportReady = false;
+    }
+  }
 
   console.log(`[Consulting Report Loader] Section: ${section}, Data found: ${!!analysis}, Ready: ${isReportReady}`);
 
@@ -167,11 +178,13 @@ export default function ConsultingReportPage() {
   // --- Engine-specific report components ---
   if (section === "Profiling Assessment") {
     return (
-      <ProfilingReport
+      <DigitalMaturityReport
         data={analysis}
-        user={user}
         brandName={brand_name || "Your Organization"}
         assessmentId={section}
+        reportType="detailed"
+        responses={responses}
+        questions={questions}
       />
     );
   }
