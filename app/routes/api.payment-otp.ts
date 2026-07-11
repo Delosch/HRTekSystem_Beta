@@ -7,7 +7,14 @@ export const action: ActionFunction = async ({ request }) => {
     const user = await requireUserSession(request);
     if (!user) return json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await request.json();
+    let body: any;
+    try {
+        body = await request.json();
+    } catch (err) {
+        console.error("Invalid OTP request body:", err);
+        return json({ error: "Invalid request format" }, { status: 400 });
+    }
+
     const { intent, phone, otp: otpInput, engineNames, totalAmount } = body;
 
     if (intent === "send_otp") {

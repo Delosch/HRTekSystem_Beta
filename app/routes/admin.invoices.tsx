@@ -3,6 +3,7 @@ import { useLoaderData, Link, useSearchParams } from "@remix-run/react";
 import { requireAdminSession } from "~/lib/session.server";
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { getPendingApprovalRequests } from "~/models/payment.model.server";
 import {
     DocumentTextIcon,
     BuildingOffice2Icon,
@@ -49,8 +50,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
         const response = await ddbDocClient.send(command);
         const invoices = response.Items || [];
 
+        // Get pending approval payment requests
+        const pendingPaymentRequests = await getPendingApprovalRequests();
+
         return json({
             invoices,
+            pendingPaymentRequests,
             totalCount: invoices.length,
             statusFilter,
             error: null as string | null
@@ -60,6 +65,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return json({
             error: "Failed to fetch invoices from database",
             invoices: [],
+            pendingPaymentRequests: [],
             totalCount: 0,
             statusFilter
         });
@@ -67,7 +73,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function AdminInvoices() {
-    const { invoices, totalCount, statusFilter, error } = useLoaderData<typeof loader>();
+    const { invoices, pendingPaymentRequests, totalCount, statusFilter, error } = useLoaderData<typeof loader>();
     const [searchParams] = useSearchParams();
 
     const getStatusStyles = (status: string) => {
@@ -75,16 +81,17 @@ export default function AdminInvoices() {
             paid: { color: "text-emerald-700 bg-emerald-50 border-emerald-100", icon: CheckCircleIcon, label: "Settled" },
             pending: { color: "text-amber-700 bg-amber-50 border-amber-100", icon: ClockIcon, label: "Processing" },
             overdue: { color: "text-rose-700 bg-rose-50 border-rose-100", icon: ExclamationTriangleIcon, label: "Overdue" },
-            cancelled: { color: "text-gray-500 bg-gray-50 border-gray-100", icon: XCircleIcon, label: "Voided" }
+            cancelled: { color: "text-gray-500 bg-gray-50 border-gray-100", icon: XCircleIcon, label: "Voided" },
+            request_pending_approval: { color: "text-blue-700 bg-blue-50 border-blue-100", icon: ClockIcon, label: "Awaiting Approval" },
         };
         return styles[status as keyof typeof styles] || styles.pending;
     };
 
     const stats = [
-        { label: 'Total Volume', value: totalCount, icon: DocumentTextIcon, color: 'indigo' },
+        { label: 'Total Invoices', value: totalCount, icon: DocumentTextIcon, color: 'indigo' },
+        { label: 'Pending Approval', value: pendingPaymentRequests.length, icon: ClockIcon, color: 'blue' },
         { label: 'Pending Audit', value: invoices.filter((i: any) => i.status === "pending").length, icon: ClockIcon, color: 'amber' },
         { label: 'Revenue Finalized', value: invoices.filter((i: any) => i.status === "paid").length, icon: CheckCircleIcon, color: 'emerald' },
-        { label: 'Risk Exposure', value: invoices.filter((i: any) => i.status === "overdue").length, icon: ExclamationTriangleIcon, color: 'rose' },
     ];
 
     return (
@@ -101,6 +108,20 @@ export default function AdminInvoices() {
                     <p className="text-gray-500 font-medium mt-1">Audit, reconcile, and synchronize all primary ingress invoices.</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <Link
+                        to="/admin/payments"
+                        className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                        <ClockIcon className="h-4 w-4" />
+                        Approval Queue
+                    </Link>
+                    <Link
+                        to="/admin/payments/verification"
+                        className="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                    >
+                        <CheckCircleIcon className="h-4 w-4" />
+                        Verify Proofs
+                    </Link>
                     <div className="relative">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
@@ -132,6 +153,76 @@ export default function AdminInvoices() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Pending Approval Requests Section */}
+            {pendingPaymentRequests.length > 0 && (
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[2.5rem] border border-blue-200 p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <ClockIcon className="h-6 w-6 text-blue-600" />
+                            <div>
+                                <h2 className="text-xl font-black text-gray-900">Payment Requests Awaiting Approval</h2>
+                                <p className="text-sm text-gray-600 mt-1">{pendingPaymentRequests.length} request(s) pending admin review</p>
+                            </div>
+                        </div>
+                        <Link
+                            to="/admin/payments"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+                        >
+                            Review All
+                        </Link>
+                    </div>
+
+                    <div className="bg-white rounded-2xl overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Engine</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Company</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Amount</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment %</th>
+                                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Requested</th>
+                                    <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {pendingPaymentRequests.slice(0, 5).map((req: any) => (
+                                    <tr key={req.invoiceId} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-bold text-gray-900">{req.engineName || "Unknown"}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-bold text-gray-700">{req.companyId}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-sm font-bold text-indigo-600">₹{(req.totalAmount || 0).toLocaleString()}</p>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                                                {req.requestedPaymentPercent}%
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <p className="text-xs text-gray-500">
+                                                {new Date(req.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <Link
+                                                to="/admin/payments"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-600 hover:text-white transition-all"
+                                            >
+                                                Review
+                                                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Filter Navigation */}
             <div className="flex flex-wrap gap-2 bg-gray-100/50 p-2 rounded-[1.5rem] w-fit">
