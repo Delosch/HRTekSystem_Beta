@@ -127,6 +127,8 @@ const ENGINE_NAME_CANONICAL_MAP: Record<string, string> = {
     "hr shared service engine": "HR Shared Service Engine",
     "decision engine": "HR Shared Service Engine",
     "intelligent change management": "ICMS",
+    "intelligent change management system": "ICMS",
+    "change management intelligence engine": "ICMS",
     "hr change management": "ICMS",
     "icms": "ICMS",
     "hti - hr transformation intelligence": "HII",
@@ -538,17 +540,26 @@ export async function createEnginePaymentRequest(params: {
 
 export async function getEngineAccessStatus(orgId: string, engineName: string): Promise<EngineAccessStatus> {
     const normalizedEngine = normalizeEngineName(engineName);
+    const canonicalTarget = canonicalEngineName(engineName);
     const payments = await getCompanyPayments(orgId);
     const enginePayments = payments.filter((payment) => {
-        if (normalizeEngineName(payment.engineName || "") === normalizedEngine) {
+        // Match by normalized name OR by canonical name
+        const paymentNorm = normalizeEngineName(payment.engineName || "");
+        const paymentCanonical = canonicalEngineName(payment.engineName || "");
+        if (paymentNorm === normalizedEngine || paymentCanonical === canonicalTarget) {
             return true;
         }
         return (payment.items || []).some(
             (item) => {
                 const iName = item.engineName || "";
-                if (normalizeEngineName(iName) === normalizedEngine) return true;
+                const iNorm = normalizeEngineName(iName);
+                const iCanonical = canonicalEngineName(iName);
+                if (iNorm === normalizedEngine || iCanonical === canonicalTarget) return true;
                 const match = iName.match(/^(.*) - Installment #(\d+)$/);
-                if (match && normalizeEngineName(match[1]) === normalizedEngine) return true;
+                if (match) {
+                    const baseName = match[1];
+                    if (normalizeEngineName(baseName) === normalizedEngine || canonicalEngineName(baseName) === canonicalTarget) return true;
+                }
                 return false;
             }
         );
@@ -587,7 +598,10 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         const matchingItems = (payment.items || []).filter(
             (item) => {
                 const iName = item.engineName || "";
-                if (normalizeEngineName(stripInstallmentSuffix(iName)) === normalizedEngine) return true;
+                const strippedName = stripInstallmentSuffix(iName);
+                if (normalizeEngineName(strippedName) === normalizedEngine) return true;
+                // Also match by canonical name
+                if (canonicalEngineName(strippedName) === canonicalTarget) return true;
                 return false;
             }
         );
@@ -693,7 +707,7 @@ export async function getEngineAccessStatus(orgId: string, engineName: string): 
         : engineType === "core"
             ? coreEnabled
             : allowPartialPayment
-                ? advancedUnlock.unlockedFeatures.length > 0
+                ? (advancedUnlock.unlockedFeatures.length > 0 || (totalPaidAmount > 0 && verifiedPayments.length > 0))
                 : isFullyPaid;
 
     const reportUnlocked = manualForceEnabled
@@ -1547,6 +1561,8 @@ export async function hasVerifiedPaymentForEngines(
                 const match = eName.match(/^(.*) - Installment #(\d+)$/);
                 if (match) eName = match[1].trim();
                 paidEngines.add(eName);
+                // Also add canonical name so different variants match
+                paidEngines.add(canonicalEngineName(eName));
             }
         });
     });
@@ -1567,12 +1583,27 @@ export async function hasVerifiedPaymentForEngines(
             for (const item of payment.items.slice(1)) {
                 if (item.price === 0) {
                     paidEngines.add(item.engineName.trim());
+                    paidEngines.add(canonicalEngineName(item.engineName.trim()));
                 }
+            }
+        }
+
+        // For advanced engines: if ANY installment is paid, add the engine itself as accessible
+        // (assessmentUnlocked at milestone level is handled by getEngineAccessStatus, but
+        //  hasVerifiedPaymentForEngines should also recognise partial payments for advanced engines)
+        if (payment.status === "payment_verified" || payment.status === "completed") {
+            const mainEngine = payment.items?.[0]?.engineName;
+            if (mainEngine && getEngineClassification(mainEngine) === "advanced") {
+                paidEngines.add(mainEngine.trim());
+                paidEngines.add(canonicalEngineName(mainEngine.trim()));
             }
         }
     }
 
-    return engineNames.every(engine => paidEngines.has(engine.trim()));
+    // Check by both raw name and canonical name
+    return engineNames.every(engine => 
+        paidEngines.has(engine.trim()) || paidEngines.has(canonicalEngineName(engine))
+    );
 }
 
 /**

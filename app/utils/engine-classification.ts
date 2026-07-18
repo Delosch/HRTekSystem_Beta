@@ -64,6 +64,7 @@ export const ENGINE_NAME_CANONICAL_MAP_CLIENT: Record<string, string> = {
     "decision engine": "HR Shared Service Engine",
     "intelligent change management system": "ICMS",
     "intelligent change management": "ICMS",
+    "change management intelligence engine": "ICMS",
     "hr change management": "ICMS",
     "icms": "ICMS",
     "hti - hr transformation intelligence": "HII",

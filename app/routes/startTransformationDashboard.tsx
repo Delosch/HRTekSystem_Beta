@@ -9,12 +9,14 @@ import {
   ChartBarIcon,
   ClockIcon,
   RocketLaunchIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { json, LoaderFunction, ActionFunction, redirect } from "@remix-run/node";
 import { getEnhancedUser } from "~/utils/user.server";
 import { completedEngine, fetchEngineRecomendations } from "~/models/engine.model.server";
 import { getEnginePriceByName } from "~/lib/pricing";
 import { addOrUpdateCartItem } from "~/models/cart.model.server";
+import { getEngineAccessStatuses } from "~/models/payment.model.server";
 
 const engineDetails: Record<string, { name: string; description: string; icon: string; route: string }> = {
   "Intelligent Change Management": {
@@ -55,6 +57,19 @@ const engineDetails: Record<string, { name: string; description: string; icon: s
   }
 };
 
+// Map from this dashboard's engine names to the user-payment-dashboard engine names
+const ENGINE_PAYMENT_NAME_MAP: Record<string, string> = {
+  "HR Technology Maturity Analysis": "HR Tech Diagnostics",
+  "HR Transformation Roadmap Generator": "HR Digital Roadmap",
+  "HCM Vendor Fit Engine": "HR HCM Vendor Fit",
+  "Shared Service Designer": "HR Shared Services",
+  "AI Driven Maturity Engine": "HR Tech Diagnostics",
+  "Intelligent Change Management": "Intelligent Change Management System",
+};
+
+// Advanced engines — not payment-gated for now (empty — CM is now gated)
+const ADVANCED_ENGINE_NAMES: string[] = [];
+
 export const loader: LoaderFunction = async ({ request }) => {
   const user = await getEnhancedUser(request);
 
@@ -81,12 +96,28 @@ export const loader: LoaderFunction = async ({ request }) => {
     enginePrices[key] = getEnginePriceByName(key);
   });
 
+  // Get payment access status for core engines
+  const paymentEngineNames = [...new Set(Object.values(ENGINE_PAYMENT_NAME_MAP))];
+  const paymentAccessMap = await getEngineAccessStatuses(user.organisationId as string, paymentEngineNames);
+
+  // Create a map: dashboard engine name → assessmentUnlocked boolean
+  const engineAccessMap: Record<string, boolean> = {};
+  for (const [dashboardName, paymentName] of Object.entries(ENGINE_PAYMENT_NAME_MAP)) {
+    const access = paymentAccessMap[paymentName];
+    engineAccessMap[dashboardName] = access?.assessmentUnlocked ?? false;
+  }
+  // Advanced engines are always accessible (not payment-gated for now)
+  ADVANCED_ENGINE_NAMES.forEach(name => {
+    engineAccessMap[name] = true;
+  });
+
   return json({
     completedEngines,
     recommendations: recommendations?.allRankings || [],
     user,
     transformationEligibility: eligibility,
-    enginePrices
+    enginePrices,
+    engineAccessMap
   });
 };
 
@@ -131,7 +162,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function StartTransformationDashboard() {
-  const { completedEngines, recommendations, user, transformationEligibility, enginePrices } = useLoaderData<typeof loader>();
+  const { completedEngines, recommendations, user, transformationEligibility, enginePrices, engineAccessMap } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const fetcher = useFetcher<{ success?: boolean; message?: string; error?: string }>(); // Typed fetcher
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -152,6 +183,23 @@ export default function StartTransformationDashboard() {
       toast.error(fetcher.data.error);
     }
   }, [fetcher.data]);
+
+  const handleEngineClick = (engineName: string) => {
+    // Check if engine is unlocked via payment
+    if (engineAccessMap[engineName]) {
+      navigate(engineDetails[engineName]?.route || `/engine/${encodeURIComponent(engineName)}`);
+      return;
+    }
+
+    // Engine is locked — show toast and redirect to payment dashboard
+    toast.warning(
+      `🔒 "${engineDetails[engineName]?.name || engineName}" requires payment approval. Redirecting to Payment Dashboard...`,
+      { autoClose: 2500 }
+    );
+    setTimeout(() => {
+      navigate("/user-payment-dashboard");
+    }, 2500);
+  };
 
   const allEngines = Object.keys(engineDetails);
   const inProgressEngines = allEngines.filter(
@@ -207,7 +255,7 @@ export default function StartTransformationDashboard() {
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
             <div className="max-w-2xl text-white">
               <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Welcome back, {user.name}! 👋
+                Hey, {user.name}! 👋
               </h1>
               <p className="text-blue-100 text-lg leading-relaxed mb-6">
                 Your HR Digital Transformation journey starts here. Track your progress,
@@ -290,7 +338,7 @@ export default function StartTransformationDashboard() {
               {completedEngines.map((engineName: string) => (
                 <div
                   key={engineName}
-                  onClick={() => navigate(engineDetails[engineName]?.route || `/engine/${encodeURIComponent(engineName)}`)}
+                  onClick={() => handleEngineClick(engineName)}
                   className="bg-white rounded-xl border-2 border-green-200 p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
                 >
                   <div className="flex items-start gap-4 mb-4">
@@ -304,9 +352,17 @@ export default function StartTransformationDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-green-700 font-semibold text-sm bg-green-50 px-4 py-2 rounded-lg">
-                    <CheckCircleIcon className="w-5 h-5" />
-                    Completed
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-700 font-semibold text-sm bg-green-50 px-4 py-2 rounded-lg">
+                      <CheckCircleIcon className="w-5 h-5" />
+                      Completed
+                    </div>
+                    {!engineAccessMap[engineName] && (
+                      <div className="flex items-center gap-1.5 text-orange-600 text-xs font-semibold bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200">
+                        <LockClosedIcon className="w-3.5 h-3.5" />
+                        Payment Required
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -327,7 +383,7 @@ export default function StartTransformationDashboard() {
               {recommendedEngines.map(([engineName, score]: [string, number]) => (
                 <div
                   key={engineName}
-                  onClick={() => navigate(engineDetails[engineName]?.route || `/engine/${encodeURIComponent(engineName)}`)}
+                  onClick={() => handleEngineClick(engineName)}
                   className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group"
                 >
                   <div className="flex items-start gap-4 mb-4">
@@ -363,7 +419,11 @@ export default function StartTransformationDashboard() {
                           )}
                         </button>
                       </fetcher.Form>
-                      <ArrowRightCircleIcon className="w-8 h-8 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                      {engineAccessMap[engineName] ? (
+                        <ArrowRightCircleIcon className="w-8 h-8 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                      ) : (
+                        <LockClosedIcon className="w-8 h-8 text-orange-500" />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -386,7 +446,7 @@ export default function StartTransformationDashboard() {
               return (
                 <div
                   key={engineName}
-                  onClick={() => navigate(engineDetails[engineName]?.route || `/engine/${encodeURIComponent(engineName)}`)}
+                  onClick={() => handleEngineClick(engineName)}
                   className={`rounded-xl border-2 p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer group ${isCompleted
                     ? 'bg-gray-50 border-gray-300 opacity-75'
                     : 'bg-white border-gray-200'
@@ -411,37 +471,44 @@ export default function StartTransformationDashboard() {
                   ) : (
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-2">
                       <div className="flex flex-col">
-                      <div className="flex gap-2">
-                        <fetcher.Form method="post" onSubmit={(e) => e.stopPropagation()}>
-                          <input type="hidden" name="intent" value="addToCart" />
-                          <input type="hidden" name="engineName" value={engineName} />
-                          <button
-                            type="submit"
-                            onClick={(e) => e.stopPropagation()}
-                            disabled={fetcher.state === 'submitting'}
-                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors"
-                          >
-                            {fetcher.state === 'submitting' && fetcher.formData?.get('engineName') === engineName ? (
-                              "..."
-                            ) : (
-                              "🛒 Add"
-                            )}
-                          </button>
-                        </fetcher.Form>
+                        <div className="flex gap-2">
+                          <fetcher.Form method="post" onSubmit={(e) => e.stopPropagation()}>
+                            <input type="hidden" name="intent" value="addToCart" />
+                            <input type="hidden" name="engineName" value={engineName} />
+                            <button
+                              type="submit"
+                              onClick={(e) => e.stopPropagation()}
+                              disabled={fetcher.state === 'submitting'}
+                              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors"
+                            >
+                              {fetcher.state === 'submitting' && fetcher.formData?.get('engineName') === engineName ? (
+                                "..."
+                              ) : (
+                                "🛒 Add"
+                              )}
+                            </button>
+                          </fetcher.Form>
 
-                        <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm bg-blue-50 px-4 py-2 rounded-lg group-hover:bg-blue-100 transition-colors">
-                          <ArrowRightCircleIcon className="w-5 h-5" />
-                          Start
+                          {engineAccessMap[engineName] ? (
+                            <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm bg-blue-50 px-4 py-2 rounded-lg group-hover:bg-blue-100 transition-colors">
+                              <ArrowRightCircleIcon className="w-5 h-5" />
+                              Start
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-orange-700 font-semibold text-sm bg-orange-50 px-4 py-2 rounded-lg border border-orange-200">
+                              <LockClosedIcon className="w-5 h-5" />
+                              Locked
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Why Transformation Section */}
         <section>

@@ -1,6 +1,6 @@
-import { aggregateEngineData, saveAdvisoryReport, updateApprovalStatus } from "~/models/hti.model.server";
+import { aggregateEngineData, saveAdvisoryReport, updateApprovalStatus, checkAllEngineReportsGenerated } from "~/models/hti.model.server";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
-import { hasVerifiedPaymentForEngines } from "~/models/payment.model.server";
+import { hasVerifiedPaymentForEngines, getEngineAccessStatus } from "~/models/payment.model.server";
 import type { HTIApprovalStatus } from "~/models/hti.model.server";
 import { getPricingForCompany } from "~/utils/pricing.server";
 import { getCompanyProfile } from "~/models/company.model.server";
@@ -16,10 +16,11 @@ import { getCompanyProfile } from "~/models/company.model.server";
  * 1. Validate HTI access (payment verification)
  * 2. Aggregate data from all 5 engines
  * 3. Check if ALL 5 engines are completed (100% progress)
- * 4. Call DeepSeek LLM for advisory generation
- * 5. Save report with 'pending' status
- * 6. Notify admin for approval
- * 7. Return report ID
+ * 4. Check if ALL 5 engine AI reports are generated (ANALYSIS# records)
+ * 5. Call DeepSeek LLM for advisory generation
+ * 6. Save report with 'pending' status
+ * 7. Notify admin for approval
+ * 8. Return report ID
  */
 export async function generateAdvisoryReport(
     companyId: string,
@@ -28,15 +29,14 @@ export async function generateAdvisoryReport(
     try {
         console.log(`🚀 Starting HTI advisory generation for company: ${companyId}`);
 
-        // Step 1: Validate HTI access (DISABLED FOR TESTING)
-        // const hasAccess = await validateHTIAccess(companyId);
-        // if (!hasAccess) {
-        //     return {
-        //         success: false,
-        //         error: "HTI module access not verified. Please ensure payment is completed and verified."
-        //     };
-        // }
-        console.log("⚠️ DEV MODE: Skipping HTI access validation");
+        // Step 1: Validate HTI access (payment verification)
+        const hasAccess = await validateHTIAccess(companyId);
+        if (!hasAccess) {
+            return {
+                success: false,
+                error: "HTI module access not verified. Please ensure payment is completed and verified."
+            };
+        }
 
         // Step 2: Aggregate engine data
         console.log("📊 Aggregating data from all engines...");
@@ -63,16 +63,27 @@ export async function generateAdvisoryReport(
                 missingEngines.push("Shared Service Designer");
             }
 
-            console.warn(`⚠️ DEV MODE: Bypassing incomplete engines check. Missing: ${missingEngines.join(", ")}`);
-            // return {
-            //     success: false,
-            //     error: `All 5 assessment engines must be completed before generating HTI advisory. Missing: ${missingEngines.join(", ")}`
-            // };
+            return {
+                success: false,
+                error: `All 5 assessment engines must be completed before generating HTI advisory. Missing: ${missingEngines.join(", ")}`
+            };
         }
 
-        console.log(`✅ All ${requiredEngines} engines completed (or bypassed)`);
+        console.log(`✅ All ${requiredEngines} engines completed`);
 
-        // Step 4: Generate advisory using DeepSeek
+        // Step 4: Check if ALL 5 engine AI reports are generated (ANALYSIS# records)
+        console.log("📋 Checking engine report generation status...");
+        const reportsCheck = await checkAllEngineReportsGenerated(companyId);
+        if (!reportsCheck.allGenerated) {
+            return {
+                success: false,
+                error: `All 5 engine AI reports must be generated before creating HTI advisory. Missing reports: ${reportsCheck.missing.join(", ")}`
+            };
+        }
+
+        console.log("✅ All engine AI reports are generated");
+
+        // Step 5: Generate advisory using DeepSeek
         console.log("🧠 Calling DeepSeek LLM for advisory generation...");
         const advisory = await generateHTIAdvisory(aggregatedData);
 
@@ -87,7 +98,7 @@ export async function generateAdvisoryReport(
             };
         }
 
-        // Step 5: Append audit trail entry for save event
+        // Step 6: Append audit trail entry for save event
         if (!advisory.auditTrail) advisory.auditTrail = [];
         advisory.auditTrail.push({
             timestamp: new Date().toISOString(),
@@ -103,7 +114,7 @@ export async function generateAdvisoryReport(
             aggregatedData
         );
 
-        // Step 6: Notify admin for approval
+        // Step 7: Notify admin for approval
         await notifyAdminForApproval(reportId, companyId);
 
         console.log(`✅ HTI Advisory generated successfully: ${reportId}`);

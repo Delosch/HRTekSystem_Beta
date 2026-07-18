@@ -155,6 +155,48 @@ const ENGINE_ANALYSIS_SECTION_MAP: Record<string, string> = {
     "Shared Service Designer": "Shared Services Assessment",
 };
 
+// The 5 required engine sections that must have ANALYSIS# records
+const REQUIRED_ANALYSIS_SECTIONS: Array<{ engineName: string; section: string }> = [
+    { engineName: "HR Technology Maturity Analysis", section: "AI Maturity Assessment" },
+    { engineName: "HR Transformation Roadmap Generator", section: "Digital Roadmap" },
+    { engineName: "Cognitive HCM Vendor Fit", section: "Vendor Fit Assessment" },
+    { engineName: "Intelligent Change Management", section: "Change Management Assessment" },
+    { engineName: "Shared Service Designer", section: "Shared Services Assessment" },
+];
+
+/**
+ * Check if all 5 engine AI analysis reports (ANALYSIS# records) have been generated.
+ * This is distinct from engine completion (progress = 100%) — a completed engine
+ * may not yet have its AI report generated.
+ */
+export async function checkAllEngineReportsGenerated(
+    companyId: string
+): Promise<{ allGenerated: boolean; generated: string[]; missing: string[] }> {
+    const generated: string[] = [];
+    const missing: string[] = [];
+
+    await Promise.all(
+        REQUIRED_ANALYSIS_SECTIONS.map(async ({ engineName, section }) => {
+            try {
+                const record = await getLatestAnalysis(companyId, section);
+                if (record && record.analysis) {
+                    generated.push(engineName);
+                } else {
+                    missing.push(engineName);
+                }
+            } catch {
+                missing.push(engineName);
+            }
+        })
+    );
+
+    return {
+        allGenerated: missing.length === 0,
+        generated,
+        missing,
+    };
+}
+
 /**
  * Attach AI-generated analysis report text to engine data
  */

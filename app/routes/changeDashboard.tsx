@@ -11,7 +11,7 @@ import EnginePricingCard from "~/components/EnginePricingCard";
 import MetricsCard from "~/components/MetricsCard";
 import ProgressRing from "~/components/ProgressRing";
 import PaymentStatusModal from "~/components/PaymentStatusModal";
-import { getEnginePaymentStatus } from "~/models/payment.model.server";
+import { getEnginePaymentStatus, getEngineAccessStatus } from "~/models/payment.model.server";
 
 const ENGINE = "Intelligent Change Management";
 
@@ -68,8 +68,13 @@ export const loader: LoaderFunction = async ({ request }) => {
   // Check detailed payment status
   const isAdmin = (user as any).role === "ADMIN";
   const paymentStatus = await getEnginePaymentStatus(user.organisationId, ENGINE);
-  const isPaid = true; // BYPASS: Force paid for testing
-  const isPending = false; // BYPASS: Force no pending for testing
+  
+  // Use real payment access status instead of bypass
+  const accessStatus = await getEngineAccessStatus(user.organisationId, ENGINE);
+  const assessmentUnlocked = accessStatus.assessmentUnlocked;
+  const reportUnlocked = accessStatus.reportUnlocked;
+  const isPaid = assessmentUnlocked;
+  const isPending = accessStatus.requestStatus === "pending";
 
   // Check report existence
   const report = await getLatestAnalysis(user.organisationId, ENGINE);
@@ -96,12 +101,14 @@ export const loader: LoaderFunction = async ({ request }) => {
     isPaid,
     isPending,
     hasReport,
-    companyLogo
+    companyLogo,
+    assessmentUnlocked,
+    reportUnlocked
   });
 };
 
 export default function ChangeDashboard() {
-  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo } = useLoaderData<any>();
+  const { currentEngine, completedEngines, recommendations, user, paymentStatus, isPaid, isPending, hasReport, companyLogo, assessmentUnlocked, reportUnlocked } = useLoaderData<any>();
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
