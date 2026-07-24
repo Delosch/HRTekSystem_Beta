@@ -30,6 +30,262 @@ interface AnswerSheet {
   answers: Record<string, unknown>;
 }
 
+type UnknownRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseJsonStringIfPossible(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+
+  const trimmed = value.trim();
+
+  if (
+    !(
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+    )
+  ) {
+    return trimmed;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return trimmed;
+  }
+}
+
+function normalizeAnswerValue(value: unknown): unknown {
+  const parsed = parseJsonStringIfPossible(value);
+
+  if (Array.isArray(parsed)) {
+    return parsed.map(normalizeAnswerValue);
+  }
+
+  if (isRecord(parsed)) {
+    return Object.fromEntries(
+      Object.entries(parsed).map(([key, nestedValue]) => [
+        key,
+        normalizeAnswerValue(nestedValue),
+      ])
+    );
+  }
+
+  return parsed;
+}
+
+function normalizeAnswers(answer: unknown): unknown {
+  const normalized = normalizeAnswerValue(answer);
+
+  /**
+   * Some future or fallback path may accidentally pass:
+   * { answers: {...} }
+   *
+   * In that case, unwrap it so the prompt receives the actual answer map.
+   */
+  if (
+    isRecord(normalized) &&
+    Object.keys(normalized).length === 1 &&
+    isRecord(normalized.answers)
+  ) {
+    return normalized.answers;
+  }
+
+  return normalized;
+}
+
+function extractMatchingFields(
+  source: unknown,
+  keywords: string[],
+  prefix = "",
+  output: UnknownRecord = {}
+): UnknownRecord {
+  if (!isRecord(source)) return output;
+
+  for (const [key, value] of Object.entries(source)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+    const keyLower = key.toLowerCase();
+
+    const isContextField = keywords.some((keyword) =>
+      keyLower.includes(keyword)
+    );
+
+    if (isContextField && value !== undefined && value !== null && value !== "") {
+      output[path] = value;
+    }
+
+    if (isRecord(value)) {
+      extractMatchingFields(value, keywords, path, output);
+    }
+  }
+
+  return output;
+}
+
+function buildNormalizedAssessmentInput(params: {
+  promptId: string;
+  engine: string;
+  companyId: string;
+  assessmentId: string;
+  answer: unknown;
+}) {
+  const normalizedAnswers = normalizeAnswers(params.answer);
+
+  const organizationContext = extractMatchingFields(normalizedAnswers, [
+    "company",
+    "industry",
+    "sector",
+    "employee",
+    "size",
+    "revenue",
+    "country",
+    "region",
+    "location",
+    "business",
+    "department",
+    "hrms",
+    "hcm",
+    "system",
+    "vendor",
+  ]);
+
+  const scoringContext = extractMatchingFields(normalizedAnswers, [
+    "score",
+    "scoring",
+    "maturity",
+    "readiness",
+    "risk",
+    "progress",
+  ]);
+
+  return {
+    assessment_context: {
+      company_id: params.companyId,
+      assessment_id: params.assessmentId,
+      engine: params.engine,
+      prompt_id: params.promptId,
+      generated_at: new Date().toISOString(),
+    },
+
+    input_aliases: {
+      schema: "Use the ASSESSMENT QUESTIONS STRUCTURE section provided above.",
+      questions_json: "Use the ASSESSMENT QUESTIONS STRUCTURE section provided above.",
+      responses_json: "Use submission.answers as the authoritative user response object.",
+      organization_context:
+        "Use organization_context only for company/profile context. Do not treat it as the full answer set.",
+    },
+
+    submission: {
+      answers: normalizedAnswers,
+    },
+
+    organization_context: organizationContext,
+
+    scoring_context:
+      Object.keys(scoringContext).length > 0 ? scoringContext : null,
+  };
+}
+
+/**
+ * Quality Warning Helpers
+ */
+function collectStrings(value: unknown, output: string[] = []): string[] {
+  if (typeof value === "string") {
+    output.push(value);
+    return output;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) collectStrings(item, output);
+    return output;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    for (const item of Object.values(value)) collectStrings(item, output);
+  }
+
+  return output;
+}
+
+function getReportQualityWarnings(report: Record<string, any>): string[] {
+  const text = collectStrings(report).join(" ");
+  const warnings: string[] = [];
+
+  if (/lorem ipsum|placeholder|sample company|example only/i.test(text)) {
+    warnings.push("Possible placeholder or sample text found.");
+  }
+
+  if (/\b\d+(\.\d+)?x\b/i.test(text)) {
+    warnings.push("Possible unsupported multiplier claim found.");
+  }
+
+  if (/benchmark data from \d+|similar transformations/i.test(text)) {
+    warnings.push("Possible unsupported benchmark-study claim found.");
+  }
+
+  if (/\b\d+\.\d{2,}\b/.test(text)) {
+    warnings.push("Over-precise decimal score found in report text.");
+  }
+
+  if (/significant intervention|required|robust framework/i.test(text)) {
+    warnings.push("Possible vague consulting phrase found; check whether it includes a specific action.");
+  }
+
+  return warnings;
+}
+
+/**
+ * Vendor Fit Score Normalization Helpers
+ */
+function clampPercentage(value: unknown): number | unknown {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return value;
+  }
+  return Math.max(0, Math.min(100, Number(value.toFixed(1))));
+}
+
+function normalizeVendorFitReport(report: any) {
+  if (!report || typeof report !== "object") return report;
+
+  if (report.scores) {
+    report.scores.satisfaction = clampPercentage(report.scores.satisfaction);
+    report.scores.painIndex = clampPercentage(report.scores.painIndex);
+    report.scores.integrationComplexity = clampPercentage(report.scores.integrationComplexity);
+    report.scores.decisionAgility = clampPercentage(report.scores.decisionAgility);
+    report.scores.changeReadiness = clampPercentage(report.scores.changeReadiness);
+    report.scores.fitScore = clampPercentage(report.scores.fitScore);
+
+    const fitScore =
+      typeof report.scores.fitScore === "number" ? report.scores.fitScore : null;
+
+    if (fitScore !== null) {
+      report.scores.fitBand =
+        fitScore >= 75
+          ? "Excellent vendor readiness"
+          : fitScore >= 45
+            ? "Moderate – some alignment gaps"
+            : "Needs alignment before vendor search";
+    }
+  }
+
+  if (Array.isArray(report.viz?.recommendationsTable)) {
+    report.viz.recommendationsTable = report.viz.recommendationsTable.map((item: any) => ({
+      ...item,
+      fitScore: clampPercentage(item.fitScore),
+    }));
+  }
+
+  if (report.viz?.executiveRadar) {
+    for (const key of Object.keys(report.viz.executiveRadar)) {
+      report.viz.executiveRadar[key] = clampPercentage(report.viz.executiveRadar[key]);
+    }
+  }
+
+  return report;
+}
+
 /**
  * Main AI generation entry point
  * Called once from Intermediate loader
@@ -77,7 +333,7 @@ export async function generate(
 
     /**
      * 2. Fetch completed answer sheet
-     * We attempt to find it via:
+     * * We attempt to find it via:
      * a) ASSESSMENT#{id} (from save_answers)
      * b) {engineName} (from createOrUpdateEngineStorage)
      */
@@ -115,29 +371,37 @@ export async function generate(
       try {
         console.log(`🔄 DeepSeek attempt ${attempt + 1}/${maxRetries}`);
 
+        const assessmentInput = buildNormalizedAssessmentInput({
+          promptId: prompt_id,
+          engine: question_section,
+          companyId: company_id,
+          assessmentId: assessment_id,
+          answer,
+        });
+
         const finalPrompt = `
-${base_prompt}
+      ${base_prompt}
 
-🚨 ASSESSMENT INPUT DATA:
-Below is the user's assessment data. Use this to perform your analysis.
-Note: Data is provided in a structured format compatible with both "submission.answers" and "responses_json" requirements.
+      🚨 ASSESSMENT INPUT DATA:
+      Below is the user's assessment data. Use this to perform your analysis.
 
-{
-  "submission": {
-    "answers": ${JSON.stringify(answer, null, 2)}
-  },
-  "responses_json": ${JSON.stringify(answer, null, 2)},
-  "organization_context": ${JSON.stringify(answer, null, 2)}
-}
+      IMPORTANT INPUT MAPPING:
+      - Use "submission.answers" as the single authoritative source of user responses.
+      - If the engine prompt mentions "responses_json", treat it as an alias for "submission.answers".
+      - Use "organization_context" only as derived company/profile context.
+      - Do not treat organization_context as the complete answer set.
+      - Use the ASSESSMENT QUESTIONS STRUCTURE above as the questionnaire schema.
 
-🚨 STRICT JSON RULES (MANDATORY):
-- Return ONLY valid JSON
-- No markdown, no comments
-- No explanations
-- Start with { and end with }
-- Use double quotes only
-- No trailing commas
-        `.trim();
+      ${JSON.stringify(assessmentInput, null, 2)}
+
+      🚨 STRICT JSON RULES (MANDATORY):
+      - Return ONLY valid JSON
+      - No markdown, no comments
+      - No explanations
+      - Start with { and end with }
+      - Use double quotes only
+      - No trailing commas
+      `.trim();
 
         /**
          * 4. Call DeepSeek V3 via Bedrock
@@ -192,14 +456,17 @@ Note: Data is provided in a structured format compatible with both "submission.a
           throw new Error("Empty response from DeepSeek");
         }
 
-        // ✅ Use Robust Post-Processing directly (bypass legacy preprocessor)
-        const processed = postProcessAiResponse(
-          rawText
-        ) as AssessmentResult;
+        const processed = postProcessAiResponse(rawText) as AssessmentResult;
 
         if (processed.success && processed.data) {
           parsedJson = processed.data;
           console.log("✅ DeepSeek JSON parsing successful");
+
+          const qualityWarnings = getReportQualityWarnings(processed.data as Record<string, any>);
+          if (qualityWarnings.length > 0) {
+            console.warn("AI report quality warnings:", qualityWarnings);
+          }
+
           break;
         }
 
@@ -209,8 +476,7 @@ Note: Data is provided in a structured format compatible with both "submission.a
         console.error(`❌ Attempt ${attempt + 1} failed`);
         console.error(`Error name: ${err?.name}`);
         console.error(`Error message: ${err?.message}`);
-        console.error(`Full error:`, JSON.stringify(err, null, 2));
-
+        
         // Log AWS-specific error details if available
         if (err?.$metadata) {
           console.error(`AWS Metadata:`, err.$metadata);
@@ -232,6 +498,14 @@ Note: Data is provided in a structured format compatible with both "submission.a
       console.error("❌ All DeepSeek attempts failed");
       setAIStatus(company_id, 'error');
       return false;
+    }
+
+    /**
+     * NEW: Runtime normalizer guard applied here
+     */
+    if (prompt_id === "vendor_fit") {
+      console.log("Normalizing vendor_fit report scores...");
+      parsedJson = normalizeVendorFitReport(parsedJson);
     }
 
     /**

@@ -1,5 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { requireUserSession } from "~/lib/session.server";
+import { resolveReportEngine } from "~/constants/engines";
 
 /**
  * API Resource Route: Generate Strategic Advisory Report
@@ -26,23 +27,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
     console.log(`[API Report Generate] Generating report for: ${engineName}`);
 
-    const engineTypeMap: Record<string, string> = {
-      "Intelligent Change Management": "changeManagement",
-      "Shared Service Designer": "sharedServices",
-      "HCM Vendor Fit Engine": "vendorFit",
-      "HR Transformation Roadmap Generator": "sharedServices",
-      "HR Technology Maturity Analysis": "sharedServices",
-      "HR Tech Maturity Analysis": "sharedServices",
-    };
+    // Resolve engine validation configurations strictly
+    const engineConfig = resolveReportEngine(engineName);
+    if (!engineConfig) {
+      return json(
+        { error: `Unsupported report engine: ${engineName}` },
+        { status: 400 }
+      );
+    }
 
-    const engineType = engineTypeMap[engineName] || "sharedServices";
-
+    // Build structure via unified config configuration properties safely
     const aggregatedData = {
       companyId: user.organisationId,
       timestamp: new Date().toISOString(),
       engines: {
-        [engineType]: {
-          engineName,
+        [engineConfig.htiInputKey]: {
+          engineName: engineConfig.displayName,
           progress: 100,
           responses: answers || {},
           scores: {},
@@ -55,7 +55,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const { generateHTIAdvisory } = await import("~/lib/hti.deepseek");
     const { saveAdvisoryReport } = await import("~/models/hti.model.server");
-    const advisory = await generateHTIAdvisory(aggregatedData as any);
+
+    // Invoke processing utilizing explicit configurations context
+    const advisory = await generateHTIAdvisory(
+      aggregatedData as any,
+      engineConfig.htiReportType
+    );
+
     await saveAdvisoryReport(user.organisationId, user.userId, advisory, aggregatedData as any);
 
     return json({ success: true, advisory });

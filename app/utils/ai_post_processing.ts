@@ -1,3 +1,5 @@
+import type { ZodSchema } from "zod";
+
 /**
  * Interface for the result of the post-processing operation.
  */
@@ -6,6 +8,7 @@ export interface JsonProcessingResult<T = any> {
     data?: T;
     error?: string;
     strategyUsed?: string;
+    validationIssues?: string[];
 }
 
 /**
@@ -101,7 +104,9 @@ function fixIncompleteDecimals(text: string): any {
     return extractByBraceBoundaries(cleaned);
 }
 
-export function postProcessAiResponse<T = any>(responseText: string): JsonProcessingResult<T> {
+export function postProcessAiResponse<T = any>(
+    responseText: string,schema?: ZodSchema<T>
+): JsonProcessingResult<T> {
     if (!responseText || responseText.trim().length === 0) {
         return { success: false, error: 'Empty response text provided' };
     }
@@ -119,9 +124,44 @@ export function postProcessAiResponse<T = any>(responseText: string): JsonProces
     for (const strategy of strategies) {
         try {
             const data = strategy.fn(responseText);
-            if (data && typeof data === 'object') {
-                return { success: true, data: data as T, strategyUsed: strategy.name };
+
+            if (data && typeof data === "object") {
+            if (schema) {
+                const validation = schema.safeParse(data);
+
+                if (!validation.success) {
+                const validationIssues =
+                    validation.error.issues.map((issue) => {
+                    const path =
+                        issue.path.length > 0
+                        ? issue.path.map(String).join(".")
+                        : "root";
+
+                    return `${path}: ${issue.message}`;
+                    });
+
+                return {
+                    success: false,
+                    error: "AI response failed schema validation",
+                    strategyUsed: strategy.name,
+                    validationIssues,
+                };
+                }
+
+                return {
+                success: true,
+                data: validation.data,
+                strategyUsed: strategy.name,
+                };
             }
+
+            return {
+                success: true,
+                data: data as T,
+                strategyUsed: strategy.name,
+            };
+            }
+
         } catch (e: any) {
             console.warn(`Strategy '${strategy.name}' failed: ${e.message}`);
         }

@@ -11,6 +11,8 @@ import { createOrUpdateEngineStorage, findEngineData } from "~/models/engine.mod
 import { createLog } from "~/models/companylogs.model.server"
 import { addOrUpdateCartItem, CartItem } from "~/models/cart.model.server"
 
+import { resolveReportEngine, resolveReportEngineBySlug } from "~/constants/engines";
+
 export const loader: LoaderFunction = async ({ params, request }: LoaderFunctionArgs) => {
     const slug = params.id ? decodeURIComponent(params.id) : undefined;
     const url = new URL(request.url);
@@ -42,19 +44,21 @@ export const loader: LoaderFunction = async ({ params, request }: LoaderFunction
     // Require authentication first - this will redirect to login if not authenticated
     const user = await requireUserSession(request);
 
-    // Map URL slug IDs to actual question section names in the DB
-    const ENGINE_SLUG_MAP: Record<string, string> = {
-        "hr-tech-maturity": "HR Technology Maturity Analysis",
-        "digital-roadmap": "HR Transformation Roadmap Generator",
-        "hcm-vendor-fit": "HCM Vendor Fit Engine",
-        "shared-services": "Shared Service Designer",
-        "change-management": "Intelligent Change Management"
-    };
+    if (!slug) {
+        throw new Response("wrong parameters", { status: 404 });
+    }
 
-    const question_section = slug ? (ENGINE_SLUG_MAP[slug] || slug) : undefined;
+    // ========================================
+    // CENTRALIZED SLUG & ENGINE RESOLUTION
+    // ========================================
+    const engineConfig = resolveReportEngineBySlug(slug) ?? resolveReportEngine(slug);
+    const question_section = engineConfig?.displayName;
 
     if (!question_section) {
-        throw new Response("wrong parameters", { status: 404 })
+        throw new Response(
+            `Unsupported report engine: ${slug}`,
+            { status: 404 }
+        );
     }
 
     console.log("Loading questions for section:", question_section, "(Slug:", slug, ")");
@@ -132,17 +136,18 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
 
         // Handle Report Generation Intent — redirect to intermediate to start generation pipeline
         if (body.intent === "generate_report") {
-            const ENGINE_PROMPT_MAP: Record<string, string> = {
-                "HCM Vendor Fit Engine": "vendor_fit",
-                "Shared Service Designer": "shared_service",
-                "Intelligent Change Management": "change_management",
-                "HR Transformation Roadmap Generator": "digital_transformation",
-                "HR Technology Maturity Analysis": "tech_maturity",
-            };
-            const promptId = ENGINE_PROMPT_MAP[body.params] || "digital_maturity";
+            const reportEngine = resolveReportEngine(body.params);
+            
+            if (!reportEngine) {
+                return json(
+                    { error: `Unsupported report engine: ${body.params}` },
+                    { status: 400 }
+                );
+            }
+
             return json({
                 success: true,
-                redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&promptId=${encodeURIComponent(promptId)}&skipQuestions=true`
+                redirect: `/intermediate?engine=${encodeURIComponent(reportEngine.displayName)}&promptId=${encodeURIComponent(reportEngine.promptId)}&skipQuestions=true`
             });
         }
 
@@ -202,7 +207,7 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
             console.log("🎯 Eligibility Check:", eligibilityResult.message);
 
             // All engines redirect directly to intermediate report generator after completion
-            return json({ success: true, redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&skipQuestions=true` });
+            return json({ success: true, redirect: `/intermediate?engine=${encodeURIComponent(body.params)}&skipQuestions=true&force=true` });
         }
         return json({ message: "Received!" });
     }
@@ -211,6 +216,7 @@ export const action: ActionFunction = async ({ request, params }: ActionFunction
         throw json("Server Error", { status: 500 });
     }
 }
+
 export default function EngineForm() {
     const LoaderData = useLoaderData<{ questions: QuestionSchema, question_section: string, existingResponses: any, savedProgress: number }>();
     const location = useLocation();

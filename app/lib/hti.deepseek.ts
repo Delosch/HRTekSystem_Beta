@@ -1,12 +1,367 @@
 import {
   BedrockRuntimeClient,
-  InvokeModelCommand
+  InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import type { HTIAggregatedInput, HTIAdvisoryContent } from "~/models/hti.model.server";
 
-// ========================================
-// AWS BEDROCK CLIENT
-// ========================================
+import type {
+  HTIAggregatedInput,
+  HTIAdvisoryContent,
+} from "~/models/hti.model.server";
+
+import { deriveHTIScores } from "~/utils/htiScoreUtils";
+import { buildEngineEvidenceBlock } from "~/utils/htiEvidence.server";
+import type {HTIReportType} from "~/constants/engines";
+
+export type EngineReportType =HTIReportType;
+
+interface ReportSectionDefinition {
+  title: string;
+  focus: string;
+  minWords: number;
+  maxWords: number;
+}
+
+interface ReportPromptConfig {
+  reportTitle: string;
+  objective: string;
+  sections: ReportSectionDefinition[];
+}
+
+interface EngineInput {
+  engineName?: string;
+  progress?: number;
+  responses?: unknown;
+  scores?: unknown;
+  aiAnalysis?: unknown;
+  aiReport?: unknown;
+}
+
+interface NormalizedEngines {
+  maturity?: EngineInput;
+  roadmap?: EngineInput;
+  vendor?: EngineInput;
+  change?: EngineInput;
+  sharedServices?: EngineInput;
+}
+
+interface AvailableEngineDefinition {
+  reportType: Exclude<EngineReportType, "crossEngine">;
+  heading: string;
+  evidenceName: string;
+  heatmapName: string;
+  data: EngineInput;
+}
+
+const REPORT_PROMPT_CONFIG: Record<EngineReportType, ReportPromptConfig> = {
+  crossEngine: {
+    reportTitle: "Cross-Engine HR Transformation Intelligence Advisory",
+    objective:
+      "Synthesize all completed assessment engines into one unified enterprise transformation advisory. Identify reinforcing signals, contradictions, dependencies, sequencing requirements, and CXO decisions.",
+    sections: [
+      {
+        title: "Cross-Engine Strategic Synthesis",
+        focus:
+          "Identify convergence, contradictions, and strategic alignment gaps across all completed engines. Establish the unified transformation narrative leadership must act on.",
+        minWords: 500,
+        maxWords: 650,
+      },
+      {
+        title: "Organizational & Change Architecture",
+        focus:
+          "Connect cultural readiness, governance, leadership accountability, workforce capability, and operating-model implications across the available evidence.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Technology Landscape & Vendor Intelligence",
+        focus:
+          "Connect technology maturity, integration readiness, vendor fit, scalability, data quality, and build-versus-buy implications where relevant evidence is available.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Digital Roadmap & Execution Blueprint",
+        focus:
+          "Present a phased execution plan with milestones, resources, dependencies, governance, and adoption requirements.",
+        minWords: 475,
+        maxWords: 625,
+      },
+      {
+        title: "Cross-Engine Risk and Dependency Map",
+        focus:
+          "Identify enterprise risks and explain how weaknesses in one assessment area amplify risks found in another.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Transformation Priority and Sequencing",
+        focus:
+          "Rank initiatives by impact and effort and define what should happen Now, Next, and Later, including sequencing dependencies.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "CXO Decision Brief",
+        focus:
+          "Summarize the decisions, ownership, funding, governance, and risk thresholds requiring executive action.",
+        minWords: 325,
+        maxWords: 475,
+      },
+      {
+        title: "Caution Zones and Deferred Initiatives",
+        focus:
+          "Identify initiatives that should not proceed until specific organizational, financial, technical, or cultural prerequisites are satisfied.",
+        minWords: 275,
+        maxWords: 425,
+      },
+    ],
+  },
+  aiMaturity: {
+    reportTitle: "HR Technology Maturity Strategic Advisory",
+    objective:
+      "Assess the organization's HR technology maturity and convert the evidence into a focused technology, data, integration, governance, capability, and investment roadmap.",
+    sections: [
+      {
+        title: "Executive Technology Maturity Synthesis",
+        focus:
+          "Explain the overall maturity level, principal strengths, constraints, and executive implications.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Current Technology and Capability Baseline",
+        focus:
+          "Assess systems, architecture, processes, automation, data, workforce capability, and digital operating maturity.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Data, Integration and Automation Readiness",
+        focus:
+          "Evaluate interoperability, data quality, analytics, automation, AI readiness, and technical dependencies.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Governance, Security and Operating Model",
+        focus:
+          "Assess decision rights, ownership, governance, security, service support, and delivery capacity.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Investment Priorities and Technology Roadmap",
+        focus:
+          "Prioritize foundational, tactical, and strategic technology improvements with sequencing and measurable outcomes.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Risks, Success Metrics and Executive Decisions",
+        focus:
+          "Define key risks, success measures, decision gates, and actions required from leadership.",
+        minWords: 325,
+        maxWords: 475,
+      },
+    ],
+  },
+  digitalRoadmap: {
+    reportTitle: "HR Transformation Roadmap Strategic Advisory",
+    objective:
+      "Translate the roadmap assessment into a sequenced and executable HR transformation plan grounded in organizational priorities, constraints, readiness, and expected value.",
+    sections: [
+      {
+        title: "Transformation Ambition and Strategic Alignment",
+        focus:
+          "Explain the transformation ambition, business drivers, desired outcomes, and strategic alignment gaps.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Current-State Gaps and Dependencies",
+        focus:
+          "Assess process, technology, workforce, data, governance, and change dependencies.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Prioritized Transformation Portfolio",
+        focus:
+          "Rank initiatives by value, readiness, complexity, dependency, and strategic contribution.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Phased Execution Roadmap",
+        focus:
+          "Define the 0-6, 6-12, and 12-24 month sequence with milestones, outcomes, and prerequisites.",
+        minWords: 450,
+        maxWords: 600,
+      },
+      {
+        title: "Resources, Governance and Change Requirements",
+        focus:
+          "Explain ownership, funding, capacity, governance, communication, and adoption prerequisites.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Risks, Success Metrics and CXO Decisions",
+        focus:
+          "Identify execution risks, KPIs, decision gates, and executive actions.",
+        minWords: 325,
+        maxWords: 475,
+      },
+    ],
+  },
+  vendorFit: {
+    reportTitle: "HCM Vendor Fit Strategic Advisory",
+    objective:
+      "Evaluate vendor readiness and fit based on functional, technical, commercial, operational, integration, scalability, and organizational requirements.",
+    sections: [
+      {
+        title: "Vendor Readiness Executive Synthesis",
+        focus:
+          "Explain overall vendor readiness, fit level, material constraints, and decision implications.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Functional and Deployment Fit",
+        focus:
+          "Assess required modules, deployment preferences, operating model, user requirements, and functional gaps.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Integration and Architecture Fit",
+        focus:
+          "Assess interfaces, data migration, technical complexity, security, interoperability, and scalability.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Commercial Fit and Total Cost Implications",
+        focus:
+          "Assess budget alignment, implementation cost, operating cost, commercial constraints, and value realization risk.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Vendor Options and Trade-offs",
+        focus:
+          "Compare suitable vendor categories and explain their strengths, limitations, assumptions, and fit.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Selection Plan, Risks and Decision Criteria",
+        focus:
+          "Define evaluation criteria, due-diligence priorities, next steps, risks, and decision gates.",
+        minWords: 325,
+        maxWords: 475,
+      },
+    ],
+  },
+  changeManagement: {
+    reportTitle: "Intelligent Change Management Strategic Advisory",
+    objective:
+      "Assess organizational change readiness and define a focused leadership, stakeholder, communication, capability, adoption, and sustainability plan.",
+    sections: [
+      {
+        title: "Change Readiness Executive Synthesis",
+        focus:
+          "Explain organizational readiness, resistance exposure, strengths, constraints, and primary risks.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Leadership and Stakeholder Alignment",
+        focus:
+          "Assess sponsorship, decision ownership, stakeholder influence, leadership consistency, and accountability.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Culture, Resistance and Communication",
+        focus:
+          "Identify resistance drivers, cultural barriers, communication gaps, employee concerns, and engagement needs.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Capability and Training Strategy",
+        focus:
+          "Define role-based learning, manager enablement, workforce capability, and performance-support requirements.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Adoption Governance and Sustainability",
+        focus:
+          "Define adoption ownership, reinforcement, measurement, benefits realization, and sustainability mechanisms.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "90-Day Plan, Metrics and Executive Decisions",
+        focus:
+          "Provide immediate interventions, success measures, decision gates, and leadership actions.",
+        minWords: 325,
+        maxWords: 475,
+      },
+    ],
+  },
+  sharedServices: {
+    reportTitle: "HR Shared Services Strategic Advisory",
+    objective:
+      "Assess the shared-services opportunity and define the appropriate service-delivery model, process architecture, technology enablement, governance, transition roadmap, and performance framework.",
+    sections: [
+      {
+        title: "Shared Services Executive Synthesis",
+        focus:
+          "Explain the shared-services opportunity, readiness, constraints, and business-case implications.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Current Operating Model and Process Baseline",
+        focus:
+          "Assess fragmentation, standardization, service ownership, volumes, process maturity, and control gaps.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Target Service Delivery Model",
+        focus:
+          "Define service scope, tiers, channels, governance, locations, roles, and accountabilities.",
+        minWords: 425,
+        maxWords: 575,
+      },
+      {
+        title: "Technology and Automation Enablement",
+        focus:
+          "Assess case management, knowledge, workflow, self-service, analytics, automation, and integration requirements.",
+        minWords: 375,
+        maxWords: 525,
+      },
+      {
+        title: "Transition Roadmap and Workforce Impact",
+        focus:
+          "Define transition phases, workforce implications, dependencies, capability needs, and adoption requirements.",
+        minWords: 400,
+        maxWords: 550,
+      },
+      {
+        title: "Risks, KPIs and Executive Decisions",
+        focus:
+          "Define service metrics, implementation risks, controls, decision gates, and leadership actions.",
+        minWords: 325,
+        maxWords: 475,
+      },
+    ],
+  },
+};
 
 const bedrock = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "ap-south-1",
@@ -18,157 +373,299 @@ const bedrock = new BedrockRuntimeClient({
 
 const MODEL_ID = "deepseek.v3-v1:0";
 
-// ========================================
-// CROSS-ENGINE SYNTHESIS PROMPT
-// ========================================
+const HTI_ADVISORY_ROLE = `
+You are HRTek's senior HR transformation advisory analyst.
 
-const CROSS_ENGINE_SECTIONS = [
-  {
-    title: "Cross-Engine Strategic Synthesis",
-    focus: "Identify convergence, contradictions, and strategic alignment gaps across all 5 assessment engines. Produce the unified transformation narrative the CXO must act on. (Approx 900-1200 words)"
-  },
-  {
-    title: "Organizational & Change Architecture",
-    focus: "Synthesize Change Management + Shared Services findings: cultural readiness, governance gaps, and operating model implications. (Approx 800-1000 words)"
-  },
-  {
-    title: "Technology Landscape & Vendor Intelligence",
-    focus: "Synthesize AI Maturity + Vendor Fit findings: current tech debt, vendor selection rationale, integration complexity, and build vs buy decisions. (Approx 800-1000 words)"
-  },
-  {
-    title: "Digital Roadmap & Execution Blueprint",
-    focus: "From the Digital Roadmap engine: phased execution plan with 6/12/24-month milestones, financial forecast, and resource requirements. (Approx 800-1000 words)"
-  },
-  {
-    title: "Cross-Engine Risk Matrix & Dependency Map",
-    focus: "Identify risks that span multiple engines (e.g. vendor selection risk worsened by low AI maturity). Map dependencies between transformation initiatives. (Approx 700-900 words)"
-  },
-  {
-    title: "Transformation Priority Matrix & Sequencing",
-    focus: "Rank all initiatives by impact vs effort. Define what must happen Now (0-6m), Next (6-18m), and Later (18m+). Identify sequencing dependencies. (Approx 700-900 words)"
-  },
-  {
-    title: "CXO Decision Brief & Board-Level Directives",
-    focus: "Summarize the 5-7 critical decisions the C-Suite must make. Include ROI projections, risk thresholds, and governance recommendations. Board-ready language only. (Approx 600-800 words)"
-  },
-  {
-    title: "Caution Zones — What Not to Transform Yet",
-    focus: "Identify areas where premature transformation would cause harm: financial, cultural, technical, or organizational reasons. Be specific and evidence-based. (Approx 500-700 words)"
-  }
-];
+Prepare an evidence-based, client-ready strategic advisory for executive
+and board-level decision-makers.
 
-function buildCrossEnginePrompt(data: HTIAggregatedInput): string {
-  const { engines, companyId } = data;
+Use HRTek's own professional advisory voice. Do not claim affiliation with,
+endorsement by, or imitation of any named consulting firm.
 
-  // Build engine context blocks — prefer AI report text, fall back to scores/responses
-  const engineBlocks: string[] = [];
+Your analysis must be clear, neutral, specific, and grounded in the
+assessment evidence provided.
+`.trim();
+
+function getNormalizedEngines(data: HTIAggregatedInput): NormalizedEngines {
+  const engines = data.engines as Record<string, EngineInput | undefined>;
+
+  return {
+    maturity: engines.maturity ?? engines.aiMaturity,
+    roadmap: engines.roadmap ?? engines.digitalRoadmap,
+    vendor: engines.vendor ?? engines.vendorFit,
+    change: engines.change ?? engines.changeManagement,
+    sharedServices: engines.sharedServices,
+  };
+}
+
+function getAvailableEngines(
+  data: HTIAggregatedInput
+): AvailableEngineDefinition[] {
+  const engines = getNormalizedEngines(data);
+  const available: AvailableEngineDefinition[] = [];
 
   if (engines.maturity) {
-    const e = engines.maturity;
-    const content = e.aiReport || JSON.stringify(e.scores || e.aiAnalysis || e.responses || {});
-    engineBlocks.push(`=== HR TECHNOLOGY MATURITY ANALYSIS ===\nProgress: ${e.progress}%\n${content}`);
+    available.push({
+      reportType: "aiMaturity",
+      heading: "HR TECHNOLOGY MATURITY ANALYSIS",
+      evidenceName: "HR Technology Maturity Analysis",
+      heatmapName: "HR Technology Maturity",
+      data: engines.maturity,
+    });
   }
 
   if (engines.roadmap) {
-    const e = engines.roadmap;
-    const content = e.aiReport || JSON.stringify(e.scores || e.aiAnalysis || e.responses || {});
-    engineBlocks.push(`=== HR DIGITAL TRANSFORMATION ROADMAP ===\nProgress: ${e.progress}%\n${content}`);
+    available.push({
+      reportType: "digitalRoadmap",
+      heading: "HR DIGITAL TRANSFORMATION ROADMAP",
+      evidenceName: "HR Transformation Roadmap Generator",
+      heatmapName: "Digital Roadmap",
+      data: engines.roadmap,
+    });
   }
 
-  const vendorEngine = engines.vendor || engines.vendorFit;
-  if (vendorEngine) {
-    const content = vendorEngine.aiReport || JSON.stringify(vendorEngine.scores || vendorEngine.aiAnalysis || vendorEngine.responses || {});
-    engineBlocks.push(`=== COGNITIVE HCM VENDOR FIT ASSESSMENT ===\nProgress: ${vendorEngine.progress}%\n${content}`);
+  if (engines.vendor) {
+    available.push({
+      reportType: "vendorFit",
+      heading: "COGNITIVE HCM VENDOR FIT ASSESSMENT",
+      evidenceName: "HCM Vendor Fit Engine",
+      heatmapName: "Vendor Fit",
+      data: engines.vendor,
+    });
   }
 
-  const changeEngine = engines.change || engines.changeManagement;
-  if (changeEngine) {
-    const content = changeEngine.aiReport || JSON.stringify(changeEngine.scores || changeEngine.aiAnalysis || changeEngine.responses || {});
-    engineBlocks.push(`=== INTELLIGENT CHANGE MANAGEMENT ASSESSMENT ===\nProgress: ${changeEngine.progress}%\n${content}`);
+  if (engines.change) {
+    available.push({
+      reportType: "changeManagement",
+      heading: "INTELLIGENT CHANGE MANAGEMENT ASSESSMENT",
+      evidenceName: "Intelligent Change Management",
+      heatmapName: "Change Management",
+      data: engines.change,
+    });
   }
 
   if (engines.sharedServices) {
-    const e = engines.sharedServices;
-    const content = e.aiReport || JSON.stringify(e.scores || e.aiAnalysis || e.responses || {});
-    engineBlocks.push(`=== SHARED SERVICE DESIGNER ASSESSMENT ===\nProgress: ${e.progress}%\n${content}`);
+    available.push({
+      reportType: "sharedServices",
+      heading: "SHARED SERVICE DESIGNER ASSESSMENT",
+      evidenceName: "Shared Service Designer",
+      heatmapName: "Shared Services",
+      data: engines.sharedServices,
+    });
   }
 
-  const completedCount = [engines.maturity, engines.roadmap, vendorEngine, changeEngine, engines.sharedServices]
-    .filter(e => e && e.progress === 100).length;
+  return available;
+}
 
-  const prompt = `You are a world-class HR Digital Transformation Consultant (McKinsey/BCG/Deloitte Level) specializing in enterprise-wide transformation synthesis.
+function inferReportType(data: HTIAggregatedInput): EngineReportType {
+  const available = getAvailableEngines(data);
+  return available.length === 1 ? available[0].reportType : "crossEngine";
+}
 
-**MISSION**: Generate a COMPREHENSIVE CROSS-ENGINE STRATEGIC ADVISORY for Company ID: ${companyId}.
-This is NOT a per-engine report. This is the UNIFIED INTELLIGENCE LAYER that synthesizes insights from ALL ${completedCount} completed HR assessment engines into one strategic directive.
+function buildEngineBlock(definition: AvailableEngineDefinition): string {
+  const evidenceBlock = buildEngineEvidenceBlock({
+    engineName: definition.evidenceName,
+    progress: definition.data.progress,
+    responses: definition.data.responses,
+    scores: definition.data.scores,
+    aiAnalysis: definition.data.aiAnalysis,
+    aiReport: definition.data.aiReport,
+  });
 
-**ASSESSMENT INPUTS** (${completedCount}/5 engines completed):
-${engineBlocks.join("\n\n")}
+  return `=== ${definition.heading} ===\n${evidenceBlock}`;
+}
 
-**STRICT INSTRUCTIONS FOR QUALITY**:
-- 10-15 PAGE BOARD-LEVEL advisory. Total word count MUST EXCEED 6,000 WORDS.
-- Each section in 'detailedSections' MUST BE 700-1200 WORDS of dense, consulting-grade analysis.
-- NO PLACEHOLDERS. NO LOREM IPSUM. Every insight must be grounded in the assessment data above.
-- Use HTML formatting: <h2>, <h3>, <h4>, <table>, <ul>, <li>, <strong>, <em>.
-- Every section MUST include at least 1 complex <table> (ROI models, risk matrices, priority rankings).
-- Use <div style="background: #f8fafc; border-left: 6px solid #4f46e5; padding: 25px; margin: 30px 0; border-radius: 8px;"> for "Expert Insight" callouts.
-- CROSS-REFERENCE FINDINGS: explicitly connect data points across different engines (e.g., "The AI Maturity score of X directly amplifies the vendor integration risk identified in...").
+function getRelevantEngines(
+  available: AvailableEngineDefinition[],
+  reportType: EngineReportType
+): AvailableEngineDefinition[] {
+  if (reportType === "crossEngine") return available;
 
-**REPORT STRUCTURE** (8 chapters):
-${CROSS_ENGINE_SECTIONS.map((s, i) => `${i + 1}. ${s.title}: ${s.focus}`).join("\n")}
+  const matching = available.filter(
+    (engine) => engine.reportType === reportType
+  );
+
+  return matching.length > 0 ? matching : available;
+}
+
+function buildCapabilityHeatmapExample(
+  definitions: AvailableEngineDefinition[]
+): string {
+  if (definitions.length === 0) return "[]";
+
+  return `[
+${definitions
+  .map(
+    (engine) =>
+      `    { "engine": "${engine.heatmapName}", "score": 70, "status": "moderate" }`
+  )
+  .join(",\n")}
+  ]`;
+}
+
+function buildAdvisoryPrompt(
+  data: HTIAggregatedInput,
+  reportType: EngineReportType
+): string {
+  const config = REPORT_PROMPT_CONFIG[reportType];
+  const isCrossEngine = reportType === "crossEngine";
+  const available = getAvailableEngines(data);
+  const relevant = getRelevantEngines(available, reportType);
+  const engineBlocks = relevant.map(buildEngineBlock);
+  const completedCount = relevant.filter(
+    (engine) => engine.data.progress === 100
+  ).length;
+
+  const scope = isCrossEngine
+    ? `Synthesize the ${relevant.length} available assessment engine inputs into one unified strategic advisory. Cross-engine claims must be based only on engines present in the evidence.`
+    : `Prepare an engine-specific advisory for ${config.reportTitle}. Do not describe this report as a cross-engine synthesis unless multiple inputs are explicitly compared.`;
+
+  const wordTarget =
+    config.sections.length >= 8 ? "4,000-5,500" : "3,000-4,500";
+
+  return `${HTI_ADVISORY_ROLE}
+
+**REPORT TYPE**:
+${config.reportTitle}
+
+**OBJECTIVE**:
+${config.objective}
+
+**COMPANY ID**:
+${data.companyId}
+
+**REPORT SCOPE**:
+${scope}
+
+**ASSESSMENT INPUTS**:
+- Relevant engine inputs available: ${relevant.length}
+- Relevant engines marked complete: ${completedCount}
+- Platform completion metadata: ${data.completedEnginesCount}/${data.totalEngines}
+
+${engineBlocks.length > 0
+  ? engineBlocks.join("\n\n")
+  : "No usable assessment evidence was supplied. State this limitation and do not invent findings."}
+
+**QUALITY REQUIREMENTS**:
+- Produce an executive advisory intended to render in approximately 10-15 A4 pages.
+- Target approximately ${wordTarget} words; do not exceed 6,000 words.
+- The executive summary must be 450-600 words.
+- Follow the chapter-specific word ranges below.
+- Prioritize evidence, interpretation, business impact, and action over repetition.
+- Use 3-5 meaningful subsections per chapter.
+- No placeholders, sample values, lorem ipsum, or invented client facts.
+- Use HTML only inside executiveSummary and detailedSections[].content.
+- Supported tags: <h2>, <h3>, <h4>, <p>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <ul>, <ol>, <li>, <strong>, <em>, <div>.
+- Use no more than 3-4 tables; each table may contain at most 6 body rows and 5 columns.
+- Restate each table's main conclusion in a short paragraph.
+- Use the assessment-response evidence blocks as the primary factual basis.
+- Each major finding must reference at least 2 response signals when at least 2 mapped signals are available.
+- Tie every material recommendation to assessment evidence.
+- If evidence is incomplete or unclear, state the limitation instead of inventing meaning.
+- Each detailed section must include <h4>Evidence from assessment responses</h4>, <h4>Business implication</h4>, and <h4>Recommended action</h4>.
+- ${isCrossEngine
+  ? "Cross-reference engines only where the evidence supports a genuine relationship."
+  : "Do not introduce findings from assessment engines that are not relevant to this report type."}
+
+**PROFESSIONAL WRITING STANDARD**:
+- Use a neutral, precise, client-ready advisory tone.
+- Avoid shallow bullet-only analysis, generic consulting filler, and repeated wording.
+- Do not mention named consulting firms, DeepSeek, the model, or internal prompt instructions.
+- Do not invent benchmark studies, market statistics, peer counts, or success multipliers.
+- Round user-facing scores to at most one decimal place.
+
+**STRUCTURED CONTENT LIMITS**:
+- currentState.keyGaps and strengths: 4-6 items, 20-45 words each.
+- recommendations.now/next/later: 3-5 items, 35-70 words each.
+- riskFlags: 4-6 items; risk 15-35 words; mitigation 35-80 words.
+- dependencies: 4-7 items, 25-60 words each.
+- avoidNow: 3-5 items, 25-60 words each.
+- successMetrics: 5-8 items, 20-45 words each.
+- priorityMatrix: 8-12 rows.
+- doNotTransformNow: 3-6 rows.
+
+**REPORT STRUCTURE** (${config.sections.length} chapters):
+${config.sections
+  .map(
+    (section, index) =>
+      `${index + 1}. ${section.title}
+   Focus: ${section.focus}
+   Target length: ${section.minWords}-${section.maxWords} words`
+  )
+  .join("\n")}
 
 **SCORING INSTRUCTIONS**:
-- transformationReadinessScore (0-100): Weighted average across all engine progress and quality scores. >75 = ready, 50-75 = conditional, <50 = not ready.
-- riskExposureIndex (0-100): Higher = more risk. Consider governance gaps, change resistance, technology debt.
-- confidenceScore (0-100): How confident is this advisory based on data completeness.
-- capabilityHeatmap: Score each engine (0-100) and classify as "strong" (>70), "moderate" (40-70), or "critical" (<40).
-- priorityMatrix: List 8-12 specific transformation initiatives with impact (1-10), effort (1-10), timeframe (now/next/later), and category.
-- doNotTransformNow: List 3-6 specific areas with reason and category (organizational/financial/technical/cultural).
+- transformationReadinessScore (0-100): Derive it from relevant assessment evidence, not completion percentage.
+- riskExposureIndex (0-100): Higher means greater evidenced risk.
+- confidenceScore (0-100): Reflect evidence completeness, clarity, consistency, and coverage.
+- capabilityHeatmap: Include only engines present in the supplied evidence.
+- priorityMatrix: Provide 8-12 specific initiatives with impact and effort from 1-10 and timeframe now/next/later.
+- doNotTransformNow: Provide 3-6 evidence-based caution areas.
+- Do not invent a score merely to fill the schema; explain limitations in the nearest narrative field.
 
-**RESPONSE FORMAT — YOU MUST RESPOND WITH VALID JSON ONLY**:
+**RESPONSE FORMAT — RETURN VALID JSON ONLY**:
 {
-  "executiveSummary": "1200-word HTML executive briefing synthesizing ALL engine findings",
+  "executiveSummary": "450-600 word HTML executive briefing appropriate for ${config.reportTitle}",
   "detailedSections": [
-    ${CROSS_ENGINE_SECTIONS.map(s => `{ "title": "${s.title}", "content": "1000+ words of HTML analysis" }`).join(",\n    ")}
+${config.sections
+  .map(
+    (section) =>
+      `    { "title": "${section.title}", "content": "${section.minWords}-${section.maxWords} words of evidence-based HTML analysis" }`
+  )
+  .join(",\n")}
   ],
   "currentState": {
     "maturityLevel": "Level X — descriptive label",
-    "digitalReadiness": "X% — with context",
-    "keyGaps": ["Specific gap with engine reference...", "..."],
-    "strengths": ["Specific strength with engine reference...", "..."]
+    "digitalReadiness": "X% — with context relevant to this report type",
+    "keyGaps": ["Specific evidence-based gap"],
+    "strengths": ["Specific evidence-based strength"]
   },
   "recommendations": {
-    "now": ["Specific action 0-6 months...", "..."],
-    "next": ["Specific action 6-18 months...", "..."],
-    "later": ["Specific action 18+ months...", "..."]
+    "now": ["Immediate evidence-based action"],
+    "next": ["Medium-term evidence-based action"],
+    "later": ["Longer-term evidence-based action"]
   },
-  "riskFlags": [{ "risk": "...", "mitigation": "..." }],
-  "dependencies": ["Initiative A must precede Initiative B because...", "..."],
-  "avoidNow": ["Do not attempt X because Y assessment shows...", "..."],
-  "successMetrics": ["KPI with target and timeline...", "..."],
+  "riskFlags": [
+    {
+      "risk": "Specific evidence-based risk",
+      "mitigation": "Specific mitigation with owner, timeframe, and expected control"
+    }
+  ],
+  "dependencies": ["Initiative A must precede Initiative B because..."],
+  "avoidNow": ["Do not attempt X until prerequisite Y is satisfied because..."],
+  "successMetrics": ["KPI with target and timeline"],
   "transformationReadinessScore": 72,
   "riskExposureIndex": 45,
   "confidenceScore": 88,
-  "capabilityHeatmap": [
-    { "engine": "HR Technology Maturity", "score": 70, "status": "moderate" },
-    { "engine": "Digital Roadmap", "score": 80, "status": "strong" },
-    { "engine": "Vendor Fit", "score": 55, "status": "moderate" },
-    { "engine": "Change Management", "score": 40, "status": "critical" },
-    { "engine": "Shared Services", "score": 65, "status": "moderate" }
-  ],
+  "capabilityHeatmap": ${buildCapabilityHeatmapExample(relevant)},
   "priorityMatrix": [
-    { "initiative": "Specific initiative name", "impact": 9, "effort": 4, "timeframe": "now", "category": "Technology" }
+    {
+      "initiative": "Specific initiative",
+      "impact": 9,
+      "effort": 4,
+      "timeframe": "now",
+      "category": "Technology"
+    }
   ],
   "doNotTransformNow": [
-    { "area": "Specific area", "reason": "Evidence-based reason from assessment data", "category": "organizational", "revisitIn": "12 months" }
+    {
+      "area": "Specific area",
+      "reason": "Evidence-based reason",
+      "category": "organizational",
+      "revisitIn": "12 months"
+    }
   ]
-}`;
-
-  return prompt;
 }
 
-/**
- * Extract JSON from LLM response
- */
+**ABSOLUTE OUTPUT RULES**:
+- Return exactly one JSON object.
+- Do not use markdown code fences.
+- Do not include text before or after the JSON.
+- Preserve the property names and data types shown above.
+- Use double quotes and no trailing commas.
+`.trim();
+}
+
 function safeJsonExtract(rawText: string): string {
   const firstBrace = rawText.indexOf("{");
   const lastBrace = rawText.lastIndexOf("}");
@@ -180,94 +677,228 @@ function safeJsonExtract(rawText: string): string {
   return rawText.slice(firstBrace, lastBrace + 1);
 }
 
-/**
- * Parse and validate LLM response
- */
-function parseAdvisoryResponse(llmOutput: string): HTIAdvisoryContent {
-  try {
-    const jsonStr = safeJsonExtract(llmOutput);
-    const parsed = JSON.parse(jsonStr);
+function normalizeScore(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
 
-    if (!parsed.executiveSummary || !parsed.currentState || !parsed.recommendations) {
+  const numberValue =
+    typeof value === "string"
+      ? Number(value.replace(/%/g, "").trim())
+      : Number(value);
+
+  if (!Number.isFinite(numberValue)) return undefined;
+
+  return Math.max(0, Math.min(100, Number(numberValue.toFixed(1))));
+}
+
+function htmlToPlainText(value: unknown): string {
+  if (typeof value !== "string") return "";
+
+  return value
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function countWords(value: unknown): number {
+  const text = htmlToPlainText(value);
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+}
+
+function auditAdvisoryLength(
+  advisory: HTIAdvisoryContent,
+  reportType: EngineReportType
+): string[] {
+  const warnings: string[] = [];
+  const config = REPORT_PROMPT_CONFIG[reportType];
+  const executiveWords = countWords(advisory.executiveSummary);
+
+  if (executiveWords < 350) {
+    warnings.push(`Executive summary is too short: ${executiveWords} words.`);
+  }
+
+  if (executiveWords > 700) {
+    warnings.push(`Executive summary is too long: ${executiveWords} words.`);
+  }
+
+  advisory.detailedSections?.forEach((section, index) => {
+    const target = config.sections[index];
+    const words = countWords(section.content);
+
+    if (!target) {
+      warnings.push(
+        `Unexpected detailed section "${section.title}" at index ${index}.`
+      );
+      return;
+    }
+
+    if (section.title.trim() !== target.title.trim()) {
+      warnings.push(
+        `Section ${index + 1} title differs: expected "${target.title}", received "${section.title}".`
+      );
+    }
+
+    if (words < target.minWords * 0.8) {
+      warnings.push(
+        `"${section.title}" is short: ${words} words; target ${target.minWords}-${target.maxWords}.`
+      );
+    }
+
+    if (words > target.maxWords * 1.2) {
+      warnings.push(
+        `"${section.title}" is long: ${words} words; target ${target.minWords}-${target.maxWords}.`
+      );
+    }
+  });
+
+  if (
+    advisory.detailedSections &&
+    advisory.detailedSections.length !== config.sections.length
+  ) {
+    warnings.push(
+      `Expected ${config.sections.length} sections for ${reportType}, received ${advisory.detailedSections.length}.`
+    );
+  }
+
+  const totalWords =
+    executiveWords +
+    (advisory.detailedSections ?? []).reduce(
+      (total, section) => total + countWords(section.content),
+      0
+    );
+
+  if (totalWords > 6000) {
+    warnings.push(
+      `The main narrative contains ${totalWords} words and may produce an excessively long PDF.`
+    );
+  }
+
+  return warnings;
+}
+
+function parseAdvisoryResponse(
+  llmOutput: string,
+  aggregatedData: HTIAggregatedInput
+): HTIAdvisoryContent {
+  try {
+    const parsed = JSON.parse(
+      safeJsonExtract(llmOutput)
+    ) as Record<string, unknown>;
+
+    if (
+      !parsed.executiveSummary ||
+      !parsed.currentState ||
+      !parsed.recommendations
+    ) {
       throw new Error("Invalid advisory structure from LLM");
     }
 
-    // Validate scores are in range if present
-    if (parsed.transformationReadinessScore !== undefined) {
-      parsed.transformationReadinessScore = Math.max(0, Math.min(100, Number(parsed.transformationReadinessScore)));
+    const directReadiness = normalizeScore(
+      parsed.transformationReadinessScore
+    );
+    const directRisk = normalizeScore(parsed.riskExposureIndex);
+    const directConfidence = normalizeScore(parsed.confidenceScore);
+
+    if (directReadiness !== undefined) {
+      parsed.transformationReadinessScore = directReadiness;
     }
-    if (parsed.riskExposureIndex !== undefined) {
-      parsed.riskExposureIndex = Math.max(0, Math.min(100, Number(parsed.riskExposureIndex)));
+    if (directRisk !== undefined) {
+      parsed.riskExposureIndex = directRisk;
     }
-    if (parsed.confidenceScore !== undefined) {
-      parsed.confidenceScore = Math.max(0, Math.min(100, Number(parsed.confidenceScore)));
+    if (directConfidence !== undefined) {
+      parsed.confidenceScore = directConfidence;
     }
 
-    return parsed as HTIAdvisoryContent;
+    const derivedScores = deriveHTIScores(parsed, aggregatedData);
+
+    if (derivedScores.readinessScore !== null) {
+      parsed.transformationReadinessScore =
+        derivedScores.readinessScore;
+    }
+    if (derivedScores.riskScore !== null) {
+      parsed.riskExposureIndex = derivedScores.riskScore;
+    }
+    if (derivedScores.confidenceScore !== null) {
+      parsed.confidenceScore = derivedScores.confidenceScore;
+    }
+
+    return parsed as unknown as HTIAdvisoryContent;
   } catch (error) {
     console.error("Error parsing LLM response:", error);
     throw new Error("Failed to parse LLM advisory response");
   }
 }
 
-// ========================================
-// MAIN LLM INTEGRATION
-// ========================================
-
-/**
- * Generate unified cross-engine HTI advisory using DeepSeek LLM
- */
 export async function generateHTIAdvisory(
-  aggregatedData: HTIAggregatedInput
+  aggregatedData: HTIAggregatedInput,
+  reportType: EngineReportType = inferReportType(aggregatedData)
 ): Promise<HTIAdvisoryContent> {
-  console.log(`🧠 Generating unified cross-engine HTI Advisory with DeepSeek...`);
+  const config = REPORT_PROMPT_CONFIG[reportType];
 
-  const prompt = buildCrossEnginePrompt(aggregatedData);
+  console.log(`Generating ${config.reportTitle} with DeepSeek`);
 
   const payload = {
     messages: [
       {
         role: "user",
-        content: prompt
-      }
+        content: buildAdvisoryPrompt(aggregatedData, reportType),
+      },
     ],
     max_tokens: 32000,
     temperature: 0.7,
   };
 
   try {
-    const command = new InvokeModelCommand({
-      modelId: MODEL_ID,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify(payload),
-    });
-
-    const response = await bedrock.send(command);
+    const response = await bedrock.send(
+      new InvokeModelCommand({
+        modelId: MODEL_ID,
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify(payload),
+      })
+    );
 
     if (!response.body) {
       throw new Error("Empty response from DeepSeek");
     }
 
-    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-    const llmOutput = responseBody.choices?.[0]?.message?.content || "";
+    const responseBody = JSON.parse(
+      new TextDecoder().decode(response.body)
+    );
+
+    const llmOutput =
+      responseBody.choices?.[0]?.message?.content ?? "";
 
     if (!llmOutput) {
       throw new Error("No text in DeepSeek response");
     }
 
-    const advisory = parseAdvisoryResponse(llmOutput);
+    const advisory = parseAdvisoryResponse(llmOutput, aggregatedData);
+    const lengthWarnings = auditAdvisoryLength(advisory, reportType);
 
-    // Add audit trail entry
-    advisory.auditTrail = [{
-      timestamp: new Date().toISOString(),
-      action: "generated",
-      details: `Cross-engine advisory generated from ${aggregatedData.completedEnginesCount}/${aggregatedData.totalEngines} completed engines using ${MODEL_ID}`
-    }];
+    if (lengthWarnings.length > 0) {
+      console.warn("HTI advisory length warnings:", lengthWarnings);
+    }
+
+    advisory.auditTrail = [
+      {
+        timestamp: new Date().toISOString(),
+        action: "generated",
+        details:
+          `${config.reportTitle} generated from ` +
+          `${aggregatedData.completedEnginesCount}/` +
+          `${aggregatedData.totalEngines} completed engines using ${MODEL_ID}`,
+      },
+    ];
 
     return advisory;
   } catch (error) {
-    console.error("❌ Error generating HTI advisory:", error);
+    console.error(`Error generating ${config.reportTitle}:`, error);
     throw error;
   }
 }

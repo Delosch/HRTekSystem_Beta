@@ -2,6 +2,7 @@ import { GetCommand, PutCommand, QueryCommand, UpdateCommand, ScanCommand } from
 import { getDynamoDBDocumentClient } from "~/lib/dynamodb.server";
 import { getLatestAnalysis } from "~/utils/analysis.server";
 import { v4 as uuidv4 } from "uuid";
+import { getAnalysisSectionCandidates } from "~/constants/engines";
 
 const TABLE_NAME = process.env.DYNAMODB_ASSESSMENTS_TABLE || process.env.DYNAMODB_TABLE_NAME || "b2b_platform";
 
@@ -145,75 +146,174 @@ export interface HTIAdvisoryReport {
 // DATA AGGREGATION
 // ========================================
 
-// Maps engine names to the section strings used in ANALYSIS# records
-const ENGINE_ANALYSIS_SECTION_MAP: Record<string, string> = {
-    "HR Technology Maturity Analysis": "AI Maturity Assessment",
-    "HR Transformation Roadmap Generator": "Digital Roadmap",
-    "Cognitive HCM Vendor Fit": "Vendor Fit Assessment",
-    "HCM Vendor Fit Engine": "Vendor Fit Assessment",
-    "Intelligent Change Management": "Change Management Assessment",
-    "Shared Service Designer": "Shared Services Assessment",
-};
-
-// The 5 required engine sections that must have ANALYSIS# records
-const REQUIRED_ANALYSIS_SECTIONS: Array<{ engineName: string; section: string }> = [
-    { engineName: "HR Technology Maturity Analysis", section: "AI Maturity Assessment" },
-    { engineName: "HR Transformation Roadmap Generator", section: "Digital Roadmap" },
-    { engineName: "Cognitive HCM Vendor Fit", section: "Vendor Fit Assessment" },
-    { engineName: "Intelligent Change Management", section: "Change Management Assessment" },
-    { engineName: "Shared Service Designer", section: "Shared Services Assessment" },
-];
+// The five engine reports required before HTI advisory generation.
+const REQUIRED_ANALYSIS_ENGINES = [
+    "HR Technology Maturity Analysis",
+    "HR Transformation Roadmap Generator",
+    "Cognitive HCM Vendor Fit",
+    "Intelligent Change Management",
+    "Shared Service Designer"
+] as const;
 
 /**
- * Check if all 5 engine AI analysis reports (ANALYSIS# records) have been generated.
- * This is distinct from engine completion (progress = 100%) — a completed engine
- * may not yet have its AI report generated.
+ * Determine whether an ANALYSIS# record contains a completed report.
+ * Current records store report content under `result`; `analysis` is retained
+ * as a legacy fallback.
+ */
+function hasGeneratedAnalysis(record: any): boolean {
+    const content = record?.result ?? record?.analysis;
+
+    if (content === null || content === undefined) {
+        return false;
+    }
+
+    if (typeof content === "string") {
+        return content.trim().length > 0;
+    }
+
+    if (Array.isArray(content)) {
+        return content.length > 0;
+    }
+
+    if (typeof content === "object") {
+        if (content.status === "pending_generation") {
+            return false;
+        }
+
+        return Object.keys(content).length > 0;
+    }
+
+    return false;
+}
+
+/**
+ * Check whether all five engine AI analysis reports have been generated.
+ * This is separate from engine completion because an engine can reach 100%
+ * progress before its ANALYSIS# report is available.
  */
 export async function checkAllEngineReportsGenerated(
     companyId: string
-): Promise<{ allGenerated: boolean; generated: string[]; missing: string[] }> {
-    const generated: string[] = [];
-    const missing: string[] = [];
+): Promise<{
+    allGenerated: boolean;
+    generated: string[];
+    missing: string[];
+}> {
+    const checks = await Promise.all(
+        REQUIRED_ANALYSIS_ENGINES.map(async engineName => {
+            const sectionCandidates = getAnalysisSectionCandidates(engineName);
 
-    await Promise.all(
-        REQUIRED_ANALYSIS_SECTIONS.map(async ({ engineName, section }) => {
-            try {
-                const record = await getLatestAnalysis(companyId, section);
-                if (record && record.analysis) {
-                    generated.push(engineName);
-                } else {
-                    missing.push(engineName);
+            for (const sectionName of sectionCandidates) {
+                try {
+                    const record = await getLatestAnalysis(
+                        companyId,
+                        sectionName
+                    );
+
+                    if (hasGeneratedAnalysis(record)) {
+                        return {
+                            engineName,
+                            isGenerated: true
+                        };
+                    }
+                } catch (error) {
+                    console.warn(
+                        `Could not verify AI report for ${engineName} using section "${sectionName}":`,
+                        error
+                    );
                 }
-            } catch {
-                missing.push(engineName);
             }
+
+            return {
+                engineName,
+                isGenerated: false
+            };
         })
     );
+
+    const generated = checks
+        .filter(check => check.isGenerated)
+        .map(check => check.engineName);
+
+    const missing = checks
+        .filter(check => !check.isGenerated)
+        .map(check => check.engineName);
 
     return {
         allGenerated: missing.length === 0,
         generated,
-        missing,
+        missing
     };
 }
+
+
+
 
 /**
  * Attach AI-generated analysis report text to engine data
  */
-async function attachAIReport(companyId: string, engineData: HTIEngineData): Promise<HTIEngineData> {
-    const sectionName = ENGINE_ANALYSIS_SECTION_MAP[engineData.engineName];
-    if (!sectionName) return engineData;
+async function attachAIReport(
+  companyId: string,
+  engineData: HTIEngineData
+): Promise<HTIEngineData> {
+  const sectionCandidates =
+    getAnalysisSectionCandidates(
+      engineData.engineName
+    );
+
+  for (
+    const sectionName of sectionCandidates
+  ) {
     try {
-        const analysisRecord = await getLatestAnalysis(companyId, sectionName);
-        if (analysisRecord && analysisRecord.analysis) {
-            engineData.aiReport = typeof analysisRecord.analysis === "string"
-                ? analysisRecord.analysis
-                : JSON.stringify(analysisRecord.analysis);
-        }
-    } catch (err) {
-        console.warn(`Could not fetch AI report for ${engineData.engineName}:`, err);
+      const analysisRecord =
+        await getLatestAnalysis(
+          companyId,
+          sectionName
+        );
+
+      if (!analysisRecord) {
+        continue;
+      }
+
+      /**
+       * Current reports are stored under `result`.
+       * `analysis` remains as a legacy fallback.
+       */
+      const reportContent =
+        analysisRecord.result ??
+        analysisRecord.analysis;
+
+      if (
+        reportContent === null ||
+        reportContent === undefined
+      ) {
+        continue;
+      }
+
+      engineData.aiReport =
+        typeof reportContent === "string"
+          ? reportContent
+          : JSON.stringify(
+              reportContent
+            );
+
+      return engineData;
+    } catch (error) {
+      console.warn(
+        `Could not fetch AI report for ` +
+          `${engineData.engineName} using section ` +
+          `"${sectionName}":`,
+        error
+      );
     }
-    return engineData;
+  }
+
+  console.warn(
+    `No generated analysis was found for ` +
+      `${engineData.engineName}. Checked sections: ` +
+      sectionCandidates.join(", ")
+  );
+
+  return engineData;
 }
 
 /**

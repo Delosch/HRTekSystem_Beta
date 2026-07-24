@@ -143,7 +143,7 @@ export async function action({ request }: ActionFunctionArgs) {
         });
 
         return redirect(
-            `/intermediate?promptId=shared_service&engine=${encodeURIComponent("Shared Service Designer")}&skipQuestions=true`
+            `/intermediate?promptId=shared_service&engine=${encodeURIComponent("Shared Service Designer")}&skipQuestions=true&force=true`
         );
     } catch (error) {
         console.error("AI Generation Error:", error);

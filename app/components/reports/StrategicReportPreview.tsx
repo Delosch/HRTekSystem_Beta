@@ -2,6 +2,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Download, FileText, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
 import type { HTIAdvisoryContent } from "~/models/hti.model.server";
+import {resolveReportClientIdentity} from "~/utils/reportClientIdentity";
+
+function sanitizeFileNamePart(
+    value: string
+): string {
+    return value
+        .trim()
+        .replace(/[^a-zA-Z0-9-_]+/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+}
 
 interface StrategicReportPreviewProps {
     isOpen: boolean;
@@ -87,6 +98,46 @@ function getEnginePhrases(title: string): string[] {
     return ENGINE_PHRASES.change; // fallback
 }
 
+function hasVisibleText(
+    value: unknown
+): value is string {
+    return (
+        typeof value === "string" &&
+        value.trim().length > 0
+    );
+}
+
+function hasVisibleHtml(
+    value: unknown
+): value is string {
+    if (!hasVisibleText(value)) {
+        return false;
+    }
+
+    const plainText = value
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;|&#160;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return plainText.length > 0;
+}
+
+function cleanStringList(
+    value: unknown
+): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .filter(hasVisibleText)
+        .map((item) => item.trim());
+}
+
 export function StrategicReportPreview({
     isOpen,
     onClose,
@@ -99,6 +150,32 @@ export function StrategicReportPreview({
     const [phraseIdx, setPhraseIdx] = useState(0);
     const [isMounted, setIsMounted] = useState(false);
     const phrases = getEnginePhrases(engineTitle);
+    const {companyName: clientName,} = resolveReportClientIdentity({
+    brand_name: brandName,});
+
+    const detailedSections = (reportData?.detailedSections ?? []).filter((section) => hasVisibleText(section?.title) && hasVisibleHtml(section?.content));
+    const riskFlags = (reportData?.riskFlags ?? []).filter((risk) => hasVisibleText(risk?.risk) || hasVisibleText(risk?.mitigation));
+    const keyGaps = cleanStringList(reportData?.currentState?.keyGaps);
+
+    const recommendations = {
+        now: cleanStringList(reportData?.recommendations?.now),
+        next: cleanStringList(reportData?.recommendations?.next),
+        later: cleanStringList(reportData?.recommendations?.later),
+    };
+
+    const dependencies = cleanStringList(reportData?.dependencies);
+    const successMetrics = cleanStringList(reportData?.successMetrics);
+
+    const hasStrategicSummary = riskFlags.length > 0 || keyGaps.length > 0;
+    const hasRecommendations = recommendations.now.length > 0 || recommendations.next.length > 0 || recommendations.later.length > 0;
+    const hasSupportingMeasures = dependencies.length > 0 || successMetrics.length > 0;
+
+    //const currentYear = new Date().getFullYear();
+    const reportDate = new Date().toISOString().slice(0, 10);
+    const resolvedEngineTitle = engineTitle?.trim() || "Strategic Assessment";
+    //const resolvedBrandName = brandName?.trim() || "Client";
+
+    const pdfFileName = ["HRTek", sanitizeFileNamePart(clientName), sanitizeFileNamePart(resolvedEngineTitle), "_Strategic_Advisory_", reportDate].filter(Boolean).join("_").concat(".pdf");
 
     useEffect(() => {
         setIsMounted(true);
@@ -162,10 +239,12 @@ export function StrategicReportPreview({
         const CONTENT_W = PAGE_W - MARGIN * 2;           // 182 mm
         const CONTENT_H = PAGE_H - HEADER_H - FOOTER_H - 3; // gap between bands
 
-        // ── Slice canvas per page ───────────────────────────────────────────
-        const scaledTotalH = (canvas.height * CONTENT_W) / canvas.width;
-        const totalPages   = Math.max(1, Math.ceil(scaledTotalH / CONTENT_H));
-        const pixPerPage   = canvas.height / totalPages;
+        // ── Slice canvas per page without changing its aspect ratio───────────────────────────────────────────
+        // The complete canvas width will be rendered as CONTENT_W millimetres.
+        // Calculate how many source pixels naturally fit inside CONTENT_H.
+        const sourcePageHeight = Math.max(1,Math.floor((canvas.width * CONTENT_H) / CONTENT_W));
+        const totalPages = Math.max(1,Math.ceil(canvas.height / sourcePageHeight ));
+        //const pixPerPage   = canvas.height / totalPages;   --> not needed
 
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
         const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -181,23 +260,44 @@ export function StrategicReportPreview({
             pdf.text('HRTEKSYSTEM', PAGE_W * 0.18, PAGE_H * 0.72, { angle: 45 });
 
             // ── 2. Content slice ───────────────────────────────────────────
-            const sliceCanvas = document.createElement('canvas');
-            sliceCanvas.width  = canvas.width;
-            const sliceH = Math.ceil(pixPerPage);
-            sliceCanvas.height = sliceH;
+            // Use a fixed source-page height for every full page.
+            // The final page uses only its remaining canvas height.
+            const sourceY = pg * sourcePageHeight;
+            const remainingSourceHeight = canvas.height - sourceY;
+            const currentSliceHeight = Math.min(sourcePageHeight, remainingSourceHeight);
 
-            const ctx = sliceCanvas.getContext('2d')!;
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = currentSliceHeight;
+
+            const ctx = sliceCanvas.getContext('2d');
+            if (!ctx) {
+                throw new Error(`Unable to create PDF canvas context for page ${pg + 1}`);
+            }
+
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, sliceCanvas.width, sliceH);
+            ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+
             ctx.drawImage(
                 canvas,
-                0, pg * pixPerPage, canvas.width, pixPerPage,
-                0, 0, canvas.width, sliceH,
+                // Source rectangle
+                0, sourceY, canvas.width, currentSliceHeight,
+                // Destination rectangle
+                0, 0, canvas.width, currentSliceHeight
             );
 
             const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.93);
-            // Content area starts below header + 1.5mm gap
-            pdf.addImage(sliceData, 'JPEG', MARGIN, HEADER_H + 1.5, CONTENT_W, CONTENT_H, '', 'FAST');
+
+            /**
+             * Preserve the source slice's aspect ratio.
+             *
+             * Full pages will render at approximately CONTENT_H.
+             * The last page will render at its natural shorter height.
+             */
+            const renderedSliceHeightMm = Math.min(CONTENT_H, (currentSliceHeight * CONTENT_W) / canvas.width);
+
+            // Content begins below the PDF header.
+            pdf.addImage(sliceData, 'JPEG', MARGIN, HEADER_H + 1.5, CONTENT_W, renderedSliceHeightMm, '', 'FAST');
 
             // ── 3. Header band (drawn OVER content top edge) ───────────────
             pdf.setFillColor(15, 23, 42);          // slate-900
@@ -250,16 +350,16 @@ export function StrategicReportPreview({
             pdf.setTextColor(148, 163, 184);
             pdf.setFont('helvetica', 'normal');
             pdf.text(
-                `© 2026 HRTek Systems  •  ${brandName}  •  Confidential & Proprietary  •  Not for External Distribution`,
+                `© {currentYear} HRTek Systems  •  ${clientName}  •  Confidential & Proprietary  •  Not for External Distribution`,
                 PAGE_W / 2,
                 PAGE_H - 4,
                 { align: 'center' },
             );
         }
 
-        const safeName = brandName.replace(/[^a-zA-Z0-9\s_-]/g, '').replace(/\s+/g, '_');
+        const safeName = clientName.trim().replace(/[^a-zA-Z0-9\s_-]/g,"",).replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
         const dateSuffix = new Date().toISOString().split('T')[0];
-        pdf.save(`HRTek_${safeName}_Strategic_Report_${dateSuffix}.pdf`);
+        pdf.save(pdfFileName);
     };
 
     return (
@@ -317,7 +417,7 @@ export function StrategicReportPreview({
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
                                             </span>
-                                            <span className="text-indigo-600 text-[10px] font-black tracking-[0.2em] uppercase">DeepSeek Engine Active</span>
+                                            <span className="text-indigo-600 text-[10px] font-black tracking-[0.2em] uppercase">Report Generation in Progress</span>
                                         </motion.div>
                                         
                                         <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter leading-none">
@@ -408,7 +508,7 @@ export function StrategicReportPreview({
                                         </div>
                                         
                                         <p className="text-slate-400 text-[10px] font-black text-center uppercase tracking-[0.3em]">
-                                            Estimated time: 45 seconds • AI Synthesis v4.0
+                                            Estimated time: 45 seconds • Confidential Advisory
                                         </p>
                                     </div>
                                 </div>
@@ -417,88 +517,213 @@ export function StrategicReportPreview({
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     id="report-content-to-export"
-                                    className="max-w-4xl mx-auto bg-white shadow-xl rounded-[2.5rem] p-16 relative border border-slate-50"
+                                    className="max-w-4xl mx-auto bg-white shadow-xl rounded-[2.5rem] p-12 relative border border-slate-50"
                                 >
                                     {/* Professional table + paragraph styles captured by html2canvas */}
                                     <style>{`
+                                        #report-content-to-export {
+                                            max-width: 100%;
+                                            overflow-x: hidden;
+                                        }
+
                                         #report-content-to-export table {
-                                            width: 100%;
+                                            width: 100% !important;
+                                            max-width: 100% !important;
+
+                                            /*
+                                            * Prevent content from expanding columns beyond
+                                            * the available A4 report width.
+                                            */
+                                            table-layout: fixed;
+
                                             border-collapse: separate;
                                             border-spacing: 0;
-                                            margin: 2.5rem 0;
-                                            border-radius: 12px;
-                                            overflow: hidden;
+
+                                            margin: 1.75rem 0;
+
                                             border: 1.5px solid #cbd5e1;
-                                            box-shadow: 0 4px 18px -2px rgba(0,0,0,0.09);
-                                            font-size: 13.5px;
+                                            border-radius: 10px;
+
+                                            /*
+                                            * Prevent wide table content from escaping the
+                                            * captured report container.
+                                            */
+                                            overflow: hidden;
+
+                                            box-sizing: border-box;
+
+                                            font-size: 12px;
+
+                                            box-shadow: 0 3px 12px -2px rgba(0, 0, 0, 0.08);
                                         }
+
+                                        #report-content-to-export thead {
+                                            display: table-header-group;
+                                        }
+
                                         #report-content-to-export thead tr {
                                             background-color: #0f172a;
                                         }
-                                        #report-content-to-export th {
-                                            padding: 13px 20px;
-                                            color: #ffffff;
-                                            font-size: 10px;
-                                            font-weight: 800;
-                                            text-transform: uppercase;
-                                            letter-spacing: 0.14em;
+
+                                        #report-content-to-export tbody {
+                                            width: 100%;
+                                        }
+
+                                        #report-content-to-export tr {
+                                            width: 100%;
+                                        }
+
+                                        #report-content-to-export th,
+                                        #report-content-to-export td {
+                                            /*
+                                            * Include padding and borders inside the calculated
+                                            * fixed-column width.
+                                            */
+                                            box-sizing: border-box;
+
+                                            /*
+                                            * Always align multi-line table content from the top.
+                                            */
+                                            vertical-align: top;
+
+                                            /*
+                                            * Do not allow content to remain on one long line.
+                                            */
+                                            white-space: normal !important;
+
+                                            /*
+                                            * Wrap ordinary words, identifiers, URLs, and
+                                            * uninterrupted AI-generated strings.
+                                            */
+                                            overflow-wrap: anywhere;
+                                            word-wrap: break-word;
+                                            word-break: break-word;
+                                            hyphens: auto;
+
+                                            /*
+                                            * Prevent any individual cell from drawing outside
+                                            * the table boundary.
+                                            */
+                                            max-width: 0;
+                                            overflow: hidden;
+
                                             text-align: left;
+                                        }
+
+                                        #report-content-to-export th {
+                                            padding: 8px 12px;
+
+                                            color: #ffffff;
+                                            background-color: #0f172a;
+
+                                            font-size: 9.5px;
+                                            font-weight: 800;
+                                            line-height: 1.35;
+
+                                            text-transform: uppercase;
+                                            letter-spacing: 0.08em;
+
                                             border-right: 1px solid #1e293b;
+
                                             border-bottom: 2.5px solid #4f46e5;
                                         }
+
                                         #report-content-to-export th:last-child {
                                             border-right: none;
                                         }
+
                                         #report-content-to-export td {
-                                            padding: 11px 20px;
+                                            padding: 8px 12px;
+
                                             color: #475569;
-                                            line-height: 1.6;
-                                            border-right: 1px solid #e2e8f0;
-                                            border-bottom: 1px solid #e2e8f0;
+
+                                            font-size: 11.5px;
                                             font-weight: 500;
+                                            line-height: 1.45;
+
+                                            border-right: 1px solid #e2e8f0;
+
+                                            border-bottom: 1px solid #e2e8f0;
                                         }
+
                                         #report-content-to-export td:last-child {
                                             border-right: none;
                                         }
+
                                         #report-content-to-export tbody tr:last-child td {
                                             border-bottom: none;
                                         }
-                                        #report-content-to-export tbody tr:nth-child(even) td {
-                                            background-color: #f8fafc;
-                                        }
+
                                         #report-content-to-export tbody tr:nth-child(odd) td {
                                             background-color: #ffffff;
                                         }
-                                        #report-content-to-export .prose p {
-                                            margin-bottom: 1.75rem;
-                                            line-height: 1.85;
+
+                                        #report-content-to-export tbody tr:nth-child(even) td {
+                                            background-color: #f8fafc;
                                         }
-                                        #report-content-to-export .prose ul {
-                                            margin-top: 1rem;
-                                            margin-bottom: 1.75rem;
+
+                                        /*
+                                        * Long links and generated identifiers need their own
+                                        * wrapping rules because browsers often keep them intact.
+                                        */
+                                        #report-content-to-export td a,
+                                        #report-content-to-export th a,
+                                        #report-content-to-export td code,
+                                        #report-content-to-export th code {
+                                            display: inline;
+
+                                            max-width: 100%;
+
+                                            white-space: normal !important;
+                                            overflow-wrap: anywhere;
+                                            word-break: break-all;
                                         }
-                                        #report-content-to-export .prose li {
-                                            margin-bottom: 0.6rem;
-                                            line-height: 1.7;
+
+                                        /*
+                                        * Ensure images or badges included inside table cells
+                                        * cannot make the column wider.
+                                        */
+                                        #report-content-to-export td img,
+                                        #report-content-to-export th img,
+                                        #report-content-to-export td svg,
+                                        #report-content-to-export th svg {
+                                            max-width: 100%;
+                                            height: auto;
                                         }
-                                        #report-content-to-export .prose h2 {
-                                            margin-top: 3.5rem;
-                                            margin-bottom: 1.25rem;
+
+                                        /*
+                                        * Prevent nested blocks generated by the AI from applying
+                                        * margins that make the cells unnecessarily tall.
+                                        */
+                                        #report-content-to-export td p,
+                                        #report-content-to-export th p {
+                                            margin-top: 0;
+                                            margin-bottom: 0.4rem;
+                                            line-height: 1.45;
                                         }
-                                        #report-content-to-export .prose h3 {
-                                            margin-top: 2.5rem;
-                                            margin-bottom: 1rem;
+
+                                        #report-content-to-export td p:last-child,
+                                        #report-content-to-export th p:last-child {
+                                            margin-bottom: 0;
                                         }
-                                        #report-content-to-export .prose h4 {
-                                            margin-top: 2rem;
-                                            margin-bottom: 0.75rem;
+
+                                        #report-content-to-export td ul,
+                                        #report-content-to-export td ol {
+                                            margin-top: 0.25rem;
+                                            margin-bottom: 0.25rem;
+                                            padding-left: 1rem;
+                                        }
+
+                                        #report-content-to-export td li {
+                                            margin-bottom: 0.2rem;
+                                            line-height: 1.4;
                                         }
                                     `}</style>
 
                                     {/* A4 Paper Look */}
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 rounded-t-full" />
 
-                                    <div className="flex justify-between items-start mb-16">
+                                    <div className="flex justify-between items-start mb-10">
                                         <div>
                                             <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic leading-none mb-2">
                                                 Strategic <br />
@@ -506,12 +731,12 @@ export function StrategicReportPreview({
                                             </h1>
                                             <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 inline-flex mt-4">
                                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">Verified DeepSeek Analysis</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-widest">Assessment-Based Strategic Advisory</span>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Company</p>
-                                            <p className="text-sm font-bold text-slate-700">{brandName}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Prepared For</p>
+                                            <p className="text-sm font-bold text-slate-700">{clientName}</p>
                                             <p className="text-[10px] font-bold text-slate-400 mt-4 uppercase tracking-widest">
                                                 {isMounted ? new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-- --- ----'}
                                             </p>
@@ -522,62 +747,225 @@ export function StrategicReportPreview({
                                     <div
                                         className="prose prose-slate max-w-none
                                             prose-headings:font-bold prose-headings:uppercase prose-headings:italic prose-headings:tracking-tight
-                                            prose-h2:text-3xl prose-h2:text-slate-900 prose-h2:border-b-4 prose-h2:border-indigo-600 prose-h2:pb-4 prose-h2:mt-16 prose-h2:mb-8
-                                            prose-h3:text-xl prose-h3:text-indigo-600 prose-h3:mt-10 prose-h3:mb-6
-                                            prose-h4:text-base prose-h4:text-slate-800 prose-h4:mt-8 prose-h4:mb-3
-                                            prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-base prose-p:mb-8 prose-p:font-medium
-                                            prose-ul:my-8 prose-li:text-slate-600 prose-li:text-base prose-li:my-3 prose-li:font-medium"
+                                            prose-h2:text-3xl prose-h2:text-slate-900 prose-h2:border-b-4 prose-h2:border-indigo-600 prose-h2:pb-3 prose-h2:mt-10 prose-h2:mb-5
+                                            prose-h3:text-xl prose-h3:text-indigo-600 prose-h3:mt-7 prose-h3:mb-4
+                                            prose-h4:text-base prose-h4:text-slate-800 prose-h4:mt-5 prose-h4:mb-2
+                                            prose-p:text-slate-600 prose-p:text-base prose-p:mb-5 prose-p:font-medium
+                                            prose-ul:my-5 prose-ol:my-5 prose-li:text-slate-600 prose-li:text-base prose-li:my-2 prose-li:font-medium"
                                     >
                                         <div dangerouslySetInnerHTML={{ __html: reportData.executiveSummary }} />
 
                                         {/* Detailed Chapters */}
-                                        {reportData.detailedSections?.map((section, idx) => (
-                                            <div key={idx} className="mt-24 pt-12 border-t-2 border-slate-100">
-                                                <div className="flex items-start gap-5 mb-10">
-                                                    <span className="text-[80px] leading-none font-black text-indigo-100 italic select-none">{String(idx + 1).padStart(2, '0')}</span>
-                                                    <h2 className="text-4xl !text-slate-900 !mt-4 !mb-0 !border-none !pb-0">{section.title}</h2>
-                                                </div>
-                                                <div dangerouslySetInnerHTML={{ __html: section.content }} />
+                                        {detailedSections.map((section, idx) => (
+                                        <div key={`${section.title}-${idx}`} className="mt-12 pt-8 border-t-2 border-slate-100">
+                                            <div className="flex items-start gap-4 mb-6">
+                                                <span className="text-[52px] leading-none font-black text-indigo-100 italic select-none">
+                                                    {String(idx + 1).padStart(2, "0")}
+                                                </span>
+
+                                                <h2 className="text-[30px] leading-tight !text-slate-900 !mt-2 !mb-0 !border-none !pb-0">
+                                                    {section.title}
+                                                </h2>
                                             </div>
-                                        ))}
+
+                                            <div dangerouslySetInnerHTML={{ __html: section.content }} />
+                                        </div>
+                                    ))}
                                     </div>
 
                                     {/* Gaps/Recommendations Summary Cards */}
-                                    <div className="mt-24 pt-10 border-t-2 border-slate-100">
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8">Strategic Intelligence Summary</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="p-8 bg-red-50 rounded-2xl border border-red-200">
-                                                <h4 className="text-red-700 font-black uppercase tracking-widest text-xs mb-5 flex items-center gap-2">
-                                                    <X className="w-4 h-4" /> Critical Risk Flags
-                                                </h4>
-                                                <ul className="space-y-5">
-                                                    {reportData.riskFlags.map((risk, i) => (
-                                                        <li key={i} className="text-sm border-b border-red-100 pb-4 last:border-0 last:pb-0">
-                                                            <p className="font-medium text-red-900 mb-1.5">{risk.risk}</p>
-                                                            <p className="text-red-700/70 text-xs leading-relaxed font-normal">{risk.mitigation}</p>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                            <div className="p-8 bg-emerald-50 rounded-2xl border border-emerald-200">
-                                                <h4 className="text-emerald-700 font-black uppercase tracking-widest text-xs mb-5 flex items-center gap-2">
-                                                    <CheckCircle2 className="w-4 h-4" /> Key Transformation Gaps
-                                                </h4>
-                                                <ul className="space-y-4">
-                                                    {reportData.currentState.keyGaps.map((gap, i) => (
-                                                        <li key={i} className="flex gap-3 text-sm text-emerald-800 font-medium leading-snug">
-                                                            <span className="shrink-0 text-emerald-500 mt-0.5 font-bold">▸</span>
-                                                            {gap}
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                    {hasStrategicSummary && (
+                                        <div className="mt-12 pt-8 border-t-2 border-slate-100">
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-5">
+                                                Strategic Intelligence Summary
+                                            </h3>
+
+                                            <div className={`grid grid-cols-1 gap-5 ${riskFlags.length > 0 && keyGaps.length > 0 ? "md:grid-cols-2" : ""}`}>
+                                                {riskFlags.length > 0 && (
+                                                    <div className="p-6 bg-red-50 rounded-2xl border border-red-200">
+                                                        <h4 className="text-red-700 font-black uppercase tracking-widest text-xs mb-5 flex items-center gap-2">
+                                                            <X className="w-4 h-4" />
+                                                            Critical Risk Flags
+                                                        </h4>
+
+                                                        <ul className="space-y-4">
+                                                            {riskFlags.map((risk, index) => (
+                                                                <li key={index} className="text-sm border-b border-red-100 pb-4 last:border-0 last:pb-0">
+                                                                    {hasVisibleText(risk.risk) && (
+                                                                        <p className="font-medium text-red-900 mb-1.5">{risk.risk}</p>
+                                                                    )}
+                                                                    {hasVisibleText(risk.mitigation) && (
+                                                                        <p className="text-red-700/70 text-xs leading-relaxed font-normal">{risk.mitigation}</p>
+                                                                    )}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {keyGaps.length > 0 && (
+                                                    <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200">
+                                                        <h4 className="text-emerald-700 font-black uppercase tracking-widest text-xs mb-5 flex items-center gap-2">
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                            Key Transformation Gaps
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {keyGaps.map((gap, index) => (
+                                                                <li key={index} className="flex gap-3 text-sm text-emerald-800 font-medium leading-snug">
+                                                                    <span className="shrink-0 text-emerald-500 mt-0.5 font-bold">▸</span>
+                                                                    {gap}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="mt-20 pt-8 border-t border-slate-100 flex justify-between items-center text-[10px] font-black text-slate-300 uppercase tracking-[0.4em]">
+                                    {hasRecommendations && (
+                                        <div className="mt-12 pt-8 border-t-2 border-slate-100">
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-5">
+                                                Strategic Recommendations
+                                            </h3>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                {recommendations.now.length > 0 && (
+                                                    <div className="p-5 bg-red-50 rounded-2xl border border-red-200">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-red-700 mb-4">
+                                                            Now
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {recommendations.now.map((item, index) => (
+                                                                <li key={index} className="text-sm text-red-900 leading-relaxed">
+                                                                    • {item}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {recommendations.next.length > 0 && (
+                                                    <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-amber-700 mb-4">
+                                                            Next
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {recommendations.next.map((item, index) => (
+                                                                <li key={index} className="text-sm text-amber-900 leading-relaxed">
+                                                                    • {item}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {recommendations.later.length > 0 && (
+                                                    <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-emerald-700 mb-4">
+                                                            Later
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {recommendations.later.map((item, index) => (
+                                                                <li key={index} className="text-sm text-emerald-900 leading-relaxed">
+                                                                    • {item}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {hasSupportingMeasures && (
+                                        <div className="mt-12 pt-8 border-t-2 border-slate-100">
+                                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-5">
+                                                Execution Controls
+                                            </h3>
+
+                                            <div
+                                                className={`grid grid-cols-1 gap-5 ${
+                                                    dependencies.length >
+                                                        0 &&
+                                                    successMetrics.length >
+                                                        0
+                                                        ? "md:grid-cols-2"
+                                                        : ""
+                                                }`}
+                                            >
+                                                {dependencies.length > 0 && (
+                                                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-700 mb-4">
+                                                            Dependencies
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {dependencies.map(
+                                                                (
+                                                                    dependency,
+                                                                    index
+                                                                ) => (
+                                                                    <li
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        className="flex gap-3 text-sm text-slate-700 leading-relaxed"
+                                                                    >
+                                                                        <span className="font-bold text-indigo-500">
+                                                                            ▸
+                                                                        </span>
+
+                                                                        {
+                                                                            dependency
+                                                                        }
+                                                                    </li>
+                                                                )
+                                                            )}
+                                                        </ul>
+                                                    </div>
+                                                )}
+
+                                                {successMetrics.length >
+                                                    0 && (
+                                                    <div className="p-5 bg-blue-50 rounded-2xl border border-blue-200">
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-blue-700 mb-4">
+                                                            Success Metrics
+                                                        </h4>
+
+                                                        <ul className="space-y-3">
+                                                            {successMetrics.map(
+                                                                (
+                                                                    metric,
+                                                                    index
+                                                                ) => (
+                                                                    <li
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        className="flex gap-3 text-sm text-blue-900 leading-relaxed"
+                                                                    >
+                                                                        <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+
+                                                                        {metric}
+                                                                    </li>
+                                                                )
+                                                            )}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+
+                                    <div className="mt-12 pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
                                         <span>HRTEKSYSTEM ADVISORY</span>
-                                        <span>REPORT REF: HTI-DEEPSEEK-2026</span>
+                                        <span>CONFIDENTIAL ADVISORY</span>
                                     </div>
                                 </motion.div>
                             ) : error ? (
@@ -587,7 +975,7 @@ export function StrategicReportPreview({
                                     </div>
                                     <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase italic tracking-tight">Generation Failed</h3>
                                     <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">
-                                        Something went wrong during the DeepSeek analysis. Error: {error}
+                                        Something went wrong during the analysis. Error: {error}
                                     </p>
                                     <button
                                         onClick={onClose}

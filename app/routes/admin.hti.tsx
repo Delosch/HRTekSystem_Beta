@@ -24,67 +24,278 @@ import {
 import { HTIReportEditor } from "~/components/HTIReportEditor";
 import { PDFPreviewModal } from "~/components/PDFPreviewModal";
 import { motion, AnimatePresence } from "framer-motion";
+import {resolveReportClientIdentity} from "~/utils/reportClientIdentity";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-    await requireAdminSession(request);
+export async function loader({request,}: LoaderFunctionArgs) {
+    await requireAdminSession(
+        request,
+    );
 
-    let pendingApprovals: any[] = [];
-    let approvedReports: any[] = [];
+    let pendingApprovals: any[] =
+        [];
+    let approvedReports: any[] =
+        [];
     let totalReportsCount = 0;
-    let loaderError: string | null = null;
+    let loaderError:
+        | string
+        | null = null;
 
     try {
-        const { getPendingApprovals, getAllHTIReports } = await import("~/models/hti.model.server");
+        const [
+            {
+                getPendingApprovals,
+                getAllHTIReports,
+            },
+            {
+                getCompanyProfile,
+            },
+        ] = await Promise.all([
+            import(
+                "~/models/hti.model.server"
+            ),
 
-        const [pendingReports, allReports] = await Promise.all([
-            getPendingApprovals(),
-            getAllHTIReports()
+            import(
+                "~/models/company.model.server"
+            ),
         ]);
 
-        totalReportsCount = allReports.length;
+        const [
+            pendingReports,
+            allReports,
+        ] = await Promise.all([
+            getPendingApprovals(),
+            getAllHTIReports(),
+        ]);
 
-        pendingApprovals = pendingReports.map(report => ({
-            reportId: report.reportId,
-            companyId: report.companyId,
-            generatedAt: report.generatedAt,
-            generatedBy: report.generatedBy,
-            status: report.status,
-            completedEngines: report.inputData?.completedEnginesCount || 5,
-            totalEngines: report.inputData?.totalEngines || 5,
-            executiveSummary: report.advisory?.executiveSummary || "No summary available",
-            advisory: report.advisory,
-            approvedAt: report.approvedAt,
-            approvedBy: report.approvedBy
-        }));
+        totalReportsCount =
+            allReports.length;
 
-        approvedReports = allReports
-            .filter((r: any) => r.status === "approved")
-            .map((report: any) => ({
-                reportId: report.reportId,
-                companyId: report.companyId,
-                generatedAt: report.generatedAt,
-                generatedBy: report.generatedBy,
-                status: report.status,
-                approvedAt: report.approvedAt,
-                approvedBy: report.approvedBy,
-                isLocked: report.isLocked ?? true,
-                lockedAt: report.lockedAt,
-                lockedBy: report.lockedBy,
-                completedEngines: report.inputData?.completedEnginesCount || 5,
-                totalEngines: report.inputData?.totalEngines || 5,
-                executiveSummary: report.advisory?.executiveSummary || "No summary available",
-                advisory: report.advisory
-            }));
+        /*
+         * Collect every unique company ID first.
+         *
+         * A company profile is fetched only once,
+         * even when several reports belong to the
+         * same company.
+         */
+        const companyIds =
+            Array.from(
+                new Set(
+                    [
+                        ...pendingReports,
+                        ...allReports,
+                    ]
+                        .map(
+                            (
+                                report:
+                                    any,
+                            ) =>
+                                report.companyId,
+                        )
+                        .filter(
+                            (
+                                companyId,
+                            ): companyId is string =>
+                                typeof companyId ===
+                                    "string" &&
+                                companyId.trim()
+                                    .length >
+                                    0,
+                        ),
+                ),
+            );
+
+        const companyIdentityById =
+            new Map<
+                string,
+                ReturnType<
+                    typeof resolveReportClientIdentity
+                >
+            >();
+
+        /*
+         * Resolve all company profiles in parallel.
+         * Each company ID is requested only once.
+         */
+        await Promise.all(
+            companyIds.map(
+                async (
+                    companyId,
+                ) => {
+                    try {
+                        const company =
+                            await getCompanyProfile(
+                                companyId,
+                            );
+
+                        companyIdentityById.set(
+                            companyId,
+                            resolveReportClientIdentity(
+                                company,
+                            ),
+                        );
+                    } catch (
+                        error
+                    ) {
+                        console.error(
+                            `Failed to load company profile for HTI admin report: ${companyId}`,
+                            error,
+                        );
+
+                        companyIdentityById.set(
+                            companyId,
+                            resolveReportClientIdentity(
+                                null,
+                            ),
+                        );
+                    }
+                },
+            ),
+        );
+
+        const fallbackIdentity =
+            resolveReportClientIdentity(
+                null,
+            );
+
+        const getCompanyName = (
+            companyId: string,
+        ): string =>
+            companyIdentityById.get(
+                companyId,
+            )?.companyName ??
+            fallbackIdentity.companyName;
+
+        pendingApprovals =
+            pendingReports.map(
+                (report) => ({
+                    reportId:
+                        report.reportId,
+
+                    companyId:
+                        report.companyId,
+
+                    companyName:
+                        getCompanyName(
+                            report.companyId,
+                        ),
+
+                    generatedAt:
+                        report.generatedAt,
+
+                    generatedBy:
+                        report.generatedBy,
+
+                    status:
+                        report.status,
+
+                    completedEngines:
+                        report.inputData
+                            ?.completedEnginesCount ??
+                        0,
+
+                    totalEngines:
+                        report.inputData
+                            ?.totalEngines ??
+                        0,
+
+                    executiveSummary:
+                        report.advisory
+                            ?.executiveSummary ||
+                        "No summary available",
+
+                    advisory:
+                        report.advisory,
+
+                    approvedAt:
+                        report.approvedAt,
+
+                    approvedBy:
+                        report.approvedBy,
+                }),
+            );
+
+        approvedReports =
+            allReports
+                .filter(
+                    (report: any) =>
+                        report.status ===
+                        "approved",
+                )
+                .map(
+                    (
+                        report: any,
+                    ) => ({
+                        reportId:
+                            report.reportId,
+
+                        companyId:
+                            report.companyId,
+
+                        companyName:
+                            getCompanyName(
+                                report.companyId,
+                            ),
+
+                        generatedAt:
+                            report.generatedAt,
+
+                        generatedBy:
+                            report.generatedBy,
+
+                        status:
+                            report.status,
+
+                        approvedAt:
+                            report.approvedAt,
+
+                        approvedBy:
+                            report.approvedBy,
+
+                        isLocked:
+                            report.isLocked ??
+                            true,
+
+                        lockedAt:
+                            report.lockedAt,
+
+                        lockedBy:
+                            report.lockedBy,
+
+                        completedEngines:
+                            report.inputData
+                                ?.completedEnginesCount ??
+                            0,
+
+                        totalEngines:
+                            report.inputData
+                                ?.totalEngines ??
+                            0,
+
+                        executiveSummary:
+                            report.advisory
+                                ?.executiveSummary ||
+                            "No summary available",
+
+                        advisory:
+                            report.advisory,
+                    }),
+                );
     } catch (error: any) {
-        console.error("Error fetching HTI reports:", error);
-        loaderError = error?.message || "Failed to load HTI reports";
+        console.error(
+            "Error fetching HTI reports:",
+            error,
+        );
+
+        loaderError =
+            error?.message ||
+            "Failed to load HTI reports";
     }
 
     return json({
         pendingApprovals,
         approvedReports,
         totalReportsCount,
-        loaderError
+        loaderError,
     });
 }
 
@@ -309,7 +520,8 @@ export default function AdminHTIApprovals() {
                                             <span className="inline-flex px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest border border-amber-100 mb-4 animate-pulse">
                                                 Review Required
                                             </span>
-                                            <h3 className="text-xl font-bold text-gray-900 truncate mb-1">#{report.companyId}</h3>
+                                            <h3 className="text-xl font-bold text-gray-900 truncate mb-1">#{report.companyName}</h3>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Company ID:{" "}{report.companyId}</p>
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Report ID: {report.reportId.slice(0, 12)}</p>
                                         </div>
 
@@ -497,7 +709,8 @@ export default function AdminHTIApprovals() {
                                         {report.approvedAt ? new Date(report.approvedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                                     </span>
                                 </div>
-                                <h3 className="text-base font-black text-gray-900 mb-0.5 truncate">{report.companyId}</h3>
+                                <h3 className="text-base font-black text-gray-900 mb-0.5 truncate">{report.companyName}</h3>
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1 truncate">Company ID:{" "}{report.companyId}</p>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                                     Approved by: <span className="text-indigo-500">{report.approvedBy || "Admin"}</span>
                                 </p>
@@ -530,6 +743,7 @@ export default function AdminHTIApprovals() {
             {showPDFPreview && previewReport && (
                 <PDFPreviewModal
                     report={previewReport}
+                    companyName={previewReport.companyName}
                     isOpen={showPDFPreview}
                     onClose={() => setShowPDFPreview(false)}
                 />

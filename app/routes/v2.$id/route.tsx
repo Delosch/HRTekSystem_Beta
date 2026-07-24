@@ -7,7 +7,7 @@ import { getCompanyProfile } from "~/models/company.model.server";
 import DigitalMaturityReport from "~/components/reports/DigitalMaturityReport";
 import { generateHTIAdvisory } from "~/lib/hti.deepseek";
 import { saveAdvisoryReport } from "~/models/hti.model.server";
-
+import {resolveReportClientIdentity} from "~/utils/reportClientIdentity";
 export const loader: LoaderFunction = async ({ request, params }: { request: Request, params: Params }) => {
     try {
         const user = await requireUserSession(request);
@@ -23,7 +23,8 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
             throw new Response("No assessment data found", { status: 404 });
         }
         const company_info = await getCompanyProfile(user.organisationId)
-        const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client"
+        //const brand_name = company_info?.brand_name || company_info?.company_name || "Confidential Client"
+        const {companyName,logoUrl,} = resolveReportClientIdentity(company_info);
 
         // Check URL for report type (detailed vs standard)
         const url = new URL(request.url);
@@ -31,7 +32,7 @@ export const loader: LoaderFunction = async ({ request, params }: { request: Req
 
         return {
             data,
-            brand_name,
+            brandName: companyName,
             assessmentId: params.id || "Unknown Assessment",
             reportType
         };

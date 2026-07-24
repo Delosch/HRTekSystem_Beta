@@ -129,7 +129,7 @@ export const action: ActionFunction = async ({ request }) => {
         console.warn("Failed to sync eligibility after profiling assessment:", eligibilityError);
       }
 
-      return json({ success: true, redirect: "/intermediate?engine=Profiling%20Assessment&promptId=digital_maturity" }, {
+      return json({ success: true, redirect: "/intermediate?engine=Profiling%20Assessment&promptId=digital_maturity&force=true" }, {
         headers: {
           "Set-Cookie": await commitSession(session),
         },

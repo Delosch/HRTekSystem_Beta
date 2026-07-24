@@ -1,6 +1,8 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
+import { deriveHTIScores, formatHTIScore } from "~/utils/htiScoreUtils";
+
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const C = {
     navy:        '#0f172a',
@@ -40,7 +42,7 @@ const S = StyleSheet.create({
 
     headerBar:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
                        paddingHorizontal: 36, paddingVertical: 10, backgroundColor: C.navy, marginBottom: 20 },
-    headerTitle:     { fontSize: 7.5, color: C.slate400, fontFamily: 'Helvetica', letterSpacing: 1 },
+    headerTitle:     { fontSize: 7.5, color: C.slate400, fontFamily: 'Helvetica', letterSpacing: 0.4 },
     headerRight:     { fontSize: 7.5, color: C.slate500, fontFamily: 'Helvetica' },
 
     footer:          { position: 'absolute', bottom: 16, left: 36, right: 36, flexDirection: 'row',
@@ -53,12 +55,12 @@ const S = StyleSheet.create({
     coverContent:    { padding: 44, flex: 1, justifyContent: 'space-between' },
     coverScoreBox:   { flex: 1, padding: 16, marginRight: 10, backgroundColor: C.navyMid, borderRadius: 6,
                        borderLeftWidth: 3, borderLeftColor: C.primaryMid },
-    coverScoreLabel: { fontSize: 7, color: C.slate400, letterSpacing: 1, marginBottom: 6, fontFamily: 'Helvetica' },
+    coverScoreLabel: { fontSize: 6.8, color: C.slate400, letterSpacing: 0.25, marginBottom: 6, fontFamily: 'Helvetica' },
     coverScoreVal:   { fontSize: 28, color: C.white, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
     coverScoreSub:   { fontSize: 7, color: C.slate500, fontFamily: 'Helvetica' },
 
     // Typography
-    sectionChip:     { fontSize: 7, color: C.primaryMid, letterSpacing: 1.5, marginBottom: 5,
+    sectionChip:     { fontSize: 7, color: C.primaryMid, letterSpacing: 0.75, marginBottom: 5,
                        fontFamily: 'Helvetica-Bold' },
     h1:              { fontSize: 20, color: C.slate900, fontFamily: 'Helvetica-Bold', marginBottom: 5 },
     h2:              { fontSize: 13, color: C.primary, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
@@ -67,7 +69,7 @@ const S = StyleSheet.create({
     body:            { fontSize: 9, color: C.slate700, fontFamily: 'Helvetica', lineHeight: 1.6, marginBottom: 5 },
     bodyBold:        { fontSize: 9, color: C.slate800, fontFamily: 'Helvetica-Bold', lineHeight: 1.6 },
     small:           { fontSize: 7.5, color: C.slate500, fontFamily: 'Helvetica', lineHeight: 1.5 },
-    label:           { fontSize: 6.5, color: C.slate400, letterSpacing: 1, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
+    label:           { fontSize: 6.5, color: C.slate400, letterSpacing: 0.4, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
 
     // Cards
     card:            { backgroundColor: C.slate50, borderRadius: 6, padding: 12, marginBottom: 10,
@@ -105,10 +107,10 @@ const S = StyleSheet.create({
     tableCellBold:   { fontSize: 8, color: C.slate900, fontFamily: 'Helvetica-Bold', flex: 1 },
 
     badge:           { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 },
-    badgeText:       { fontSize: 6.5, fontFamily: 'Helvetica-Bold', letterSpacing: 0.5 },
+    badgeText:       { fontSize: 6.5, fontFamily: 'Helvetica-Bold', letterSpacing: 0.25 },
 
     chapterBlock:    { marginBottom: 16, paddingBottom: 10, borderBottomWidth: 2, borderBottomColor: C.slate200 },
-    chapterNum:      { fontSize: 7.5, color: C.primaryMid, letterSpacing: 2, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
+    chapterNum:      { fontSize: 7.5, color: C.primaryMid, letterSpacing: 0.8, fontFamily: 'Helvetica-Bold', marginBottom: 4 },
     chapterTitle:    { fontSize: 18, color: C.slate900, fontFamily: 'Helvetica-Bold' },
     chapterSub:      { fontSize: 8.5, color: C.slate500, fontFamily: 'Helvetica', marginTop: 3 },
 });
@@ -179,6 +181,16 @@ function timeframeColor(tf: string): string {
     return C.green;
 }
 
+function clientSafeAuditDetails(action: string, details: string): string {
+    if (action.trim().toLowerCase() === 'generated') {
+        return 'Assessment-based advisory generated.';
+    }
+
+    return details
+        .replace(/\s+using\s+[^.]+\.?$/i, '')
+        .trim();
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const PageHeader = ({ chapter, right }: { chapter: string; right: string }) => (
@@ -188,10 +200,23 @@ const PageHeader = ({ chapter, right }: { chapter: string; right: string }) => (
     </View>
 );
 
-const PageFooter = ({ companyId }: { companyId: string }) => (
+const PageFooter = ({
+    companyId,
+    year,
+}: {
+    companyId: string;
+    year: number;
+}) => (
     <View style={S.footer} fixed>
-        <Text style={S.footerText}>HRTek Systems • HR Transformation Intelligence • {companyId} • Confidential</Text>
-        <Text style={S.footerPageNum} render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+        <Text style={S.footerText}>
+            © {year} HRTek Systems • HR Transformation Intelligence • {companyId} • Confidential Advisory
+        </Text>
+        <Text
+            style={S.footerPageNum}
+            render={({ pageNumber, totalPages }) =>
+                `Page ${pageNumber} of ${totalPages}`
+            }
+        />
     </View>
 );
 
@@ -252,6 +277,10 @@ interface HTIReportPDFProps {
         companyId: string;
         reportId?: string;
         generatedAt: string;
+        inputData?: {
+            completedEnginesCount?: number;
+            totalEngines?: number;
+        };
         advisory: {
             executiveSummary: string;
             detailedSections?: Array<{ title: string; content: string }>;
@@ -276,19 +305,52 @@ interface HTIReportPDFProps {
             auditTrail?: Array<{ timestamp: string; action: string; details: string }>;
         };
     };
-    brandName?: string;
+    companyName: string;
 }
 
 // ─── Main PDF Component ───────────────────────────────────────────────────────
 
-export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName }) => {
+export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, companyName }) => {
     const { advisory, companyId, generatedAt, reportId } = report;
-    const company = brandName || companyId;
-    const date = new Date(generatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    const company = companyName.trim() ||"Confidential Client";;
 
-    const readiness  = advisory.transformationReadinessScore ?? 0;
-    const riskIdx    = advisory.riskExposureIndex ?? 0;
-    const confidence = advisory.confidenceScore ?? 0;
+    const generatedDate = new Date(generatedAt);
+    const hasValidGeneratedDate = !Number.isNaN(generatedDate.getTime());
+
+    const currentYear = hasValidGeneratedDate
+        ? generatedDate.getFullYear()
+        : new Date().getFullYear();
+
+    const date = hasValidGeneratedDate
+        ? generatedDate.toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        })
+        : 'Date unavailable';
+
+    const completedEngineCount =
+        report.inputData?.completedEnginesCount ??
+        advisory.capabilityHeatmap?.length ??
+        0;
+
+    const engineCountLabel =
+        completedEngineCount > 0
+            ? `${completedEngineCount}-Engine Cross-Synthesis`
+            : 'Cross-Engine Synthesis';
+
+    const engineCountDescription =
+        completedEngineCount > 0
+            ? `${completedEngineCount} completed assessment ${
+                completedEngineCount === 1 ? 'engine' : 'engines'
+            }`
+            : 'the completed assessment engines';
+
+    const derivedScores = deriveHTIScores(advisory, report.inputData);
+
+    const readiness = derivedScores.readinessScore;
+    const riskIdx = derivedScores.riskScore;
+    const confidence = derivedScores.confidenceScore;
 
     return (
         <Document>
@@ -303,8 +365,8 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                     {/* Brand header */}
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 40 }}>
                         <View>
-                            <Text style={{ fontSize: 11, color: C.primaryMid, fontFamily: 'Helvetica-Bold', letterSpacing: 2, marginBottom: 2 }}>HRTEKSYSTEM</Text>
-                            <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', letterSpacing: 1 }}>HR TRANSFORMATION INTELLIGENCE PLATFORM</Text>
+                            <Text style={{ fontSize: 11, color: C.primaryMid, fontFamily: 'Helvetica-Bold', letterSpacing: 1, marginBottom: 2 }}>HRTEKSYSTEM</Text>
+                            <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', letterSpacing: 0.5 }}>HR TRANSFORMATION INTELLIGENCE PLATFORM</Text>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
                             <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica' }}>CONFIDENTIAL ADVISORY</Text>
@@ -314,7 +376,7 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
 
                     {/* Title block */}
                     <View style={{ marginBottom: 36 }}>
-                        <Text style={{ fontSize: 8, color: C.primaryMid, fontFamily: 'Helvetica-Bold', letterSpacing: 2.5, marginBottom: 14 }}>
+                        <Text style={{ fontSize: 8, color: C.primaryMid, fontFamily: 'Helvetica-Bold', letterSpacing: 1.2, marginBottom: 14 }}>
                             HTI ADVISORY REPORT
                         </Text>
                         <Text style={{ fontSize: 34, color: C.white, fontFamily: 'Helvetica-Bold', lineHeight: 1.2, marginBottom: 12 }}>
@@ -329,17 +391,47 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
 
                     {/* Score cards */}
                     <View style={{ marginBottom: 28 }}>
-                        <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', letterSpacing: 1.5, marginBottom: 12 }}>
+                        <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', letterSpacing: 0.8, marginBottom: 12 }}>
                             ADVISORY SCORECARD
                         </Text>
                         <View style={{ flexDirection: 'row' }}>
                             {[
-                                { label: 'TRANSFORMATION READINESS', value: readiness, color: scoreColor(readiness),
-                                  sub: readiness >= 75 ? 'Ready to Transform' : readiness >= 50 ? 'Conditionally Ready' : 'Pre-Readiness Phase' },
-                                { label: 'RISK EXPOSURE INDEX', value: riskIdx, color: scoreColor(100 - riskIdx),
-                                  sub: riskIdx <= 30 ? 'Low Risk Environment' : riskIdx <= 60 ? 'Moderate Risk' : 'High Risk Zone' },
-                                { label: 'ADVISORY CONFIDENCE', value: confidence, color: scoreColor(confidence),
-                                  sub: confidence >= 80 ? 'High Data Completeness' : confidence >= 60 ? 'Moderate Completeness' : 'Partial Data' },
+                                {
+                                    label: 'TRANSFORMATION READINESS',
+                                    value: formatHTIScore(readiness),
+                                    color: readiness === null ? C.slate400 : scoreColor(readiness),
+                                    sub: readiness === null
+                                        ? 'Score Unavailable'
+                                        : readiness >= 75
+                                            ? 'Ready to Transform'
+                                            : readiness >= 50
+                                                ? 'Conditionally Ready'
+                                                : 'Pre-Readiness Phase'
+                                },
+                                {
+                                    label: 'RISK EXPOSURE INDEX',
+                                    value: formatHTIScore(riskIdx),
+                                    color: riskIdx === null ? C.slate400 : scoreColor(100 - riskIdx),
+                                    sub: riskIdx === null
+                                        ? 'Score Unavailable'
+                                        : riskIdx <= 30
+                                            ? 'Low Risk Environment'
+                                            : riskIdx <= 60
+                                                ? 'Moderate Risk'
+                                                : 'High Risk Zone'
+                                },
+                                {
+                                    label: 'ADVISORY CONFIDENCE',
+                                    value: formatHTIScore(confidence),
+                                    color: confidence === null ? C.slate400 : scoreColor(confidence),
+                                    sub: confidence === null
+                                        ? 'Data Completeness Unknown'
+                                        : confidence >= 80
+                                            ? 'High Data Completeness'
+                                            : confidence >= 60
+                                                ? 'Moderate Completeness'
+                                                : 'Partial Data'
+                                },
                             ].map((s, i, arr) => (
                                 <View key={i} style={[S.coverScoreBox, i === arr.length - 1 ? { marginRight: 0 } : {}]}>
                                     <Text style={S.coverScoreLabel}>{s.label}</Text>
@@ -357,12 +449,12 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         <View>
                             <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', marginBottom: 2 }}>PREPARED FOR</Text>
                             <Text style={{ fontSize: 10, color: C.white, fontFamily: 'Helvetica-Bold' }}>{company}</Text>
-                            <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', marginTop: 2 }}>Company ID: {companyId}</Text>
+                            
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
                             <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', marginBottom: 2 }}>REPORT REFERENCE</Text>
                             <Text style={{ fontSize: 7.5, color: C.slate300, fontFamily: 'Helvetica' }}>{reportId || 'N/A'}</Text>
-                            <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', marginTop: 2 }}>5-Engine Cross-Synthesis</Text>
+                            <Text style={{ fontSize: 7, color: C.slate500, fontFamily: 'Helvetica', marginTop: 2 }}>{engineCountLabel}</Text>
                         </View>
                     </View>
                 </View>
@@ -375,7 +467,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
             <Page size="A4" style={S.page}>
                 <PageHeader chapter="Executive Summary" right={company} />
                 <View style={S.pageBody}>
-                    <SectionDivider title="Executive Summary" sub="Board-level strategic briefing synthesizing all five assessment engines" />
+                    <SectionDivider
+                        title="Executive Summary"
+                        sub={`Board-level strategic briefing synthesizing ${engineCountDescription}`}
+                    />
 
                     {(advisory.currentState.maturityLevel || advisory.currentState.digitalReadiness) && (
                         <View style={{ flexDirection: 'row', marginBottom: 14 }}>
@@ -398,7 +493,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
 
                     <HTMLContent html={advisory.executiveSummary} />
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
             {/* ══════════════════════════════════════════
@@ -459,7 +557,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         </View>
                     </View>
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
             {/* ══════════════════════════════════════════
@@ -515,7 +616,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                             ))}
                         </View>
                     </View>
-                    <PageFooter companyId={companyId} />
+                    <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
                 </Page>
             )}
 
@@ -532,7 +636,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         </View>
                         <HTMLContent html={section.content} />
                     </View>
-                    <PageFooter companyId={companyId} />
+                    <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
                 </Page>
             ))}
 
@@ -586,7 +693,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         </View>
                     )}
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
             {/* ══════════════════════════════════════════
@@ -631,7 +741,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         </View>
                     )}
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
             {/* ══════════════════════════════════════════
@@ -699,7 +812,10 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                         </View>
                     )}
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
             {/* ══════════════════════════════════════════
@@ -720,12 +836,14 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                             text: 'This report provides strategic advisory and recommendations based on assessment data provided by the client organisation. HRTekSystem does not guarantee specific outcomes or financial results from implementing these recommendations. All strategic decisions remain the sole responsibility of the client organisation and its leadership.'
                         },
                         {
-                            num: '03', title: 'Data Accuracy & Limitation of Liability',
-                            text: 'Recommendations are based solely on the information provided during the five-engine assessment process. HRTekSystem is not liable for any decisions made based on this advisory. The client organisation should conduct additional due diligence before implementing major transformation initiatives.'
+                            num: '03',
+                            title: 'Data Accuracy & Limitation of Liability',
+                            text: `Recommendations are based solely on the information provided through ${engineCountDescription}. HRTekSystem is not liable for decisions made based on this advisory. The client organisation should conduct additional due diligence before implementing major transformation initiatives.`
                         },
                         {
-                            num: '04', title: 'AI-Generated Intelligence Disclosure',
-                            text: 'This report incorporates AI-generated analysis synthesised from your organisation\'s assessment responses across five engines. The insights are based on patterns and benchmarks in the training data. Human expert review is recommended for all major investment decisions referenced herein.'
+                            num: '04',
+                            title: 'Assessment-Based Intelligence Disclosure',
+                            text: `This report incorporates automated analysis of the organisation's assessment responses across ${engineCountDescription}. Findings and recommendations should be considered alongside appropriate management review and due diligence before major investment or transformation decisions are made.`
                         },
                     ].map((t, i) => (
                         <View key={i} style={[S.card, { marginBottom: 8 }]}>
@@ -753,7 +871,12 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                                     <Text style={[S.small, { color: C.primaryMid, width: 100, flexShrink: 0, fontFamily: 'Helvetica-Bold' }]}>
                                         {entry.action}
                                     </Text>
-                                    <Text style={[S.small, { flex: 1 }]}>{entry.details}</Text>
+                                    <Text style={[S.small, { flex: 1 }]}>
+                                        {clientSafeAuditDetails(
+                                            entry.action,
+                                            entry.details
+                                        )}
+                                    </Text>
                                 </View>
                             ))}
                         </View>
@@ -767,11 +890,14 @@ export const HTIReportPDF: React.FC<HTIReportPDFProps> = ({ report, brandName })
                             Generated by HRTekSystem — HR Transformation Intelligence Platform
                         </Text>
                         <Text style={[S.small, { color: C.slate400, textAlign: 'center', marginTop: 2 }]}>
-                            © {new Date().getFullYear()} HRTekSystem Pvt. Ltd. All Rights Reserved.
+                            © {currentYear} HRTekSystem Pvt. Ltd. All Rights Reserved.
                         </Text>
                     </View>
                 </View>
-                <PageFooter companyId={companyId} />
+                <PageFooter
+                    companyId={companyId}
+                    year={currentYear}
+                />
             </Page>
 
         </Document>

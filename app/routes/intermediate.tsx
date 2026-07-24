@@ -8,6 +8,11 @@ import { requireUserSession } from "~/lib/session.server";
 import { generate } from "~/lib/digitalMaturity.genAi";
 import { engineRecommendationList } from "~/models/engine.model.server";
 
+import {
+  normalizePromptId,
+  resolveReportEngine,
+} from "~/constants/engines";
+
 // Types
 interface Question {
   id: string;
@@ -203,32 +208,40 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const url = new URL(request.url);
   const engine = url.searchParams.get("engine") || "Profiling Assessment";
-  let promptId = url.searchParams.get("promptId");
+  
 
   // Robust mapping fallback for promptId based on engine name
-  if (!promptId || promptId === "digital_maturity" || promptId === "shared_services" || promptId === "digital_roadmap") {
-    switch (engine) {
-      case "Shared Service Designer":
-        promptId = "shared_service";
-        break;
-      case "HR Transformation Roadmap Generator":
-        promptId = "digital_transformation";
-        break;
-      case "HR Technology Maturity Analysis":
-      case "HR Tech Maturity Analysis":
-        promptId = "tech_maturity";
-        break;
-      case "Intelligent Change Management":
-      case "Change Management Readiness":
-        promptId = "change_management";
-        break;
-      case "HCM Vendor Fit Engine":
-        promptId = "vendor_fit";
-        break;
-      default:
-        promptId = promptId || "digital_maturity";
+
+  // CENTRALIZED ENGINE & PROMPT RESOLUTION
+    const engineConfig = resolveReportEngine(engine);
+    if (!engineConfig) {
+      throw new Response(
+        `Unsupported report engine: ${engine}`,
+        { status: 400 }
+      );
     }
-  }
+
+    const requestedPromptId = normalizePromptId(
+      url.searchParams.get("promptId")
+    );
+
+    /**
+     * Engine identity is authoritative.
+     * A mismatched prompt could produce a structurally valid
+     * but substantively incorrect report.
+     */
+    if (
+      requestedPromptId &&
+      requestedPromptId !== engineConfig.promptId
+    ) {
+      console.warn(
+        `[Intermediate Loader] Ignoring mismatched prompt ID ` +
+          `"${requestedPromptId}" for engine "${engine}". ` +
+          `Using "${engineConfig.promptId}".`
+      );
+    }
+
+    const promptId = engineConfig.promptId;
 
   const skipQuestions = url.searchParams.get("skipQuestions") === "true";
 
@@ -241,8 +254,25 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Check if report already exists in DB
   const { getLatestAnalysis } = await import("~/utils/analysis.server");
-  const existingReport = await getLatestAnalysis(companyId, engine);
-  let isReportReady = existingReport && existingReport.result?.status !== "pending_generation";
+  const existingReport =
+  await getLatestAnalysis(companyId, engine);
+
+  const existingReportIsReady =
+    Boolean(
+      existingReport &&
+        existingReport.result?.status !==
+          "pending_generation"
+    );
+
+  const forceRegeneration = url.searchParams.get("force") === "true";
+  /**
+   * During forced regeneration, the previous report must not
+   * be treated as the report the user is waiting for.
+   */
+  let isReportReady =
+    forceRegeneration
+      ? false
+      : existingReportIsReady;
 
   // For Profiling Assessment, detect old schema (from profiling.genAi.server) and force regeneration
   if (isReportReady && engine === "Profiling Assessment") {
@@ -260,7 +290,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   // 2) Status is error
   // 3) Status is ready but report missing (edge case)
   // 4) No status AND report missing
-  const forceRegeneration = url.searchParams.get("force") === "true";
+  
   const shouldGenerate =
     forceRegeneration ||
     currentStatus === "error" ||
@@ -287,9 +317,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     questions: recommendationQuestions,
     engine,
     promptId,
-    skipQuestions,
-    initialStatus: currentStatus,
-    hasExistingReport: isReportReady
+    skipQuestions,/**
+    * If generation was started in this loader,
+    * the UI should begin in a pending state.
+    */
+    initialStatus:
+      shouldGenerate ? "pending" : currentStatus,
+
+    hasExistingReport: isReportReady,
+    regenerating: forceRegeneration,
   });
 }
 
@@ -344,14 +380,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Main Component
 export default function Intermediate() {
-  const { companyId, questions, engine, initialStatus, hasExistingReport, skipQuestions } = useLoaderData<typeof loader>();
+  const { companyId, questions, engine, initialStatus, hasExistingReport, skipQuestions,regenerating } = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
   const navigation = useNavigation();
   const navigate = useNavigate();
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(skipQuestions || (initialStatus === "ready" && hasExistingReport));
-  const [aiReady, setAiReady] = useState(hasExistingReport || (initialStatus === "ready" && hasExistingReport));
+  const [aiReady, setAiReady] = useState(!regenerating && hasExistingReport);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -406,11 +442,12 @@ export default function Intermediate() {
           const currentElapsed = Math.floor((Date.now() - startTime) / 1000);
 
           // Always verify report availability directly from route before trusting status flags
+          if(!regenerating){
           try {
             const reportCheckUrl = reportUrl.includes('?')
               ? `${reportUrl}&verify=true`
               : `${reportUrl}?verify=true`;
-
+              
             const reportResponse = await fetch(reportCheckUrl, {
               method: 'HEAD'
             });
@@ -425,6 +462,7 @@ export default function Intermediate() {
           } catch (reportErr) {
             console.log(`[Polling ${currentElapsed}s] Report availability check failed, retrying...`, reportErr);
           }
+        }
 
           // Check AI status
           const statusResponse = await fetch(`/api/ai-status?companyId=${companyId}`);
@@ -485,7 +523,7 @@ export default function Intermediate() {
       if (pollRef.current) clearInterval(pollRef.current);
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [submitted, aiReady, companyId, reportUrl, navigate]);
+  }, [submitted, aiReady, companyId, reportUrl, navigate,regenerating]);
 
   const handleAnswer = (questionId: string, value: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));

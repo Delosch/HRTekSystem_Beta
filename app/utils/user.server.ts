@@ -2,6 +2,7 @@ import { requireUserSession } from "~/lib/session.server";
 import { getUserProfile } from "~/models/user.model.server";
 import { getCompanyProfile } from "~/models/company.model.server";
 import { redirect } from "@remix-run/node";
+import {CONFIDENTIAL_CLIENT_NAME,isInternalCompanyIdentifier,resolveReportClientIdentity} from "~/utils/reportClientIdentity";
 
 /**
  * Fetches the user session and supplements it with full profile and organization data
@@ -12,7 +13,8 @@ export async function getEnhancedUser(request: Request) {
 
     // FETCH FRESH USER PROFILE & COMPANY DATA
     let userProfile: any = {};
-    let organisationName = "";
+    let organisationName =CONFIDENTIAL_CLIENT_NAME;
+    let companyLogo: string | null =null;
 
     try {
         const [profile, company] = await Promise.all([
@@ -26,10 +28,13 @@ export async function getEnhancedUser(request: Request) {
             }) : Promise.resolve(null)
         ]);
 
-        userProfile = profile || {};
-        if (company) {
-            organisationName = company.company_name;
-        }
+        userProfile =profile || {};
+        const sessionOrganisationName =typeof (userSession as any).organisationName ==="string"? (userSession as any ).organisationName.trim(): "";
+        const safeSessionOrganisationName =sessionOrganisationName &&!isInternalCompanyIdentifier(sessionOrganisationName)? sessionOrganisationName: "";
+        const companyIdentity =resolveReportClientIdentity(company);
+        organisationName =companyIdentity.companyName !==CONFIDENTIAL_CLIENT_NAME? companyIdentity.companyName: safeSessionOrganisationName ||CONFIDENTIAL_CLIENT_NAME;
+        companyLogo =companyIdentity.logoUrl;
+
     } catch (e) {
         console.error("Error fetching enhanced user details", e);
     }
@@ -37,7 +42,8 @@ export async function getEnhancedUser(request: Request) {
     return {
         ...userSession,
         ...userProfile,
-        organisationName: organisationName || (userSession as any).organisationName || "Organization",
+        organisationName,
+        companyLogo,
         role: userProfile.role || (userSession as any).role || "Team Member",
         name: userProfile.first_name ? `${userProfile.first_name} ${userProfile.last_name || ''}` : (userSession.first_name ? `${userSession.first_name} ${userSession.last_name || ''}` : "User")
     };

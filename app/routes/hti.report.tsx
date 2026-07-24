@@ -22,6 +22,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import BoardDossierRenderer from "~/components/reports/BoardDossierRenderer";
 
+import { deriveHTIScores } from "~/utils/htiScoreUtils";
+import { resolveReportClientIdentity } from "~/utils/reportClientIdentity";
+
 // ── Loader ────────────────────────────────────────────────────────────────────
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -41,7 +44,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     if (!organisationId) return redirect("/auth/drx");
 
-    const company = await getCompanyProfile(organisationId);
+    const companyProfile = await getCompanyProfile(organisationId);
+    const { companyName } = resolveReportClientIdentity(companyProfile);
 
     const [reports, payments] = await Promise.all([
         getCompanyAdvisories(organisationId),
@@ -65,9 +69,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
             ?? reports?.sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime())[0];
     }
 
-    if (!report) return json({ hasReport: false, companyName: company?.company_name });
+    if (!report) return json({ hasReport: false, companyName });
 
-    return json({ hasReport: true, report, companyName: company?.company_name });
+    return json({ hasReport: true, report, companyName });
 }
 
 // ── Score Interpretation Helpers ─────────────────────────────────────────────
@@ -260,12 +264,16 @@ export default function HTIAdvisoryReport() {
 
     const report = (data as any).report;
     const advisory = report.advisory as any;
-    const companyName = (data as any).companyName || "Your Organisation";
+    const companyName = (data as any).companyName || "Confidential Client";
 
     // Extract data with safe fallbacks
-    const readinessScore   = advisory?.transformationReadinessScore ?? 0;
-    const riskScore        = advisory?.riskExposureIndex ?? 0;
-    const confidenceScore  = advisory?.confidenceScore ?? 0;
+    
+    const derivedScores = deriveHTIScores(advisory, report.inputData);
+
+    const readinessScore = derivedScores.readinessScore ?? 0;
+    const riskScore = derivedScores.riskScore ?? 0;
+    const confidenceScore = derivedScores.confidenceScore ?? 0;
+
     const capabilityHeatmap = advisory?.capabilityHeatmap ?? [];
     const priorityMatrix   = advisory?.priorityMatrix ?? [];
     const doNotTransformNow = advisory?.doNotTransformNow ?? [];

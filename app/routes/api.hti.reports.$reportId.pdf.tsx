@@ -3,6 +3,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { requireUserSession } from "~/lib/session.server";
 import { getAdvisoryReport } from "~/models/hti.model.server";
 import { HTIReportPDF } from "~/components/HTIReportPDF";
+import {CONFIDENTIAL_CLIENT_NAME,resolveReportClientIdentity,} from "~/utils/reportClientIdentity";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
     const user = await requireUserSession(request);
@@ -42,13 +43,26 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         throw new Response("Payment required to download HTI reports", { status: 403 });
     }
 
-    // Fetch company name for branding
+    // Resolve a readable client identity for PDF branding.
+    // Never use targetCompanyId as the client-facing display name.
     const { getCompanyProfile } = await import("~/models/company.model.server");
     const company = await getCompanyProfile(targetCompanyId);
-    const brandName = company?.brand_name || targetCompanyId;
+    const { companyName } = resolveReportClientIdentity(company);
+
+    if (companyName === CONFIDENTIAL_CLIENT_NAME) {
+        console.warn(
+            `[HTI PDF] No readable company name found for company ${targetCompanyId}. ` +
+                `Using "${CONFIDENTIAL_CLIENT_NAME}" in report ${reportId}.`,
+        );
+    }
 
     // Render PDF to stream
-    const stream = await renderToStream(<HTIReportPDF report={report} brandName={brandName} />);
+    const stream = await renderToStream(
+        <HTIReportPDF
+            report={report}
+            companyName={companyName}
+        />,
+    );
 
     // Convert stream to readable stream (if needed by platform, but standard Response accepts standard streams usually)
     // Remix node adapter handles node streams well.

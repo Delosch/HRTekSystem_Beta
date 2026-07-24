@@ -12,6 +12,11 @@ import {
     ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis,
     PolarRadiusAxis, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip
 } from "recharts";
+import { ENGINES } from "~/constants/engines";
+
+// Use the canonical engine definition so report generation always
+// uses the registered engine name instead of a hardcoded string.
+const TECH_MATURITY_ENGINE = ENGINES.HR_TECH_MATURITY;
 
 interface TechMaturityReportProps {
     data: any;
@@ -30,7 +35,11 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
 
     const handleExportPDF = () => {
         setIsPreviewOpen(true);
-        generate("Tech Maturity Engine", (data as any)?.responses);
+        generate(
+        // Use the canonical display name from the engine registry.
+        TECH_MATURITY_ENGINE.displayName,
+        (data as any)?.responses
+        );
     };
 
     const result = (data?.result || {}) as any;
@@ -313,7 +322,7 @@ export default function TechMaturityReport({ data, brandName }: TechMaturityRepo
                 onClose={() => setIsPreviewOpen(false)}
                 reportData={reportData}
                 isGenerating={isGenerating}
-                engineTitle="Tech Maturity Engine"
+                engineTitle={TECH_MATURITY_ENGINE.displayName}
                 brandName={brandName}
             />
 

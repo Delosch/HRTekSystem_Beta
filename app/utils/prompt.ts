@@ -1,7 +1,12 @@
 import { getLatestQuestion } from "./question.utils";
 
+import {
+  normalizePromptId,
+  type ReportPromptId,
+} from "~/constants/engines";
+
 export interface PromptType {
-  id: string;
+  id: ReportPromptId;
   name: string;
   basePrompt: string;
 }
@@ -17,16 +22,57 @@ export const PROMPT_PLACEHOLDERS = {
 } as const;
 
 const prompt_extra = `
-## 🚨 ABSOLUTE JSON REQUIREMENTS:
-- Return ONLY the JSON object without any markdown formatting
-- Do NOT wrap the response in \`\`\`json or \`\`\`
-- Do NOT include any explanatory text before or after the JSON  
-- Start directly with { and end with }
-- Ensure the JSON is valid and properly escaped
-- All strings must use double quotes, not single quotes
-- No trailing commas anywhere in the JSON
-- All arrays must have the exact number of elements specified
-- Use null for missing values, never undefined
+## ABSOLUTE JSON REQUIREMENTS:
+- Return ONLY the JSON object without any markdown formatting.
+- Do NOT wrap the response in markdown code fences.
+- Do NOT include any explanatory text before or after the JSON.
+- Start directly with { and end with }.
+- Ensure the JSON is valid and properly escaped.
+- All strings must use double quotes, not single quotes.
+- No trailing commas anywhere in the JSON.
+- All arrays must have the exact number of elements specified by the requested schema.
+- Use null for missing values, never undefined.
+
+## OUTPUT SCHEMA PRESERVATION:
+- Follow the requested JSON schema exactly.
+- Do NOT add new top-level keys.
+- Do NOT rename fields.
+- Do NOT remove required fields.
+- Do NOT change arrays into objects or objects into arrays.
+- Apply the writing-quality rules below inside the existing text fields, string arrays, descriptions, rationales, insights, recommendations, risks, and summaries.
+
+## EXECUTIVE REPORT WRITING QUALITY REQUIREMENTS:
+- Write for CXO, board-level, and senior HR/IT decision-makers.
+- Use a professional consulting tone, but avoid generic consulting filler.
+- Avoid vague phrases such as "significant intervention is required", "critical transformation is needed", or "robust framework should be implemented" unless followed by a specific action and business reason.
+- Every major insight must explain: what was found, why it matters, and what decision or action it implies.
+- Every score mentioned in text must include a plain-English interpretation.
+- Use concise but complete business language. Do not produce one-word or shallow recommendations.
+- Avoid repetitive phrasing across sections.
+- Do not use placeholder text, generic filler, lorem ipsum, fake company names, or sample values.
+- If assessment data is incomplete, explicitly state the limitation in the relevant text field instead of inventing missing facts.
+
+## SCORE, BENCHMARK, AND CLAIM QUALITY RULES:
+- Round user-facing scores to a maximum of one decimal place.
+- Do not show excessive precision such as 54.8125 unless the schema specifically requires raw calculation values.
+- Do not invent external benchmark studies, survey counts, peer-group statistics, or claims such as "3.2x improvement" or "based on 47 similar transformations".
+- If benchmark-like values are required by the schema but no validated benchmark source is provided, treat them as illustrative internal reference values and clearly say so in the nearest available text field.
+- Do not present assumptions as facts.
+- If a number is estimated, explain the assumption in the nearest rationale, peer comparison, insight, or recommendation field.
+
+## RECOMMENDATION QUALITY RULES:
+- Every major recommendation must be actionable and decision-grade.
+- Where the schema provides object fields such as action, rationale, owner, timeline, success_metrics, mitigation_strategy, or impact, fill those fields with specific content.
+- Where the schema only allows a string or array of strings, write each recommendation as a compact executive sentence that includes action, rationale, owner or accountable function, timeframe, and success measure when possible.
+- Recommended string format when only a string is allowed: "Action: ... | Rationale: ... | Owner: ... | Timeline: ... | KPI: ..."
+- Risk mitigation recommendations must state the risk being reduced and the expected control or outcome.
+- Do not recommend technology implementation unless readiness, governance, integration, budget, and adoption implications are addressed.
+
+## EVIDENCE AND TRACEABILITY RULES:
+- Ground conclusions in the assessment responses and question structure provided.
+- When possible, reference the response theme or question area that supports the finding.
+- Do not make a recommendation only from generic HR best practice.
+- If the provided answers are ambiguous, state the uncertainty in the relevant text field.
 `;
 
 export const PROMPTS: PromptType[] = [
@@ -44,8 +90,9 @@ You are an expert digital transformation analyst tasked with processing a compre
 
 ## INPUT DATA:
 - questions_json: Complete questionnaire structure with all questions, types, and metadata
-- responses_json: User responses to all assessment questions
-- organization_context: Industry, size, revenue data from responses
+-submission.answers: User responses to all assessment questions.
+-responses_json: Legacy alias for submission.answers.
+-organization_context: Derived company/profile context only, not the full answer set.
 
 ## ANALYSIS REQUIREMENTS:
 
@@ -165,7 +212,7 @@ Generate a comprehensive JSON response with this EXACT structure:
 2. **Process Checkbox/Multi-select**: Count selections, analyze patterns, incorporate into key_strengths and critical_gaps
 3. **Process Text Responses**: Extract themes for strategic_insights and detailed_recommendations
 4. **Calculate Confidence Scores**: Use formula provided, reflect in dimensional confidence_score fields
-5. **Generate Industry Benchmarks**: Use realistic values in industry_benchmark objects
+5. **Generate Industry Benchmarks**: If validated benchmark data is not provided, use conservative illustrative internal reference values only. In peer_comparison or the nearest available text field, clearly state that the benchmark is an illustrative internal reference, not a verified external market benchmark.
 6. **Create Visualization Data**: Ensure all arrays have exactly 7 values matching the 7 dimensions
 7. **Generate Complete Recommendations**: Provide specific, actionable recommendations
 8. **Dashboard Graph Generation Rules**: 
@@ -182,6 +229,9 @@ Generate a comprehensive JSON response with this EXACT structure:
 - All dimensional references must use the exact dimension names provided
 - Ensure visualization_data arrays align perfectly with dimensional_scores array order
 - **NO PLACEHOLDERS**: All content must be generated based on the specific user answers.
+- All recommendations must be executive-ready: include the action, business rationale, accountable function, target timeline, and success measure inside the existing schema fields.
+- Every maturity score must be explained in plain business language in the nearest available insight, assessment, or recommendation field.
+- Do not invent external benchmark sources, market studies, or peer statistics.
 
 ${prompt_extra}
 
@@ -483,17 +533,37 @@ Vendor Fit Recommendations (Dynamic Table)
 
     Scoring:
 
-        Start at 50.
+        Start each category fitScore at 50.
 
-        +10 for each matching criterion.
+        Add +10 for each matching criterion:
+        - deployment alignment
+        - module count alignment
+        - integration complexity alignment
+        - budget band alignment
+        - scale tier alignment
+        - growth / scalability alignment
 
-        -10 for each strong mismatch (e.g., deployment mismatch, budget too low for category, scaleTier outside target).
+        Subtract -10 for each strong mismatch:
+        - deployment mismatch
+        - budget too low for category
+        - scaleTier outside target
+        - integration needs exceed category capability
+        - growth expectations exceed category scalability
 
-        Clamp to.
+        Clamp the final category fitScore to the range 0–100.
 
-    reasons: concise bullets referencing matched/mismatched criteria (max 4).
+        Interpret category fitScore bands as:
+        - below 40 = Low Fit
+        - 40–69 = Moderate Fit
+        - 70–84 = Strong Fit
+        - 85–100 = Excellent Fit
 
-    riskFlags: include overall riskLevel plus any category-specific gap phrases.
+        Do not create a new JSON field for this classification.
+        Use the classification only inside existing reasons or riskFlags text when helpful.
+
+    reasons: concise bullets referencing matched/mismatched criteria (max 4). Each reason should explain why the category received its score.
+
+    riskFlags: include overall riskLevel plus any category-specific gap phrases. If the category score is below 70, explain the main constraint preventing a stronger fit.
 
 Tagging Rules (max 10, unique)
 
@@ -514,6 +584,14 @@ Tagging Rules (max 10, unique)
     "Complex-integrations" if integrationComplexity >= 70
 
     "Mid-market" if scaleTier in ["mid","upper_mid"]; "Enterprise-scale" if scaleTier in ["enterprise","large_enterprise"]
+
+STRICT RULES FOR "scores.fitBand":
+Calculate and assign the overall "scores.fitBand" string exactly based on the calculated "scores.fitScore":
+- If scores.fitScore >= 75: Use EXACTLY "Excellent vendor readiness"
+- If scores.fitScore >= 45 and < 75: Use EXACTLY "Moderate – some alignment gaps"
+- If scores.fitScore < 45: Use EXACTLY "Needs alignment before vendor search"
+
+Do not use any other labels or variations for "fitBand".
 
 Output schema
 Return exactly:
@@ -2428,7 +2506,17 @@ Analyze the provided assessment data and generate the complete technology maturi
 ];
 
 export function getPromptById(id: string): PromptType | undefined {
-  return PROMPTS.find((p) => p.id === id);
+  const normalizedId =
+    normalizePromptId(id);
+
+  if (!normalizedId) {
+    return undefined;
+  }
+
+  return PROMPTS.find(
+    (prompt) =>
+      prompt.id === normalizedId
+  );
 }
 
 export async function prompt_processed(
@@ -2453,17 +2541,17 @@ export async function prompt_processed(
 
     const question_id = question.pk;
 
-    if (id === "digital_maturity" || id === "vendor_fit" || id === "digital_transformation" || id === "shared_service" || id === "change_management" || id === "tech_maturity") {
-      console.log(`📋 Processing questions for company: ${company_id}, question_id: ${question_id} `);
-      return [
-        question_id,
-        `${base_prompt.basePrompt}
+    console.log(
+    `Processing questions for company: ${company_id}, question_id: ${question_id}`);
 
-ASSESSMENT QUESTIONS STRUCTURE:
-${JSON.stringify(question, null, 2)}
-`
-      ];
-    }
+  return [
+    question_id,
+    `${base_prompt.basePrompt}
+
+  ASSESSMENT QUESTIONS STRUCTURE:
+  ${JSON.stringify(question, null, 2)}
+  `,
+  ];
 
     return undefined;
   } catch (error) {

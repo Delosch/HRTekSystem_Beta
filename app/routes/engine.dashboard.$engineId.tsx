@@ -2,6 +2,8 @@ import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { requireUserSession } from "~/lib/session.server";
 import { findEngineData } from "~/models/engine.model.server";
+import {resolveReportClientIdentity,} from "~/utils/reportClientIdentity";
+
 import DashboardHeader from "~/components/DashboardHeader";
 import TechMaturityDashboard from "~/components/dashboards/TechMaturityDashboard";
 import RoadmapDashboard from "~/components/dashboards/RoadmapDashboard";
@@ -9,6 +11,7 @@ import VendorFitDashboard from "~/components/dashboards/VendorFitDashboard";
 import SharedServicesDashboard from "~/components/dashboards/SharedServicesDashboard";
 import ChangeManagementDashboard from "~/components/dashboards/ChangeManagementDashboard";
 import { getLatestAnalysis } from "~/utils/question.utils";
+import { getCompanyProfile } from "~/models/company.model.server";
 
 // Engine configuration mapping - Updated names from image
 const ENGINE_CONFIG: Record<string, { name: string; description: string; icon: string; id: string }> = {
@@ -63,6 +66,16 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
     const engineConfig = ENGINE_CONFIG[engineId];
     const engineFullName = ENGINE_NAME_MAP[engineId];
+
+    let companyName = resolveReportClientIdentity(null).companyName;
+    if (user.organisationId) {
+    try {
+        const companyProfile = await getCompanyProfile(user.organisationId);
+        companyName = resolveReportClientIdentity(companyProfile).companyName;
+    } catch (error) {
+        console.error("⚠️ Company profile fetch failed, using confidential client fallback:", error);
+        }
+    }
 
     // Fetch engine data from DynamoDB with error handling
     let engineData = null;
@@ -141,6 +154,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
         insights,
         historicalData,
         analysisResult,
+        companyName,
         user: {
             name: user.first_name,
             email: user.email,
@@ -149,7 +163,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function EngineDashboardRoute() {
-    const { engineConfig, metrics, assessmentData, insights, historicalData, analysisResult, user } =
+    const { engineConfig, metrics, assessmentData, insights, historicalData, analysisResult,companyName, user } =
         useLoaderData<typeof loader>();
     const navigate = useNavigate();
 
@@ -161,7 +175,7 @@ export default function EngineDashboardRoute() {
             assessmentData: assessmentData as any,
             insights: insights as any,
             historicalData: historicalData as any,
-            brandName: "Your Organization" // Fallback or pass from loader
+            brandName: companyName // Fallback or pass from loader
         };
 
         switch (engineConfig.id) {
