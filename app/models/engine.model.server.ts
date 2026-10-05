@@ -101,6 +101,15 @@ export const findEngineData = async (company_id: string, engine_name: string) =>
     }
 }
 
+// The 5 valid transformation engines
+const VALID_ENGINES = [
+    "HR Technology Maturity Analysis",
+    "HR Transformation Roadmap Generator",
+    "HCM Vendor Fit Engine",
+    "Shared Service Designer",
+    "Intelligent Change Management",
+];
+
 export const completedEngine = async (company_id: string) => {
     try {
         const command = new QueryCommand({
@@ -115,8 +124,8 @@ export const completedEngine = async (company_id: string) => {
         })
         const response = await ddbDocClient.send(command);
         const engineNames = response.Items?.map((item) => item.sk) || [];
-        // Filter out non-transformation engines like "Profiling Assessment"
-        return engineNames.filter(name => name !== "Profiling Assessment");
+        // Only include the 5 valid transformation engines (excludes Profiling Assessment, onboarding procedures, etc.)
+        return engineNames.filter(name => VALID_ENGINES.includes(name));
     } catch (error) {
         console.error("Error fetching completed engines:", error);
         return [];

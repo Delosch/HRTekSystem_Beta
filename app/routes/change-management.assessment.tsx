@@ -114,6 +114,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
         return redirect("/login");
     }
 
+    // Check if company has paid for this engine (assessment unlocks at 50% for advanced engines)
+    const { getEngineAccessStatus } = await import("~/models/payment.model.server");
+    const accessStatus = await getEngineAccessStatus(user.organisationId, "Intelligent Change Management");
+    console.log("[CM Assessment] Access status:", JSON.stringify({
+        assessmentUnlocked: accessStatus.assessmentUnlocked,
+        reportUnlocked: accessStatus.reportUnlocked,
+        engineType: accessStatus.engineType,
+        activationStatus: accessStatus.activationStatus,
+        totalPaidAmount: accessStatus.totalPaidAmount,
+        fullAmount: accessStatus.fullAmount,
+        paymentProgress: accessStatus.paymentProgress,
+        requestStatus: accessStatus.requestStatus,
+        enabledFeatures: accessStatus.enabledFeatures,
+    }, null, 2));
+    if (!accessStatus.assessmentUnlocked) {
+        return redirect(`/engine-locked/${encodeURIComponent("Intelligent Change Management")}`);
+    }
+
     // We can load existing assessment data here if needed
     const engineData = await findEngineData(user.organisationId, "Intelligent Change Management");
     const initialAnswers = engineData?.responses || {};

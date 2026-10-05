@@ -30,7 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { completedEngine } = await import("~/models/engine.model.server");
     const completedEngines = await completedEngine(user.organisationId);
 
-    const { getCompanyAdvisories } = await import("~/models/hti.model.server");
+    const { getCompanyAdvisories, checkAllEngineReportsGenerated } = await import("~/models/hti.model.server");
     const rawReports = await getCompanyAdvisories(user.organisationId);
 
     const reports = rawReports.map(report => ({
@@ -48,6 +48,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
         confidenceScore: report.advisory?.confidenceScore ?? null,
     }));
 
+    // Check engine reports readiness (ANALYSIS# records)
+    const engineReportsStatus = await checkAllEngineReportsGenerated(user.organisationId);
+
     let pricingTier = PRICING_TIERS.TRANSFORMATION;
     let htiPricing = calculatePricing({ engine: "hti", employeeCount: 0 });
     let employeeCount = 0;
@@ -60,10 +63,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
         }
     } catch { /* ignore */ }
 
-    const { getCompanyPayments } = await import("~/models/payment.model.server");
-    const payments = await getCompanyPayments(user.organisationId);
+    // Check payment status for HTI via engine access status
+    const { getEngineAccessStatus } = await import("~/models/payment.model.server");
+    const htiAccess = await getEngineAccessStatus(user.organisationId, "HR Tech Advisory");
     const isAdmin = (user as any).role === "ADMIN";
-    const hasPaid = true; // BYPASS: Force paid for testing (was: isAdmin || payments.some(...))
+    const hasPaid = isAdmin || htiAccess.assessmentUnlocked;
 
     return json({
         user,
@@ -78,6 +82,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
             employeeTier: htiPricing.employeeTier,
         },
         hasPaid,
+        engineReportsReady: engineReportsStatus.allGenerated,
+        engineReportsStatus: {
+            generated: engineReportsStatus.generated,
+            missing: engineReportsStatus.missing,
+        },
     });
 }
 
@@ -117,7 +126,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return redirect("/contact");
     }
 
-    const alreadyPaid = true; // BYPASS: Force paid for testing
+    const alreadyPaid = formData.get("alreadyPaid") === "true";
 
     try {
         const { generateAdvisoryReport } = await import("~/services/hti.service.server");
@@ -291,6 +300,86 @@ function LockedGateway({ completedEngines, requiredEngines }: { completedEngines
                         <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
                     </div>
                 ))}
+            </div>
+        </div>
+    );
+}
+// ── Reports Missing Gate ──────────────────────────────────────────────────────
+
+function ReportsMissingGate({ engineReportsStatus }: { engineReportsStatus: { generated: string[]; missing: string[] } }) {
+    const REPORT_ENGINES = [
+        { name: "HR Technology Maturity Analysis", dashboardRoute: "/ai-maturity/dashboard", icon: BarChart3 },
+        { name: "HR Transformation Roadmap Generator", dashboardRoute: "/roadmapDashboard", icon: Layers },
+        { name: "Cognitive HCM Vendor Fit", dashboardRoute: "/vendorDashboard", icon: Target },
+        { name: "Intelligent Change Management", dashboardRoute: "/changeDashboard", icon: Users },
+        { name: "Shared Service Designer", dashboardRoute: "/sharedDashboard", icon: Network },
+    ];
+
+    const generatedCount = engineReportsStatus.generated.length;
+
+    return (
+        <div className="max-w-5xl mx-auto px-6 pb-20">
+            <div className="relative bg-gradient-to-br from-slate-900 to-[#010f2e] rounded-3xl overflow-hidden border border-white/5 shadow-2xl mb-8">
+                <div className="absolute inset-0 opacity-[0.03]"
+                    style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+
+                <div className="relative p-10 flex flex-col lg:flex-row items-start gap-10">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                <FileText className="h-6 w-6 text-amber-400" />
+                            </div>
+                            <div>
+                                <p className="text-amber-300 text-[10px] font-black uppercase tracking-widest">Reports Required</p>
+                                <p className="text-white font-black text-lg leading-tight">Generate All Engine AI Reports</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-400 text-sm leading-relaxed max-w-lg mb-8">
+                            All 5 engine assessments are complete, but their AI analysis reports must be generated before HTI can synthesise them into a unified advisory. Visit each engine's dashboard to generate the missing reports.
+                        </p>
+
+                        <div className="grid sm:grid-cols-2 gap-2.5 mb-8">
+                            {REPORT_ENGINES.map((engine) => {
+                                const isGenerated = engineReportsStatus.generated.includes(engine.name);
+                                const Icon = engine.icon;
+                                return (
+                                    <div key={engine.name} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all ${
+                                        isGenerated ? "bg-emerald-500/10 border-emerald-500/20" : "bg-amber-500/5 border-amber-500/15"
+                                    }`}>
+                                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${isGenerated ? "bg-emerald-500/20" : "bg-amber-500/10"}`}>
+                                            <Icon className={`h-4 w-4 ${isGenerated ? "text-emerald-400" : "text-amber-400"}`} />
+                                        </div>
+                                        <span className={`text-sm flex-1 font-medium truncate ${isGenerated ? "text-white" : "text-amber-200"}`}>
+                                            {engine.name}
+                                        </span>
+                                        {isGenerated ? (
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                                        ) : (
+                                            <Link to={engine.dashboardRoute}
+                                                className="text-[10px] font-bold text-amber-400 hover:text-amber-300 uppercase tracking-wider shrink-0"
+                                            >
+                                                Generate →
+                                            </Link>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <Link to="/dashboard"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-900/40 text-sm">
+                            Go to Dashboard <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-4 shrink-0">
+                        <ProgressRing value={generatedCount} max={5} size={140} />
+                        <div className="text-center">
+                            <p className="text-white font-black text-2xl">{generatedCount}/5</p>
+                            <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest">Reports Generated</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -629,10 +718,10 @@ function HTIWorkspace({ data, isGenerating, onGenerate, hasPaid }: { data: any; 
                     {/* Generate button */}
                     <button
                         type="button"
-                        onClick={() => !isGenerating && onGenerate()} // BYPASS: Removed completedCount >= 5 check
-                        disabled={isGenerating} // BYPASS: Removed completedCount < 5 check
+                        onClick={() => !isGenerating && completedCount >= 5 && onGenerate()}
+                        disabled={isGenerating || completedCount < 5}
                         className={`w-full py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2.5 transition-all ${
-                            isGenerating
+                            isGenerating || completedCount < 5
                                 ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/5"
                                 : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-900/40 hover:shadow-blue-900/60"
                         }`}
@@ -844,8 +933,9 @@ export default function HTIDashboard() {
     const completedCount = loaderData.completedEngines?.length || 0;
     const allEnginesDone = completedCount >= 5;
     const hasPaid = loaderData.hasPaid;
+    const engineReportsReady = loaderData.engineReportsReady;
 
-    const gateState = "workspace"; // BYPASS: Always show workspace for testing (was: !allEnginesDone ? "locked" : !hasPaid ? "pricing" : "workspace")
+    const gateState = !allEnginesDone ? "locked" : !engineReportsReady ? "reports_missing" : !hasPaid ? "pricing" : "workspace";
 
     const handleEmployeeSelect = (empCount: number) => {
         setShowEmployeeModal(false);
@@ -863,6 +953,7 @@ export default function HTIDashboard() {
 
     const STEPS = [
         { label: "Complete 5 Engines", done: allEnginesDone, icon: Cpu },
+        { label: "Generate Reports", done: engineReportsReady, icon: FileText },
         { label: "Verify Payment", done: hasPaid, icon: ShieldCheck },
         { label: "Generate Advisory", done: loaderData.reports?.some((r: any) => r.status === "approved"), icon: Brain },
     ];
@@ -929,7 +1020,7 @@ export default function HTIDashboard() {
                                                 {label}
                                             </span>
                                         </div>
-                                        {i < 2 && (
+                                        {i < 3 && (
                                             <div className={`w-12 h-px mx-3 ${done ? "bg-blue-600/50" : "bg-white/5"}`} />
                                         )}
                                     </div>
@@ -944,6 +1035,9 @@ export default function HTIDashboard() {
             <div className="pt-8">
                 {gateState === "locked" && (
                     <LockedGateway completedEngines={loaderData.completedEngines || []} requiredEngines={REQUIRED_ENGINES} />
+                )}
+                {gateState === "reports_missing" && (
+                    <ReportsMissingGate engineReportsStatus={loaderData.engineReportsStatus} />
                 )}
                 {gateState === "pricing" && (
                     <PricingGate htiPricing={loaderData.htiPricing} pricingTier={loaderData.pricingTier} onGetStarted={() => setShowEmployeeModal(true)} />

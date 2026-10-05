@@ -115,7 +115,15 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     console.error("[Consulting Report Loader] Failed to fetch responses/questions:", auxError);
   }
 
-  return json({ user, section, analysis, brand_name, companyLogo: company_info?.logo_url, responses, questions });
+  // Check report unlock status for Change Management (advanced engine — requires 100% payment)
+  let reportUnlocked = true; // Default: unlocked for non-CM engines
+  if (section === "Intelligent Change Management") {
+    const { getEngineAccessStatus } = await import("~/models/payment.model.server");
+    const accessStatus = await getEngineAccessStatus(user.organisationId, section);
+    reportUnlocked = accessStatus.reportUnlocked;
+  }
+
+  return json({ user, section, analysis, brand_name, companyLogo: company_info?.logo_url, responses, questions, reportUnlocked });
 }
 
 // --- Action (for AI report generation from engine page) ---
@@ -172,7 +180,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 }
 
 export default function ConsultingReportPage() {
-  const { user, section, analysis, brand_name, companyLogo, responses, questions } =
+  const { user, section, analysis, brand_name, companyLogo, responses, questions, reportUnlocked } =
     useLoaderData<typeof loader>();
 
   // --- Engine-specific report components ---
@@ -197,6 +205,7 @@ export default function ConsultingReportPage() {
         assessmentId={section}
         responses={responses}
         questions={questions}
+        reportUnlocked={reportUnlocked}
       />
     );
   }

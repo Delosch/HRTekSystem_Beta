@@ -6,6 +6,8 @@ import {
 import { StrategicReportPreview } from "../reports/StrategicReportPreview";
 import ChangeManagementDashboard from "./ChangeManagement/ChangeManagementDashboard";
 import { useReportGenerator } from "~/hooks/useReportGenerator";
+import { useNavigate } from "@remix-run/react";
+import { toast } from "react-toastify";
 
 type View = 'dashboard' | 'emotions' | 'stakeholders' | 'interventions' | 'alerts' | 'reports' | 'settings';
 
@@ -16,14 +18,16 @@ interface ChangeManagementReportProps {
     companyLogo?: string;
     responses?: any;
     questions?: any;
+    reportUnlocked?: boolean;
 }
 
-export default function ChangeManagementReport({ data, brandName, assessmentId, companyLogo, responses, questions }: ChangeManagementReportProps) {
+export default function ChangeManagementReport({ data, brandName, assessmentId, companyLogo, responses, questions, reportUnlocked = true }: ChangeManagementReportProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [activeView, setActiveView] = useState<View>('dashboard');
     const [scrollProgress, setScrollProgress] = useState(0);
     const isScrollingRef = useRef(false);
     const scrollTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const navigate = useNavigate();
 
     // AI Report State
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -34,6 +38,16 @@ export default function ChangeManagementReport({ data, brandName, assessmentId, 
     }, [data]);
 
     const handleExportPDF = () => {
+        if (!reportUnlocked) {
+            toast.warning(
+                '🔒 Remaining 50% payment required to export report. Redirecting to Payment Dashboard...',
+                { autoClose: 2500 }
+            );
+            setTimeout(() => {
+                navigate('/user-payment-dashboard');
+            }, 2500);
+            return;
+        }
         setIsPreviewOpen(true);
         generate("Intelligent Change Management", responses);
     };
@@ -116,6 +130,7 @@ export default function ChangeManagementReport({ data, brandName, assessmentId, 
                     onGenerateDossier={handleExportPDF}
                     responses={responses}
                     questions={questions}
+                    reportUnlocked={reportUnlocked}
                 />
             </main>
 

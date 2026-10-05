@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Share2, Globe, FileText, Layout, ChevronRight, Menu, X, Rocket } from 'lucide-react';
+import { Download, Share2, Globe, FileText, Layout, ChevronRight, Menu, X, Rocket, Lock } from 'lucide-react';
 import { calculateIndexScores } from '~/components/assessment/ChangeManagement/utils/scoringEngine';
 import { Sidebar } from './components/Sidebar';
 import { SummaryHero } from './components/decisive/summary-hero';
@@ -17,6 +17,7 @@ interface ChangeManagementDashboardProps {
     onGenerateDossier?: () => void;
     responses?: any;
     questions?: any;
+    reportUnlocked?: boolean;
 }
 
 export default function ChangeManagementDashboard({
@@ -25,7 +26,8 @@ export default function ChangeManagementDashboard({
     hideSidebar = false,
     onGenerateDossier,
     responses,
-    questions
+    questions,
+    reportUnlocked = true
 }: ChangeManagementDashboardProps) {
     const [activeSection, setActiveSection] = useState('summary');
     const [isMounted, setIsMounted] = useState(false);
@@ -170,16 +172,29 @@ export default function ChangeManagementDashboard({
                             </div>
                         </div>
 
-                        <button
-                            onClick={onGenerateDossier}
-                            className="group relative h-12 bg-slate-900 overflow-hidden text-white font-semibold text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <span className="relative z-10 flex items-center gap-2">
-                                Export Report
-                                <Rocket className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-                            </span>
-                        </button>
+                        {reportUnlocked ? (
+                            <button
+                                onClick={onGenerateDossier}
+                                className="group relative h-12 bg-slate-900 overflow-hidden text-white font-semibold text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <span className="relative z-10 flex items-center gap-2">
+                                    Export Report
+                                    <Rocket className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                                </span>
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onGenerateDossier}
+                                className="group relative h-12 bg-orange-600 overflow-hidden text-white font-semibold text-[10px] uppercase tracking-[0.2em] px-10 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <Lock className="w-4 h-4" />
+                                    Export Locked — 50% Payment Remaining
+                                </span>
+                            </button>
+                        )}
                     </div>
                 </header>
 

@@ -1,6 +1,17 @@
-import { useLocation, Link, useRouteLoaderData } from "@remix-run/react";
+import { useLocation, Link, useRouteLoaderData, useNavigate } from "@remix-run/react";
 import { sidebarSections } from "./sidebarConfig";
-import { Settings, Home } from "lucide-react";
+import { Settings, Home, Lock } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { toast } from "react-toastify";
+
+// Sidebar paths that are payment-gated (core engines only)
+const GATED_ENGINE_PATHS = [
+    "/roadmapDashboard",
+    "/vendorDashboard",
+    "/ai-maturity/dashboard",
+    "/sharedDashboard",
+    "/changeDashboard",
+];
 
 interface SidebarProps {
     user?: {
@@ -21,10 +32,45 @@ export default function Sidebar({ user: propUser, onLinkClick }: SidebarProps = 
     const user = propUser || rootData?.user;
 
     const location = useLocation();
+    const navigate = useNavigate();
     const currentPath = location.pathname;
+
+    const [engineAccess, setEngineAccess] = useState<Record<string, boolean>>({});
+
+    // Fetch engine access status once on mount
+    useEffect(() => {
+        let cancelled = false;
+        fetch("/api/engine-access")
+            .then(res => res.ok ? res.json() : { accessByPath: {} })
+            .then(data => {
+                if (!cancelled) {
+                    setEngineAccess(data.accessByPath || {});
+                }
+            })
+            .catch(() => { /* silent fail */ });
+        return () => { cancelled = true; };
+    }, []);
 
     const isActive = (path: string) =>
         currentPath === path ? "bg-blue-100 border-l-4 border-blue-500 font-semibold" : "";
+
+    const isGatedPath = (path: string) => GATED_ENGINE_PATHS.includes(path);
+    const isPathLocked = (path: string) => isGatedPath(path) && !engineAccess[path];
+
+    const handleGatedClick = useCallback((e: React.MouseEvent, path: string, label: string) => {
+        if (!isGatedPath(path)) return; // Not gated, let Link handle it
+        if (engineAccess[path]) return; // Unlocked, let Link handle it
+
+        // Locked — prevent navigation, show toast, redirect
+        e.preventDefault();
+        toast.warning(
+            `🔒 "${label}" requires payment approval. Redirecting to Payment Dashboard...`,
+            { autoClose: 2500 }
+        );
+        setTimeout(() => {
+            navigate("/user-payment-dashboard");
+        }, 2500);
+    }, [engineAccess, navigate]);
 
     return (
         <aside className={`bg-[#f8fafc] shadow-lg p-4 text-black overflow-y-auto scrollbar-hide rounded-2xl space-y-6 z-50 transition-all duration-300 ${onLinkClick
@@ -89,20 +135,40 @@ export default function Sidebar({ user: propUser, onLinkClick }: SidebarProps = 
                         className={`border rounded-lg ${title !== "Logout" ? "divide-y" : "border-transparent rounded-2xl"
                             } shadow-lg`}
                     >
-                        {items.map(({ label, path, icon: Icon, isLogout }) => (
-                            <Link
-                                key={path}
-                                to={path}
-                                onClick={onLinkClick}
-                                className={`w-full text-left p-2 text-sm flex items-center gap-2 ${isLogout
-                                    ? "bg-red-500 text-white hover:bg-red-600 rounded-2xl"
-                                    : isActive(path)
-                                    }`}
-                            >
-                                <Icon className="w-4 h-4" />
-                                {label}
-                            </Link>
-                        ))}
+                        {items.map(({ label, path, icon: Icon, isLogout }) => {
+                            const locked = isPathLocked(path);
+                            return (
+                                <Link
+                                    key={path}
+                                    to={path}
+                                    onClick={(e) => {
+                                        if (locked) {
+                                            handleGatedClick(e, path, label);
+                                        } else {
+                                            onLinkClick?.();
+                                        }
+                                    }}
+                                    className={`w-full text-left p-2 text-sm flex items-center gap-2 ${isLogout
+                                        ? "bg-red-500 text-white hover:bg-red-600 rounded-2xl"
+                                        : locked
+                                            ? "text-slate-400 cursor-pointer"
+                                            : isActive(path)
+                                        }`}
+                                >
+                                    {locked ? (
+                                        <Lock className="w-4 h-4 text-orange-500" />
+                                    ) : (
+                                        <Icon className="w-4 h-4" />
+                                    )}
+                                    <span className={locked ? "text-slate-400" : ""}>{label}</span>
+                                    {locked && (
+                                        <span className="ml-auto text-[9px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                                            🔒
+                                        </span>
+                                    )}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
             ))}
