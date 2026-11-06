@@ -2,9 +2,11 @@ import { json, type ActionFunctionArgs, type MetaFunction } from "@remix-run/nod
 import { useActionData, Form, useNavigation } from "@remix-run/react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import Footer from "../components/Footer";
 import Navbar from "~/components/HomePageComponents/Navbar";
 import { generateMeta, generateBreadcrumbSchema } from "~/utils/seo";
+import { verifyHCaptcha } from "~/utils/captcha.server";
 
 export const meta: MetaFunction = () => {
   return generateMeta({
@@ -25,6 +27,14 @@ export async function action({ request }: ActionFunctionArgs) {
   const jobRole    = (formData.get("jobRole")    as string)?.trim() || "";
   const location   = (formData.get("location")  as string)?.trim() || "";
   const resumeFile = formData.get("resume") as File | null;
+  const hCaptchaToken = formData.get("h-captcha-response") as string;
+
+  if (!hCaptchaToken || !(await verifyHCaptcha(hCaptchaToken))) {
+    return json(
+      { success: false, error: "Please complete the security verification." },
+      { status: 400 },
+    );
+  }
 
   if (!firstName || !email || !jobRole) {
     return json({ success: false, error: "Please fill in all required fields." });
@@ -338,6 +348,9 @@ export default function CareerPage() {
   const [formKey, setFormKey] = useState(0);
   const [selectedRole, setSelectedRole] = useState("");
   const [fileName, setFileName] = useState("");
+  const [siteKey, setSiteKey] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const captchaRef = useRef<HCaptcha>(null);
 
   const isSubmitting = navigation.state === "submitting" || navigation.state === "loading";
 
@@ -348,8 +361,19 @@ export default function CareerPage() {
       setFormKey(k => k + 1);
       setFileName("");
       setSelectedRole("");
+      setCaptchaToken("");
+    } else if ((actionData as any)?.error) {
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken("");
     }
   }, [actionData]);
+
+  useEffect(() => {
+    const key = (window as Window & {
+      ENV?: { VITE_HCAPTCHA_SITE_KEY?: string };
+    }).ENV?.VITE_HCAPTCHA_SITE_KEY;
+    if (key) setSiteKey(key);
+  }, []);
 
   const formRef = useRef<HTMLDivElement>(null);
   const scrollToForm = (role = "") => {
@@ -843,6 +867,19 @@ export default function CareerPage() {
                       </label>
                     </div>
 
+                    {/* Security verification */}
+                    <div className="flex justify-center">
+                      {siteKey && (
+                        <HCaptcha
+                          ref={captchaRef}
+                          sitekey={siteKey}
+                          onVerify={setCaptchaToken}
+                          onExpire={() => setCaptchaToken("")}
+                          onError={() => setCaptchaToken("")}
+                        />
+                      )}
+                    </div>
+
                     {/* Error */}
                     {(actionData as any)?.error && (
                       <div className="flex items-center gap-3 text-red-600 text-sm font-medium bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
@@ -857,8 +894,8 @@ export default function CareerPage() {
                     <div className="pt-2">
                       <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className={`w-full py-4 bg-[#023e8a] text-white font-black rounded-2xl transition-all shadow-lg text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 group ${isSubmitting ? 'opacity-70 cursor-not-allowed shadow-none' : 'hover:bg-[#022e6a] shadow-blue-900/20'}`}
+                        disabled={isSubmitting || !captchaToken}
+                        className={`w-full py-4 bg-[#023e8a] text-white font-black rounded-2xl transition-all shadow-lg text-sm uppercase tracking-widest flex items-center justify-center gap-2.5 group ${isSubmitting || !captchaToken ? 'opacity-70 cursor-not-allowed shadow-none' : 'hover:bg-[#022e6a] shadow-blue-900/20'}`}
                       >
                         {isSubmitting ? (
                           <>
