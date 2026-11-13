@@ -215,8 +215,6 @@ export default function App() {
   return (
     <html lang="en" suppressHydrationWarning>
       <head suppressHydrationWarning>
-        {/* suppressHydrationWarning on title prevents browser-extension-caused hydration errors */}
-        <title suppressHydrationWarning>HRTek System - AI-Powered HR Transformation Platform</title>
         <Meta />
         <Links />
 
