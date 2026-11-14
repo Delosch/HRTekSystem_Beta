@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const ADMIN_EMAIL = "atul.dixit@hrteksystems.in";
+const ADMIN_EMAIL = "atul.dixit@hrteksystem.com";
 
 export async function notifyAdmin(subject: string, message: string) {
     try {

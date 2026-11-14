@@ -3,7 +3,7 @@ import { createAuthSession } from "~/lib/session.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const adminId = "00000000-0000-4000-a000-000000000000";
-  const ADMIN_EMAIL = "atul.dixit@hrteksystems.in";
+  const ADMIN_EMAIL = "atul.dixit@hrteksystem.com";
   const ADMIN_PHONE = "+919935959986";
 
   // Directly log in as admin and redirect to /admin
