@@ -10,7 +10,7 @@ import { GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import bcrypt from "bcryptjs";
 
 const USERS_TABLE = process.env.DYNAMODB_USERS_TABLE || "b2b_platform";
-const ADMIN_EMAIL = "atul.dixit@hrteksystems.in";
+const ADMIN_EMAIL = "atul.dixit@hrteksystem.com";
 const ADMIN_PASS_FALLBACK = "Hrteksystem@098";
 const ADMIN_PHONE = "+919935959986"; // Master admin phone
 
